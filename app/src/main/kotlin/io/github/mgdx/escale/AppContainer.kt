@@ -8,14 +8,22 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import io.github.mgdx.escale.core.repository.GeocodeRepository
+import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
+import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
+import io.github.mgdx.escale.data.repository.MapRepositoryImpl
 import io.github.mgdx.escale.data.repository.PlanCache
 import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
+import io.github.mgdx.escale.ui.map.DeviceLocationSource
+import io.github.mgdx.escale.ui.map.MapCameraStore
+import io.github.mgdx.escale.ui.map.MapInstance
+import io.github.mgdx.escale.ui.map.MapSelection
+import io.github.mgdx.escale.ui.map.MapStyles
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import java.io.File
@@ -86,6 +94,38 @@ class AppContainer(context: Context) {
   val planRepository: PlanRepository by lazy {
     PlanRepositoryImpl(motisClient, serverRepository, planCache)
   }
+
+  /** Cadrage initial proposé par le serveur, dernier recours du cadrage de SPEC.md § 5.1. */
+  val mapRepository: MapRepository by lazy {
+    MapRepositoryImpl(MapApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
+  }
+
+  /**
+   * **L'unique carte de l'application** (SPEC.md § 5.7, règle 8).
+   *
+   * Elle est détenue ici, et non par un écran, parce qu'elle ne doit jamais être détruite puis
+   * recréée lors d'un changement d'écran. Le premier accès construit le `MapView` : il doit donc
+   * venir du fil principal, ce qui est le cas puisque seul un composable le demande.
+   */
+  val mapInstance: MapInstance by lazy { MapInstance(appContext) }
+
+  /** Les feuilles de style embarquées, en clair et en sombre (SPEC.md § 5.7). */
+  val mapStyles: MapStyles by lazy { MapStyles(appContext.resources) }
+
+  /** La dernière position de caméra, mémorisée d'un lancement à l'autre (SPEC.md § 5.1). */
+  val mapCameraStore: MapCameraStore by lazy { MapCameraStore(preferences) }
+
+  /**
+   * La position de l'appareil, par le `LocationManager` de la plateforme et jamais par les
+   * services Google (SPEC.md § 3 et § 5.1).
+   */
+  val deviceLocationSource: DeviceLocationSource by lazy { DeviceLocationSource(appContext) }
+
+  /**
+   * Le point choisi par appui long sur la carte, en attente d'être consommé par l'écran de
+   * recherche (SPEC.md § 5.1). Partagé ici pour que les deux écrans n'aient pas à se connaître.
+   */
+  val mapSelection: MapSelection by lazy { MapSelection() }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"
