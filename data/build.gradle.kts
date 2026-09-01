@@ -50,6 +50,9 @@ dependencies {
   implementation(libs.ktor.client.okhttp)
   implementation(libs.ktor.client.content.negotiation)
   implementation(libs.ktor.serialization.kotlinx.json)
+  // Moteur du client Ktor, déclaré explicitement pour son cache disque : SPEC.md § 7.5 impose
+  // 24 h de cache sur les résultats de géocodage, et c'est `okhttp3.Cache` qui le porte.
+  implementation(libs.okhttp)
   implementation(libs.androidx.datastore.preferences)
 
   testImplementation(libs.junit)
