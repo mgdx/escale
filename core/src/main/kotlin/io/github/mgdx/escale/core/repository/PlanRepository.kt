@@ -29,4 +29,13 @@ interface PlanRepository {
    * (SPEC.md § 5.5.1).
    */
   suspend fun refresh(itineraryId: String, detailedLegs: Boolean = true): Outcome<Journey>
+
+  /**
+   * Vide le cache mémoire des résultats de recherche (SPEC.md § 7.5).
+   *
+   * L'écran « Serveur MOTIS » l'appelle au changement de serveur : les trajets d'une instance n'ont
+   * rien à faire dans les résultats d'une autre (SPEC.md § 4.1). Les favoris et l'historique, eux,
+   * ne sont pas concernés.
+   */
+  suspend fun clearCache(): Outcome<Unit>
 }

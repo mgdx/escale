@@ -150,13 +150,24 @@ class PlanRepositoryImplTest {
 
   @Test
   fun `vider le cache fait repartir la requete`() = runTest {
-    val cache = PlanCache()
-    val repository = PlanTestSupport.repository(recordingEngine(), backgroundScope, cache)
+    val repository = PlanTestSupport.repository(recordingEngine(), backgroundScope)
     repository.plan(PlanTestSupport.query())
-    // C'est ce que déclenchera l'écran « Serveur MOTIS » au changement de serveur (SPEC.md § 4.1).
-    cache.clear()
+    // C'est ce que déclenchera l'écran « Serveur MOTIS » au changement de serveur (SPEC.md § 4.1),
+    // par l'interface de dépôt et non par la classe de cache : même geste que clearGeocodeCache.
+    assertTrue(repository.clearCache() is Outcome.Success)
     repository.plan(PlanTestSupport.query())
     assertEquals(2, seen.size)
+  }
+
+  @Test
+  fun `le cache partage par plusieurs onglets est vide d un seul coup`() = runTest {
+    val repository = PlanTestSupport.repository(recordingEngine(), backgroundScope)
+    repository.plan(PlanTestSupport.query(JourneyCategory.TRANSIT))
+    repository.plan(PlanTestSupport.query(JourneyCategory.WALK))
+    repository.clearCache()
+    repository.plan(PlanTestSupport.query(JourneyCategory.TRANSIT))
+    repository.plan(PlanTestSupport.query(JourneyCategory.WALK))
+    assertEquals(4, seen.size)
   }
 
   // --- Une seule requête en vol par onglet, SPEC.md § 7.2 --------------------------------------
