@@ -3,6 +3,7 @@
   <string name="app_tagline">Aller là-bas, comme vous voulez</string>
 
   <string name="action_back">Retour</string>
+  <string name="action_close">Fermer</string>
   <string name="action_settings">Réglages</string>
   <string name="action_retry">Réessayer</string>
 

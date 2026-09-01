@@ -7,8 +7,16 @@
   <string name="about_title">About</string>
   <string name="about_version">Version %1$s</string>
   <string name="about_license_summary">Escale is free software, published under the GNU General Public License, version 3 or later. You may use, study, share and improve it.</string>
+  <!--
+    Le texte de la licence est embarqué dans res/raw/gpl_3_0.txt : le lien vers gnu.org rend 403, et
+    une application GPLv3 dont le lien vers sa propre licence ne marche pas est un très mauvais
+    signal pour un relecteur F-Droid. Le lien reste proposé en complément, jamais en remplacement.
+  -->
   <string name="about_license_link">Licence</string>
-  <string name="about_license_link_subtitle">Read the full text of the GNU GPL v3</string>
+  <string name="about_license_link_subtitle">Read the full text of the GNU GPL v3, included in the app</string>
+  <string name="about_license_full_title">GNU General Public License v3</string>
+  <string name="about_license_online">The licence on gnu.org</string>
+  <string name="about_license_online_subtitle" translatable="false">gnu.org/licenses/gpl-3.0.html</string>
   <string name="about_license_url" translatable="false">https://www.gnu.org/licenses/gpl-3.0.html</string>
   <string name="about_repository">Source code</string>
   <string name="about_repository_subtitle">github.com/mgdx/escale</string>
