@@ -20,10 +20,17 @@ import java.io.IOException
  * Ces trois nombres sont une donnée de localisation : ils restent dans les préférences privées de
  * l'application, ne sont jamais journalisés, et ne partent nulle part (SPEC.md § 8 et § 11).
  */
-class MapCameraStore(private val dataStore: DataStore<Preferences>) {
-
+interface MapCameraMemory {
   /** Le dernier cadrage enregistré, ou `null` au premier lancement. */
-  suspend fun lastCamera(): MapCamera? {
+  suspend fun lastCamera(): MapCamera?
+
+  /** Enregistre le cadrage courant. */
+  suspend fun save(camera: MapCamera)
+}
+
+class MapCameraStore(private val dataStore: DataStore<Preferences>) : MapCameraMemory {
+
+  override suspend fun lastCamera(): MapCamera? {
     // Un fichier de préférences illisible ne doit pas priver la carte de son cadrage : on repart
     // simplement sur la source suivante de SPEC.md § 5.1.
     val preferences = dataStore.data
@@ -36,7 +43,7 @@ class MapCameraStore(private val dataStore: DataStore<Preferences>) {
   }
 
   /** Enregistre le cadrage courant. Un échec d'écriture est sans conséquence : on recadrera. */
-  suspend fun save(camera: MapCamera) {
+  override suspend fun save(camera: MapCamera) {
     try {
       dataStore.edit { preferences ->
         preferences[KEY_LATITUDE] = camera.center.lat

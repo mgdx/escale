@@ -1,5 +1,7 @@
 package io.github.mgdx.escale.ui.map
 
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -20,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
+import io.github.mgdx.escale.ui.theme.EscaleTheme
 
 /** Le bouton de position, 56 dp, bas à droite, trois états (SPEC.md § 5.1). */
 @Composable
@@ -210,3 +214,29 @@ private val ATTRIBUTION_ICON_SIZE = 16.dp
 /** Obligations d'attribution de SPEC.md § 4.2. */
 private const val OPENSTREETMAP_URL = "https://www.openstreetmap.org/copyright"
 private const val TRANSITOUS_URL = "https://transitous.org/sources/"
+
+@Preview(name = "Commandes de carte, thème clair", showBackground = true)
+@Preview(
+  name = "Commandes de carte, thème sombre",
+  showBackground = true,
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun MapOverlaysPreview() {
+  EscaleTheme(dynamicColor = false) {
+    Surface {
+      Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        // Les trois états côte à côte : c'est ainsi qu'on vérifie qu'ils se distinguent autrement
+        // que par la couleur (SPEC.md § 9).
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+          LocateState.entries.forEach { entry -> LocateButton(state = entry, onClick = {}) }
+        }
+        AttributionBar(onClick = {})
+        TileWarning()
+      }
+    }
+  }
+}

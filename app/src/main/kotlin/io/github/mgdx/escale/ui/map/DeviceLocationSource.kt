@@ -30,18 +30,30 @@ import kotlinx.coroutines.flow.flowOn
  * appui sur le bouton de position (SPEC.md § 5.1). Toutes les fonctions de cette classe rendent
  * simplement « rien » quand la permission manque.
  */
-class DeviceLocationSource(context: Context) {
+interface LocationSource {
+  /** Vrai si l'application peut déjà lire une position approchée, sans rien demander à l'usager. */
+  fun hasCoarsePermission(): Boolean
+
+  /** Vrai si l'application peut lire une position précise. */
+  fun hasFinePermission(): Boolean
+
+  /** La dernière position connue du système, **sans aucune demande de permission**. */
+  fun lastKnownLocation(): LatLon?
+
+  /** Les positions successives de l'appareil, tant que le flux est collecté. */
+  fun locations(): Flow<LatLon>
+}
+
+class DeviceLocationSource(context: Context) : LocationSource {
 
   private val appContext: Context = context.applicationContext
 
   private val locationManager: LocationManager?
     get() = ContextCompat.getSystemService(appContext, LocationManager::class.java)
 
-  /** Vrai si l'application peut déjà lire une position approchée, sans rien demander à l'usager. */
-  fun hasCoarsePermission(): Boolean = isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
+  override fun hasCoarsePermission(): Boolean = isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  /** Vrai si l'application peut lire une position précise. */
-  fun hasFinePermission(): Boolean = isGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+  override fun hasFinePermission(): Boolean = isGranted(Manifest.permission.ACCESS_FINE_LOCATION)
 
   /**
    * La dernière position connue du système, **sans aucune demande de permission**.
@@ -50,7 +62,7 @@ class DeviceLocationSource(context: Context) {
    * l'utilisateur si elle est déjà connue sans demande de permission ». Rend `null` si la
    * permission manque, si aucun fournisseur n'en a, ou si le système la refuse.
    */
-  fun lastKnownLocation(): LatLon? {
+  override fun lastKnownLocation(): LatLon? {
     if (!hasCoarsePermission()) return null
     val manager = locationManager ?: return null
     return PROVIDERS
@@ -67,7 +79,7 @@ class DeviceLocationSource(context: Context) {
    * inconnue ». Arrêter la collecte coupe les mises à jour : rien ne tourne en fond
    * (SPEC.md § 7.7).
    */
-  fun locations(): Flow<LatLon> = callbackFlow {
+  override fun locations(): Flow<LatLon> = callbackFlow {
     val manager = locationManager
     if (!hasCoarsePermission() || manager == null) {
       close()
