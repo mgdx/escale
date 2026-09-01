@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chaînes de l'écran de réglages et de l'écran « Serveur MOTIS » (SPEC.md § 5.6 et § 5.6.1). -->
+<resources>
+  <string name="settings_title">Settings</string>
+  <string name="settings_server_title">MOTIS server</string>
+
+  <string name="server_settings_title">MOTIS server</string>
+  <string name="server_settings_current_label">Server in use</string>
+  <string name="server_settings_public_instance_notice">The default server is a public instance run by volunteers. Please use it sparingly.</string>
+</resources>

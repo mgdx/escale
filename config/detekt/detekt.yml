@@ -1,0 +1,53 @@
+# Configuration detekt d'Escale.
+# `buildUponDefaultConfig = true` : ce fichier ne contient que les écarts au paramétrage par défaut,
+# chacun justifié. Aucune règle n'est coupée « pour faire passer la compilation ».
+
+build:
+  # Aucun écart toléré (CLAUDE.md) : la première remarque fait échouer la tâche.
+  maxIssues: 0
+
+complexity:
+  LongParameterList:
+    # Les modèles de domaine reprennent fidèlement les champs de l'API MOTIS : un `Leg` a
+    # légitimement une quinzaine de propriétés. Les découper en sous-objets arbitraires
+    # obscurcirait le mapping sans rien simplifier.
+    ignoreDataClasses: true
+    functionThreshold: 8
+    constructorThreshold: 10
+  TooManyFunctions:
+    # Les interfaces de dépôt regroupent volontairement les appels d'un même domaine fonctionnel
+    # (docs/architecture.md § 5) ; les éclater ferait perdre le contrat.
+    ignoreDeprecated: true
+    ignorePrivate: true
+    thresholdInInterfaces: 20
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+
+naming:
+  FunctionNaming:
+    # Les composables Compose portent une majuscule par convention du framework.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+
+style:
+  MagicNumber:
+    # Les tests décrivent des cas concrets : y nommer chaque constante nuirait à la lisibilité.
+    # Dans la palette du thème, la valeur hexadécimale EST la constante nommée : `Color(0xFF1D9E75)`
+    # affecté à `BrandTeal` n'a pas de nom plus parlant à recevoir.
+    excludes: ['**/test/**', '**/androidTest/**', '**/ui/theme/**']
+  MaxLineLength:
+    maxLineLength: 120
+    excludes: ['**/test/**', '**/androidTest/**']
+  ReturnCount:
+    max: 3
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+
+exceptions:
+  TooGenericExceptionCaught:
+    # Le client HTTP doit rattraper toute défaillance du transport pour la traduire en
+    # `EscaleError` : laisser fuir une exception ferait planter l'application (SPEC.md § 8).
+    excludes: ['**/data/net/**']
+  SwallowedException:
+    excludes: ['**/data/net/**']
