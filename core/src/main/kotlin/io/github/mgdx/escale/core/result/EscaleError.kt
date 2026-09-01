@@ -34,6 +34,16 @@ sealed interface EscaleError {
    */
   data class BadRequest(val serverMessage: String?) : EscaleError
 
+  /**
+   * La requête a été annulée par une recherche plus récente sur le même onglet (SPEC.md § 7.2).
+   *
+   * **Ce cas ne s'affiche jamais.** L'interface l'ignore silencieusement : un résultat plus récent
+   * arrive derrière, et annoncer « une erreur est survenue » à quelqu'un qui vient simplement de
+   * relancer sa recherche serait un défaut visible. Cette valeur existe pour que l'appelant sache
+   * qu'il n'a pas à afficher le résultat qu'il attendait, pas pour être traduite en message.
+   */
+  data object Superseded : EscaleError
+
   /** Tout le reste. [cause] est le nom de la défaillance, jamais son contexte de données. */
   data class Unknown(val cause: String?) : EscaleError
 }
