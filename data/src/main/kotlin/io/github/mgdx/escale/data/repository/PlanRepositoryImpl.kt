@@ -97,6 +97,11 @@ class PlanRepositoryImpl(
     }
   }
 
+  override suspend fun clearCache(): Outcome<Unit> {
+    cache.clear()
+    return Outcome.Success(Unit)
+  }
+
   private suspend fun fetch(key: PlanCache.Key): Outcome<JourneyPage> =
     when (val outcome = api.plan(key.baseUrl, key.query, key.cursor, key.detailedLegs)) {
       is Outcome.Success -> Outcome.Success(outcome.value.toDomain())
