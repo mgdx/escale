@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran « À propos » (SPEC.md § 5.6), dont les attributions rendues obligatoires par la
+  politique d'usage de Transitous (SPEC.md § 4.2).
+-->
+<resources>
+  <string name="about_title">About</string>
+  <string name="about_version">Version %1$s</string>
+  <string name="about_license_summary">Escale is free software, published under the GNU General Public License, version 3 or later. You may use, study, share and improve it.</string>
+  <string name="about_license_link">Licence</string>
+  <string name="about_license_link_subtitle">Read the full text of the GNU GPL v3</string>
+  <string name="about_license_url" translatable="false">https://www.gnu.org/licenses/gpl-3.0.html</string>
+  <string name="about_repository">Source code</string>
+  <string name="about_repository_subtitle">github.com/mgdx/escale</string>
+  <string name="about_repository_url" translatable="false">https://github.com/mgdx/escale</string>
+
+  <string name="about_attributions_title">Attributions</string>
+  <string name="about_attributions_notice">Journeys are computed by a MOTIS server. The public instance and its data come from the Transitous project, whose map data comes from OpenStreetMap.</string>
+  <string name="about_transitous">Transitous data sources</string>
+  <string name="about_transitous_subtitle">transitous.org/sources</string>
+  <string name="about_transitous_url" translatable="false">https://transitous.org/sources/</string>
+  <string name="about_openstreetmap">© OpenStreetMap contributors</string>
+  <string name="about_openstreetmap_subtitle">openstreetmap.org/copyright</string>
+  <string name="about_openstreetmap_url" translatable="false">https://www.openstreetmap.org/copyright</string>
+</resources>
