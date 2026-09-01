@@ -111,9 +111,16 @@ Toute logique métier testable vit dans `:core`. Une règle qui n'est pas testab
 ### 4.1 Configuration
 
 - Serveur par défaut : **`https://api.transitous.org`** (instance publique communautaire, couverture mondiale).
-- L'utilisateur peut saisir l'URL de **son propre serveur** dans les réglages (instance auto-hébergée,
-  serveur local en `http://` sur le réseau local — autoriser le trafic en clair uniquement pour les
-  hôtes saisis par l'utilisateur, via une `network_security_config` restrictive, jamais globalement).
+- L'utilisateur peut saisir l'URL de **son propre serveur** dans les réglages : instance
+  auto-hébergée, ou serveur local en `http://` sur le réseau local. Le trafic en clair ne peut pas
+  être restreint aux seuls hôtes saisis par l'utilisateur : depuis Android 7, la
+  `network_security_config` est figée à la compilation, et un hôte saisi à l'exécution ne peut pas y
+  être ajouté. Le dispositif retenu est donc **permissif au niveau de la plateforme, strict au niveau
+  applicatif** : `cleartextTrafficPermitted="true"` sur la `base-config`, avec un commentaire en tête
+  du fichier qui l'explique, et la restriction portée par le code — l'écran « Serveur MOTIS » refuse
+  toute URL `http://` tant que l'utilisateur n'a pas confirmé un avertissement explicite. Ce
+  consentement est demandé une fois par hôte et mémorisé ; aucune requête en clair, test de connexion
+  compris, ne part sans lui.
 - Un bouton **« Tester la connexion »** appelle `GET /api/v1/health` et affiche le résultat.
 - Changer de serveur vide le cache des résultats mais conserve favoris et historique.
 - Le comportement complet de l'écran de réglage du serveur est décrit au § 5.6.1 : normalisation de
