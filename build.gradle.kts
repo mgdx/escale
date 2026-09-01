@@ -12,6 +12,11 @@ plugins {
   alias(libs.plugins.detekt) apply false
 }
 
+// Avertissement connu et laissé tel quel : detekt 1.23.8, la dernière version stable publiée,
+// appelle `ReportingExtension.file(String)`, que Gradle 9.5 signale comme dépréciée. Gradle affiche
+// donc « Deprecated Gradle features were used in this build » à chaque exécution. L'appel vient du
+// greffon, pas de ce dépôt : rien ici ne peut le supprimer, et masquer l'avertissement (
+// `org.gradle.warning.mode=none`) masquerait aussi les nôtres. À réévaluer à la sortie de detekt 2.
 subprojects {
   apply(plugin = rootProject.libs.plugins.ktlint.get().pluginId)
   apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
