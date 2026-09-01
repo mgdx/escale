@@ -222,3 +222,39 @@ sous forme de `VectorDrawable` XML, reprise du jeu officiel **Material Symbols**
 - Un lot qui a besoin d'une icône déjà présente la réutilise ; il ne la redessine pas.
 - Motif : zéro dépendance, aucun poids mort dans l'APK (spec §2 vise moins de 15 Mo),
   et rien qu'un relecteur F-Droid puisse reprocher.
+
+### 11.3 Envoyer l'identifiant d'arrêt, pas ses coordonnées
+
+Constat de terrain fait au sprint 1 contre `api.transitous.org` : une requête `plan` exprimée
+**par coordonnées** autour d'une gare rendait zéro résultat, là où la même requête exprimée
+**par `stopId`** en rendait cinq.
+
+Conséquence contraignante pour l'écran de recherche : quand l'autocomplétion rend un `Location`
+dont le `kind` vaut `PlaceKind.STOP`, c'est son `id` qui part dans `fromPlace`/`toPlace`, jamais
+sa position. `PlanQueryBuilder` applique déjà cette règle ; l'interface ne doit pas la contourner
+en reconstruisant un point à partir des coordonnées affichées.
+
+### 11.4 Composition de l'écran d'accueil
+
+L'écran d'accueil (spec §5.1) superpose trois choses écrites par trois lots différents : la carte
+plein écran, la carte de recherche flottante, et la feuille de résultats. Pour qu'ils ne se
+marchent pas dessus, la composition passe par des **emplacements**, jamais par des appels directs
+d'un lot à l'autre :
+
+```kotlin
+@Composable
+fun HomeScreen(
+  modifier: Modifier = Modifier,
+  searchCard: @Composable (PaddingValues) -> Unit = {},   // rempli par le lot « recherche »
+  resultsSheet: @Composable (PaddingValues) -> Unit = {}, // rempli par le lot « résultats »
+)
+```
+
+- Le lot **carte** possède `HomeScreen` et l'instance MapLibre. Il fournit les emplacements avec
+  une valeur par défaut vide, de sorte que l'écran compile et s'affiche avant que les deux autres
+  lots existent.
+- Les lots **recherche** et **résultats** écrivent chacun leur composable dans leur propre paquet
+  et ne modifient pas `HomeScreen`. Le branchement se fait dans `EscaleNavHost.kt`, à raison d'une
+  ligne par lot.
+- Le `PaddingValues` transmis porte les encarts système et la hauteur de la feuille ouverte :
+  c'est ce qui permet au cadrage de trajet de tenir compte de la feuille (spec §5.7, règle 9).
