@@ -47,6 +47,7 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
 import io.github.mgdx.escale.ui.map.AttributionBar
 import io.github.mgdx.escale.ui.map.AttributionDialog
+import io.github.mgdx.escale.ui.map.LOCATE_BUTTON_SIZE
 import io.github.mgdx.escale.ui.map.LocateButton
 import io.github.mgdx.escale.ui.map.LocateState
 import io.github.mgdx.escale.ui.map.LocationPermissionDialog
@@ -116,10 +117,12 @@ fun HomeScreen(
     searchCard(systemInsets)
 
     if (state.tilesUnavailable) {
+      // Juste au-dessus des commandes, et non en haut : le haut de l'écran appartient à la carte
+      // de recherche du lot suivant, et le message doit rester discret (SPEC.md § 5.7).
       TileWarning(
         modifier = Modifier
-          .align(Alignment.TopCenter)
-          .padding(top = systemInsets.calculateTopPadding() + WarningTopMargin)
+          .align(Alignment.BottomCenter)
+          .padding(bottom = bottomInset + ScreenMargin + ControlsStackHeight)
           .padding(horizontal = ScreenMargin),
       )
     }
@@ -290,4 +293,6 @@ private fun Context.startActivitySafely(intent: Intent) {
 
 /** Marges de SPEC.md § 5.1 : 12 dp entre les commandes flottantes et le bord de l'écran. */
 private val ScreenMargin: Dp = 12.dp
-private val WarningTopMargin: Dp = 8.dp
+
+/** Hauteur de la pile de commandes du bas : le bouton de position, celui des réglages, l'écart. */
+private val ControlsStackHeight: Dp = LOCATE_BUTTON_SIZE + MIN_TOUCH_TARGET + ScreenMargin
