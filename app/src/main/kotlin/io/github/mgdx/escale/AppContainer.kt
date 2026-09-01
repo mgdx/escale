@@ -7,9 +7,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
+import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
+import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
+import java.io.File
 
 /**
  * Le graphe de dépendances de l'application, écrit à la main.
@@ -40,8 +44,26 @@ class AppContainer(context: Context) {
     ServerRepositoryImpl(preferences, motisClient)
   }
 
+  /**
+   * Autocomplétion et géocodage inverse.
+   *
+   * Le cache disque de 24 h de SPEC.md § 7.5 tient dans un sous-répertoire du cache **privé** de
+   * l'application : les lieux cherchés par l'usager ne sortent pas du bac à sable (SPEC.md § 11),
+   * et `clearGeocodeCache()` les efface au changement de serveur (SPEC.md § 5.6.1).
+   */
+  val geocodeRepository: GeocodeRepository by lazy {
+    GeocodeRepositoryImpl(
+      api = GeocodeApi(
+        versionName = BuildConfig.VERSION_NAME,
+        cacheDirectory = File(appContext.cacheDir, GEOCODE_CACHE_DIRECTORY),
+      ),
+      serverRepository = serverRepository,
+    )
+  }
+
   private companion object {
     const val PREFERENCES_NAME = "escale"
+    const val GEOCODE_CACHE_DIRECTORY = "geocode-http"
   }
 }
 
