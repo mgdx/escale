@@ -63,7 +63,13 @@ ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serializatio
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 # --- Carte -----------------------------------------------------------------------------------
-maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre" }
+# Variante **OpenGL** et non la variante par défaut : `org.maplibre.gl:android-sdk` est compilée
+# pour Vulkan et injecte dans le manifeste fusionné un
+# `<uses-feature android:name="android.hardware.vulkan.version" android:required="true" />`, qui
+# rend l'application impossible à installer sur tout appareil sans Vulkan — alors que `minSdk`
+# vaut 26 et que SPEC.md § 3 promet Android 8. `android-sdk-opengl` porte le même code, rendu par
+# OpenGL ES, et n'exige rien de tel.
+maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk-opengl", version.ref = "maplibre" }
 
 # --- Persistance -----------------------------------------------------------------------------
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
