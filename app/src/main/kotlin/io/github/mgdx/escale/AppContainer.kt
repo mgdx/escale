@@ -7,9 +7,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
+import io.github.mgdx.escale.data.repository.PlanCache
+import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
 
 /**
  * Le graphe de dépendances de l'application, écrit à la main.
@@ -38,6 +41,17 @@ class AppContainer(context: Context) {
 
   val serverRepository: ServerRepository by lazy {
     ServerRepositoryImpl(preferences, motisClient)
+  }
+
+  /**
+   * Cache mémoire des résultats de recherche (SPEC.md § 7.5). Exposé à part du dépôt parce que
+   * l'écran « Serveur MOTIS » doit pouvoir le vider au changement de serveur (SPEC.md § 4.1).
+   */
+  val planCache: PlanCache by lazy { PlanCache() }
+
+  /** Recherche d'itinéraire : une requête par onglet, mise en cache pour la durée de la recherche. */
+  val planRepository: PlanRepository by lazy {
+    PlanRepositoryImpl(motisClient, serverRepository, planCache)
   }
 
   private companion object {

@@ -5,6 +5,8 @@ import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.data.dto.ErrorDto
 import io.github.mgdx.escale.data.dto.HealthResponseDto
+import io.github.mgdx.escale.data.dto.PlanItineraryDto
+import io.github.mgdx.escale.data.dto.PlanResponseDto
 import io.github.mgdx.escale.data.mapper.toDomain
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -23,6 +25,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.Json
 import java.io.Closeable
 import java.io.IOException
@@ -122,8 +125,39 @@ class MotisClient(versionName: String, engine: HttpClientEngine = OkHttp.create(
     Outcome.Success(response.status.isSuccess())
   }
 
+  /**
+   * `GET /api/v6/plan` : la recherche d'itinéraire.
+   *
+   * Les paramètres sont assemblés par `:core.query`, jamais ici : ce client ne fait que les poser
+   * sur la requête. Une valeur vide reste envoyée telle quelle — `directModes=` est justement ce
+   * qui empêche les trajets directs d'éliminer les trajets en transport en commun (SPEC.md § 5.2).
+   */
+  internal suspend fun plan(baseUrl: String, parameters: Map<String, String>): Outcome<PlanResponseDto> =
+    getJson(baseUrl, MotisEndpoints.PLAN, parameters, PlanResponseDto.serializer())
+
+  /** `GET /api/v6/refresh-itinerary` : recalcule un trajet déjà obtenu avec le temps réel du moment. */
+  internal suspend fun refreshItinerary(baseUrl: String, parameters: Map<String, String>): Outcome<PlanItineraryDto> =
+    getJson(baseUrl, MotisEndpoints.REFRESH_ITINERARY, parameters, PlanItineraryDto.serializer())
+
   override fun close() {
     client.close()
+  }
+
+  /** Un GET qui rend un corps JSON décodé, ou l'[EscaleError] correspondant au statut reçu. */
+  private suspend fun <T> getJson(
+    baseUrl: String,
+    endpoint: String,
+    parameters: Map<String, String>,
+    serializer: DeserializationStrategy<T>,
+  ): Outcome<T> = runCatchingHttp {
+    val response = client.get(MotisEndpoints.url(baseUrl, endpoint)) {
+      parameters.forEach { (name, value) -> parameter(name, value) }
+    }
+    if (response.status.isSuccess()) {
+      Outcome.Success(json.decodeFromString(serializer, response.bodyAsText()))
+    } else {
+      failure(response, endpoint)
+    }
   }
 
   private suspend fun decodeHealth(response: HttpResponse, fullyStarted: Boolean): ServerHealth =
