@@ -1,0 +1,921 @@
+{
+ "requestParameters": {},
+ "debugOutput": {},
+ "from": {
+  "name": "",
+  "lat": 52.5251,
+  "lon": 13.3694,
+  "vertexType": "NORMAL"
+ },
+ "to": {
+  "name": "",
+  "lat": 52.523,
+  "lon": 13.372,
+  "vertexType": "NORMAL"
+ },
+ "direct": [
+  {
+   "duration": 474,
+   "startTime": "2026-09-01T21:52:00Z",
+   "endTime": "2026-09-01T21:59:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:52:00Z",
+      "scheduledDeparture": "2026-09-01T21:52:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.523,
+      "lon": 13.372,
+      "arrival": "2026-09-01T21:59:00Z",
+      "scheduledArrival": "2026-09-01T21:59:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 474,
+     "startTime": "2026-09-01T21:52:00Z",
+     "endTime": "2026-09-01T21:59:00Z",
+     "scheduledStartTime": "2026-09-01T21:52:00Z",
+     "scheduledEndTime": "2026-09-01T21:59:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 568.0,
+     "legGeometry": {
+      "points": "ka{dcBwb_oXES??qHpE??i@o@??qBvA??OeO??xEwC??vCmB??pEoC??pJaG??pH{ENhO??tBuA??v@d@??fFaD??p@oB??rCB??|@m@??fGyD??jAs@??~@m@??^U??fC_B??bF_D??nMgI??dOwI??^|A??d@U??\\O??rAs@??tBkA??ZQ??x@c@??_AsH??p@A??dq@K??b@A??}BaOeAaKu@_MUcLIcJCaO??s@B???`@???zF??mBF??@eC",
+      "precision": 6,
+      "length": 88
+     },
+     "steps": [
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 1.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "toOsmNode": 2739626515,
+       "polyline": {
+        "points": "ka{dcBwb_oXES",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "STAIRS",
+       "distance": 18.0,
+       "fromLevel": 0.0,
+       "toLevel": 1.0,
+       "osmWay": 268633028,
+       "fromOsmNode": 2739626515,
+       "toOsmNode": 2739626524,
+       "polyline": {
+        "points": "qa{dcBkc_oXqHpE",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 3.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400545,
+       "fromOsmNode": 2739626524,
+       "toOsmNode": 2746268300,
+       "polyline": {
+        "points": "ck{dcBy|~nXi@o@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 7.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400517,
+       "fromOsmNode": 2746268300,
+       "toOsmNode": 2746268303,
+       "polyline": {
+        "points": "ml{dcBi~~nXqBvA",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 18.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400517,
+       "fromOsmNode": 2746268303,
+       "toOsmNode": 3629306705,
+       "polyline": {
+        "points": "_p{dcBq{~nXOeO",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 13.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400518,
+       "fromOsmNode": 3629306705,
+       "toOsmNode": 3625410347,
+       "polyline": {
+        "points": "op{dcBwk_oXxEwC",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 9.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400518,
+       "fromOsmNode": 3625410347,
+       "toOsmNode": 4294834719,
+       "polyline": {
+        "points": "ui{dcBop_oXvCmB",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 13.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400518,
+       "fromOsmNode": 4294834719,
+       "toOsmNode": 4294834718,
+       "polyline": {
+        "points": "}d{dcB}s_oXpEoC",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 22.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400518,
+       "fromOsmNode": 4294834718,
+       "toOsmNode": 3625410096,
+       "polyline": {
+        "points": "k~zdcBmx_oXpJaG",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 36.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 269400518,
+       "fromOsmNode": 3625410096,
+       "toOsmNode": 3629305792,
+       "polyline": {
+        "points": "yrzdcBo``oXpH{ENhO",
+        "precision": 6,
+        "length": 3
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 7.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 357808943,
+       "fromOsmNode": 3629305792,
+       "toOsmNode": 2746268184,
+       "polyline": {
+        "points": "whzdcBaw_oXtBuA",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 3.0,
+       "fromLevel": 1.0,
+       "toLevel": 1.0,
+       "osmWay": 357808943,
+       "fromOsmNode": 2746268184,
+       "toOsmNode": 2739626460,
+       "polyline": {
+        "points": "aezdcBwy_oXv@d@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "STAIRS",
+       "distance": 14.0,
+       "fromLevel": 1.0,
+       "toLevel": 0.0,
+       "osmWay": 268633043,
+       "fromOsmNode": 2739626460,
+       "toOsmNode": 2739626418,
+       "polyline": {
+        "points": "iczdcBqx_oXfFaD",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 5.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 268633049,
+       "fromOsmNode": 2739626418,
+       "toOsmNode": 2739626411,
+       "polyline": {
+        "points": "a|ydcBs}_oXp@oB",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 8.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 268633047,
+       "fromOsmNode": 2739626411,
+       "toOsmNode": 2745767088,
+       "polyline": {
+        "points": "ozydcBca`oXrCB",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 4.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 302476983,
+       "fromOsmNode": 2745767088,
+       "toOsmNode": 2739626375,
+       "polyline": {
+        "points": "{uydcB_a`oX|@m@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 16.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 2739626375,
+       "toOsmNode": 12898808609,
+       "polyline": {
+        "points": "}sydcBmb`oXfGyD",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 5.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 12898808609,
+       "toOsmNode": 2778904327,
+       "polyline": {
+        "points": "ukydcBgh`oXjAs@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 4.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 2778904327,
+       "toOsmNode": 11343423087,
+       "polyline": {
+        "points": "iiydcB{i`oX~@m@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 2.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 11343423087,
+       "toOsmNode": 12898808622,
+       "polyline": {
+        "points": "igydcBik`oX^U",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 8.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 12898808622,
+       "toOsmNode": 13688953943,
+       "polyline": {
+        "points": "ifydcB_l`oXfC_B",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 14.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 13688953943,
+       "toOsmNode": 8328279469,
+       "polyline": {
+        "points": "abydcB_o`oXbF_D",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 28.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 8328279469,
+       "toOsmNode": 8328279444,
+       "polyline": {
+        "points": "}zxdcB_t`oXnMgI",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 31.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207813,
+       "fromOsmNode": 8328279444,
+       "toOsmNode": 11343423093,
+       "polyline": {
+        "points": "mlxdcBg~`oXdOwI",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 4.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1184281378,
+       "fromOsmNode": 11343423093,
+       "toOsmNode": 2786208512,
+       "polyline": {
+        "points": "g|wdcB_iaoX^|A",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 2.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1184281377,
+       "fromOsmNode": 2786208512,
+       "toOsmNode": 12898808627,
+       "polyline": {
+        "points": "g{wdcBafaoXd@U",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 2.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1184281377,
+       "fromOsmNode": 12898808627,
+       "toOsmNode": 10998061204,
+       "polyline": {
+        "points": "azwdcBwfaoX\\O",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 5.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1168756167,
+       "fromOsmNode": 10998061204,
+       "toOsmNode": 2088368503,
+       "polyline": {
+        "points": "cywdcBggaoXrAs@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Washingtonplatz",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 7.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207174,
+       "fromOsmNode": 2088368503,
+       "toOsmNode": 10998061203,
+       "polyline": {
+        "points": "ovwdcB{haoXtBkA",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 2.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1184281376,
+       "fromOsmNode": 10998061203,
+       "toOsmNode": 8098189820,
+       "polyline": {
+        "points": "yrwdcBgkaoXZQ",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 3.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 1168756166,
+       "fromOsmNode": 8098189820,
+       "toOsmNode": 2088368482,
+       "polyline": {
+        "points": "}qwdcBykaoXx@c@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 11.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 538207173,
+       "fromOsmNode": 2088368482,
+       "toOsmNode": 1454656237,
+       "polyline": {
+        "points": "cpwdcB}laoX_AsH",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 3.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 273805086,
+       "fromOsmNode": 1454656237,
+       "toOsmNode": 10039793757,
+       "polyline": {
+        "points": "crwdcBqvaoXp@A",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 89.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 15405394,
+       "fromOsmNode": 10039793757,
+       "toOsmNode": 2786208456,
+       "polyline": {
+        "points": "qpwdcBsvaoXdq@K",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "Gustav-Heinemann-Brücke",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 2.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 50071662,
+       "fromOsmNode": 2786208456,
+       "toOsmNode": 431077908,
+       "polyline": {
+        "points": "k~udcB_waoXb@A",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 92.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 4395332,
+       "fromOsmNode": 431077908,
+       "toOsmNode": 4418601297,
+       "polyline": {
+        "points": "g}udcBawaoX}BaOeAaKu@_MUcLIcJCaO",
+        "precision": 6,
+        "length": 7
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "STAIRS",
+       "distance": 3.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 444376080,
+       "fromOsmNode": 4418601297,
+       "toOsmNode": 4418601298,
+       "polyline": {
+        "points": "efvdcBoidoXs@B",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 1.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 444376079,
+       "fromOsmNode": 4418601298,
+       "toOsmNode": 4418600688,
+       "polyline": {
+        "points": "ygvdcBkidoX?`@",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "STAIRS",
+       "distance": 9.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 37065572,
+       "fromOsmNode": 4418600688,
+       "toOsmNode": 2786208487,
+       "polyline": {
+        "points": "ygvdcBihdoX?zF",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 6.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "osmWay": 444376075,
+       "fromOsmNode": 2786208487,
+       "toOsmNode": 431076285,
+       "polyline": {
+        "points": "ygvdcBm`doXmBF",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      },
+      {
+       "relativeDirection": "CONTINUE",
+       "distance": 38.0,
+       "fromLevel": 0.0,
+       "toLevel": 0.0,
+       "fromOsmNode": 431076285,
+       "polyline": {
+        "points": "gkvdcBe`doX@eC",
+        "precision": 6,
+        "length": 2
+       },
+       "streetName": "",
+       "exit": "",
+       "stayOn": false,
+       "area": false,
+       "toll": false,
+       "elevationUp": 0,
+       "elevationDown": 0
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "itineraries": [],
+ "previousPageCursor": "",
+ "nextPageCursor": ""
+}

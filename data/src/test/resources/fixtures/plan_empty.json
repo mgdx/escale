@@ -1,0 +1,20 @@
+{
+ "requestParameters": {},
+ "debugOutput": {},
+ "from": {
+  "name": "",
+  "lat": 52.5251,
+  "lon": 13.3694,
+  "vertexType": "NORMAL"
+ },
+ "to": {
+  "name": "",
+  "lat": 52.5219,
+  "lon": 13.4132,
+  "vertexType": "NORMAL"
+ },
+ "direct": [],
+ "itineraries": [],
+ "previousPageCursor": "",
+ "nextPageCursor": ""
+}
