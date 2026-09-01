@@ -213,13 +213,17 @@ class ServerSettingsViewModel(
       askCleartextConsent(target, PendingCleartextAction.SAVE)
       return
     }
+    // Sans test dans cette session, le drapeau des tuiles relevé la dernière fois reste vrai : le
+    // perdre priverait la carte de son fond sans raison (SPEC.md § 5.7).
+    val known = state.knownServers.firstOrNull { it.baseUrl == target }
+    val hasTiles = if (state.connectionTest.finished) {
+      state.connectionTest.tiles == CheckStepState.PASSED
+    } else {
+      known?.hasTiles == true
+    }
     _uiState.update {
       it.copy(
-        dialog = ServerDialog.SwitchEffects(
-          baseUrl = target,
-          hasTiles = it.connectionTest.tiles == CheckStepState.PASSED,
-          untested = untested,
-        ),
+        dialog = ServerDialog.SwitchEffects(baseUrl = target, hasTiles = hasTiles, untested = untested),
       )
     }
   }
