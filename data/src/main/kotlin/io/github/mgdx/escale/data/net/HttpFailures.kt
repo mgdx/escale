@@ -7,6 +7,7 @@ import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 import java.net.ConnectException
+import java.net.NoRouteToHostException
 import java.net.UnknownHostException
 
 /** Traduction des échecs de transport et des statuts HTTP en [EscaleError] (SPEC.md § 8). */
@@ -28,9 +29,14 @@ internal object HttpFailures {
     is HttpRequestTimeoutException, is SocketTimeoutException, is ConnectTimeoutException ->
       EscaleError.Timeout
 
-    // Le nom d'hôte ne se résout pas : dans l'immense majorité des cas, l'appareil est hors ligne.
-    is UnknownHostException -> EscaleError.NoNetwork
+    // Le nom d'hôte ne se résout pas. Ne pas trancher : la cause est aussi bien une adresse
+    // fautive qu'une absence de réseau, et deviner l'une des deux se paie par un message faux.
+    is UnknownHostException -> EscaleError.HostNotFound
 
+    // Aucune route vers l'hôte : là, c'est bien la connectivité de l'appareil qui manque.
+    is NoRouteToHostException -> EscaleError.NoNetwork
+
+    // L'hôte existe et répond, mais refuse la connexion : c'est le serveur qui est en cause.
     is ConnectException -> EscaleError.ServerUnreachable(statusCode = null)
 
     is SerializationException -> EscaleError.Unknown(cause = "SerializationException")

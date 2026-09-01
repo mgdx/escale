@@ -116,9 +116,25 @@ class MotisClientTest {
 
   @Test
   fun `une panne de transport devient une erreur, jamais une exception`() = runTest {
-    val engine = MockEngine { throw java.net.UnknownHostException("exemple.org") }
+    val engine = MockEngine { throw java.net.NoRouteToHostException("reseau injoignable") }
     val outcome = MotisClient(versionName = "1.0.0", engine = engine).use { it.health(baseUrl) }
     assertEquals(EscaleError.NoNetwork, (outcome as Outcome.Failure).error)
+  }
+
+  @Test
+  fun `un hote inexistant n est pas annonce comme une panne de reseau`() = runTest {
+    // Anomalie A1 : saisir « example.invalid » dans l'écran « Serveur MOTIS » affichait
+    // « Pas de connexion réseau » alors que le Wi-Fi fonctionnait.
+    val engine = MockEngine { throw java.net.UnknownHostException("hote inconnu") }
+    val outcome = MotisClient(versionName = "1.0.0", engine = engine).use { it.health(baseUrl) }
+    assertEquals(EscaleError.HostNotFound, (outcome as Outcome.Failure).error)
+  }
+
+  @Test
+  fun `un serveur qui refuse la connexion se distingue d un hote introuvable`() = runTest {
+    val engine = MockEngine { throw java.net.ConnectException("connexion refusee") }
+    val outcome = MotisClient(versionName = "1.0.0", engine = engine).use { it.health(baseUrl) }
+    assertEquals(EscaleError.ServerUnreachable(statusCode = null), (outcome as Outcome.Failure).error)
   }
 
   @Test

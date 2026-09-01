@@ -149,13 +149,22 @@ class GeocodeApiTest {
     assertEquals(EscaleError.ServerUnreachable(500), (outcome as Outcome.Failure).error)
   }
 
+  // Hote introuvable et absence de reseau sont deux pannes distinctes (SPEC.md § 8).
+  @Test
+  fun `un hote introuvable devient une erreur, jamais une exception`() = runTest {
+    assertEquals(EscaleError.HostNotFound, erreurDe { throw java.net.UnknownHostException("x") })
+  }
+
   @Test
   fun `l absence de reseau devient une erreur, jamais une exception`() = runTest {
-    val engine = MockEngine { throw java.net.UnknownHostException("exemple.org") }
-    val outcome = GeocodeApi(versionName = "1.0.0", engine = engine).use {
+    assertEquals(EscaleError.NoNetwork, erreurDe { throw java.net.NoRouteToHostException("x") })
+  }
+
+  private suspend fun erreurDe(panne: () -> Nothing): EscaleError {
+    val outcome = GeocodeApi(versionName = "1.0.0", engine = MockEngine { panne() }).use {
       it.geocode(baseUrl, "Gare", bias = null, language = null, limit = 10)
     }
-    assertEquals(EscaleError.NoNetwork, (outcome as Outcome.Failure).error)
+    return (outcome as Outcome.Failure).error
   }
 
   @Test

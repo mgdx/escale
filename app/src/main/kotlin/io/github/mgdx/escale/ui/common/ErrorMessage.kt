@@ -30,6 +30,10 @@ import io.github.mgdx.escale.ui.theme.EscaleTheme
 fun EscaleError.asMessage(): String = when (this) {
   EscaleError.NoNetwork -> stringResource(R.string.error_no_network)
 
+  // Libellé provisoire : la chaîne exacte (« serveur introuvable : vérifiez l'adresse ou votre
+  // connexion ») appartient au lot d'interface, qui possède strings.xml.
+  EscaleError.HostNotFound -> stringResource(R.string.error_server_unreachable)
+
   EscaleError.Timeout -> stringResource(R.string.error_timeout)
 
   is EscaleError.ServerUnreachable -> stringResource(R.string.error_server_unreachable)
@@ -38,6 +42,10 @@ fun EscaleError.asMessage(): String = when (this) {
 
   // Le serveur donne parfois un message exploitable ; sinon on reste générique.
   is EscaleError.BadRequest -> serverMessage ?: stringResource(R.string.error_unknown)
+
+  // Une requête supplantée n'est jamais montrée : l'appelant l'ignore et attend le résultat plus
+  // récent. Cette branche n'est là que pour garder le `when` exhaustif.
+  EscaleError.Superseded -> stringResource(R.string.error_unknown)
 
   is EscaleError.Unknown -> stringResource(R.string.error_unknown)
 }
