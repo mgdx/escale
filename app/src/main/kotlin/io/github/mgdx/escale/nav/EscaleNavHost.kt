@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.mgdx.escale.ui.about.AboutRoute
 import io.github.mgdx.escale.ui.about.AboutScreen
+import io.github.mgdx.escale.ui.about.LicenseRoute
+import io.github.mgdx.escale.ui.about.LicenseScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
 import io.github.mgdx.escale.ui.home.HomeScreen
 import io.github.mgdx.escale.ui.server.ServerSettingsRoute
@@ -37,7 +39,13 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
       ServerSettingsScreen(onBack = navController::popBackStack)
     }
     composable<AboutRoute> {
-      AboutScreen(onBack = navController::popBackStack)
+      AboutScreen(
+        onBack = navController::popBackStack,
+        onOpenLicense = { navController.navigate(LicenseRoute) },
+      )
+    }
+    composable<LicenseRoute> {
+      LicenseScreen(onBack = navController::popBackStack)
     }
   }
 }
