@@ -1,6 +1,8 @@
 package io.github.mgdx.escale.ui.server
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -29,20 +31,36 @@ import java.time.Instant
  *   seulement avant l'enregistrement.
  *
  * L'état vit ici en entier : la rotation et le retour depuis l'arrière-plan le retrouvent intact.
+ * La saisie, elle, passe par [SavedStateHandle] : c'est le seul état qu'Android restitue après
+ * avoir tué le processus en arrière-plan, et le champ perdait sinon une adresse tapée à la main.
  */
 class ServerSettingsViewModel(
   private val serverRepository: ServerRepository,
   private val cleartextConsentStore: CleartextConsentStore,
+  private val savedState: SavedStateHandle,
 ) : ViewModel() {
 
-  private val _uiState = MutableStateFlow(ServerSettingsUiState())
+  private val _uiState = MutableStateFlow(restoredState())
   val uiState: StateFlow<ServerSettingsUiState> = _uiState.asStateFlow()
 
   /** Les hôtes en clair déjà acceptés. Suivis à part : ce n'est pas une information d'écran. */
   private var consentedHosts: Set<String> = emptySet()
 
+  /**
+   * La saisie de l'usager, telle quelle, conservée par le système jusqu'à la mort du processus.
+   *
+   * Rien d'autre n'y est rangé : la normalisation se recalcule, et un résultat de test de connexion
+   * restitué des minutes plus tard serait de toute façon caduc.
+   */
+  private var savedInput: String?
+    get() = savedState[SAVED_INPUT]
+    set(value) {
+      savedState[SAVED_INPUT] = value
+    }
+
   /** Tant que l'usager n'a rien tapé, le champ recopie le serveur en service. */
-  private var inputTouched: Boolean = false
+  private val inputTouched: Boolean
+    get() = savedInput != null
 
   init {
     viewModelScope.launch {
@@ -56,7 +74,7 @@ class ServerSettingsViewModel(
 
   /** Saisie ou collage : la normalisation est calculée à chaque frappe et montrée à l'usager. */
   fun onInputChange(raw: String) {
-    inputTouched = true
+    savedInput = raw
     val normalized = ServerUrl.normalize(raw)
     _uiState.update { state ->
       state.copy(
@@ -95,7 +113,7 @@ class ServerSettingsViewModel(
       _uiState.update {
         it.copy(input = config.baseUrl, normalizedInput = config.baseUrl, inputInvalid = false)
       }
-      inputTouched = true
+      savedInput = config.baseUrl
       askCleartextConsent(config.baseUrl, PendingCleartextAction.SAVE)
       return
     }
@@ -112,7 +130,7 @@ class ServerSettingsViewModel(
         ),
       )
     }
-    inputTouched = true
+    savedInput = config.baseUrl
   }
 
   /** Suppression par balayage d'un serveur déjà utilisé (SPEC.md § 5.6.1). */
@@ -138,7 +156,7 @@ class ServerSettingsViewModel(
         ),
       )
     }
-    inputTouched = true
+    savedInput = default
   }
 
   /** L'usager a lu et accepté l'avertissement sur le trafic en clair. */
@@ -177,6 +195,20 @@ class ServerSettingsViewModel(
 
   fun onDismissDialog() {
     _uiState.update { it.copy(dialog = null) }
+  }
+
+  /**
+   * L'état de départ : vierge au premier affichage, et repeuplé de la saisie que le système a
+   * conservée quand le processus a été tué en arrière-plan.
+   */
+  private fun restoredState(): ServerSettingsUiState {
+    val restored = savedState.get<String>(SAVED_INPUT) ?: return ServerSettingsUiState()
+    val normalized = ServerUrl.normalize(restored)
+    return ServerSettingsUiState(
+      input = restored,
+      normalizedInput = normalized,
+      inputInvalid = restored.isNotBlank() && normalized == null,
+    )
   }
 
   private fun onServersChanged(current: ServerConfig, known: List<ServerConfig>) {
@@ -257,6 +289,9 @@ class ServerSettingsViewModel(
   private fun clearCaches() = Unit
 
   companion object {
+    /** Clé de la saisie dans l'état sauvegardé. */
+    private const val SAVED_INPUT = "input"
+
     private val RUNNING_TEST = ConnectionTest(
       reachable = CheckStepState.RUNNING,
       apiVersion = CheckStepState.RUNNING,
@@ -273,7 +308,11 @@ class ServerSettingsViewModel(
     /** Fabrique propre à ce ViewModel (docs/architecture.md § 3, règle 3). */
     fun factory(container: AppContainer) = viewModelFactory {
       initializer {
-        ServerSettingsViewModel(container.serverRepository, container.cleartextConsentStore)
+        ServerSettingsViewModel(
+          container.serverRepository,
+          container.cleartextConsentStore,
+          createSavedStateHandle(),
+        )
       }
     }
   }

@@ -10,11 +10,15 @@
 
   <!-- Actions génériques, réutilisables par tous les écrans. -->
   <string name="action_back">Back</string>
+  <string name="action_close">Close</string>
   <string name="action_settings">Settings</string>
   <string name="action_retry">Try again</string>
 
   <!-- Erreurs générales (SPEC.md § 8). -->
   <string name="error_no_network">No network connection.</string>
+  <!-- Cas ambigu : la résolution du nom d'hôte échoue aussi bien sur une adresse fautive
+       que sur un appareil hors ligne. Le libellé couvre les deux hypothèses (SPEC.md § 8). -->
+  <string name="error_host_not_found">Server not found. Check the address or your connection.</string>
   <string name="error_timeout">The server took too long to answer.</string>
   <string name="error_server_unreachable">The server is not responding.</string>
   <string name="error_api_version_too_old">This server runs a version of MOTIS that is too old for Escale.</string>

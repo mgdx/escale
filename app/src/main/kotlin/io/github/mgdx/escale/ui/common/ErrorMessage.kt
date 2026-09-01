@@ -21,33 +21,44 @@ import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 
 /**
- * Le message à montrer pour un échec (SPEC.md § 8).
+ * La ressource de libellé d'un échec (SPEC.md § 8).
  *
- * Chaque cas a son propre libellé : l'usager doit pouvoir distinguer « le serveur ne répond pas »
- * d'« aucun trajet trouvé », et un serveur trop ancien d'une panne de réseau.
+ * Chaque cas que l'usager doit pouvoir distinguer a **sa propre** chaîne : « le serveur ne répond
+ * pas » ne se confond ni avec « aucun trajet trouvé », ni avec une panne de réseau, ni avec un
+ * serveur trop ancien.
+ *
+ * C'est une fonction ordinaire, hors composition : la correspondance entre cas d'erreur et libellé
+ * est ainsi vérifiable par un test JVM, sans passer par le rendu.
  */
-@Composable
-fun EscaleError.asMessage(): String = when (this) {
-  EscaleError.NoNetwork -> stringResource(R.string.error_no_network)
+internal fun EscaleError.messageRes(): Int = when (this) {
+  EscaleError.NoNetwork -> R.string.error_no_network
 
-  // Libellé provisoire : la chaîne exacte (« serveur introuvable : vérifiez l'adresse ou votre
-  // connexion ») appartient au lot d'interface, qui possède strings.xml.
-  EscaleError.HostNotFound -> stringResource(R.string.error_server_unreachable)
+  // Le nom d'hôte ne se résout pas. La cause est aussi bien une adresse fautive qu'un appareil
+  // hors ligne : le libellé nomme les deux hypothèses plutôt que d'en choisir une fausse.
+  EscaleError.HostNotFound -> R.string.error_host_not_found
 
-  EscaleError.Timeout -> stringResource(R.string.error_timeout)
+  EscaleError.Timeout -> R.string.error_timeout
 
-  is EscaleError.ServerUnreachable -> stringResource(R.string.error_server_unreachable)
+  is EscaleError.ServerUnreachable -> R.string.error_server_unreachable
 
-  is EscaleError.ApiVersionTooOld -> stringResource(R.string.error_api_version_too_old)
+  is EscaleError.ApiVersionTooOld -> R.string.error_api_version_too_old
 
-  // Le serveur donne parfois un message exploitable ; sinon on reste générique.
-  is EscaleError.BadRequest -> serverMessage ?: stringResource(R.string.error_unknown)
+  // Repli quand le serveur n'a joint aucun message exploitable à son refus.
+  is EscaleError.BadRequest -> R.string.error_unknown
 
   // Une requête supplantée n'est jamais montrée : l'appelant l'ignore et attend le résultat plus
   // récent. Cette branche n'est là que pour garder le `when` exhaustif.
-  EscaleError.Superseded -> stringResource(R.string.error_unknown)
+  EscaleError.Superseded -> R.string.error_unknown
 
-  is EscaleError.Unknown -> stringResource(R.string.error_unknown)
+  is EscaleError.Unknown -> R.string.error_unknown
+}
+
+/** Le message à montrer pour un échec (SPEC.md § 8). */
+@Composable
+fun EscaleError.asMessage(): String {
+  // Le serveur donne parfois un message exploitable ; sinon on reste sur le libellé générique.
+  val serverMessage = (this as? EscaleError.BadRequest)?.serverMessage
+  return serverMessage ?: stringResource(messageRes())
 }
 
 /**

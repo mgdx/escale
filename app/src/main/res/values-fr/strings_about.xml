@@ -4,7 +4,9 @@
   <string name="about_version">Version %1$s</string>
   <string name="about_license_summary">Escale est un logiciel libre, publié sous licence publique générale GNU, version 3 ou ultérieure. Vous pouvez l\'utiliser, l\'étudier, le partager et l\'améliorer.</string>
   <string name="about_license_link">Licence</string>
-  <string name="about_license_link_subtitle">Lire le texte intégral de la GNU GPL v3</string>
+  <string name="about_license_link_subtitle">Lire le texte intégral de la GNU GPL v3, inclus dans l\'application</string>
+  <string name="about_license_full_title">Licence publique générale GNU v3</string>
+  <string name="about_license_online">La licence sur gnu.org</string>
   <string name="about_repository">Code source</string>
   <string name="about_repository_subtitle">github.com/mgdx/escale</string>
 
