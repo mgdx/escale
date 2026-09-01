@@ -1,8 +1,37 @@
+import com.android.build.api.variant.FilterConfiguration
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.kotlin.serialization)
 }
+
+// `versionCode` de base, celui de l'application. Il s'incrémente à chaque publication, et lui seul.
+val baseVersionCode = 1
+
+// Convention de `versionCode` par ABI — **à ne pas changer une fois l'application publiée.**
+//
+// Android et F-Droid exigent que deux APK d'une même application n'aient pas le même `versionCode`
+// sur des ABI différentes : c'est ce nombre, et lui seul, qui départage les fichiers candidats.
+// Le `versionCode` publié vaut donc `rang de l'ABI × 1000 + baseVersionCode` — 1001, 2001, 3001 et
+// 4001 pour la version 1.
+//
+// Les rangs ne sont pas arbitraires : **une ABI doit avoir un rang supérieur à toutes celles qu'un
+// appareil qui la porte sait également exécuter**, sans quoi l'appareil installerait la mauvaise.
+// Un appareil `arm64-v8a` exécute aussi `armeabi-v7a`, un appareil `x86_64` exécute aussi `x86`, et
+// un appareil x86 exécute souvent `armeabi-v7a` par traduction : d'où cet ordre, qui est celui
+// recommandé par la documentation Android.
+//
+// Le multiplicateur 1000 laisse 999 publications avant que deux rangs se rejoignent, et garde le
+// `versionCode` lisible : le rang se lit à gauche, la version de l'application à droite.
+val abiVersionCodeRanks = mapOf(
+  "armeabi-v7a" to 1,
+  "arm64-v8a" to 2,
+  "x86" to 3,
+  "x86_64" to 4,
+)
+
+val abiVersionCodeMultiplier = 1000
 
 android {
   namespace = "io.github.mgdx.escale"
@@ -15,7 +44,7 @@ android {
     applicationId = "io.github.mgdx.escale"
     minSdk = 26
     targetSdk = 37
-    versionCode = 1
+    versionCode = baseVersionCode
     versionName = "1.0.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -26,6 +55,20 @@ android {
       optimization {
         enable = false
       }
+    }
+  }
+
+  // Un APK par architecture (SPEC.md § 2 : moins de 15 Mo). Les bibliothèques natives de MapLibre
+  // pèsent à elles seules une quarantaine de mégaoctets une fois les quatre architectures réunies ;
+  // aucun appareil n'en exécute plus d'une. F-Droid sert à chaque appareil le fichier qui lui
+  // convient, et les variantes x86 restent produites pour les émulateurs.
+  splits {
+    abi {
+      isEnable = true
+      reset()
+      include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+      // Pas d'APK universel : il annulerait tout le gain, et personne ne l'installerait.
+      isUniversalApk = false
     }
   }
 
@@ -48,6 +91,21 @@ android {
     // `checkDependencies` n'est pas activé : lint ne sait pas analyser un module Kotlin/JVM comme
     // :core et le signale par un avertissement à chaque exécution. Chaque module Android porte donc
     // sa propre tâche lint, et :core est couvert par ktlint, detekt et ses tests JVM.
+  }
+}
+
+// Applique la convention ci-dessus à chaque APK produit. La valeur est posée sur la sortie, jamais
+// sur `defaultConfig` : `defaultConfig.versionCode` reste le numéro de version de l'application.
+androidComponents {
+  onVariants { variant ->
+    variant.outputs.forEach { output ->
+      val abi = output.filters
+        .firstOrNull { it.filterType == FilterConfiguration.FilterType.ABI }
+        ?.identifier
+        ?: return@forEach
+      val rank = abiVersionCodeRanks[abi] ?: error("ABI sans rang de versionCode : $abi")
+      output.versionCode.set(rank * abiVersionCodeMultiplier + baseVersionCode)
+    }
   }
 }
 
