@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import io.github.mgdx.escale.ui.about.AboutRoute
+import io.github.mgdx.escale.ui.about.AboutScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
 import io.github.mgdx.escale.ui.home.HomeScreen
 import io.github.mgdx.escale.ui.server.ServerSettingsRoute
@@ -28,10 +30,14 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
       SettingsScreen(
         onBack = navController::popBackStack,
         onOpenServerSettings = { navController.navigate(ServerSettingsRoute) },
+        onOpenAbout = { navController.navigate(AboutRoute) },
       )
     }
     composable<ServerSettingsRoute> {
       ServerSettingsScreen(onBack = navController::popBackStack)
+    }
+    composable<AboutRoute> {
+      AboutScreen(onBack = navController::popBackStack)
     }
   }
 }

@@ -13,6 +13,8 @@ import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
+import io.github.mgdx.escale.ui.server.CleartextConsentStore
+import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import java.io.File
 
 /**
@@ -59,6 +61,16 @@ class AppContainer(context: Context) {
       ),
       serverRepository = serverRepository,
     )
+  }
+
+  /**
+   * Consentement au trafic en clair, mémorisé une fois par hôte (docs/architecture.md § 11.1).
+   *
+   * C'est lui, et non la `network_security_config`, qui garantit qu'aucune requête `http://` ne part
+   * sans un accord explicite de l'usager.
+   */
+  val cleartextConsentStore: CleartextConsentStore by lazy {
+    DataStoreCleartextConsentStore(preferences)
   }
 
   private companion object {

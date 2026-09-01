@@ -3,7 +3,48 @@
   <string name="settings_title">Réglages</string>
   <string name="settings_server_title">Serveur MOTIS</string>
 
+  <string name="settings_action_cancel">Annuler</string>
+  <string name="settings_action_opens_externally">Ouvre une autre application</string>
+
   <string name="server_settings_title">Serveur MOTIS</string>
   <string name="server_settings_current_label">Serveur en service</string>
-  <string name="server_settings_public_instance_notice">Le serveur par défaut est une instance publique tenue par des bénévoles. Merci d\'en faire un usage mesuré.</string>
+  <string name="server_settings_url_label">Adresse du serveur</string>
+  <string name="server_settings_url_hint">Saisissez la racine du serveur. Escale y ajoute lui-même les chemins de l\'API et des tuiles.</string>
+  <string name="server_settings_url_normalized">Sera enregistré sous la forme %1$s</string>
+  <string name="server_settings_url_invalid">Cette adresse de serveur n\'est pas exploitable.</string>
+  <string name="server_settings_paste">Coller l\'adresse depuis le presse-papiers</string>
+  <string name="server_settings_test">Tester la connexion</string>
+  <string name="server_settings_save">Utiliser ce serveur</string>
+  <string name="server_settings_use_anyway">Utiliser quand même</string>
+  <string name="server_settings_reset_default">Rétablir le serveur par défaut</string>
+
+  <string name="server_settings_test_results">Test de connexion</string>
+  <string name="server_settings_check_reachable">Serveur joignable</string>
+  <string name="server_settings_check_api">Version d\'API compatible</string>
+  <string name="server_settings_check_tiles">Tuiles de carte servies</string>
+  <string name="server_settings_step_idle">Pas encore testé</string>
+  <string name="server_settings_step_running">En cours…</string>
+  <string name="server_settings_step_passed">Réussi</string>
+  <string name="server_settings_step_failed">Échec</string>
+  <string name="server_settings_step_absent">Non disponible</string>
+  <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable : la carte sera simplement sans fond.</string>
+
+  <string name="server_settings_known_title">Serveurs déjà utilisés</string>
+  <string name="server_settings_known_empty">Aucun serveur n\'a encore été utilisé.</string>
+  <string name="server_settings_known_in_use">En service</string>
+  <string name="server_settings_known_swipe_hint">Balayez un serveur sur le côté pour le retirer de la liste. Touchez-le pour basculer dessus.</string>
+  <string name="server_settings_forget">Retirer</string>
+
+  <string name="server_settings_cleartext_title">Connexion en clair</string>
+  <string name="server_settings_cleartext_message">%1$s est contacté en http://, sans chiffrement. Toute personne présente sur le réseau peut lire ou modifier ce qu\'Escale envoie et reçoit, y compris les lieux que vous recherchez. N\'acceptez que pour un serveur situé sur un réseau de confiance.</string>
+  <string name="server_settings_cleartext_accept">Accepter et continuer</string>
+
+  <string name="server_settings_switch_title">Changer de serveur ?</string>
+  <string name="server_settings_switch_message">Escale utilisera %1$s. Les caches de résultats, de géocodage et de tuiles sont vidés.</string>
+  <string name="server_settings_switch_favorites">Vos favoris et votre historique sont conservés. Un arrêt enregistré en favori peut ne pas être reconnu par le nouveau serveur : il reste alors affiché avec ses coordonnées et un signalement discret, et n\'est jamais supprimé.</string>
+  <string name="server_settings_switch_untested">Ce serveur n\'a pas passé le test de connexion. Les recherches risquent de ne pas fonctionner.</string>
+  <string name="server_settings_switch_confirm">Changer de serveur</string>
+
+  <string name="server_settings_public_instance_notice">Le serveur par défaut, api.transitous.org, est une instance publique tenue par des bénévoles, à leurs frais. Merci d\'en faire un usage mesuré.</string>
+  <string name="server_settings_policy_link">Politique d\'usage de Transitous</string>
 </resources>

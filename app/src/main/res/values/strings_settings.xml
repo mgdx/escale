@@ -4,7 +4,60 @@
   <string name="settings_title">Settings</string>
   <string name="settings_server_title">MOTIS server</string>
 
+  <!--
+    Actions partagées par les écrans de réglages. Elles vivent ici plutôt que dans strings.xml pour
+    ne pas entrer en collision avec les actions génériques d'un autre lot
+    (docs/architecture.md § 3, règle 2).
+  -->
+  <string name="settings_action_cancel">Cancel</string>
+  <string name="settings_action_opens_externally">Opens in another app</string>
+
+  <!-- Écran « Serveur MOTIS » (SPEC.md § 5.6.1). -->
   <string name="server_settings_title">MOTIS server</string>
   <string name="server_settings_current_label">Server in use</string>
-  <string name="server_settings_public_instance_notice">The default server is a public instance run by volunteers. Please use it sparingly.</string>
+  <string name="server_settings_url_label">Server address</string>
+  <string name="server_settings_url_hint">Enter the root address of the server. Escale appends the API and map tile paths itself.</string>
+  <string name="server_settings_url_normalized">Will be saved as %1$s</string>
+  <string name="server_settings_url_invalid">This is not a usable server address.</string>
+  <string name="server_settings_paste">Paste the address from the clipboard</string>
+  <string name="server_settings_test">Test the connection</string>
+  <string name="server_settings_save">Use this server</string>
+  <string name="server_settings_use_anyway">Use anyway</string>
+  <string name="server_settings_reset_default">Restore the default server</string>
+
+  <!-- Les trois étapes du test de connexion, affichées séparément. -->
+  <string name="server_settings_test_results">Connection test</string>
+  <string name="server_settings_check_reachable">Server reachable</string>
+  <string name="server_settings_check_api">API version supported</string>
+  <string name="server_settings_check_tiles">Map tiles served</string>
+  <string name="server_settings_step_idle">Not tested yet</string>
+  <string name="server_settings_step_running">In progress…</string>
+  <string name="server_settings_step_passed">Passed</string>
+  <string name="server_settings_step_failed">Failed</string>
+  <string name="server_settings_step_absent">Not available</string>
+  <string name="server_settings_tiles_absent_notice">This server serves no map tiles. Escale remains usable: the map simply has no background.</string>
+
+  <!-- Serveurs déjà utilisés, avec suppression par balayage. -->
+  <string name="server_settings_known_title">Servers already used</string>
+  <string name="server_settings_known_empty">No server has been used yet.</string>
+  <string name="server_settings_known_in_use">In use</string>
+  <string name="server_settings_known_swipe_hint">Swipe a server sideways to remove it from the list. Tap it to switch to it.</string>
+  <string name="server_settings_forget">Remove</string>
+
+  <!-- Avertissement sur le trafic en clair (docs/architecture.md § 11.1). -->
+  <string name="server_settings_cleartext_title">Unencrypted connection</string>
+  <string name="server_settings_cleartext_message">%1$s is contacted over http://, without encryption. Anyone on the network can read or alter what Escale sends and receives, including the places you search for. Only accept this for a server on a network you trust.</string>
+  <string name="server_settings_cleartext_accept">Accept and continue</string>
+
+  <!-- Effets d'un changement de serveur, annoncés avant confirmation. -->
+  <string name="server_settings_switch_title">Change server?</string>
+  <string name="server_settings_switch_message">Escale will use %1$s. The result, geocoding and map tile caches are emptied.</string>
+  <string name="server_settings_switch_favorites">Your favourites and history are kept. A stop saved as a favourite may not be known to the new server: it stays in the list with its coordinates and a discreet warning, and is never deleted.</string>
+  <string name="server_settings_switch_untested">This server has not passed the connection test. Searches may not work.</string>
+  <string name="server_settings_switch_confirm">Change server</string>
+
+  <!-- Pied de page : la politique d'usage de l'instance publique (SPEC.md § 4.2). -->
+  <string name="server_settings_public_instance_notice">The default server, api.transitous.org, is a public instance run by volunteers at their own expense. Please use it sparingly.</string>
+  <string name="server_settings_policy_link">Transitous usage policy</string>
+  <string name="server_settings_policy_url" translatable="false">https://transitous.org/api/</string>
 </resources>
