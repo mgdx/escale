@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran d'accueil et de la carte (SPEC.md § 5.1 et § 5.7).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+-->
+<resources>
+  <!-- La carte elle-même, pour les lecteurs d'écran. -->
+  <string name="map_content_description">Map</string>
+
+  <!-- Bouton de position, trois états (SPEC.md § 5.1). Le libellé, et pas seulement la couleur,
+       distingue les états : aucune information n'est portée par la couleur seule (SPEC.md § 9). -->
+  <string name="map_locate_unknown">Show my location</string>
+  <string name="map_locate_centered">Centred on my location. Tap to follow me</string>
+  <string name="map_locate_following">Following my location. Tap to stop</string>
+
+  <!-- Permission refusée : une phrase, et le chemin vers les réglages système (SPEC.md § 5.1). -->
+  <string name="map_location_denied_title">Location unavailable</string>
+  <string name="map_location_denied_message">Escale needs the location permission to show where you are. Everything else works without it.</string>
+  <string name="map_location_denied_action">Open system settings</string>
+  <string name="map_dismiss">Close</string>
+
+  <!-- Appui long sur la carte (SPEC.md § 5.1). -->
+  <string name="map_pick_departure">Start from here</string>
+  <string name="map_pick_destination">Go to here</string>
+
+  <!-- Attribution, visible en permanence (SPEC.md § 4.2 et § 5.7). -->
+  <string name="map_attribution_short" translatable="false">© OpenStreetMap</string>
+  <string name="map_attribution_button">Map data sources</string>
+  <string name="map_attribution_title">Map data</string>
+  <string name="map_attribution_openstreetmap">© OpenStreetMap contributors</string>
+  <string name="map_attribution_openstreetmap_link">openstreetmap.org/copyright</string>
+  <string name="map_attribution_transitous">Timetables from the Transitous community</string>
+  <string name="map_attribution_transitous_link">transitous.org/sources</string>
+
+  <!-- Serveur sans tuiles : un message discret, aucun repli sur un tiers (SPEC.md § 5.7). -->
+  <string name="map_tiles_unavailable">This server provides no map background.</string>
+</resources>
