@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Couleurs propres à la carte. Elles ne viennent pas de la palette Material : ce sont les couleurs
+  cartographiques des feuilles de style de res/raw, et elles doivent leur correspondre exactement.
+-->
+<resources>
+  <!-- Fond affiché par MapLibre avant la première image, identique au `background-color` de
+       map_style_light.json : sans lui, la carte flashe en blanc au démarrage. -->
+  <color name="map_loading_background">#FFF8F4F0</color>
+</resources>
