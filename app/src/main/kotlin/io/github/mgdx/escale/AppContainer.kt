@@ -26,6 +26,7 @@ import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.map.MapStyles
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
+import io.github.mgdx.escale.ui.session.SearchSession
 import java.io.File
 
 /**
@@ -126,6 +127,16 @@ class AppContainer(context: Context) {
    * recherche (SPEC.md § 5.1). Partagé ici pour que les deux écrans n'aient pas à se connaître.
    */
   val mapSelection: MapSelection by lazy { MapSelection() }
+
+  /**
+   * La recherche en cours — départ, arrivée, heure (SPEC.md § 5.1).
+   *
+   * Elle est détenue ici parce qu'elle n'appartient à aucun des deux écrans qui s'en servent : la
+   * carte de recherche la remplit, la feuille de résultats la lit, et « dès que Départ et Arrivée
+   * sont renseignés, la recherche se lance ». Les deux lots la partagent sans se connaître
+   * (docs/architecture.md § 11.4).
+   */
+  val searchSession: SearchSession by lazy { SearchSession() }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"

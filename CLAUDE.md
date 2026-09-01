@@ -19,7 +19,7 @@ propose l'amendement de la spec dans le même commit que le code.
 ./gradlew test                     # tests JVM (:core, :data)
 ./gradlew connectedAndroidTest     # tests instrumentés (appareil branché requis)
 ./gradlew ktlintCheck detekt lint  # qualité
-./gradlew installDebug             # compiler et installer sur l'appareil branché
+./gradlew installDebug             # compiler et installer l'APK de l'ABI de l'appareil branché
 ```
 
 **Aucun avertissement n'est toléré** sur `test`, `lint`, `ktlintCheck`, `detekt`. Un avertissement
@@ -33,7 +33,13 @@ attendu à t'en servir** : rien n'est considéré comme terminé tant que ce n'e
 
 ```bash
 adb devices                                   # vérifier la présence de l'appareil
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+# L'APK est découpé par architecture (un fichier par ABI, pas d'APK universel) : il n'y a plus
+# d'app-debug.apk. `adb shell getprop ro.product.cpu.abi` dit laquelle prendre :
+adb install -r app/build/outputs/apk/debug/app-arm64-v8a-debug.apk    # téléphone 64 bits, le cas courant
+adb install -r app/build/outputs/apk/debug/app-armeabi-v7a-debug.apk  # téléphone 32 bits
+adb install -r app/build/outputs/apk/debug/app-x86_64-debug.apk       # émulateur
+adb install -r app/build/outputs/apk/debug/app-x86-debug.apk          # émulateur 32 bits
+# Au doute, `./gradlew installDebug` choisit tout seul le bon fichier.
 adb shell am start -n io.github.mgdx.escale/.MainActivity
 adb exec-out screencap -p > /tmp/ecran.png    # capture à regarder avec l'outil de lecture d'image
 adb logcat -c && adb logcat -s Escale:* AndroidRuntime:E   # journal filtré

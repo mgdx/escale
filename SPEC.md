@@ -636,6 +636,11 @@ Permissions déclarées, et aucune autre :
 - `ACCESS_COARSE_LOCATION` et `ACCESS_FINE_LOCATION`, facultatives, demandées à l'usage
 - `POST_NOTIFICATIONS`, facultative, demandée seulement à l'activation d'une première surveillance
   de trajet (§ 5.5.1)
+- `ACCESS_NETWORK_STATE`, exigée par MapLibre : son `ConnectivityReceiver` appelle
+  `getActiveNetworkInfo()` pour suspendre le téléchargement des tuiles hors ligne, et lève une
+  `SecurityException` sans elle. Permission de **niveau normal** : accordée à l'installation, sans
+  écran de consentement, elle ne donne accès qu'à l'état « connecté ou non » de l'appareil et ne
+  révèle rien sur l'usager ni sur ses déplacements.
 
 L'application doit rester entièrement utilisable si la permission de localisation est refusée.
 Aucune permission de stockage, de contacts, de démarrage automatique, de service en arrière-plan,

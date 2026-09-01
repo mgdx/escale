@@ -54,6 +54,11 @@ Rien de tout cela n'est synchronisé ni sauvegardé ailleurs que sur votre appar
 | `INTERNET` | interroger le serveur MOTIS | à l'installation, obligatoire |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | vous situer sur la carte et partir de votre position | facultatives, au premier appui sur le bouton de localisation |
 | `POST_NOTIFICATIONS` | vous prévenir avant un trajet surveillé | facultative, à l'activation de votre première surveillance |
+| `ACCESS_NETWORK_STATE` | savoir si l'appareil est connecté, pour que la carte cesse de réclamer des tuiles hors ligne | à l'installation, exigée par la bibliothèque de carte |
+
+`ACCESS_NETWORK_STATE` est une permission de niveau *normal* : elle ne vous est pas soumise et ne
+donne accès qu'au fait que l'appareil soit connecté ou non — ni le nom du réseau, ni son adresse,
+ni rien qui vous concerne.
 
 La position est lue par le `LocationManager` de la plateforme, jamais par les services de
 localisation de Google. Aucune permission de stockage, de contacts, de démarrage automatique, de

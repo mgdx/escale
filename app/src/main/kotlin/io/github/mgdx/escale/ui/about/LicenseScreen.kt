@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,14 +22,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 import kotlinx.coroutines.Dispatchers
@@ -41,27 +43,21 @@ import kotlinx.coroutines.withContext
  * signal pour un relecteur F-Droid. Le texte embarqué ne dépend d'aucun tiers et marche hors ligne.
  * Le lien vers gnu.org reste proposé, en complément.
  *
- * **Pourquoi un dialogue plein écran plutôt qu'une destination de navigation ?** L'écran « À
- * propos » est le seul point d'entrée de ce texte, et il n'a pas d'état à conserver : lui ajouter
- * une route ferait porter au graphe de navigation une destination sans vie propre.
+ * **Pourquoi une destination de navigation et non un dialogue ?** Voir [LicenseRoute] : un `Dialog`
+ * plein écran ne consomme pas les encarts système et ne se comporte pas comme un écran vis-à-vis
+ * du retour arrière matériel.
  *
  * Le fichier fait plusieurs dizaines de milliers de caractères : il est lu **hors du fil
  * principal**, et affiché par paragraphes dans une liste paresseuse, jamais dans un unique `Text`.
  */
 @Composable
-internal fun LicenseDialog(onDismiss: () -> Unit) {
-  Dialog(
-    onDismissRequest = onDismiss,
-    // Un texte de licence n'a rien à faire dans la largeur réduite d'une boîte de dialogue.
-    properties = DialogProperties(usePlatformDefaultWidth = false),
-  ) {
-    LicenseContent(onClose = onDismiss)
-  }
+fun LicenseScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+  LicenseContent(onBack = onBack, modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun LicenseContent(onClose: () -> Unit, modifier: Modifier = Modifier, paragraphs: List<String>? = null) {
+internal fun LicenseContent(onBack: () -> Unit, modifier: Modifier = Modifier, paragraphs: List<String>? = null) {
   val loaded = paragraphs ?: rememberLicenseParagraphs()
   Scaffold(
     modifier = modifier.fillMaxSize(),
@@ -69,10 +65,10 @@ internal fun LicenseContent(onClose: () -> Unit, modifier: Modifier = Modifier, 
       TopAppBar(
         title = { Text(text = stringResource(R.string.about_license_full_title)) },
         navigationIcon = {
-          IconButton(onClick = onClose) {
+          IconButton(onClick = onBack) {
             Icon(
               painter = painterResource(R.drawable.ic_arrow_back),
-              contentDescription = stringResource(R.string.action_close),
+              contentDescription = stringResource(R.string.action_back),
             )
           }
         },
@@ -83,9 +79,12 @@ internal fun LicenseContent(onClose: () -> Unit, modifier: Modifier = Modifier, 
       LoadingIndicator(modifier = Modifier.padding(innerPadding))
     } else {
       LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(innerPadding),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize(),
+        // Les encarts système entrent dans le `contentPadding` et non dans un `padding` de la
+        // liste : le texte défile alors *sous* la barre de navigation, comme partout ailleurs dans
+        // l'application, sans que le dernier paragraphe s'y trouve caché.
+        contentPadding = innerPadding.plus(horizontal = TextMargin, vertical = TextGap),
+        verticalArrangement = Arrangement.spacedBy(TextGap),
       ) {
         items(count = loaded.size) { index ->
           Text(
@@ -99,6 +98,18 @@ internal fun LicenseContent(onClose: () -> Unit, modifier: Modifier = Modifier, 
       }
     }
   }
+}
+
+/** Ajoute une marge de texte aux encarts déjà calculés par le `Scaffold`. */
+@Composable
+private fun PaddingValues.plus(horizontal: Dp, vertical: Dp): PaddingValues {
+  val direction = LocalLayoutDirection.current
+  return PaddingValues(
+    start = calculateStartPadding(direction) + horizontal,
+    top = calculateTopPadding() + vertical,
+    end = calculateEndPadding(direction) + horizontal,
+    bottom = calculateBottomPadding() + vertical,
+  )
 }
 
 @Composable
@@ -136,6 +147,12 @@ private fun rememberLicenseParagraphs(): List<String>? {
  */
 private val PARAGRAPH_SEPARATOR = Regex("\\n[ \\t]*\\n")
 
+/** Marge latérale du texte, celle des autres écrans de réglages. */
+private val TextMargin: Dp = 24.dp
+
+/** Écart entre deux paragraphes, repris en marge haute et basse de la liste. */
+private val TextGap: Dp = 12.dp
+
 @Preview(showBackground = true, name = "Licence, thème clair")
 @Preview(
   showBackground = true,
@@ -146,7 +163,7 @@ private val PARAGRAPH_SEPARATOR = Regex("\\n[ \\t]*\\n")
 private fun LicenseContentPreview() {
   EscaleTheme(dynamicColor = false) {
     LicenseContent(
-      onClose = {},
+      onBack = {},
       paragraphs = listOf(
         "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007",
         " Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>",
