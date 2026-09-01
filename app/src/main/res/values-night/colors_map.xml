@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Identique au `background-color` de map_style_dark.json. -->
+  <color name="map_loading_background">#FF20242A</color>
+</resources>

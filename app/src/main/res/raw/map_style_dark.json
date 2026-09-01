@@ -1,0 +1,1102 @@
+{
+  "version": 8,
+  "name": "Escale sombre",
+  "sources": {
+    "motis": {
+      "type": "vector",
+      "tiles": [
+        "__BASE_URL__/tiles/{z}/{x}/{y}.mvt"
+      ],
+      "maxzoom": 20,
+      "attribution": "© OpenStreetMap"
+    }
+  },
+  "glyphs": "__BASE_URL__/glyphs/{fontstack}/{range}.pbf",
+  "sprite": "__BASE_URL__/sprites/basics/sprites",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#20242a"
+      }
+    },
+    {
+      "id": "coastline",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "coastline",
+      "paint": {
+        "fill-color": "#16222e"
+      }
+    },
+    {
+      "id": "land-urban",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "residential",
+          "industrial",
+          "commercial",
+          "retail",
+          "railway",
+          "landfill",
+          "brownfield",
+          "greenfield",
+          "quarry",
+          "garages",
+          "farmyard",
+          "farmland",
+          "public_transport"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#262a30"
+      }
+    },
+    {
+      "id": "land-green",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "forest",
+          "scrub",
+          "grass",
+          "meadow",
+          "grassland",
+          "heath"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#1d2a1f"
+      }
+    },
+    {
+      "id": "land-park",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "park",
+          "garden",
+          "village_green",
+          "recreation_ground",
+          "playground",
+          "golf_course",
+          "miniature_golf",
+          "allotments",
+          "greenhouse_horticulture",
+          "orchard",
+          "vineyard",
+          "plant_nursery"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#1f2f22"
+      }
+    },
+    {
+      "id": "land-cemetery",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "cemetery",
+          "grave_yard"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#252b23"
+      }
+    },
+    {
+      "id": "land-sand",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "sand",
+          "beach",
+          "bare_rock",
+          "scree",
+          "shingle"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#2c2a24"
+      }
+    },
+    {
+      "id": "land-wetland",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "land",
+      "filter": [
+        "match",
+        [
+          "get",
+          "kind"
+        ],
+        [
+          "swamp",
+          "bog",
+          "string_bog",
+          "wet_meadow",
+          "marsh"
+        ],
+        true,
+        false
+      ],
+      "paint": {
+        "fill-color": "#1c2a29"
+      }
+    },
+    {
+      "id": "water-polygons",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "water_polygons",
+      "paint": {
+        "fill-color": "#16222e"
+      }
+    },
+    {
+      "id": "water-lines",
+      "type": "line",
+      "source": "motis",
+      "source-layer": "water_lines",
+      "minzoom": 9,
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#1d2c3a",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0.6,
+          13,
+          1.4,
+          17,
+          4
+        ]
+      }
+    },
+    {
+      "id": "sites",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "sites",
+      "minzoom": 13,
+      "filter": [
+        "!=",
+        [
+          "get",
+          "kind"
+        ],
+        "construction"
+      ],
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "hospital",
+          "#a04040",
+          "sports_center",
+          "#22301f",
+          "#282c33"
+        ],
+        "fill-opacity": [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "hospital",
+          0.1,
+          0.7
+        ]
+      }
+    },
+    {
+      "id": "street-polygons",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "street_polygons",
+      "minzoom": 13,
+      "paint": {
+        "fill-color": "#2a2f36"
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "motis",
+      "source-layer": "buildings",
+      "minzoom": 14,
+      "paint": {
+        "fill-color": "#2b2f36",
+        "fill-outline-color": "#343943",
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0.5,
+          16,
+          1
+        ]
+      }
+    },
+    {
+      "id": "roads",
+      "type": "line",
+      "source": "motis",
+      "source-layer": "streets",
+      "minzoom": 5,
+      "filter": [
+        "!=",
+        [
+          "get",
+          "rail"
+        ],
+        true
+      ],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "motorway",
+          "#5c5145",
+          "trunk",
+          "#514840",
+          [
+            "primary",
+            "secondary"
+          ],
+          "#4b463c",
+          "tertiary",
+          "#43413c",
+          [
+            "residential",
+            "living_street",
+            "unclassified",
+            "pedestrian",
+            "busway"
+          ],
+          "#3c4046",
+          "#33373d"
+        ],
+        "line-opacity": [
+          "case",
+          [
+            "==",
+            [
+              "get",
+              "tunnel"
+            ],
+            true
+          ],
+          0.5,
+          1
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          [
+            "match",
+            [
+              "get",
+              "kind"
+            ],
+            "motorway",
+            1.0,
+            "trunk",
+            0.8,
+            [
+              "primary",
+              "secondary"
+            ],
+            0.5,
+            "tertiary",
+            0.3,
+            [
+              "residential",
+              "living_street",
+              "unclassified",
+              "pedestrian",
+              "busway"
+            ],
+            0.2,
+            0.2
+          ],
+          10,
+          [
+            "match",
+            [
+              "get",
+              "kind"
+            ],
+            "motorway",
+            2.2,
+            "trunk",
+            1.8,
+            [
+              "primary",
+              "secondary"
+            ],
+            1.3,
+            "tertiary",
+            0.9,
+            [
+              "residential",
+              "living_street",
+              "unclassified",
+              "pedestrian",
+              "busway"
+            ],
+            0.5,
+            0.4
+          ],
+          14,
+          [
+            "match",
+            [
+              "get",
+              "kind"
+            ],
+            "motorway",
+            5.0,
+            "trunk",
+            4.2,
+            [
+              "primary",
+              "secondary"
+            ],
+            3.4,
+            "tertiary",
+            2.6,
+            [
+              "residential",
+              "living_street",
+              "unclassified",
+              "pedestrian",
+              "busway"
+            ],
+            2.0,
+            1.3
+          ],
+          18,
+          [
+            "match",
+            [
+              "get",
+              "kind"
+            ],
+            "motorway",
+            20.0,
+            "trunk",
+            17.0,
+            [
+              "primary",
+              "secondary"
+            ],
+            14.0,
+            "tertiary",
+            11.0,
+            [
+              "residential",
+              "living_street",
+              "unclassified",
+              "pedestrian",
+              "busway"
+            ],
+            8.0,
+            5.0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rails",
+      "type": "line",
+      "source": "motis",
+      "source-layer": "streets",
+      "minzoom": 8,
+      "filter": [
+        "==",
+        [
+          "get",
+          "rail"
+        ],
+        true
+      ],
+      "paint": {
+        "line-color": "#41474f",
+        "line-opacity": [
+          "case",
+          [
+            "==",
+            [
+              "get",
+              "tunnel"
+            ],
+            true
+          ],
+          0.4,
+          1
+        ],
+        "line-dasharray": [
+          3,
+          2
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          0.5,
+          13,
+          1.2,
+          18,
+          3
+        ]
+      }
+    },
+    {
+      "id": "ferries",
+      "type": "line",
+      "source": "motis",
+      "source-layer": "ferries",
+      "minzoom": 7,
+      "paint": {
+        "line-color": "#2c4457",
+        "line-dasharray": [
+          2,
+          3
+        ],
+        "line-width": 1.2
+      }
+    },
+    {
+      "id": "boundaries",
+      "type": "line",
+      "source": "motis",
+      "source-layer": "boundaries",
+      "filter": [
+        "all",
+        [
+          "has",
+          "admin_level"
+        ],
+        [
+          "<=",
+          [
+            "get",
+            "admin_level"
+          ],
+          4
+        ]
+      ],
+      "paint": {
+        "line-color": "#5a5566",
+        "line-dasharray": [
+          4,
+          3
+        ],
+        "line-opacity": 0.6,
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0.6,
+          8,
+          1.2,
+          12,
+          1.8
+        ]
+      }
+    },
+    {
+      "id": "street-labels",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "streets",
+      "minzoom": 15,
+      "filter": [
+        "all",
+        [
+          "!=",
+          [
+            "get",
+            "name"
+          ],
+          ""
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "rail"
+          ],
+          true
+        ]
+      ],
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-max-angle": 30,
+        "text-padding": 2
+      },
+      "paint": {
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-landmarks",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 15,
+      "filter": [
+        "any",
+        [
+          "match",
+          [
+            "get",
+            "amenity"
+          ],
+          [
+            "hospital",
+            "clinic",
+            "doctors",
+            "dentist",
+            "pharmacy",
+            "school",
+            "university",
+            "college",
+            "library",
+            "townhall",
+            "post_office",
+            "police",
+            "fire_station",
+            "courthouse",
+            "community_centre",
+            "place_of_worship",
+            "theatre",
+            "cinema",
+            "arts_centre"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "historic"
+          ],
+          [
+            "castle",
+            "monument",
+            "memorial",
+            "fort",
+            "ruins",
+            "archaeological_site",
+            "battlefield"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "tourism"
+          ],
+          [
+            "artwork",
+            "viewpoint"
+          ],
+          true,
+          false
+        ],
+        [
+          "==",
+          [
+            "get",
+            "man_made"
+          ],
+          "lighthouse"
+        ]
+      ],
+      "layout": {
+        "icon-image": [
+          "case",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "hospital",
+              "clinic"
+            ],
+            true,
+            false
+          ],
+          "icon-hospital",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "doctors",
+              "dentist"
+            ],
+            true,
+            false
+          ],
+          "icon-doctor",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "pharmacy"
+          ],
+          "icon-pharmacy",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "school"
+          ],
+          "icon-school",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "university",
+              "college"
+            ],
+            true,
+            false
+          ],
+          "icon-college",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "library"
+          ],
+          "icon-library",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "townhall",
+              "courthouse"
+            ],
+            true,
+            false
+          ],
+          "icon-town_hall",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "post_office"
+          ],
+          "icon-post",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "police"
+          ],
+          "icon-police",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "fire_station"
+          ],
+          "icon-fire_station",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "community_centre"
+          ],
+          "icon-community",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "place_of_worship"
+          ],
+          "icon-place_of_worship",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "theatre"
+          ],
+          "icon-theatre",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "cinema"
+          ],
+          "icon-cinema",
+          [
+            "==",
+            [
+              "get",
+              "amenity"
+            ],
+            "arts_centre"
+          ],
+          "icon-art_gallery",
+          [
+            "==",
+            [
+              "get",
+              "historic"
+            ],
+            "castle"
+          ],
+          "icon-castle",
+          [
+            "match",
+            [
+              "get",
+              "historic"
+            ],
+            [
+              "monument",
+              "memorial",
+              "fort",
+              "ruins",
+              "archaeological_site",
+              "battlefield"
+            ],
+            true,
+            false
+          ],
+          "icon-monument",
+          [
+            "==",
+            [
+              "get",
+              "tourism"
+            ],
+            "artwork"
+          ],
+          "icon-artwork",
+          [
+            "==",
+            [
+              "get",
+              "tourism"
+            ],
+            "viewpoint"
+          ],
+          "icon-viewpoint",
+          [
+            "==",
+            [
+              "get",
+              "man_made"
+            ],
+            "lighthouse"
+          ],
+          "icon-lighthouse",
+          "icon-historic"
+        ],
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.55,
+          18,
+          0.8
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          16,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.9
+        ],
+        "text-max-width": 8,
+        "text-optional": true
+      },
+      "paint": {
+        "icon-color": "#9aa8b8",
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "place-labels-towns",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "place_labels",
+      "minzoom": 9,
+      "filter": [
+        ">=",
+        [
+          "zoom"
+        ],
+        [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "town",
+          9,
+          [
+            "village",
+            "suburb"
+          ],
+          11,
+          [
+            "hamlet",
+            "quarter"
+          ],
+          13,
+          [
+            "neighbourhood",
+            "locality"
+          ],
+          14,
+          99
+        ]
+      ],
+      "layout": {
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 12,
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.4
+      }
+    },
+    {
+      "id": "place-labels-cities",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "place_labels",
+      "minzoom": 4,
+      "filter": [
+        ">=",
+        [
+          "zoom"
+        ],
+        [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "capital",
+          4,
+          "state_capital",
+          5,
+          "city",
+          6,
+          99
+        ]
+      ],
+      "layout": {
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
+        "symbol-sort-key": [
+          "-",
+          0,
+          [
+            "coalesce",
+            [
+              "get",
+              "population"
+            ],
+            0
+          ]
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          12,
+          10,
+          17
+        ],
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#cfd3d8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.6
+      }
+    }
+  ]
+}
