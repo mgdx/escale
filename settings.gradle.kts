@@ -23,5 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Escale"
-include(":app")
- 
+include(":core", ":data", ":app")
