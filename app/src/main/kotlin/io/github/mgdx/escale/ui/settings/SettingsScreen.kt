@@ -31,13 +31,14 @@ import io.github.mgdx.escale.ui.theme.EscaleTheme
  * Écran de réglages (SPEC.md § 5.6).
  *
  * La première entrée, avant toutes les autres, est « Serveur MOTIS », avec l'URL en cours en
- * sous-titre. Les autres rubriques — préférences de recherche, affichage, données, à propos —
- * viendront à leurs jalons respectifs.
+ * sous-titre (SPEC.md § 5.6). L'entrée « À propos » ferme la liste. Les autres rubriques —
+ * préférences de recherche, affichage, données — viendront à leurs jalons respectifs.
  */
 @Composable
 fun SettingsScreen(
   onBack: () -> Unit,
   onOpenServerSettings: () -> Unit,
+  onOpenAbout: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(appContainer())),
 ) {
@@ -46,6 +47,7 @@ fun SettingsScreen(
     uiState = uiState,
     onBack = onBack,
     onOpenServerSettings = onOpenServerSettings,
+    onOpenAbout = onOpenAbout,
     modifier = modifier,
   )
 }
@@ -56,6 +58,7 @@ internal fun SettingsContent(
   uiState: SettingsUiState,
   onBack: () -> Unit,
   onOpenServerSettings: () -> Unit,
+  onOpenAbout: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   Scaffold(
@@ -90,6 +93,11 @@ internal fun SettingsContent(
         },
         modifier = Modifier.clickable(role = Role.Button, onClick = onOpenServerSettings),
       )
+      ListItem(
+        headlineContent = { Text(text = stringResource(R.string.about_title)) },
+        supportingContent = { Text(text = stringResource(R.string.about_attributions_title)) },
+        modifier = Modifier.clickable(role = Role.Button, onClick = onOpenAbout),
+      )
     }
   }
 }
@@ -107,6 +115,7 @@ private fun SettingsScreenPreview() {
       uiState = SettingsUiState(serverUrl = "https://api.transitous.org"),
       onBack = {},
       onOpenServerSettings = {},
+      onOpenAbout = {},
     )
   }
 }
