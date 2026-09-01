@@ -17,6 +17,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -35,8 +39,13 @@ import io.github.mgdx.escale.ui.theme.EscaleTheme
  * l'application et le lien vers son code source. Tous les liens sont confiés au navigateur du
  * système par une intention externe : SPEC.md § 2 exclut toute WebView.
  *
- * L'écran est entièrement statique — la version vient de `BuildConfig` — et n'a donc pas de
- * `ViewModel` : il n'y a aucun état à conserver d'une rotation à l'autre.
+ * Le texte de la licence, lui, est **embarqué** (`res/raw/gpl_3_0.txt`) : le lien vers
+ * `gnu.org/licenses/gpl-3.0.html` rend 403, et une application GPLv3 dont le lien vers sa propre
+ * licence ne fonctionne pas est un très mauvais signal pour un relecteur F-Droid. Le lien vers
+ * gnu.org reste proposé en complément, jamais en remplacement.
+ *
+ * L'écran est par ailleurs statique — la version vient de `BuildConfig` — et n'a donc pas de
+ * `ViewModel` : la seule chose à retenir d'une rotation à l'autre est l'ouverture de la licence.
  */
 @Composable
 fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier, versionName: String = BuildConfig.VERSION_NAME) {
@@ -62,6 +71,9 @@ internal fun AboutContent(onBack: () -> Unit, versionName: String, modifier: Mod
       )
     },
   ) { innerPadding ->
+    // Seul état de l'écran : la licence est-elle ouverte ? `rememberSaveable` la retrouve après
+    // une rotation comme après une mort du processus.
+    var licenseVisible by rememberSaveable { mutableStateOf(false) }
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -70,9 +82,15 @@ internal fun AboutContent(onBack: () -> Unit, versionName: String, modifier: Mod
     ) {
       Identity(versionName = versionName)
       HorizontalDivider()
+      // Le texte intégral est dans l'application : il s'affiche hors ligne, sans dépendre d'un tiers.
+      ListItem(
+        headlineContent = { Text(text = stringResource(R.string.about_license_link)) },
+        supportingContent = { Text(text = stringResource(R.string.about_license_link_subtitle)) },
+        modifier = Modifier.clickable(role = Role.Button) { licenseVisible = true },
+      )
       ExternalLink(
-        titleRes = R.string.about_license_link,
-        subtitleRes = R.string.about_license_link_subtitle,
+        titleRes = R.string.about_license_online,
+        subtitleRes = R.string.about_license_online_subtitle,
         urlRes = R.string.about_license_url,
       )
       ExternalLink(
@@ -82,6 +100,9 @@ internal fun AboutContent(onBack: () -> Unit, versionName: String, modifier: Mod
       )
       HorizontalDivider()
       Attributions()
+    }
+    if (licenseVisible) {
+      LicenseDialog(onDismiss = { licenseVisible = false })
     }
   }
 }
