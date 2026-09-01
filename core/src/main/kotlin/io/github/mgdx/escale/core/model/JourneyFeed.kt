@@ -53,18 +53,21 @@ data class JourneyFeed(
      * est retenu : sur un rafraîchissement, la donnée la plus récente est passée en premier.
      */
     private fun merge(first: List<Journey>, second: List<Journey>): List<Journey> = (first + second)
-      .distinctBy { it.identity() }
+      .distinctBy { it.stableKey() }
       .sortedWith(compareBy({ it.startTime }, { it.endTime }))
-
-    /**
-     * De quoi reconnaître deux fois le même trajet. L'identifiant du serveur fait foi quand il
-     * existe ; sinon les horaires et la forme du trajet suffisent, un trajet direct étant toujours
-     * rendu à l'identique d'une page à l'autre.
-     */
-    private fun Journey.identity(): Any =
-      id ?: listOf(startTime, endTime, transfers, legs.size, legs.firstOrNull()?.from?.name)
   }
 }
+
+/**
+ * De quoi reconnaître deux fois le même trajet, et le désigner dans une liste.
+ *
+ * L'identifiant du serveur fait foi quand il existe. Sinon les horaires et la forme du trajet
+ * suffisent : un trajet sans horaire est rendu à l'identique d'une page à l'autre, et deux trajets
+ * différents ne partagent pas leurs quatre bornes. La clé sert aussi de `key` de liste à
+ * l'interface, ce qui lui évite d'inventer la sienne.
+ */
+fun Journey.stableKey(): String = id ?: listOf(startTime, endTime, duration, transfers, legs.size)
+  .joinToString("|")
 
 /** Les trajets d'une page, horaires et directs réunis dans l'ordre du serveur. */
 private fun JourneyPage.all(): List<Journey> = journeys + direct
