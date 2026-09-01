@@ -110,17 +110,30 @@ class GeocodeRepositoryImplTest {
     assertTrue(outcome is Outcome.Success)
   }
 
+  // Hote introuvable et absence de reseau sont deux pannes distinctes : les confondre enverrait
+  // l'usager chercher une coupure inexistante apres une faute de frappe dans l'URL (SPEC.md § 8).
+  @Test
+  fun `un hote introuvable remonte en erreur typee`() = runTest {
+    assertEquals(
+      EscaleError.HostNotFound,
+      erreurDe { throw java.net.UnknownHostException("exemple.org") },
+    )
+  }
+
   @Test
   fun `une panne de reseau remonte en erreur typee`() = runTest {
-    val engine = MockEngine { throw java.net.UnknownHostException("exemple.org") }
+    assertEquals(
+      EscaleError.NoNetwork,
+      erreurDe { throw java.net.NoRouteToHostException("exemple.org") },
+    )
+  }
+
+  private suspend fun erreurDe(panne: () -> Nothing): EscaleError {
     val repository = GeocodeRepositoryImpl(
-      api = GeocodeApi(versionName = "1.0.0", engine = engine),
+      api = GeocodeApi(versionName = "1.0.0", engine = MockEngine { panne() }),
       serverRepository = FakeServerRepository("https://exemple.org"),
       ioDispatcher = Dispatchers.Unconfined,
     )
-    assertEquals(
-      EscaleError.NoNetwork,
-      (repository.autocomplete("Rue de Rivoli") as Outcome.Failure).error,
-    )
+    return (repository.autocomplete("Rue de Rivoli") as Outcome.Failure).error
   }
 }
