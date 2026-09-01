@@ -39,6 +39,10 @@ fun EscaleError.asMessage(): String = when (this) {
   // Le serveur donne parfois un message exploitable ; sinon on reste générique.
   is EscaleError.BadRequest -> serverMessage ?: stringResource(R.string.error_unknown)
 
+  // Une requête supplantée n'est jamais montrée : l'appelant l'ignore et attend le résultat plus
+  // récent. Cette branche n'est là que pour garder le `when` exhaustif.
+  EscaleError.Superseded -> stringResource(R.string.error_unknown)
+
   is EscaleError.Unknown -> stringResource(R.string.error_unknown)
 }
 

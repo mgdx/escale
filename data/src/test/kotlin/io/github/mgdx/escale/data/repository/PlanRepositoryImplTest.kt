@@ -206,8 +206,11 @@ class PlanRepositoryImplTest {
     runCurrent()
     release.complete(Unit)
 
-    // La recherche supplantée ne rend pas un résultat périmé : l'écran affiche celui de la suivante.
-    assertTrue(abandoned.await() is Outcome.Failure)
+    // La recherche supplantée ne rend pas un résultat périmé : l'écran affiche celui de la
+    // suivante. Le cas a sa propre valeur d'erreur, que l'interface ignore silencieusement — la
+    // rendre en `Unknown` ferait afficher « une erreur est survenue » à qui vient de relancer sa
+    // recherche.
+    assertEquals(EscaleError.Superseded, (abandoned.await() as Outcome.Failure).error)
     assertTrue(wanted.await() is Outcome.Success)
   }
 

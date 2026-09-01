@@ -80,7 +80,7 @@ class PlanRepositoryImpl(
     } catch (superseded: CancellationException) {
       // Si c'est l'appelant lui-même qui a été annulé, l'annulation doit continuer de se propager.
       currentCoroutineContext().ensureActive()
-      return Outcome.Failure(EscaleError.Unknown(cause = SUPERSEDED))
+      return Outcome.Failure(EscaleError.Superseded)
     }
     if (outcome is Outcome.Success) cache.put(key, outcome.value)
     mutex.withLock { if (inFlight[query.category] === request) inFlight.remove(query.category) }
@@ -102,13 +102,4 @@ class PlanRepositoryImpl(
       is Outcome.Success -> Outcome.Success(outcome.value.toDomain())
       is Outcome.Failure -> outcome
     }
-
-  private companion object {
-    /**
-     * Cause rendue à l'appelant dont la requête a été supplantée par une recherche plus récente.
-     * Ce n'est pas une panne : l'écran affiche déjà le résultat de la recherche qui l'a remplacée.
-     * La valeur ne porte ni lieu, ni coordonnée, ni URL (docs/architecture.md § 6).
-     */
-    const val SUPERSEDED = "Superseded"
-  }
 }
