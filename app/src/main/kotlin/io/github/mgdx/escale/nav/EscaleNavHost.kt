@@ -11,6 +11,8 @@ import io.github.mgdx.escale.ui.about.LicenseRoute
 import io.github.mgdx.escale.ui.about.LicenseScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
 import io.github.mgdx.escale.ui.home.HomeScreen
+import io.github.mgdx.escale.ui.results.ResultsSheetSlot
+import io.github.mgdx.escale.ui.search.SearchCardSlot
 import io.github.mgdx.escale.ui.server.ServerSettingsRoute
 import io.github.mgdx.escale.ui.server.ServerSettingsScreen
 import io.github.mgdx.escale.ui.settings.SettingsRoute
@@ -26,7 +28,15 @@ import io.github.mgdx.escale.ui.settings.SettingsScreen
 fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
   NavHost(navController = navController, startDestination = HomeRoute) {
     composable<HomeRoute> {
-      HomeScreen(onOpenSettings = { navController.navigate(SettingsRoute) })
+      // Les deux emplacements de l'écran d'accueil (docs/architecture.md § 11.4). Ils sont branchés
+      // ici, une fois pour toutes : le lot « recherche » et le lot « résultats » remplissent chacun
+      // le corps de son propre fichier et n'ont jamais à revenir dans ce fichier ni dans
+      // `HomeScreen`. C'est ce qui leur évite de se marcher dessus.
+      HomeScreen(
+        onOpenSettings = { navController.navigate(SettingsRoute) },
+        searchCard = { padding -> SearchCardSlot(padding = padding) },
+        resultsSheet = { padding -> ResultsSheetSlot(padding = padding) },
+      )
     }
     composable<SettingsRoute> {
       SettingsScreen(
