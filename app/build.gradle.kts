@@ -73,6 +73,9 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
+  // `SavedStateHandle` : le seul état qu'Android restitue après avoir tué le processus en
+  // arrière-plan. Sans lui, la saisie de l'écran « Serveur MOTIS » est perdue.
+  implementation(libs.androidx.lifecycle.viewmodel.savedstate)
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)

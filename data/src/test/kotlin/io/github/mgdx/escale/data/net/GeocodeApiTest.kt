@@ -177,6 +177,34 @@ class GeocodeApiTest {
     assertTrue((outcome as Outcome.Failure).error is EscaleError.ServerUnreachable)
   }
 
+  // La politique de transport est tenue par MotisTransport pour les deux clients : elle reste
+  // vérifiée ici aussi, sur le client de géocodage, et pas seulement sur MotisClient.
+  @Test
+  fun `une erreur 4xx n est jamais reprise`() = runTest {
+    var attempts = 0
+    val engine = MockEngine {
+      attempts++
+      respondError(HttpStatusCode.BadRequest)
+    }
+    GeocodeApi(versionName = "1.0.0", engine = engine).use {
+      it.geocode(baseUrl, "Gare", bias = null, language = null, limit = 10)
+    }
+    assertEquals(1, attempts)
+  }
+
+  @Test
+  fun `une erreur 5xx est reprise une seule fois`() = runTest {
+    var attempts = 0
+    val engine = MockEngine {
+      attempts++
+      respondError(HttpStatusCode.InternalServerError)
+    }
+    GeocodeApi(versionName = "1.0.0", engine = engine).use {
+      it.geocode(baseUrl, "Gare", bias = null, language = null, limit = 10)
+    }
+    assertEquals(2, attempts)
+  }
+
   @Test
   fun `vider le cache d un client sans cache disque ne fait rien`() = runTest {
     val engine = engineServing("geocode_no_result.json")
