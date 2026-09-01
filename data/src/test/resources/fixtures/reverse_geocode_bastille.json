@@ -1,0 +1,358 @@
+[
+  {
+    "type": "PLACE",
+    "category": "monument_16",
+    "tokens": [],
+    "name": "Colonne de Juillet",
+    "id": "way/[227757683]",
+    "lat": 4.88532077E1,
+    "lon": 2.3692449E0,
+    "country": "FR",
+    "zip": "75011",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 11e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier de la Roquette",
+        "adminLevel": 1E1,
+        "matched": true,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -6.60513973236084E0
+  },
+  {
+    "type": "PLACE",
+    "category": "artwork_14",
+    "tokens": [],
+    "name": "Le Génie de la Liberté",
+    "id": "node/[4679772364]",
+    "lat": 4.88531664E1,
+    "lon": 2.3691393E0,
+    "country": "FR",
+    "zip": "75011",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 11e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier de la Roquette",
+        "adminLevel": 1E1,
+        "matched": true,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -4.1963419914245605E0
+  },
+  {
+    "type": "PLACE",
+    "category": "castle_14",
+    "tokens": [],
+    "name": "Ruines de la Bastille",
+    "id": "node/[13411401985]",
+    "lat": 4.8852699E1,
+    "lon": 2.3687765E0,
+    "country": "FR",
+    "zip": "75004",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 4e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier de l'Arsenal",
+        "adminLevel": 1E1,
+        "matched": true,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": 5.374608612060547E1
+  },
+  {
+    "type": "PLACE",
+    "category": "suburb",
+    "tokens": [],
+    "name": "Bastille",
+    "id": "node/[2141212990]",
+    "lat": 4.88535713E1,
+    "lon": 2.3699734E0,
+    "country": "FR",
+    "zip": "75011",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 11e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier de la Roquette",
+        "adminLevel": 1E1,
+        "matched": true,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": 6.004668426513672E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [],
+    "name": "4 Place de la Bastille",
+    "id": "",
+    "lat": 4.885308E1,
+    "lon": 2.3702034E0,
+    "street": "Place de la Bastille",
+    "houseNumber": "4",
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": true,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": 6.46168212890625E1
+  }
+]

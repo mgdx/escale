@@ -1,0 +1,732 @@
+[
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.88561474E1,
+    "lon": 2.3571222E0,
+    "country": "FR",
+    "zip": "75004",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      },
+      {
+        "name": "Paris 4e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": true,
+        "default": false
+      },
+      {
+        "name": "Quartier Saint-Gervais",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -1.975E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.88631744E1,
+    "lon": 2.3338823E0,
+    "country": "FR",
+    "zip": "75001",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      },
+      {
+        "name": "Paris 1er Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": true,
+        "default": false
+      }
+    ],
+    "score": -1.975E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.86642824E1,
+    "lon": 2.3142964E0,
+    "country": "FR",
+    "zip": "91360",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Essonne",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Palaiseau",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Épinay-sur-Orge",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.825E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.88344934E1,
+    "lon": 1.9866702E0,
+    "country": "FR",
+    "zip": "78450",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Yvelines",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Versailles",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Villepreux",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.825E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.87814476E1,
+    "lon": 1.6891864E0,
+    "country": "FR",
+    "zip": "78950",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Yvelines",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Rambouillet",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Gambais",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.825E1
+  },
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Louvre - Rivoli",
+    "id": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:73630",
+    "lat": 4.8860896999999994E1,
+    "lon": 2.3406352999999998E0,
+    "country": "FR",
+    "zip": "75001",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": true,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 1er Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Saint-Germain-l'Auxerrois",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -1.7785140991210938E1,
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ],
+    "importance": 1.511869952082634E-3
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.38261148E1,
+    "lon": 4.3729642E0,
+    "country": "FR",
+    "zip": "30000;30900",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Occitanie",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Gard",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Nîmes",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Nîmes",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.775E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.80015365E1,
+    "lon": 1.956633E-1,
+    "country": "FR",
+    "zip": "72000",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Pays de la Loire",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Sarthe",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Le Mans",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Le Mans",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.775E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 4.36981675E1,
+    "lon": 7.2590329E0,
+    "country": "FR",
+    "zip": "06000;06100;06200;06300",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Provence-Alpes-Côte d'Azur",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Alpes-Maritimes",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Nice",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Nice",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.775E1
+  },
+  {
+    "type": "ADDRESS",
+    "tokens": [
+      [
+        0E0,
+        3E0
+      ],
+      [
+        4E0,
+        2E0
+      ],
+      [
+        7E0,
+        6E0
+      ]
+    ],
+    "name": "Rue de Rivoli",
+    "id": "",
+    "lat": 5.07297706E1,
+    "lon": 3.1629758E0,
+    "country": "FR",
+    "zip": "59200",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Hauts-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Département du Nord",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Lille",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Tourcoing",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      }
+    ],
+    "score": -1.775E1
+  }
+]
