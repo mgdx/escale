@@ -190,3 +190,35 @@ Les `ViewModel` reçoivent leurs dépendances par constructeur, via la fabrique 
 - `:data` — moteur Ktor simulé (`MockEngine`), réponses JSON réelles capturées, rangées dans
   `data/src/test/resources/fixtures/`. Aucun test ne touche le réseau réel.
 - `:app` — tests Compose sur les états liste / vide / erreur / chargement.
+
+## 11. Décisions d'arbitrage (validées par le mainteneur)
+
+Ces points ont été tranchés en cours de projet. Ils ont la même force que le reste du contrat.
+
+### 11.1 Trafic en clair et serveur auto-hébergé
+
+La spec §4.1 demandait une `network_security_config` n'autorisant le clair que pour les hôtes
+saisis par l'utilisateur. **C'est impossible sur Android** : depuis Android 7 cette configuration
+est figée à la compilation, un hôte saisi à l'exécution ne peut pas y être ajouté.
+
+Décision retenue : **permissif au niveau plateforme, strict au niveau applicatif.**
+
+- `network_security_config` : `cleartextTrafficPermitted="true"` sur la `base-config`.
+- **La garantie est portée par le code** : l'écran « Serveur MOTIS » refuse toute URL `http://`
+  tant que l'utilisateur n'a pas confirmé l'avertissement explicite décrit au §5.6.1. Aucune
+  requête en clair ne part sans ce consentement, et il est demandé une fois par hôte.
+- Le commentaire en tête du fichier XML doit dire que la restriction est applicative et pointer
+  vers le code qui l'applique — sans quoi un relecteur F-Droid conclura à une négligence.
+- `SPEC.md` §4.1 est amendé en conséquence, dans le même commit que le code.
+
+### 11.2 Icônes
+
+**Aucune bibliothèque d'icônes.** Chaque icône nécessaire est ajoutée à `app/src/main/res/drawable/`
+sous forme de `VectorDrawable` XML, reprise du jeu officiel **Material Symbols** (Apache 2.0).
+
+- Nommage : `ic_<sujet>.xml` en anglais — `ic_directions_bus.xml`, `ic_swap_vert.xml`.
+- Style unique pour tout le projet : Material Symbols **Outlined**, graisse 400, `viewportWidth`
+  et `viewportHeight` à 24, `android:tint="?attr/colorControlNormal"` jamais codé en dur.
+- Un lot qui a besoin d'une icône déjà présente la réutilise ; il ne la redessine pas.
+- Motif : zéro dépendance, aucun poids mort dans l'APK (spec §2 vise moins de 15 Mo),
+  et rien qu'un relecteur F-Droid puisse reprocher.
