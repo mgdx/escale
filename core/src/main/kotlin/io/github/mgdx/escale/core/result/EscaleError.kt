@@ -12,6 +12,18 @@ sealed interface EscaleError {
   /** Aucune connectivité : bandeau explicite et bouton « Réessayer », jamais un écran vide. */
   data object NoNetwork : EscaleError
 
+  /**
+   * Le nom d'hôte du serveur ne se résout pas.
+   *
+   * Le cas est **réellement ambigu** : la résolution échoue aussi bien parce que l'adresse est
+   * fautive que parce que l'appareil n'a plus de réseau. Il a sa propre valeur parce que le
+   * confondre avec [NoNetwork] envoyait l'usager chercher une panne de réseau inexistante après
+   * une simple faute de frappe dans l'URL de son serveur (SPEC.md § 8). Le libellé affiché doit
+   * couvrir honnêtement les deux hypothèses, dans l'esprit de « serveur introuvable : vérifiez
+   * l'adresse ou votre connexion ».
+   */
+  data object HostNotFound : EscaleError
+
   /** Le serveur n'a pas répondu dans les 30 secondes (SPEC.md § 7.8). */
   data object Timeout : EscaleError
 
