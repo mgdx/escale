@@ -44,8 +44,10 @@ android {
   lint {
     // Un avertissement de lint est une erreur (CLAUDE.md).
     warningsAsErrors = true
-    checkDependencies = true
     abortOnError = true
+    // `checkDependencies` n'est pas activé : lint ne sait pas analyser un module Kotlin/JVM comme
+    // :core et le signale par un avertissement à chaque exécution. Chaque module Android porte donc
+    // sa propre tâche lint, et :core est couvert par ktlint, detekt et ses tests JVM.
   }
 }
 
@@ -72,6 +74,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)
 
   testImplementation(libs.junit)

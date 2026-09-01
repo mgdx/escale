@@ -33,7 +33,9 @@ naming:
 style:
   MagicNumber:
     # Les tests décrivent des cas concrets : y nommer chaque constante nuirait à la lisibilité.
-    excludes: ['**/test/**', '**/androidTest/**']
+    # Dans la palette du thème, la valeur hexadécimale EST la constante nommée : `Color(0xFF1D9E75)`
+    # affecté à `BrandTeal` n'a pas de nom plus parlant à recevoir.
+    excludes: ['**/test/**', '**/androidTest/**', '**/ui/theme/**']
   MaxLineLength:
     maxLineLength: 120
     excludes: ['**/test/**', '**/androidTest/**']
