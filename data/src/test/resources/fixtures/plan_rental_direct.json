@@ -1,0 +1,932 @@
+{
+ "requestParameters": {},
+ "debugOutput": {},
+ "from": {
+  "name": "",
+  "lat": 52.5251,
+  "lon": 13.3694,
+  "vertexType": "NORMAL"
+ },
+ "to": {
+  "name": "",
+  "lat": 52.5219,
+  "lon": 13.4132,
+  "vertexType": "NORMAL"
+ },
+ "direct": [
+  {
+   "duration": 1068,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:08:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "BIKE",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:08:00Z",
+      "scheduledArrival": "2026-09-01T22:08:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 1068,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T22:08:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T22:08:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 4073.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1331,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:13:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 270,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 324.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "",
+      "lat": 52.5216661,
+      "lon": 13.4131914,
+      "arrival": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 995,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:12:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:12:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3635.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-NextbikeBerlin",
+      "providerGroupId": "nextbike Berlin",
+      "systemId": "nextbike_bn",
+      "systemName": "nextbike Berlin",
+      "url": "https://www.nextbike.de/berlin/",
+      "fromStationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "rentalUriAndroid": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriIOS": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriWeb": "https://nxtb.it/p/171667497",
+      "formFactor": "BICYCLE",
+      "propulsionType": "HUMAN",
+      "returnConstraint": "NONE"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "",
+      "lat": 52.5216661,
+      "lon": 13.4131914,
+      "arrival": "2026-09-01T22:12:00Z",
+      "departure": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "scheduledDeparture": "2026-09-01T22:12:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:13:00Z",
+      "scheduledArrival": "2026-09-01T22:13:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 66,
+     "startTime": "2026-09-01T22:12:00Z",
+     "endTime": "2026-09-01T22:13:00Z",
+     "scheduledStartTime": "2026-09-01T22:12:00Z",
+     "scheduledEndTime": "2026-09-01T22:13:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 46.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1331,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:13:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 270,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 324.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "",
+      "lat": 52.5216661,
+      "lon": 13.4131914,
+      "arrival": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 995,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:12:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:12:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3635.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-NextbikeBerlin",
+      "providerGroupId": "nextbike Berlin",
+      "systemId": "nextbike_bn",
+      "systemName": "nextbike Berlin",
+      "url": "https://www.nextbike.de/berlin/",
+      "fromStationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "rentalUriAndroid": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriIOS": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriWeb": "https://nxtb.it/p/171667497",
+      "formFactor": "BICYCLE",
+      "propulsionType": "ELECTRIC_ASSIST",
+      "returnConstraint": "NONE"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "",
+      "lat": 52.5216661,
+      "lon": 13.4131914,
+      "arrival": "2026-09-01T22:12:00Z",
+      "departure": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "scheduledDeparture": "2026-09-01T22:12:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:13:00Z",
+      "scheduledArrival": "2026-09-01T22:13:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 66,
+     "startTime": "2026-09-01T22:12:00Z",
+     "endTime": "2026-09-01T22:13:00Z",
+     "scheduledStartTime": "2026-09-01T22:12:00Z",
+     "scheduledEndTime": "2026-09-01T22:13:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 46.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1484,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:15:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Jelbi S+U Hauptbahnhof / Washingtonplatz",
+      "lat": 52.52368927001953,
+      "lon": 13.370759963989258,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 270,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 324.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Jelbi S+U Hauptbahnhof / Washingtonplatz",
+      "lat": 52.52368927001953,
+      "lon": 13.370759963989258,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "Jelbi S+U Alexanderplatz / Grunerstraße",
+      "lat": 52.52024841308594,
+      "lon": 13.413479804992676,
+      "arrival": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 995,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:12:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:12:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3679.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-CallaBike",
+      "providerGroupId": "Call a Bike",
+      "systemId": "callabike",
+      "systemName": "Call a Bike",
+      "url": "https://www.callabike.de",
+      "stationName": "Jelbi S+U Hauptbahnhof / Washingtonplatz",
+      "fromStationName": "Jelbi S+U Hauptbahnhof / Washingtonplatz",
+      "toStationName": "Jelbi S+U Alexanderplatz / Grunerstraße",
+      "rentalUriAndroid": "https://www.callabike.de/app",
+      "rentalUriIOS": "https://www.callabike.de/app",
+      "rentalUriWeb": "",
+      "formFactor": "BICYCLE",
+      "propulsionType": "HUMAN",
+      "returnConstraint": "ANY_STATION"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "Jelbi S+U Alexanderplatz / Grunerstraße",
+      "lat": 52.52024841308594,
+      "lon": 13.413479804992676,
+      "arrival": "2026-09-01T22:12:00Z",
+      "departure": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "scheduledDeparture": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:15:00Z",
+      "scheduledArrival": "2026-09-01T22:15:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 219,
+     "startTime": "2026-09-01T22:12:00Z",
+     "endTime": "2026-09-01T22:15:00Z",
+     "scheduledStartTime": "2026-09-01T22:12:00Z",
+     "scheduledEndTime": "2026-09-01T22:15:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 243.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1484,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:15:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 270,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 324.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "lat": 52.520232,
+      "lon": 13.413502,
+      "arrival": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 995,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:12:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:12:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3679.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-NextbikeBerlin",
+      "providerGroupId": "nextbike Berlin",
+      "systemId": "nextbike_bn",
+      "systemName": "nextbike Berlin",
+      "url": "https://www.nextbike.de/berlin/",
+      "stationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "fromStationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "toStationName": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "rentalUriAndroid": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriIOS": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriWeb": "https://nxtb.it/p/171667497",
+      "formFactor": "BICYCLE",
+      "propulsionType": "HUMAN",
+      "returnConstraint": "ANY_STATION"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "lat": 52.520232,
+      "lon": 13.413502,
+      "arrival": "2026-09-01T22:12:00Z",
+      "departure": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "scheduledDeparture": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:15:00Z",
+      "scheduledArrival": "2026-09-01T22:15:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 219,
+     "startTime": "2026-09-01T22:12:00Z",
+     "endTime": "2026-09-01T22:15:00Z",
+     "scheduledStartTime": "2026-09-01T22:12:00Z",
+     "scheduledEndTime": "2026-09-01T22:15:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 243.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1484,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:15:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 270,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 324.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "lat": 52.520232,
+      "lon": 13.413502,
+      "arrival": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 995,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:12:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:12:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3679.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-NextbikeBerlin",
+      "providerGroupId": "nextbike Berlin",
+      "systemId": "nextbike_bn",
+      "systemName": "nextbike Berlin",
+      "url": "https://www.nextbike.de/berlin/",
+      "stationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "fromStationName": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "toStationName": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "rentalUriAndroid": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriIOS": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriWeb": "https://nxtb.it/p/171667497",
+      "formFactor": "BICYCLE",
+      "propulsionType": "ELECTRIC_ASSIST",
+      "returnConstraint": "ANY_STATION"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "Jelbi S+U Alexanderplatz/Grunerstraße (MIT/AG)",
+      "lat": 52.520232,
+      "lon": 13.413502,
+      "arrival": "2026-09-01T22:12:00Z",
+      "departure": "2026-09-01T22:12:00Z",
+      "scheduledArrival": "2026-09-01T22:12:00Z",
+      "scheduledDeparture": "2026-09-01T22:12:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:15:00Z",
+      "scheduledArrival": "2026-09-01T22:15:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 219,
+     "startTime": "2026-09-01T22:12:00Z",
+     "endTime": "2026-09-01T22:15:00Z",
+     "scheduledStartTime": "2026-09-01T22:12:00Z",
+     "scheduledEndTime": "2026-09-01T22:15:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 243.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1569,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:17:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "MOA/HA Jelbi-Punkt S+U Hauptbahnhof/Heidestraße",
+      "lat": 52.52711426,
+      "lon": 13.37078316,
+      "arrival": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 295,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:55:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:55:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 354.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "MOA/HA Jelbi-Punkt S+U Hauptbahnhof/Heidestraße",
+      "lat": 52.52711426,
+      "lon": 13.37078316,
+      "arrival": "2026-09-01T21:55:00Z",
+      "departure": "2026-09-01T21:55:00Z",
+      "scheduledArrival": "2026-09-01T21:55:00Z",
+      "scheduledDeparture": "2026-09-01T21:55:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "MIT/AL  Jelbi S+U Alexanderplatz/Dircksenstraße",
+      "lat": 52.5226983,
+      "lon": 13.40932815,
+      "arrival": "2026-09-01T22:11:00Z",
+      "scheduledArrival": "2026-09-01T22:11:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 916,
+     "startTime": "2026-09-01T21:55:00Z",
+     "endTime": "2026-09-01T22:11:00Z",
+     "scheduledStartTime": "2026-09-01T21:55:00Z",
+     "scheduledEndTime": "2026-09-01T22:11:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 3248.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-DottBerlin",
+      "providerGroupId": "Dott berlin",
+      "systemId": "dott-berlin",
+      "systemName": "Dott berlin",
+      "url": "",
+      "stationName": "MOA/HA Jelbi-Punkt S+U Hauptbahnhof/Heidestraße",
+      "fromStationName": "MOA/HA Jelbi-Punkt S+U Hauptbahnhof/Heidestraße",
+      "toStationName": "MIT/AL  Jelbi S+U Alexanderplatz/Dircksenstraße",
+      "rentalUriAndroid": "",
+      "rentalUriIOS": "",
+      "rentalUriWeb": "",
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "ANY_STATION"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "MIT/AL  Jelbi S+U Alexanderplatz/Dircksenstraße",
+      "lat": 52.5226983,
+      "lon": 13.40932815,
+      "arrival": "2026-09-01T22:11:00Z",
+      "departure": "2026-09-01T22:11:00Z",
+      "scheduledArrival": "2026-09-01T22:11:00Z",
+      "scheduledDeparture": "2026-09-01T22:11:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:17:00Z",
+      "scheduledArrival": "2026-09-01T22:17:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 358,
+     "startTime": "2026-09-01T22:11:00Z",
+     "endTime": "2026-09-01T22:17:00Z",
+     "scheduledStartTime": "2026-09-01T22:11:00Z",
+     "scheduledEndTime": "2026-09-01T22:17:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 409.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  },
+  {
+   "duration": 1667,
+   "startTime": "2026-09-01T21:51:00Z",
+   "endTime": "2026-09-01T22:18:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:51:00Z",
+      "scheduledDeparture": "2026-09-01T21:51:00Z",
+      "vertexType": "NORMAL"
+     },
+     "to": {
+      "name": "Dott berlin",
+      "lat": 52.525111,
+      "lon": 13.365553,
+      "arrival": "2026-09-01T21:56:00Z",
+      "scheduledArrival": "2026-09-01T21:56:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 313,
+     "startTime": "2026-09-01T21:51:00Z",
+     "endTime": "2026-09-01T21:56:00Z",
+     "scheduledStartTime": "2026-09-01T21:51:00Z",
+     "scheduledEndTime": "2026-09-01T21:56:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 372.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    },
+    {
+     "mode": "RENTAL",
+     "from": {
+      "name": "Dott berlin",
+      "lat": 52.525111,
+      "lon": 13.365553,
+      "arrival": "2026-09-01T21:56:00Z",
+      "departure": "2026-09-01T21:56:00Z",
+      "scheduledArrival": "2026-09-01T21:56:00Z",
+      "scheduledDeparture": "2026-09-01T21:56:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "MIT/AG  Jelbi S+U Alexanderplatz/Grunerstraße",
+      "lat": 52.52024,
+      "lon": 13.4135,
+      "arrival": "2026-09-01T22:15:00Z",
+      "scheduledArrival": "2026-09-01T22:15:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "duration": 1135,
+     "startTime": "2026-09-01T21:56:00Z",
+     "endTime": "2026-09-01T22:15:00Z",
+     "scheduledStartTime": "2026-09-01T21:56:00Z",
+     "scheduledEndTime": "2026-09-01T22:15:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 4398.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     },
+     "rental": {
+      "providerId": "de-DottBerlin",
+      "providerGroupId": "Dott berlin",
+      "systemId": "dott-berlin",
+      "systemName": "Dott berlin",
+      "url": "",
+      "stationName": "MIT/AG  Jelbi S+U Alexanderplatz/Grunerstraße",
+      "toStationName": "MIT/AG  Jelbi S+U Alexanderplatz/Grunerstraße",
+      "rentalUriAndroid": "https://go.ridedott.com/vehicles/15904c4e-1514-4b1f-be96-c01a0b8e57a3?platform=android",
+      "rentalUriIOS": "https://go.ridedott.com/vehicles/15904c4e-1514-4b1f-be96-c01a0b8e57a3?platform=ios",
+      "rentalUriWeb": "",
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "NONE"
+     }
+    },
+    {
+     "mode": "WALK",
+     "from": {
+      "name": "MIT/AG  Jelbi S+U Alexanderplatz/Grunerstraße",
+      "lat": 52.52024,
+      "lon": 13.4135,
+      "arrival": "2026-09-01T22:15:00Z",
+      "departure": "2026-09-01T22:15:00Z",
+      "scheduledArrival": "2026-09-01T22:15:00Z",
+      "scheduledDeparture": "2026-09-01T22:15:00Z",
+      "vertexType": "BIKESHARE"
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T22:18:00Z",
+      "scheduledArrival": "2026-09-01T22:18:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 219,
+     "startTime": "2026-09-01T22:15:00Z",
+     "endTime": "2026-09-01T22:18:00Z",
+     "scheduledStartTime": "2026-09-01T22:15:00Z",
+     "scheduledEndTime": "2026-09-01T22:18:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 243.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0
+     }
+    }
+   ]
+  }
+ ],
+ "itineraries": [],
+ "previousPageCursor": "",
+ "nextPageCursor": ""
+}

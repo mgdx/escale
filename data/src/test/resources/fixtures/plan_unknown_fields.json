@@ -1,0 +1,73 @@
+{
+ "requestParameters": {},
+ "debugOutput": {},
+ "from": {
+  "name": "",
+  "lat": 52.5251,
+  "lon": 13.3694,
+  "vertexType": "NORMAL"
+ },
+ "to": {
+  "name": "",
+  "lat": 52.5219,
+  "lon": 13.4132,
+  "vertexType": "NORMAL"
+ },
+ "direct": [
+  {
+   "duration": 450,
+   "startTime": "2026-09-01T21:52:00Z",
+   "endTime": "2026-09-01T21:59:00Z",
+   "transfers": 0,
+   "id": "",
+   "legs": [
+    {
+     "mode": "CAR",
+     "from": {
+      "name": "START",
+      "lat": 52.5251,
+      "lon": 13.3694,
+      "departure": "2026-09-01T21:52:00Z",
+      "scheduledDeparture": "2026-09-01T21:52:00Z",
+      "vertexType": "NORMAL",
+      "futurePlaceField": [
+       "a",
+       "b"
+      ]
+     },
+     "to": {
+      "name": "END",
+      "lat": 52.5219,
+      "lon": 13.4132,
+      "arrival": "2026-09-01T21:59:00Z",
+      "scheduledArrival": "2026-09-01T21:59:00Z",
+      "vertexType": "NORMAL"
+     },
+     "duration": 450,
+     "startTime": "2026-09-01T21:52:00Z",
+     "endTime": "2026-09-01T21:59:00Z",
+     "scheduledStartTime": "2026-09-01T21:52:00Z",
+     "scheduledEndTime": "2026-09-01T21:59:00Z",
+     "realTime": false,
+     "scheduled": false,
+     "distance": 5245.0,
+     "legGeometry": {
+      "points": "",
+      "precision": 6,
+      "length": 0,
+      "encoding": "polyline6"
+     },
+     "tollCostCents": 250
+    }
+   ],
+   "carbonGrams": 812.5
+  }
+ ],
+ "itineraries": [],
+ "previousPageCursor": "",
+ "nextPageCursor": "",
+ "futureTopLevelField": {
+  "kind": "something-new",
+  "count": 3
+ }
+}
