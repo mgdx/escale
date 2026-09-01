@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.server
 
+import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
 import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
@@ -23,7 +24,13 @@ class ServerSettingsViewModelTest {
   private val repository = FakeServerRepository()
   private val consentStore = FakeCleartextConsentStore()
 
-  private fun viewModel() = ServerSettingsViewModel(repository, consentStore)
+  /**
+   * Le même `SavedStateHandle` d'un `ViewModel` à l'autre : c'est ce que fait le système quand il
+   * tue le processus en arrière-plan puis restitue l'écran.
+   */
+  private val savedState = SavedStateHandle()
+
+  private fun viewModel() = ServerSettingsViewModel(repository, consentStore, savedState)
 
   @Test
   fun `le champ reprend le serveur en service tant que rien n est saisi`() = runTest {
@@ -214,7 +221,7 @@ class ServerSettingsViewModelTest {
     repository.testOutcome = Outcome.Success(
       ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = false),
     )
-    val viewModel = ServerSettingsViewModel(repository, store)
+    val viewModel = ServerSettingsViewModel(repository, store, savedState)
 
     viewModel.onInputChange("http://192.168.1.10:8080")
     viewModel.onTestConnection()
@@ -290,5 +297,35 @@ class ServerSettingsViewModelTest {
 
     assertNull(viewModel.uiState.value.dialog)
     assertEquals(emptyList<ServerConfig>(), repository.savedConfigs)
+  }
+
+  @Test
+  fun `la saisie survit a la mort du processus`() = runTest {
+    // Anomalie A3 : le système tue l'application en arrière-plan, et le champ revenait vide.
+    viewModel().onInputChange("exemple.org/api/")
+
+    val restored = viewModel()
+
+    assertEquals("exemple.org/api/", restored.uiState.value.input)
+    assertEquals("https://exemple.org", restored.uiState.value.normalizedInput)
+  }
+
+  @Test
+  fun `une saisie aberrante est de nouveau signalee apres la mort du processus`() = runTest {
+    viewModel().onInputChange("ftp://exemple.org")
+
+    val restored = viewModel()
+
+    assertTrue(restored.uiState.value.inputInvalid)
+    assertNull(restored.uiState.value.normalizedInput)
+  }
+
+  @Test
+  fun `sans saisie, le champ reprend le serveur en service apres la mort du processus`() = runTest {
+    viewModel()
+
+    val restored = viewModel()
+
+    assertEquals(ServerUrl.DEFAULT_BASE_URL, restored.uiState.value.input)
   }
 }
