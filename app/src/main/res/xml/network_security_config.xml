@@ -1,31 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Politique réseau d'Escale (SPEC.md § 4.1 et § 5.6.1).
+  Politique réseau d'Escale (SPEC.md § 4.1, § 5.6.1 et docs/architecture.md § 11.1).
 
-  Le trafic en clair est interdit globalement : toutes les requêtes vers un serveur MOTIS passent
-  en HTTPS et vérifient les autorités de certification du système.
+  CE FICHIER EST PERMISSIF À DESSEIN, LA RESTRICTION EST PORTÉE PAR LE CODE APPLICATIF.
 
-  POUR AUTORISER UN SERVEUR EN CLAIR (instance sur le réseau local, ou serveur de développement) :
-  décommenter le bloc `domain-config` ci-dessous et y remplacer l'hôte par celui du serveur, sans
-  schéma, sans port et sans chemin — par exemple `192.168.1.10` ou `motis.maison.lan`. Un bloc
-  `domain-config` peut contenir plusieurs balises `domain`.
+  Escale laisse l'usager pointer sa propre instance MOTIS, y compris un serveur de son réseau local
+  joignable en `http://` (SPEC.md § 4.1). Or, depuis Android 7, cette configuration est figée à la
+  compilation : un hôte saisi à l'exécution ne peut PAS y être ajouté. Une `base-config`
+  restrictive rendrait donc tout serveur local définitivement inutilisable, sans recompilation.
 
-  ATTENTION, limite de la plateforme : depuis Android 7, cette configuration est figée à la
-  compilation. Un hôte saisi par l'usager dans l'écran « Serveur MOTIS » ne peut donc PAS être
-  ajouté ici à l'exécution ; seule une recompilation le permet. L'application doit en conséquence
-  refuser une URL `http://` non déclarée avec un message explicite, plutôt que d'échouer sans
-  raison visible.
+  Le dispositif retenu est permissif au niveau de la plateforme et strict au niveau applicatif :
+
+  - `cleartextTrafficPermitted="true"` ci-dessous, faute de pouvoir énumérer les hôtes à l'avance ;
+  - la garantie est appliquée par le code, dans
+    `app/src/main/kotlin/io/github/mgdx/escale/ui/server/ServerSettingsViewModel.kt`, adossé à
+    `app/src/main/kotlin/io/github/mgdx/escale/ui/server/CleartextConsent.kt` : l'écran « Serveur
+    MOTIS » refuse toute URL `http://` tant que l'usager n'a pas confirmé un avertissement
+    explicite. Le consentement est demandé une fois par hôte, mémorisé, et vaut aussi pour le test
+    de connexion : aucune requête en clair ne part sans lui.
+
+  Autrement dit, ce n'est pas une négligence : c'est le seul emplacement possible de la décision, la
+  plateforme ne sachant pas exprimer « en clair uniquement vers l'hôte que l'usager vient de
+  saisir ». Le reste du trafic — l'instance publique par défaut et toute instance en `https://` —
+  passe par les autorités de certification du système, sans exception ni épinglage.
 -->
-<network-security-config>
-  <base-config cleartextTrafficPermitted="false">
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+  <!--
+    `InsecureBaseConfiguration` est signalée par lint et supprimée ici en connaissance de cause :
+    l'avertissement est exact au niveau de la plateforme, mais la décision est celle de
+    docs/architecture.md § 11.1, et le contrôle qu'il réclame est appliqué par le code de l'écran
+    « Serveur MOTIS ». La suppression est volontairement portée par cette seule balise, et non par
+    une exclusion globale dans build.gradle.kts ni par un fichier de référence lint.
+  -->
+  <base-config cleartextTrafficPermitted="true" tools:ignore="InsecureBaseConfiguration">
     <trust-anchors>
       <certificates src="system" />
     </trust-anchors>
   </base-config>
-
-  <!--
-  <domain-config cleartextTrafficPermitted="true">
-    <domain includeSubdomains="false">192.168.1.10</domain>
-  </domain-config>
-  -->
 </network-security-config>

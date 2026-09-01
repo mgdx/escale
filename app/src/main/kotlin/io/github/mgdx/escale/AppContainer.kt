@@ -10,6 +10,8 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
+import io.github.mgdx.escale.ui.server.CleartextConsentStore
+import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 
 /**
  * Le graphe de dépendances de l'application, écrit à la main.
@@ -38,6 +40,16 @@ class AppContainer(context: Context) {
 
   val serverRepository: ServerRepository by lazy {
     ServerRepositoryImpl(preferences, motisClient)
+  }
+
+  /**
+   * Consentement au trafic en clair, mémorisé une fois par hôte (docs/architecture.md § 11.1).
+   *
+   * C'est lui, et non la `network_security_config`, qui garantit qu'aucune requête `http://` ne part
+   * sans un accord explicite de l'usager.
+   */
+  val cleartextConsentStore: CleartextConsentStore by lazy {
+    DataStoreCleartextConsentStore(preferences)
   }
 
   private companion object {
