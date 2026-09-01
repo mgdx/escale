@@ -43,9 +43,9 @@ class MapViewModel(
   private val serverRepository: ServerRepository,
   private val mapRepository: MapRepository,
   private val geocodeRepository: GeocodeRepository,
-  private val styles: MapStyles,
-  private val cameraStore: MapCameraStore,
-  private val locationSource: DeviceLocationSource,
+  private val styles: MapStyleSource,
+  private val cameraStore: MapCameraMemory,
+  private val locationSource: LocationSource,
   private val selection: MapSelection,
   private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
