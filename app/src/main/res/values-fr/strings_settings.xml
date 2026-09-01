@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="settings_title">Réglages</string>
+  <string name="settings_server_title">Serveur MOTIS</string>
+
+  <string name="server_settings_title">Serveur MOTIS</string>
+  <string name="server_settings_current_label">Serveur en service</string>
+  <string name="server_settings_public_instance_notice">Le serveur par défaut est une instance publique tenue par des bénévoles. Merci d\'en faire un usage mesuré.</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Politique réseau d'Escale (SPEC.md § 4.1 et § 5.6.1).
+
+  Le trafic en clair est interdit globalement : toutes les requêtes vers un serveur MOTIS passent
+  en HTTPS et vérifient les autorités de certification du système.
+
+  POUR AUTORISER UN SERVEUR EN CLAIR (instance sur le réseau local, ou serveur de développement) :
+  décommenter le bloc `domain-config` ci-dessous et y remplacer l'hôte par celui du serveur, sans
+  schéma, sans port et sans chemin — par exemple `192.168.1.10` ou `motis.maison.lan`. Un bloc
+  `domain-config` peut contenir plusieurs balises `domain`.
+
+  ATTENTION, limite de la plateforme : depuis Android 7, cette configuration est figée à la
+  compilation. Un hôte saisi par l'usager dans l'écran « Serveur MOTIS » ne peut donc PAS être
+  ajouté ici à l'exécution ; seule une recompilation le permet. L'application doit en conséquence
+  refuser une URL `http://` non déclarée avec un message explicite, plutôt que d'échouer sans
+  raison visible.
+-->
+<network-security-config>
+  <base-config cleartextTrafficPermitted="false">
+    <trust-anchors>
+      <certificates src="system" />
+    </trust-anchors>
+  </base-config>
+
+  <!--
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">192.168.1.10</domain>
+  </domain-config>
+  -->
+</network-security-config>

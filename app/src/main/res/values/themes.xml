@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Thème de la fenêtre, appliqué avant que Compose ne prenne la main. Il ne sert qu'à éviter un
+  clignotement au démarrage : toutes les couleurs de l'interface viennent du thème Material 3
+  défini dans ui/theme/Theme.kt.
+-->
 <resources>
-
-    <style name="Theme.Escale" parent="android:Theme.Material.Light.NoActionBar" />
+  <style name="Theme.Escale" parent="android:Theme.Material.Light.NoActionBar">
+    <item name="android:windowBackground">@color/window_background</item>
+  </style>
 </resources>
