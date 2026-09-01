@@ -453,9 +453,11 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
 - Les serveurs déjà utilisés sont mémorisés et proposés en liste, avec suppression par balayage.
   Une bascule ne demande pas de ressaisir l'URL.
 - **Serveur en clair (`http://`)** : accepté pour une instance sur le réseau local ou en
-  développement, avec un avertissement explicite au moment de l'enregistrement. Techniquement,
-  cela suppose une `network_security_config` qui n'autorise le trafic en clair que pour les hôtes
-  saisis par l'utilisateur, jamais globalement.
+  développement, avec un avertissement explicite au moment de l'enregistrement. Le dispositif
+  technique est celui décrit au § 4.1 : la plateforme ne sachant pas restreindre le clair aux seuls
+  hôtes saisis à l'exécution, la `network_security_config` est permissive et **c'est cet écran qui
+  porte la restriction** — aucune URL `http://` n'est enregistrée, ni même testée, sans un
+  consentement explicite, demandé une fois par hôte et mémorisé.
 - **Effets d'un changement de serveur**, annoncés avant confirmation : les caches de résultats, de
   géocodage et de tuiles sont vidés ; les favoris et l'historique sont conservés ; les identifiants
   d'arrêts enregistrés dans les favoris peuvent ne plus être reconnus par le nouveau serveur — dans
