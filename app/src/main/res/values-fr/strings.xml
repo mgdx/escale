@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_tagline">Aller là-bas, comme vous voulez</string>
+
+  <string name="action_back">Retour</string>
+  <string name="action_settings">Réglages</string>
+  <string name="action_retry">Réessayer</string>
+
+  <string name="error_no_network">Pas de connexion réseau.</string>
+  <string name="error_timeout">Le serveur a mis trop de temps à répondre.</string>
+  <string name="error_server_unreachable">Le serveur ne répond pas.</string>
+  <string name="error_api_version_too_old">Ce serveur utilise une version de MOTIS trop ancienne pour Escale.</string>
+  <string name="error_unknown">Une erreur est survenue.</string>
+</resources>

@@ -25,6 +25,12 @@ android {
       isReturnDefaultValues = true
     }
   }
+
+  lint {
+    // Un avertissement de lint est une erreur (CLAUDE.md).
+    warningsAsErrors = true
+    abortOnError = true
+  }
 }
 
 kotlin {
