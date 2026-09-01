@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="map_content_description">Carte</string>
+
+  <string name="map_locate_unknown">Afficher ma position</string>
+  <string name="map_locate_centered">Centré sur ma position. Appuyer pour me suivre</string>
+  <string name="map_locate_following">Suivi de ma position. Appuyer pour arrêter</string>
+
+  <string name="map_location_denied_title">Position indisponible</string>
+  <string name="map_location_denied_message">Escale a besoin de la permission de localisation pour afficher où vous êtes. Tout le reste fonctionne sans.</string>
+  <string name="map_location_denied_action">Ouvrir les réglages système</string>
+  <string name="map_dismiss">Fermer</string>
+
+  <string name="map_pick_departure">Partir d\'ici</string>
+  <string name="map_pick_destination">Aller ici</string>
+
+  <string name="map_attribution_button">Sources des données de la carte</string>
+  <string name="map_attribution_title">Données de la carte</string>
+  <string name="map_attribution_openstreetmap">© les contributeurs d\'OpenStreetMap</string>
+  <string name="map_attribution_openstreetmap_link">openstreetmap.org/copyright</string>
+  <string name="map_attribution_transitous">Horaires de la communauté Transitous</string>
+  <string name="map_attribution_transitous_link">transitous.org/sources</string>
+
+  <string name="map_tiles_unavailable">Ce serveur ne fournit pas de fond de carte.</string>
+</resources>
