@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="about_title">À propos</string>
+  <string name="about_version">Version %1$s</string>
+  <string name="about_license_summary">Escale est un logiciel libre, publié sous licence publique générale GNU, version 3 ou ultérieure. Vous pouvez l\'utiliser, l\'étudier, le partager et l\'améliorer.</string>
+  <string name="about_license_link">Licence</string>
+  <string name="about_license_link_subtitle">Lire le texte intégral de la GNU GPL v3</string>
+  <string name="about_repository">Code source</string>
+  <string name="about_repository_subtitle">github.com/mgdx/escale</string>
+
+  <string name="about_attributions_title">Attributions</string>
+  <string name="about_attributions_notice">Les itinéraires sont calculés par un serveur MOTIS. L\'instance publique et ses données proviennent du projet Transitous, dont les données cartographiques viennent d\'OpenStreetMap.</string>
+  <string name="about_transitous">Sources de données de Transitous</string>
+  <string name="about_transitous_subtitle">transitous.org/sources</string>
+  <string name="about_openstreetmap">© les contributeurs d\'OpenStreetMap</string>
+  <string name="about_openstreetmap_subtitle">openstreetmap.org/copyright</string>
+</resources>
