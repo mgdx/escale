@@ -1,0 +1,872 @@
+[
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon",
+    "id": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:73626",
+    "lat": 4.884457E1,
+    "lon": 2.3751456999999996E0,
+    "level": 1E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.729500389099121E1,
+    "modes": [
+      "REGIONAL_RAIL",
+      "SUBWAY",
+      "BUS"
+    ],
+    "importance": 5.309747066348791E-3
+  },
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Paris Gare de Lyon",
+    "id": "ch-opentransportdataswiss26_Parent8768600",
+    "lat": 4.884483999999999E1,
+    "lon": 2.3740674999999998E0,
+    "level": 1E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.502886199951172E1,
+    "modes": [
+      "HIGHSPEED_RAIL",
+      "LONG_DISTANCE"
+    ],
+    "importance": 8.84847657289356E-4
+  },
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon Part Dieu",
+    "id": "es-RENFE-Larga-Distancia-y-AVE_87303",
+    "lat": 4.576028E1,
+    "lon": 4.859801E0,
+    "level": 0E0,
+    "country": "FR",
+    "zip": "69003",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Auvergne-Rhône-Alpes",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Rhône",
+        "adminLevel": 5E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Métropole de Lyon",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Lyon",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Lyon",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Lyon 3e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.3835233688354492E1,
+    "modes": [
+      "HIGHSPEED_RAIL",
+      "LONG_DISTANCE",
+      "REGIONAL_RAIL"
+    ],
+    "importance": 5.6525045074522495E-3
+  },
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon Perrache",
+    "id": "fr-horaires-sncf_FR::LMU:8d3fa4b0-cb0a-11e8-8bfa-f784c1c7c611:",
+    "lat": 4.574850800000001E1,
+    "lon": 4.8257769999999995E0,
+    "level": 0E0,
+    "country": "FR",
+    "zip": "69002",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Auvergne-Rhône-Alpes",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Rhône",
+        "adminLevel": 5E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Métropole de Lyon",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Lyon",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Lyon",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Lyon 2e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.3496400833129883E1,
+    "modes": [
+      "HIGHSPEED_RAIL",
+      "LONG_DISTANCE",
+      "REGIONAL_RAIL",
+      "BUS"
+    ],
+    "importance": 3.1178640201687813E-3
+  },
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Paris Gare de Lyon Hall 1 - 2",
+    "id": "fr-horaires-sncf_FR::LMU:6451bcf0-cb0a-11e8-8bfa-f784c1c7c611:",
+    "lat": 4.8844944999999996E1,
+    "lon": 2.373481E0,
+    "level": -3E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.3429061889648438E1,
+    "modes": [
+      "HIGHSPEED_RAIL",
+      "LONG_DISTANCE",
+      "REGIONAL_RAIL"
+    ],
+    "importance": 4.3767839670181274E-3
+  },
+  {
+    "type": "PLACE",
+    "category": "post_office_14",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Paris Gare-de-Lyon",
+    "id": "node/[251774784]",
+    "lat": 4.88460989E1,
+    "lon": 2.3742452E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.275E1
+  },
+  {
+    "type": "PLACE",
+    "category": "shelter_14",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon-Diderot",
+    "id": "way/[630710596]",
+    "lat": 4.88456942E1,
+    "lon": 2.3714826E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.225E1
+  },
+  {
+    "type": "PLACE",
+    "category": "shelter_14",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon-Diderot",
+    "id": "way/[630710598]",
+    "lat": 4.88456853E1,
+    "lon": 2.3714008E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.225E1
+  },
+  {
+    "type": "PLACE",
+    "category": "hotel_16",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "TimHotel Gare de Lyon",
+    "id": "node/[535869178]",
+    "lat": 4.88468041E1,
+    "lon": 2.370162E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.2E1
+  },
+  {
+    "type": "PLACE",
+    "category": "books_16",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ],
+      [
+        5E0,
+        2E0
+      ],
+      [
+        8E0,
+        4E0
+      ]
+    ],
+    "name": "Fnac Paris - Gare de Lyon",
+    "id": "way/[366390614]",
+    "lat": 4.88445763E1,
+    "lon": 2.3749268E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "France",
+        "adminLevel": 2E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "France métropolitaine",
+        "adminLevel": 3E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Île-de-France",
+        "adminLevel": 4E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 6E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true
+      },
+      {
+        "name": "Paris 12e Arrondissement",
+        "adminLevel": 9E0,
+        "matched": false,
+        "unique": false,
+        "default": false
+      },
+      {
+        "name": "Quartier des Quinze-Vingts",
+        "adminLevel": 1E1,
+        "matched": false,
+        "unique": false,
+        "default": false
+      }
+    ],
+    "score": -2.125E1
+  }
+]
