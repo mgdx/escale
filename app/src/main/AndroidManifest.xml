@@ -1,11 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+  <uses-permission android:name="android.permission.INTERNET" />
 
   <!--
-    Seule permission déclarée à ce jalon (SPEC.md § 11). La localisation et les notifications
-    viendront à leur jalon respectif, facultatives et demandées à l'usage.
+    Localisation facultative, demandée à l'usage au premier appui sur le bouton de position, et
+    jamais au démarrage (SPEC.md § 5.1 et § 11). La position est lue par le `LocationManager` de
+    la plateforme, jamais par un service Google. L'application reste pleinement utilisable si ces
+    deux permissions sont refusées.
+    POST_NOTIFICATIONS viendra au jalon 10, avec les trajets surveillés.
   -->
-  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+  <!--
+    Imposée par MapLibre : son `ConnectivityReceiver` appelle
+    `ConnectivityManager.getActiveNetworkInfo()` pour suspendre le téléchargement des tuiles hors
+    ligne, et lève une SecurityException sans elle. Elle ne donne accès à aucune donnée
+    personnelle : seulement à l'état « connecté ou non » de l'appareil.
+  -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+  <!--
+    ACCESS_WIFI_STATE et la fonctionnalité `android.hardware.wifi` viennent du manifeste de
+    MapLibre, qui ne s'en sert nulle part : aucune classe de l'AAR ne référence `WifiManager`.
+    Une permission inutile est une permission de trop (SPEC.md § 11), on la retire de la fusion.
+  -->
+  <uses-permission
+      android:name="android.permission.ACCESS_WIFI_STATE"
+      tools:node="remove" />
+  <uses-feature
+      android:name="android.hardware.wifi"
+      tools:node="remove" />
 
   <application
       android:name=".EscaleApplication"

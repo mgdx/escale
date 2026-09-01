@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuration lint du module :app. Elle ne contient que des exceptions ciblées et justifiées :
+  CLAUDE.md ne tolère aucun avertissement, et couper une règle en bloc reviendrait à s'en priver.
+-->
+<lint>
+  <issue id="UnusedResources">
+    <!--
+      `app_tagline` n'a plus d'écran depuis que l'accueil est devenu la carte plein écran
+      (SPEC.md § 5.1) : l'ancienne page d'attente du jalon 1 l'affichait, la carte n'a rien à
+      afficher. La chaîne reste une chaîne d'identité de l'application (SPEC.md § 1.1) et n'est pas
+      supprimée pour autant : l'écran « À propos » est sa place naturelle. À retirer d'ici dès
+      qu'un écran la reprend.
+    -->
+    <ignore regexp="app_tagline" />
+  </issue>
+</lint>

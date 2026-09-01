@@ -77,6 +77,10 @@ dependencies {
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)
 
+  // Carte : MapLibre GL Android, licence BSD, compatible F-Droid (SPEC.md § 3). La carte est
+  // rendue par le moteur natif, jamais par une WebView (SPEC.md § 2).
+  implementation(libs.maplibre.android.sdk)
+
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(platform(libs.androidx.compose.bom))
