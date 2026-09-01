@@ -241,6 +241,22 @@ class ServerSettingsViewModelTest {
   }
 
   @Test
+  fun `une bascule sans nouveau test conserve le drapeau des tuiles`() = runTest {
+    val known = ServerConfig(
+      baseUrl = "https://motis.exemple.org",
+      label = "motis.exemple.org",
+      hasTiles = true,
+    )
+    repository.addKnown(known)
+    val viewModel = viewModel()
+
+    viewModel.onSelectKnownServer(known)
+    viewModel.onConfirmSwitch()
+
+    assertTrue(repository.savedConfigs.single().hasTiles)
+  }
+
+  @Test
   fun `le balayage retire un serveur des serveurs connus`() = runTest {
     val viewModel = viewModel()
 
