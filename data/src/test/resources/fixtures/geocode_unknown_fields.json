@@ -1,0 +1,51 @@
+[
+  {
+    "type": "STOP",
+    "tokens": [
+      [
+        0E0,
+        4E0
+      ]
+    ],
+    "name": "Gare de Lyon",
+    "id": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:73626",
+    "lat": 4.884457E1,
+    "lon": 2.3751456999999996E0,
+    "level": 1E0,
+    "country": "FR",
+    "zip": "75012",
+    "tz": "Europe/Paris",
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 8E0,
+        "matched": false,
+        "unique": true,
+        "default": true,
+        "champInconnuAjouteParMotis": "l'API MOTIS ajoute des champs sans préavis"
+      }
+    ],
+    "score": -2.729500389099121E1,
+    "modes": [
+      "SUBWAY",
+      "HYPERLOOP"
+    ],
+    "importance": 5.309747066348791E-3,
+    "champInconnuAjouteParMotis": {
+      "structureEntiereInconnue": [
+        1E0,
+        2E0
+      ]
+    }
+  },
+  {
+    "type": "TYPE_INCONNU",
+    "tokens": [],
+    "name": "Quai inconnu",
+    "id": "",
+    "lat": 4.884E1,
+    "lon": 2.375E0,
+    "areas": [],
+    "score": 0E0
+  }
+]
