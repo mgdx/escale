@@ -6,33 +6,43 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
 import io.github.mgdx.escale.core.geo.MapCamera
+import io.github.mgdx.escale.core.geo.MapDataRequest
 import io.github.mgdx.escale.core.geo.MapViewport
 import io.github.mgdx.escale.core.geo.center
 import io.github.mgdx.escale.core.geo.isPointLike
 import io.github.mgdx.escale.core.geo.journeyTrace
 import io.github.mgdx.escale.core.geo.mapDataRequests
+import io.github.mgdx.escale.core.geo.shouldClusterStops
+import io.github.mgdx.escale.core.geo.stopMarkers
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
+import io.github.mgdx.escale.core.repository.PreferencesRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
+import io.github.mgdx.escale.core.repository.StopsRepository
+import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.core.result.getOrNull
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,35 +56,64 @@ import kotlinx.coroutines.withContext
  *
  * Aucune coordonnée n'est journalisée (SPEC.md § 8 et § 11).
  */
+// Douze collaborateurs, et pas un de trop : la carte est le seul écran qui réunit le serveur
+// courant, les arrêts, les réglages, le géocodage inverse, la position de l'appareil, la feuille
+// de style, la caméra mémorisée et les trois points de rendez-vous avec les autres lots. Les
+// regrouper en objets de commodité masquerait ce que cet écran dépend réellement, sans en retirer
+// une seule dépendance (docs/architecture.md § 9 : injection par constructeur, sans conteneur).
+@Suppress("LongParameterList")
 class MapViewModel(
   private val serverRepository: ServerRepository,
   private val mapRepository: MapRepository,
   private val geocodeRepository: GeocodeRepository,
+  private val stopsRepository: StopsRepository,
+  private val preferencesRepository: PreferencesRepository,
   private val styles: MapStyleSource,
   private val cameraStore: MapCameraMemory,
   private val locationSource: LocationSource,
   private val selection: MapSelection,
   private val selectedJourneys: SelectedJourneyStore,
+  private val departureRequests: StopDepartureRequests,
   private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
-  private val state = MutableStateFlow(MapUiState())
+  /**
+   * Les rappels d'appui sur un arrêt, construits une seule fois et posés sur l'état initial : ils
+   * ne changent jamais, et n'entrent donc jamais dans une recomposition (voir [MapStopActions]).
+   */
+  private val stopActions = MapStopActions(
+    onStopClick = ::onStopClick,
+    onClusterClick = ::onClusterClick,
+    onDismissStop = ::onDismissStop,
+    onDepartures = ::onStopDepartures,
+  )
+
+  private val state = MutableStateFlow(MapUiState(stopActions = stopActions))
   val uiState: StateFlow<MapUiState> = state.asStateFlow()
 
   /** Le thème du système, poussé par le composable : il décide de la palette de la feuille. */
   private val darkTheme = MutableStateFlow<Boolean?>(null)
 
-  /** Un arrêt de caméra, et un seul par geste (SPEC.md § 5.7, règle 1). */
-  private val cameraIdles = MutableSharedFlow<MapViewport>(extraBufferCapacity = EXTRA_BUFFER)
+  /**
+   * Le dernier arrêt de caméra (SPEC.md § 5.7, règle 1).
+   *
+   * Un `StateFlow` et non un flux d'événements : il rejoue sa valeur courante à chaque nouvelle
+   * collecte, ce qui fait que rallumer le réglage « arrêts » recharge l'écran courant sans attendre
+   * que l'usager touche la carte. Deux arrêts de caméra trop rapprochés se fondent en un seul,
+   * ce que l'anti-rebond de 300 ms aurait fait de toute façon.
+   */
+  private val cameraIdles = MutableStateFlow<MapViewport?>(null)
 
   private var tokens = 0L
   private var locationJob: Job? = null
+  private var stopDetailJob: Job? = null
   private var fineRequested = false
   private var centerOnNextFix = false
 
   init {
     observeStyle()
-    observePlannedRequests()
+    observeStops()
+    observePointsOfInterest()
     observeSelectedJourney()
     applyInitialCamera()
   }
@@ -89,7 +128,7 @@ class MapViewModel(
    * (SPEC.md § 5.7, règle 1), et c'est aussi là qu'on mémorise le cadrage (SPEC.md § 5.1).
    */
   fun onCameraIdle(viewport: MapViewport, camera: MapCamera) {
-    cameraIdles.tryEmit(viewport)
+    cameraIdles.value = viewport
     viewModelScope.launch { cameraStore.save(camera) }
   }
 
@@ -220,17 +259,144 @@ class MapViewModel(
   }
 
   /**
-   * Branche les arrêts de caméra sur les règles de `:core`.
+   * Branche les arrêts de caméra sur `StopsRepository` (SPEC.md § 5.7).
    *
-   * `collectLatest` porte la règle 2 : une nouvelle requête planifiée annule la coroutine de la
-   * précédente, donc l'appel réseau qu'elle attendait. Le jalon 6 remplacera la mise à jour de
-   * l'état par l'appel à `StopsRepository`.
+   * Sept des neuf règles de fluidité passent par ces quelques lignes :
+   *
+   * - **règles 1, 3, 5 et § 7.9** : `mapDataRequests` ne laisse passer qu'une requête par geste,
+   *   après 300 ms, sur l'emprise élargie de 30 %, jamais sous le zoom 11 et jamais en redescendant
+   *   d'un palier. Rien de tout cela n'est réécrit ici ;
+   * - **règle 2** : `collectLatest` annule la coroutine de la requête précédente — donc l'appel
+   *   HTTP — dès qu'une nouvelle naît, c'est-à-dire dès que la caméra a rebougé ;
+   * - **règle 4** : le cache par emprise et par palier est dans le dépôt ; une emprise déjà
+   *   couverte rend sa réponse sans toucher au réseau ;
+   * - **règles 6 et 7** : la mise en GeoJSON se fait sur [computeDispatcher], et les deux sources
+   *   sont posées en **une seule** modification d'état.
+   *
+   * Le réglage « arrêts » de SPEC.md § 5.6 coupe le flux entier : décoché, il n'émet plus la
+   * moindre requête, ce qui est plus honnête que de charger pour ne rien montrer. Recoché, la
+   * collecte reprend sur la position courante de la caméra, que [cameraIdles] a retenue.
    */
-  private fun observePlannedRequests() {
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun observeStops() {
     viewModelScope.launch {
-      mapDataRequests(cameraIdles).collect { request ->
-        state.update { it.copy(plannedRequest = request) }
+      preferencesRepository.displayPreferences
+        .map { it.showStops }
+        .distinctUntilChanged()
+        .onEach { visible -> if (!visible) clearStops() }
+        .flatMapLatest { visible ->
+          if (visible) mapDataRequests(cameraIdles.filterNotNull()) else emptyFlow()
+        }
+        .collectLatest { request -> loadStops(request) }
+    }
+  }
+
+  private suspend fun loadStops(request: MapDataRequest) {
+    val stops = stopsRepository
+      .stopsIn(area = request.area, modes = request.tier.stopModes, grouped = true)
+      .getOrNull()
+      // Une emprise sans réponse laisse les marqueurs précédents en place : une carte qui se vide
+      // parce que le réseau a hoqueté est pire qu'une carte un peu en retard (SPEC.md § 8).
+      ?: return
+    val drawing = withContext(computeDispatcher) { stopsDrawing(stops) }
+    state.update {
+      it.copy(
+        plannedRequest = request,
+        stopsGeoJson = drawing.plain,
+        clusteredStopsGeoJson = drawing.clustered,
+      )
+    }
+  }
+
+  /**
+   * Les arrêts mis en GeoJSON, sur l'une des deux sources et jamais sur les deux.
+   *
+   * Règle 6 : au-delà de 200 points, c'est la source regroupante qui les porte ; en deçà, chacun
+   * garde son dessin et son nom. L'autre source reçoit une collection vide, ce qui l'efface sans
+   * démonter la moindre couche (règle 8).
+   */
+  private fun stopsDrawing(stops: List<Stop>): StopsDrawing {
+    val geoJson = MapGeoJson.stops(stopMarkers(stops))
+    return if (shouldClusterStops(stops.size)) {
+      StopsDrawing(plain = MapGeoJson.EMPTY, clustered = geoJson)
+    } else {
+      StopsDrawing(plain = geoJson, clustered = MapGeoJson.EMPTY)
+    }
+  }
+
+  private fun clearStops() {
+    state.update {
+      it.copy(stopsGeoJson = MapGeoJson.EMPTY, clusteredStopsGeoJson = MapGeoJson.EMPTY, selectedStop = null)
+    }
+  }
+
+  /**
+   * Le réglage « points d'intérêt » de SPEC.md § 5.6, indépendant du zoom.
+   *
+   * Aucune requête n'est en jeu : les points d'intérêt sont déjà dans les tuiles vectorielles, et
+   * la feuille de style embarquée porte leur couche avec le bon `minzoom`. Il n'y a qu'à l'allumer
+   * ou à l'éteindre.
+   */
+  private fun observePointsOfInterest() {
+    viewModelScope.launch {
+      preferencesRepository.displayPreferences
+        .map { it.showPointsOfInterest }
+        .distinctUntilChanged()
+        .collect { visible -> state.update { it.copy(pointsOfInterestVisible = visible) } }
+    }
+  }
+
+  /**
+   * Appui sur un arrêt : l'infobulle s'ouvre aussitôt sur ce qu'on sait déjà — son nom et son mode,
+   * lus sur l'entité touchée — puis les lignes desservies arrivent (SPEC.md § 5.7).
+   *
+   * L'appel n'attend pas de réponse pour ouvrir l'infobulle : `/api/v6/stop` prend le temps qu'il
+   * prend, et l'usager doit voir immédiatement qu'il a touché le bon arrêt.
+   */
+  fun onStopClick(stop: SelectedStop) {
+    state.update { it.copy(selectedStop = stop.copy(linesLoading = true, linesFailed = false)) }
+    stopDetailJob?.cancel()
+    stopDetailJob = viewModelScope.launch {
+      val outcome = stopsRepository.stop(stop.id)
+      state.update { current ->
+        // L'usager a pu refermer l'infobulle ou en ouvrir une autre pendant l'appel.
+        if (current.selectedStop?.id != stop.id) {
+          current
+        } else {
+          current.copy(selectedStop = current.selectedStop.withLines(outcome))
+        }
       }
+    }
+  }
+
+  /**
+   * « Un bouton menant aux prochains départs (§ 5.4) » — **le point d'accroche du jalon 9**.
+   *
+   * L'écran des prochains départs n'existe pas encore ; l'appui dépose la demande dans
+   * [StopDepartureRequests], que la navigation consommera. Voir la documentation de cette classe
+   * pour les trois lignes qui restent à écrire.
+   */
+  fun onStopDepartures(stop: SelectedStop) {
+    departureRequests.request(stopId = stop.id, stopName = stop.name)
+  }
+
+  fun onDismissStop() {
+    stopDetailJob?.cancel()
+    stopDetailJob = null
+    state.update { it.copy(selectedStop = null) }
+  }
+
+  /**
+   * Appui sur une pastille de regroupement : on se rapproche, on n'ouvre rien.
+   *
+   * Le zoom monte de [CLUSTER_ZOOM_STEP] paliers, ce qui suffit à faire éclater le groupe.
+   * L'animation est bornée à 500 ms par le composable (règle 9).
+   */
+  fun onClusterClick(point: LatLon) {
+    val zoom = (cameraIdles.value?.zoom ?: NEARBY_ZOOM) + CLUSTER_ZOOM_STEP
+    state.update {
+      val goal = CameraGoal.Center(MapCamera(point, zoom))
+      it.copy(cameraTarget = CameraTarget(goal, animated = true, token = nextToken()), selectedStop = null)
     }
   }
 
@@ -324,6 +490,9 @@ class MapViewModel(
     return tokens
   }
 
+  /** Les arrêts prêts à poser : l'une des deux collections porte tout, l'autre est vide. */
+  private data class StopsDrawing(val plain: String, val clustered: String)
+
   /** Le tracé d'un trajet, prêt à poser : deux sources GeoJSON et un cadrage. */
   private data class JourneyDrawing(val lines: String, val markers: String, val traced: Boolean, val goal: CameraGoal?)
 
@@ -358,7 +527,8 @@ class MapViewModel(
     /** Ni caméra mémorisée, ni position connue, ni serveur qui réponde : on montre la planète. */
     val WORLD_CAMERA = MapCamera(center = LatLon(lat = 20.0, lon = 0.0), zoom = 1.5)
 
-    private const val EXTRA_BUFFER = 4
+    /** De combien on se rapproche à l'appui sur un groupe : assez pour qu'il éclate. */
+    private const val CLUSTER_ZOOM_STEP = 2.0
 
     /** De l'air autour d'un trajet cadré : le tracé ne colle pas aux bords de la zone visible. */
     private const val FRAME_MARGIN_RATIO = 0.12
@@ -369,13 +539,28 @@ class MapViewModel(
           serverRepository = container.serverRepository,
           mapRepository = container.mapRepository,
           geocodeRepository = container.geocodeRepository,
+          stopsRepository = container.stopsRepository,
+          preferencesRepository = container.preferencesRepository,
           styles = container.mapStyles,
           cameraStore = container.mapCameraStore,
           locationSource = container.deviceLocationSource,
           selection = container.mapSelection,
           selectedJourneys = container.selectedJourneyStore,
+          departureRequests = container.stopDepartureRequests,
         )
       }
     }
   }
+}
+
+/**
+ * L'infobulle complétée par ce que `/api/v6/stop` a rendu.
+ *
+ * Un échec n'efface pas l'infobulle : le nom de l'arrêt reste juste, et [SelectedStop.linesFailed]
+ * dit que les lignes manquent plutôt que de laisser croire que l'arrêt n'en dessert aucune
+ * (SPEC.md § 8).
+ */
+private fun SelectedStop.withLines(outcome: Outcome<Stop>): SelectedStop = when (outcome) {
+  is Outcome.Success -> copy(lines = outcome.value.lines, linesLoading = false, linesFailed = false)
+  is Outcome.Failure -> copy(linesLoading = false, linesFailed = true)
 }

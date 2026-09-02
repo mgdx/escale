@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.map
 
+import io.github.mgdx.escale.core.geo.StopMarker
 import io.github.mgdx.escale.core.geo.TraceMarker
 import io.github.mgdx.escale.core.geo.TraceSegment
 import io.github.mgdx.escale.core.model.LatLon
@@ -63,6 +64,29 @@ object MapGeoJson {
     }
   }
 
+  /**
+   * Les arrêts de la carte (SPEC.md § 5.7).
+   *
+   * Chaque entité porte tout ce dont les couches ont besoin pour se dessiner sans jamais être
+   * reconstruites : son dessin ([PROPERTY_ICON]), le palier à partir duquel elle doit se voir
+   * ([PROPERTY_TIER]) et son nom. [PROPERTY_STOP_ID] est ce que l'appui rend, pour aller chercher
+   * les lignes desservies puis les prochains départs.
+   */
+  fun stops(markers: List<StopMarker>): String = collection {
+    for (marker in markers) {
+      feature(
+        properties = {
+          put(PROPERTY_STOP_ID, marker.id)
+          put(PROPERTY_LABEL, marker.name)
+          put(PROPERTY_TIER, marker.tier.name)
+          put(PROPERTY_MODE, marker.mode.name)
+          put(PROPERTY_ICON, StopIcon.of(marker.mode).imageId)
+        },
+        geometry = { point(marker.point) },
+      )
+    }
+  }
+
   /** Les marqueurs de départ, d'arrivée et de correspondance d'un trajet (SPEC.md § 5.3). */
   fun journeyMarkers(markers: List<TraceMarker>): String = collection {
     for (marker in markers) {
@@ -122,4 +146,16 @@ object MapGeoJson {
 
   /** Nature du marqueur : le nom d'une valeur de `TraceMarkerKind`. */
   const val PROPERTY_KIND = "kind"
+
+  /** Identifiant de l'arrêt, celui que `/api/v6/stop` et `/api/v6/stoptimes` attendent. */
+  const val PROPERTY_STOP_ID = "stopId"
+
+  /** Palier d'apparition de l'arrêt : le nom d'une valeur de `ZoomTier`. */
+  const val PROPERTY_TIER = "tier"
+
+  /** Mode principal desservi : le nom d'une valeur de `TransitMode`. */
+  const val PROPERTY_MODE = "mode"
+
+  /** Identifiant du dessin posé sur la feuille de style pour cet arrêt. */
+  const val PROPERTY_ICON = "icon"
 }

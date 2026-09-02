@@ -1,14 +1,23 @@
 package io.github.mgdx.escale.ui.map
 
 import io.github.mgdx.escale.core.geo.MapCamera
+import io.github.mgdx.escale.core.model.BoundingBox
+import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.SearchPreferences
+import io.github.mgdx.escale.core.model.Stop
+import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
+import io.github.mgdx.escale.core.repository.PreferencesRepository
+import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Feuilles de style factices : ce qui compte est laquelle des deux est demandée. */
 class FakeStyleSource : MapStyleSource {
@@ -92,4 +101,56 @@ class FakeGeocodeRepository(private var label: Location? = null) : GeocodeReposi
   }
 
   override suspend fun clearGeocodeCache(): Outcome<Unit> = Outcome.Success(Unit)
+}
+
+/**
+ * Arrêts de carte, entièrement pilotés par le cas d'essai.
+ *
+ * Le compteur d'appels est ce qui prouve les règles de sobriété de SPEC.md § 5.7 : c'est lui, et
+ * non l'état affiché, qui dit si une requête est partie.
+ */
+class FakeStopsRepository(
+  var stops: List<Stop> = emptyList(),
+  var detail: Outcome<Stop> = Outcome.Failure(EscaleError.NoNetwork),
+) : StopsRepository {
+
+  /** Chaque emprise et chaque jeu de modes demandés, dans l'ordre. */
+  val requests: MutableList<Pair<BoundingBox, Set<TransitMode>>> = mutableListOf()
+  val detailRequests: MutableList<String> = mutableListOf()
+
+  /** Combien de temps la réponse se fait attendre : de quoi éprouver l'annulation. */
+  var delayMillis: Long = 0
+
+  /** Non nulle : la prochaine emprise échoue, comme le ferait un réseau coupé. */
+  var failure: EscaleError? = null
+
+  override suspend fun stopsIn(area: BoundingBox, modes: Set<TransitMode>, grouped: Boolean): Outcome<List<Stop>> {
+    requests += area to modes
+    if (delayMillis > 0) delay(delayMillis)
+    return failure?.let { Outcome.Failure(it) } ?: Outcome.Success(stops)
+  }
+
+  override suspend fun stop(stopId: String): Outcome<Stop> {
+    detailRequests += stopId
+    return detail
+  }
+}
+
+/** Réglages d'affichage en mémoire : les trois bascules de couches de SPEC.md § 5.6. */
+class FakePreferencesRepository(display: DisplayPreferences = DisplayPreferences()) : PreferencesRepository {
+
+  private val displayState = MutableStateFlow(display)
+
+  override val searchPreferences: Flow<SearchPreferences> = MutableStateFlow(SearchPreferences())
+
+  override val displayPreferences: Flow<DisplayPreferences> = displayState
+
+  override suspend fun updateSearchPreferences(preferences: SearchPreferences): Outcome<Unit> = Outcome.Success(Unit)
+
+  override suspend fun updateDisplayPreferences(preferences: DisplayPreferences): Outcome<Unit> {
+    displayState.value = preferences
+    return Outcome.Success(Unit)
+  }
+
+  override suspend fun resetToDefaults(): Outcome<Unit> = Outcome.Success(Unit)
 }
