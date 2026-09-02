@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de la carte de recherche flottante et de son autocomplétion (SPEC.md § 5.1).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+-->
+<resources>
+  <!-- Les deux champs de la carte de recherche. -->
+  <string name="search_from_label">Departure</string>
+  <string name="search_to_label">Destination</string>
+  <string name="search_from_hint">Choose a starting point</string>
+  <string name="search_to_hint">Choose a destination</string>
+  <string name="search_swap">Swap departure and destination</string>
+
+  <!-- Troisième ligne : le choix d'heure. Le libellé reflète toujours le choix en cours, et se
+       compose d'une de ces chaînes et d'une date formatée — jamais de texte concaténé en dur. -->
+  <string name="search_time_now">Now</string>
+  <string name="search_time_depart_at">Departure %1$s</string>
+  <string name="search_time_arrive_by">Arrive before %1$s</string>
+  <string name="search_time_change">Change the travel time</string>
+
+  <!-- Sélecteur d'heure (SPEC.md § 5.1). -->
+  <string name="search_time_title">When do you travel?</string>
+  <string name="search_time_option_now">Leave now</string>
+  <string name="search_time_option_depart">Leave at…</string>
+  <string name="search_time_option_arrive">Arrive before…</string>
+  <string name="search_time_pick_date">Pick a date</string>
+  <string name="search_time_pick_time">Pick a time</string>
+  <string name="search_action_next">Next</string>
+  <string name="search_action_confirm">Confirm</string>
+  <string name="search_action_cancel">Cancel</string>
+
+  <!-- Champ actif en plein écran (SPEC.md § 5.1). -->
+  <string name="search_clear">Clear the field</string>
+  <string name="search_loading">Searching…</string>
+  <string name="search_no_results">No place matches this search.</string>
+  <plurals name="search_min_length">
+    <item quantity="one">Type at least %1$d character.</item>
+    <item quantity="other">Type at least %1$d characters.</item>
+  </plurals>
+
+  <!-- Entrées en tête de liste, avant les résultats du serveur. -->
+  <string name="search_entry_my_location">My location</string>
+  <string name="search_entry_home">Home</string>
+  <string name="search_entry_work">Work</string>
+  <string name="search_entry_pick_on_map">Choose on the map</string>
+  <string name="search_pick_on_map_hint">Press and hold the map to choose a point.</string>
+
+  <!-- Nature d'un résultat : le pictogramme est toujours doublé d'un mot (SPEC.md § 9). -->
+  <string name="search_kind_address">Address</string>
+  <string name="search_kind_place">Place</string>
+  <string name="search_kind_stop">Stop</string>
+
+  <!-- Puces d'accès rapide, affichées quand les deux champs sont vides (SPEC.md § 5.1). -->
+  <string name="search_chip_recent">%1$s → %2$s</string>
+
+  <!-- Modes desservis par un arrêt (SPEC.md § 5.1). Faute d'icônes de mode, qui appartiennent à
+       l'écran des résultats, ils sont écrits en toutes lettres. -->
+  <string name="search_served_modes">Served by %1$s</string>
+  <string name="search_mode_separator" translatable="false">" · "</string>
+  <string name="search_mode_tram">Tram</string>
+  <string name="search_mode_subway">Metro</string>
+  <string name="search_mode_ferry">Ferry</string>
+  <string name="search_mode_airplane">Plane</string>
+  <string name="search_mode_bus">Bus</string>
+  <string name="search_mode_coach">Coach</string>
+  <string name="search_mode_rail">Train</string>
+  <string name="search_mode_highspeed_rail">High-speed train</string>
+  <string name="search_mode_long_distance">Intercity train</string>
+  <string name="search_mode_night_rail">Night train</string>
+  <string name="search_mode_regional_rail">Regional train</string>
+  <string name="search_mode_suburban">Suburban train</string>
+  <string name="search_mode_funicular">Funicular</string>
+  <string name="search_mode_aerial_lift">Cable car</string>
+  <string name="search_mode_other">Other</string>
+</resources>
