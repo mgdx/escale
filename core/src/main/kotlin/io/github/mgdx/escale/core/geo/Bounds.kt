@@ -46,3 +46,15 @@ val BoundingBox.center: LatLon
  */
 fun BoundingBox.isPointLike(spanDegrees: Double = POINT_LIKE_SPAN_DEGREES): Boolean =
   max.lat - min.lat < spanDegrees && max.lon - min.lon < spanDegrees
+
+/**
+ * Vrai si cette emprise contient entièrement [other].
+ *
+ * C'est le cœur de la règle 4 de SPEC.md § 5.7 : « une emprise déjà couverte par une réponse en
+ * cache n'est pas redemandée ». **Couverte veut dire incluse, pas égale** — l'emprise demandée au
+ * serveur est celle de l'écran élargie de 30 %, si bien qu'un petit déplacement produit une emprise
+ * plus petite que celle déjà chargée, et n'a donc rien à redemander.
+ *
+ * L'antiméridien n'est pas traité, au même titre que dans [boundingBoxOf].
+ */
+fun BoundingBox.covers(other: BoundingBox): Boolean = contains(other.min) && contains(other.max)

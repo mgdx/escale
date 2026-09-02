@@ -49,11 +49,3 @@ fun planMapLoad(loaded: MapDataRequest?, visibleArea: BoundingBox, zoom: Double)
   if (loaded != null && loaded.tier >= tier && loaded.area.covers(visibleArea)) return null
   return MapDataRequest(area = visibleArea.expandBy(MapLoadRules.AREA_EXPANSION_RATIO), tier = tier)
 }
-
-/**
- * Vrai si cette emprise contient entièrement [other].
- *
- * L'antiméridien n'est pas traité, au même titre que dans [boundingBoxOf] : aucun jeu de données
- * MOTIS ne s'y prête en v1.
- */
-private fun BoundingBox.covers(other: BoundingBox): Boolean = contains(other.min) && contains(other.max)
