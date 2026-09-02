@@ -19,6 +19,7 @@ import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +38,9 @@ import kotlinx.coroutines.launch
  *   la réponse sans réseau, mais on ne va même pas jusque-là : un onglet qui a déjà sa liste est
  *   affiché tel quel ;
  * - **une nouvelle recherche annule ce qui court** (§ 7.2). Les travaux en cours sont annulés, les
- *   quatre onglets repartent de zéro, et seul l'onglet consulté est relancé.
+ *   quatre onglets repartent de zéro, et seul l'onglet consulté est relancé. Un réglage de
+ *   recherche modifié (§ 5.6) produit exactement le même effet : les trajets affichés ont été
+ *   calculés avec les anciens réglages, ils sont périmés.
  *
  * `EscaleError.Superseded` n'est jamais montré : il signifie qu'un résultat plus récent est en
  * route, et afficher « une erreur est survenue » à quelqu'un qui vient de relancer sa recherche
@@ -50,6 +53,7 @@ import kotlinx.coroutines.launch
 class ResultsViewModel(
   private val session: SearchSession,
   private val planRepository: PlanRepository,
+  private val searchPreferences: Flow<SearchPreferences>,
   private val selection: SelectedJourneyStore,
   private val savedState: SavedStateHandle,
 ) : ViewModel() {
@@ -61,9 +65,43 @@ class ResultsViewModel(
   /** Un travail par onglet, au plus. C'est ce qui permet d'annuler sans toucher aux autres. */
   private val jobs = mutableMapOf<JourneyCategory, Job>()
 
+  /** Les réglages de SPEC.md § 5.6, tels que le dépôt les a émis en dernier. */
+  private var preferences = SearchPreferences()
+
+  /** Faux tant que le dépôt n'a rien émis : aucune recherche ne part avant de les connaître. */
+  private var preferencesKnown = false
+
   init {
     viewModelScope.launch {
-      session.draft.collect(::onDraftChanged)
+      searchPreferences.collect(::onPreferencesChanged)
+    }
+  }
+
+  /**
+   * Les réglages de recherche ont changé (SPEC.md § 5.6).
+   *
+   * Deux moments à distinguer, et c'est tout l'objet de cette fonction :
+   *
+   * - **la première émission** n'est pas un changement. C'est seulement à ce moment qu'on sait avec
+   *   quels réglages chercher, et c'est donc là qu'on commence à observer le brouillon de
+   *   recherche. Observer les deux en parallèle ferait partir la première requête avec les valeurs
+   *   par défaut, pour la relancer aussitôt : une requête pour rien, que SPEC.md § 7 proscrit ;
+   * - **un changement réel** périme ce qui est affiché : ces trajets ont été calculés avec les
+   *   anciens réglages. Les onglets repartent de zéro et **seul l'onglet consulté est rechargé**,
+   *   les autres restant muets tant que l'usager ne les ouvre pas (SPEC.md § 7.3).
+   *
+   * Le cache de `PlanRepository` n'a rien à désactiver : sa clé contient la `SearchQuery`, donc les
+   * préférences. Une préférence modifiée donne une clé différente, et la réponse précédente n'est
+   * jamais rendue à sa place (SPEC.md § 7.5).
+   */
+  private fun onPreferencesChanged(updated: SearchPreferences) {
+    val first = !preferencesKnown
+    val changed = updated != preferences
+    preferences = updated
+    preferencesKnown = true
+    when {
+      first -> viewModelScope.launch { session.draft.collect(::onDraftChanged) }
+      changed -> restart(open = state.value.open)
     }
   }
 
@@ -118,13 +156,19 @@ class ResultsViewModel(
    * requête n'est envoyée. Dès qu'il est complet, la recherche part — SPEC.md § 5.1 ne prévoit pas
    * de bouton « Rechercher » — mais **pour le seul onglet consulté**.
    */
-  private fun onDraftChanged(draft: SearchDraft) {
+  private fun onDraftChanged(draft: SearchDraft) = restart(open = draft.isComplete)
+
+  /**
+   * Repart de zéro : tout ce qui court est annulé, les quatre onglets sont oubliés, et le seul
+   * onglet consulté est rechargé — s'il y a une recherche à faire.
+   */
+  private fun restart(open: Boolean) {
     jobs.values.forEach(Job::cancel)
     jobs.clear()
     selection.select(null)
     val category = state.value.category
-    state.value = ResultsUiState(open = draft.isComplete, category = category)
-    if (draft.isComplete) load(category)
+    state.value = ResultsUiState(open = open, category = category)
+    if (open) load(category)
   }
 
   private fun paginate(page: ResultsPage) {
@@ -193,20 +237,13 @@ class ResultsViewModel(
      */
     private const val KEY_CATEGORY = "results.category"
 
-    /**
-     * Les réglages de recherche de SPEC.md § 5.6 n'ont pas encore de dépôt : `AppContainer`
-     * n'expose pas de `PreferencesRepository`. Les valeurs par défaut sont celles du serveur, si
-     * bien qu'une requête assemblée avec elles est exactement celle qu'attend MOTIS. Le jour où le
-     * dépôt existera, c'est ce champ, et lui seul, qu'il faudra remplacer par son flux.
-     */
-    private val preferences = SearchPreferences()
-
     /** Fabrique propre à ce ViewModel (docs/architecture.md § 3, règle 3). */
     fun factory(container: AppContainer) = viewModelFactory {
       initializer {
         ResultsViewModel(
           session = container.searchSession,
           planRepository = container.planRepository,
+          searchPreferences = container.preferencesRepository.searchPreferences,
           selection = SelectedJourneyStore.shared,
           savedState = createSavedStateHandle(),
         )
