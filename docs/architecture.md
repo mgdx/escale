@@ -258,3 +258,28 @@ fun HomeScreen(
   ligne par lot.
 - Le `PaddingValues` transmis porte les encarts système et la hauteur de la feuille ouverte :
   c'est ce qui permet au cadrage de trajet de tenir compte de la feuille (spec §5.7, règle 9).
+
+### 11.5 Parapluies et feuilles dans l'enum `Mode`
+
+Deux valeurs de l'enum `Mode` de MOTIS ne sont **pas** des modes de transport mais des
+**parapluies** qui en désignent plusieurs (`docs/motis-openapi.yaml`, ligne 3845) :
+
+- `RAIL` couvre `HIGHSPEED_RAIL`, `LONG_DISTANCE`, `NIGHT_RAIL`, `REGIONAL_RAIL`, `SUBURBAN`, `SUBWAY` ;
+- `TRANSIT` couvre `TRAM`, `FERRY`, `AIRPLANE`, `BUS`, `COACH`, `RAIL`, `ODM`, `RIDE_SHARING`,
+  `FUNICULAR`, `AERIAL_LIFT`, `OTHER`.
+
+**La règle, qui vaut pour tout le projet :**
+
+> Un `Mode` **envoyé** au serveur peut être un parapluie — c'est même l'usage recommandé,
+> `transitModes=TRANSIT` en est l'exemple. Un `Mode` **reçu** du serveur se compare toujours à des
+> **feuilles** : le serveur a déjà développé le parapluie.
+
+Confondre les deux ne produit aucune erreur visible, seulement des résultats manquants — le défaut
+le plus coûteux à diagnostiquer. Le cas rencontré : Châtelet-Les Halles est annoncée en
+`REGIONAL_RAIL` seul ; un filtre d'affichage qui cherchait littéralement `RAIL` la faisait
+disparaître du palier de zoom 11, alors que la plus grande gare souterraine d'Europe doit y figurer.
+
+Corollaire pour la lecture de `SPEC.md` : quand la spec énumère des modes, elle emploie le
+vocabulaire de l'API, parapluies compris. Une liste de la spec peut donc être **plus courte** que
+la liste de feuilles à comparer côté client. Le code doit alors documenter l'écart et citer la
+ligne de l'OpenAPI, sans quoi le lot suivant « corrigera » la correction.
