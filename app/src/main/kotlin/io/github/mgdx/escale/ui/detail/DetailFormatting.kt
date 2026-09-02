@@ -1,0 +1,176 @@
+package io.github.mgdx.escale.ui.detail
+
+import android.text.format.DateUtils
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import io.github.mgdx.escale.R
+import io.github.mgdx.escale.core.format.DistanceUnit
+import io.github.mgdx.escale.core.format.FormattedDistance
+import io.github.mgdx.escale.core.model.DisruptionSeverity
+import io.github.mgdx.escale.core.model.RentalPropulsionType
+import io.github.mgdx.escale.core.model.RentalReturnConstraint
+import io.github.mgdx.escale.core.model.StepDirection
+import io.github.mgdx.escale.core.model.WheelchairAccess
+import java.text.NumberFormat
+import java.time.Instant
+
+/*
+ * Ce qui traduit le domaine de l'écran de détail en ressources : pictogrammes et libellés.
+ *
+ * Comme `ResultsFormatting`, rien ici ne décide de quoi que ce soit — les règles sont dans `:core`,
+ * testées en JVM. Ce fichier ne fait que choisir la ressource qui correspond.
+ *
+ * **Chaque pictogramme est doublé d'un libellé textuel** (SPEC.md § 9) : c'est pour cela que les
+ * deux tables vont toujours par paires.
+ */
+
+/**
+ * Le pictogramme d'une manœuvre.
+ *
+ * Trois tracés servent deux fois, retournés à l'affichage par [isMirrored] : un « tourner à
+ * droite » est le « tourner à gauche » vu dans un miroir. Le libellé, lui, reste distinct, et c'est
+ * lui qui porte l'information (SPEC.md § 9).
+ */
+@DrawableRes
+internal fun StepDirection.iconRes(): Int = when (this) {
+  StepDirection.DEPART -> R.drawable.ic_trip_origin
+
+  StepDirection.CONTINUE -> R.drawable.ic_straight
+
+  StepDirection.LEFT, StepDirection.SLIGHTLY_LEFT, StepDirection.HARD_LEFT,
+  StepDirection.RIGHT, StepDirection.SLIGHTLY_RIGHT, StepDirection.HARD_RIGHT,
+  -> R.drawable.ic_turn_left
+
+  StepDirection.CIRCLE_CLOCKWISE, StepDirection.CIRCLE_COUNTERCLOCKWISE -> R.drawable.ic_roundabout_left
+
+  StepDirection.STAIRS -> R.drawable.ic_stairs
+
+  StepDirection.ELEVATOR -> R.drawable.ic_elevator
+
+  StepDirection.UTURN_LEFT, StepDirection.UTURN_RIGHT -> R.drawable.ic_u_turn_left
+}
+
+/** Vrai quand le tracé de [iconRes] doit être retourné horizontalement pour dire « à droite ». */
+internal fun StepDirection.isMirrored(): Boolean = when (this) {
+  StepDirection.RIGHT,
+  StepDirection.SLIGHTLY_RIGHT,
+  StepDirection.HARD_RIGHT,
+  StepDirection.UTURN_RIGHT,
+  StepDirection.CIRCLE_CLOCKWISE,
+  -> true
+
+  else -> false
+}
+
+// Une table de correspondance, pas un algorithme : detekt y compte une branche par manœuvre, ce
+// qui n'a pas de sens ici. La découper en sous-fonctions rendrait la table moins lisible, pas plus.
+@Suppress("CyclomaticComplexMethod")
+@StringRes
+internal fun StepDirection.labelRes(): Int = when (this) {
+  StepDirection.DEPART -> R.string.detail_step_depart
+  StepDirection.CONTINUE -> R.string.detail_step_continue
+  StepDirection.LEFT -> R.string.detail_step_left
+  StepDirection.SLIGHTLY_LEFT -> R.string.detail_step_slightly_left
+  StepDirection.HARD_LEFT -> R.string.detail_step_hard_left
+  StepDirection.RIGHT -> R.string.detail_step_right
+  StepDirection.SLIGHTLY_RIGHT -> R.string.detail_step_slightly_right
+  StepDirection.HARD_RIGHT -> R.string.detail_step_hard_right
+  StepDirection.CIRCLE_CLOCKWISE -> R.string.detail_step_circle_clockwise
+  StepDirection.CIRCLE_COUNTERCLOCKWISE -> R.string.detail_step_circle_counterclockwise
+  StepDirection.STAIRS -> R.string.detail_step_stairs
+  StepDirection.ELEVATOR -> R.string.detail_step_elevator
+  StepDirection.UTURN_LEFT -> R.string.detail_step_uturn_left
+  StepDirection.UTURN_RIGHT -> R.string.detail_step_uturn_right
+}
+
+/** La gravité d'une perturbation, dite en toutes lettres : jamais une couleur seule (SPEC.md § 9). */
+@StringRes
+internal fun DisruptionSeverity.labelRes(): Int = when (this) {
+  DisruptionSeverity.INFO -> R.string.detail_alert_severity_info
+  DisruptionSeverity.WARNING -> R.string.detail_alert_severity_warning
+  DisruptionSeverity.SEVERE -> R.string.detail_alert_severity_severe
+  DisruptionSeverity.UNKNOWN_SEVERITY -> R.string.detail_alert_severity_unknown
+}
+
+@StringRes
+internal fun WheelchairAccess.labelRes(): Int = when (this) {
+  WheelchairAccess.ACCESSIBLE -> R.string.detail_wheelchair_accessible
+  WheelchairAccess.NOT_ACCESSIBLE -> R.string.detail_wheelchair_not_accessible
+}
+
+@DrawableRes
+internal fun WheelchairAccess.iconRes(): Int = when (this) {
+  WheelchairAccess.ACCESSIBLE -> R.drawable.ic_accessible
+  WheelchairAccess.NOT_ACCESSIBLE -> R.drawable.ic_not_accessible
+}
+
+@StringRes
+internal fun RentalPropulsionType.labelRes(): Int = when (this) {
+  RentalPropulsionType.HUMAN -> R.string.detail_rental_propulsion_human
+  RentalPropulsionType.ELECTRIC_ASSIST -> R.string.detail_rental_propulsion_electric_assist
+  RentalPropulsionType.ELECTRIC -> R.string.detail_rental_propulsion_electric
+  RentalPropulsionType.COMBUSTION -> R.string.detail_rental_propulsion_combustion
+  RentalPropulsionType.COMBUSTION_DIESEL -> R.string.detail_rental_propulsion_combustion_diesel
+  RentalPropulsionType.HYBRID -> R.string.detail_rental_propulsion_hybrid
+  RentalPropulsionType.PLUG_IN_HYBRID -> R.string.detail_rental_propulsion_plug_in_hybrid
+  RentalPropulsionType.HYDROGEN_FUEL_CELL -> R.string.detail_rental_propulsion_hydrogen
+}
+
+/**
+ * La contrainte de retour d'un véhicule partagé, **en clair** (SPEC.md § 5.3).
+ *
+ * Un exploitant qui ne la publie pas mérite sa propre phrase : « on ne sait pas » n'est pas « on
+ * peut le laisser n'importe où », et laisser croire le second coûterait une amende à l'usager.
+ */
+@StringRes
+internal fun RentalReturnConstraint?.labelRes(): Int = when (this) {
+  RentalReturnConstraint.NONE -> R.string.detail_rental_return_none
+  RentalReturnConstraint.ANY_STATION -> R.string.detail_rental_return_any_station
+  RentalReturnConstraint.ROUNDTRIP_STATION -> R.string.detail_rental_return_roundtrip
+  null -> R.string.detail_rental_return_unknown
+}
+
+/**
+ * Une distance mise en forme dans la langue de l'usager : « 450 m », « 2,3 km ».
+ *
+ * L'arrondi vient de `:core` ; seule la ponctuation du nombre est ici, parce qu'elle dépend de la
+ * langue du système et qu'un « 2.3 km » dans une interface française serait une faute.
+ */
+@Composable
+internal fun distanceText(meters: Double): String {
+  val distance = FormattedDistance.of(meters)
+  val locale = LocalConfiguration.current.locales[0]
+  val number = remember(distance, locale) {
+    NumberFormat.getNumberInstance(locale).apply {
+      minimumFractionDigits = distance.decimals
+      maximumFractionDigits = distance.decimals
+    }.format(distance.value)
+  }
+  return when (distance.unit) {
+    DistanceUnit.METERS -> stringResource(R.string.detail_distance_meters, number)
+    DistanceUnit.KILOMETERS -> stringResource(R.string.detail_distance_kilometers, number)
+  }
+}
+
+/**
+ * Une date et une heure, pour la période de validité d'une perturbation.
+ *
+ * Le format vient de la plateforme, qui connaît la langue et le réglage 12 h / 24 h : aucun motif
+ * n'est codé en dur.
+ */
+@Composable
+internal fun dateTimeText(instant: Instant): String {
+  val context = LocalContext.current
+  return remember(context, instant) {
+    DateUtils.formatDateTime(
+      context,
+      instant.toEpochMilli(),
+      DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_MONTH,
+    )
+  }
+}

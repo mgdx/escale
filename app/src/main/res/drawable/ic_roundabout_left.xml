@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manœuvre « prendre le rond-point ». Le sens inverse est le même tracé, retourné par l'affichage (SPEC.md § 5.3).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:fillType="evenOdd"
+      android:pathData="M14,5a5,5 0 1,0 0,10a5,5 0 1,0 0,-10ZM14,7a3,3 0 1,1 0,6a3,3 0 1,1 0,-6Z" />
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M13,21h2V13h-2zM11,9H7v2h4zM7,6.5v7L3,10Z" />
+</vector>

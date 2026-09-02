@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manœuvre « faire demi-tour ». Le pendant à droite est le même tracé, retourné par l'affichage (SPEC.md § 5.3).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M17,20V9A5,5 0 0,0 7,9v6H4l4,5 4,-5H9V9A3,3 0 0,1 15,9v11Z" />
+</vector>
