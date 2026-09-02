@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Les langues qu'Escale fournit réellement (SPEC.md § 2 et § 5.6).
+
+  C'est cette liste, et elle seule, que le système propose dans son écran « Langue de
+  l'application » depuis Android 13. Une langue traduite mais absente d'ici n'y est jamais offerte ;
+  une langue listée ici mais non traduite y apparaît et rend l'anglais.
+
+  **Un contributeur qui ajoute un `res/values-<code>/` ajoute sa ligne ici**, sans quoi sa
+  traduction reste inatteignable autrement qu'en changeant la langue de tout l'appareil.
+  La procédure est décrite dans CONTRIBUTING.md, § « Ajouter une langue ».
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- `values/` : l'anglais est la langue par défaut de l'application. -->
+  <locale android:name="en" />
+  <!-- `values-fr/`. -->
+  <locale android:name="fr" />
+</locale-config>

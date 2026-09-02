@@ -121,6 +121,7 @@ internal fun SettingsMessage.textRes(): Int = when (this) {
   SettingsMessage.CLEAR_FAILED -> R.string.settings_clear_failed
   SettingsMessage.SETTINGS_RESET -> R.string.settings_reset_done
   SettingsMessage.SAVE_FAILED -> R.string.settings_save_failed
+  SettingsMessage.LANGUAGE_SETTINGS_UNAVAILABLE -> R.string.settings_language_unavailable
 }
 
 @StringRes

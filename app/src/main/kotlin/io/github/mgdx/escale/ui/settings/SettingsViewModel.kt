@@ -88,6 +88,12 @@ class SettingsViewModel(
     }
   }
 
+  /**
+   * L'écran système « Langue de l'application » n'a pas pu être ouvert : on le dit, plutôt que de
+   * laisser un appui sans réponse (SPEC.md § 5.6).
+   */
+  fun languageSettingsUnavailable() = show(SettingsMessage.LANGUAGE_SETTINGS_UNAVAILABLE)
+
   fun confirmClear(target: ClearTarget) {
     viewModelScope.launch {
       val cleared = maintenance.clear(target)

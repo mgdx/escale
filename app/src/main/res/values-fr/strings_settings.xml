@@ -86,6 +86,10 @@
   <string name="settings_theme_light">Clair</string>
   <string name="settings_theme_dark">Sombre</string>
 
+  <string name="settings_language_title">Langue</string>
+  <string name="settings_language_description">Choisissez la langue d\'affichage d\'Escale, sur l\'écran « Langue de l\'application » d\'Android. Tant que vous n\'y touchez pas, Escale suit la langue de votre appareil.</string>
+  <string name="settings_language_unavailable">Cet appareil ne propose pas d\'écran de langue par application. Vous pouvez tout de même changer la langue de toutes les applications dans les réglages d\'Android.</string>
+
   <string name="settings_clock_format_title">Format de l\'heure</string>
   <string name="settings_clock_format_description">La façon dont les heures de départ et d\'arrivée sont écrites.</string>
   <string name="settings_clock_format_system">Comme le système</string>
