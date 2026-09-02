@@ -203,13 +203,18 @@ private fun ApplyCameraTarget(
         goal.camera.zoom,
       )
 
-      is CameraGoal.Fit -> CameraUpdateFactory.newLatLngBounds(
-        goal.bounds.asLatLngBounds(),
-        padding.left.within(instance.width),
-        padding.top.within(instance.height),
-        padding.right.within(instance.width),
-        padding.bottom.within(instance.height),
-      )
+      is CameraGoal.Fit -> {
+        // Réduit au besoin, pour qu'il reste toujours de quoi cadrer, même carte de recherche
+        // visible et feuille dépliée (règle 9).
+        val room = padding.fittedInto(instance.width, instance.height)
+        CameraUpdateFactory.newLatLngBounds(
+          goal.bounds.asLatLngBounds(),
+          room.left,
+          room.top,
+          room.right,
+          room.bottom,
+        )
+      }
     }
     if (camera.animated) {
       instance.easeCamera(update, MapLoadRules.MAX_CAMERA_ANIMATION_MILLIS)
@@ -220,19 +225,7 @@ private fun ApplyCameraTarget(
   }
 }
 
-/**
- * Borne un remplissage à une fraction de la dimension de la carte.
- *
- * Une feuille de résultats dépliée jusqu'en haut de l'écran donnerait un remplissage plus grand que
- * la carte elle-même, et il n'existe alors plus aucune échelle à laquelle une emprise « tienne » :
- * mieux vaut un cadrage un peu large qu'un calcul impossible.
- */
-private fun Int.within(dimension: Float): Int = coerceIn(0, (dimension * MAX_PADDING_RATIO).toInt())
-
-/** Le remplissage de la caméra, en pixels : encarts système et feuille de résultats ouverte. */
-@Immutable
-private data class CameraPadding(val left: Int, val top: Int, val right: Int, val bottom: Int)
-
+/** Le remplissage de la caméra en pixels : encarts système et éléments flottants de l'écran. */
 @Composable
 private fun rememberCameraPadding(contentPadding: PaddingValues): CameraPadding {
   val density = LocalDensity.current
@@ -412,6 +405,3 @@ private const val HALO_OPACITY = 0.2f
 private const val DOT_RADIUS = 7f
 private const val PICKED_RADIUS = 9f
 private const val STROKE_WIDTH = 2.5f
-
-/** Part maximale de la carte qu'un remplissage de cadrage peut consommer, de chaque côté. */
-private const val MAX_PADDING_RATIO = 0.4f
