@@ -9,6 +9,7 @@ import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.SearchQuery
 import io.github.mgdx.escale.core.model.TimeChoice
 import java.math.BigDecimal
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -36,6 +37,21 @@ object PlanQueryBuilder {
   private const val MAX_DIRECT_TIME_BIKE_SECONDS = 3 * 60 * 60
 
   private const val MAX_DIRECT_TIME_WALK_SECONDS = 2 * 60 * 60
+
+  /**
+   * Le plafond de durée effectivement envoyé pour un onglet, ou `null` pour l'onglet transport en
+   * commun, qui n'en envoie pas.
+   *
+   * L'état vide de SPEC.md § 5.2 doit nommer cette limite à l'usager (« aucun trajet trouvé dans la
+   * limite de durée ») : l'interface la lit donc ici, au lieu d'en recopier une seconde qui
+   * finirait par diverger de la requête réellement émise.
+   */
+  fun maxDirectTime(category: JourneyCategory): Duration? = when (category) {
+    JourneyCategory.TRANSIT -> null
+    JourneyCategory.CAR -> Duration.ofSeconds(MAX_DIRECT_TIME_CAR_SECONDS.toLong())
+    JourneyCategory.BIKE -> Duration.ofSeconds(MAX_DIRECT_TIME_BIKE_SECONDS.toLong())
+    JourneyCategory.WALK -> Duration.ofSeconds(MAX_DIRECT_TIME_WALK_SECONDS.toLong())
+  }
 
   /**
    * Le serveur attend une date-heure ISO-8601. `Instant.toString()` omet les secondes quand elles

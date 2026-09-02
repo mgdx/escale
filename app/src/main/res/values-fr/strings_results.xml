@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="results_tab_transit">Transport en commun</string>
+  <string name="results_tab_car">Voiture</string>
+  <string name="results_tab_bike">Vélo</string>
+  <string name="results_tab_walk">À pied</string>
+
+  <string name="results_sheet_description">Résultats de la recherche</string>
+  <string name="results_sheet_expand">Agrandir les résultats</string>
+  <string name="results_sheet_collapse">Réduire les résultats</string>
+
+  <string name="results_time_range">%1$s → %2$s</string>
+  <string name="results_time_range_description">Départ à %1$s, arrivée à %2$s</string>
+  <string name="results_summary">%1$s · %2$s</string>
+  <string name="results_no_transfer">Sans correspondance</string>
+  <plurals name="results_transfers">
+    <item quantity="one">%d correspondance</item>
+    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
+         l'exige pour que le pluriel soit complet. -->
+    <item quantity="many">%d de correspondances</item>
+    <item quantity="other">%d correspondances</item>
+  </plurals>
+
+  <string name="results_duration_hours_minutes">%1$d h %2$d min</string>
+  <string name="results_duration_hours">%1$d h</string>
+  <string name="results_duration_minutes">%1$d min</string>
+  <string name="results_duration_under_minute">Moins d\'une minute</string>
+
+  <string name="results_delay_on_time">À l\'heure</string>
+  <string name="results_delay_late">%1$s de retard</string>
+  <string name="results_delay_early">%1$s d\'avance</string>
+  <string name="results_cancelled">Supprimé</string>
+  <plurals name="results_disruptions">
+    <item quantity="one">%d perturbation</item>
+    <item quantity="many">%d de perturbations</item>
+    <item quantity="other">%d perturbations</item>
+  </plurals>
+
+  <string name="results_timeline_description">Portions : %1$s</string>
+  <string name="results_leg_detail">%1$s %2$s</string>
+
+  <string name="results_mode_walk">Marche</string>
+  <string name="results_mode_bike">Vélo</string>
+  <string name="results_mode_car">Voiture</string>
+  <string name="results_mode_car_parking">Parc relais</string>
+  <string name="results_mode_car_dropoff">Dépose</string>
+  <string name="results_mode_hgv">Poids lourd</string>
+  <string name="results_mode_bus">Bus</string>
+  <string name="results_mode_coach">Autocar</string>
+  <string name="results_mode_tram">Tram</string>
+  <string name="results_mode_subway">Métro</string>
+  <string name="results_mode_rail">Train</string>
+  <string name="results_mode_regional_rail">TER</string>
+  <string name="results_mode_suburban">Train de banlieue</string>
+  <string name="results_mode_highspeed_rail">Train à grande vitesse</string>
+  <string name="results_mode_long_distance">Train grandes lignes</string>
+  <string name="results_mode_night_rail">Train de nuit</string>
+  <string name="results_mode_ferry">Bateau</string>
+  <string name="results_mode_airplane">Avion</string>
+  <string name="results_mode_funicular">Funiculaire</string>
+  <string name="results_mode_aerial_lift">Téléphérique</string>
+  <string name="results_mode_on_demand">Transport à la demande</string>
+  <string name="results_mode_transit">Transport en commun</string>
+
+  <string name="results_mode_rental">Véhicule partagé</string>
+  <string name="results_mode_rental_bike">Vélo partagé</string>
+  <string name="results_mode_rental_cargo_bike">Vélo cargo partagé</string>
+  <string name="results_mode_rental_scooter">Trottinette partagée</string>
+  <string name="results_mode_rental_moped">Scooter partagé</string>
+  <string name="results_mode_rental_car">Voiture partagée</string>
+  <string name="results_rental_operator">Exploité par %1$s</string>
+
+  <string name="results_filter_label">Véhicule</string>
+  <string name="results_filter_all">Tous</string>
+  <string name="results_filter_own">Mon vélo</string>
+  <string name="results_filter_shared">Partagé</string>
+
+  <string name="results_earlier">Plus tôt</string>
+  <string name="results_later">Plus tard</string>
+
+  <string name="results_select_journey">Choisir ce trajet</string>
+  <string name="results_journey_selected">Trajet choisi</string>
+
+  <string name="results_loading">Recherche de trajets…</string>
+
+  <string name="results_empty_title">Aucun trajet trouvé</string>
+  <string name="results_empty_transit_message">Le serveur n\'a trouvé aucun trajet pour cet horaire.</string>
+  <string name="results_empty_direct_message">Aucun trajet trouvé dans la limite de %1$s qu\'Escale autorise pour ce mode.</string>
+  <string name="results_empty_hint_window">Élargir la fenêtre horaire</string>
+  <string name="results_empty_hint_transfers">Autoriser plus de correspondances dans les réglages</string>
+  <string name="results_empty_hint_time">Essayer un autre horaire</string>
+  <string name="results_empty_hint_transit">Essayer l\'onglet transport en commun</string>
+</resources>

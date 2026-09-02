@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bac ou navette fluviale, frise des portions (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M3.8,22 h-0.8 v-2 h0.8 q1.2,0,2.288,-0.263 T8.525,18.9 q0.95,0.475,1.663,0.788 T12,20 q1.1,0,1.812,-0.312 T15.475,18.9 q1.325,0.575,2.438,0.838 T20.225,20 h0.775 v2 h-0.775 q-1.225,0,-2.388,-0.225 T15.55,21.1 q-1,0.475,-1.825,0.675 t-1.725,0.2 q-0.9,0,-1.713,-0.2 T8.475,21.1 q-1.125,0.45,-2.288,0.675 T3.8,22 Z m5.575,-5 l-1.125,-1 q-0.675,0.675,-1.513,1.15 T4.95,17.825 l-2.125,-6.825 q-0.125,-0.425,0.075,-0.775 t0.625,-0.475 l1.475,-0.4 v-3.35 q0,-0.825,0.588,-1.413 T7,4 h2.5 v-2 h5 v2 h2.5 q0.825,0,1.413,0.588 T19,6 v3.35 l1.475,0.4 q0.425,0.125,0.625,0.475 t0.075,0.775 l-2.125,6.825 q-0.95,-0.2,-1.788,-0.675 T15.75,16 l-1.125,1 q-1.125,1,-2.625,1 t-2.625,-1 Z m2.675,-1 q0.775,0,1.375,-0.513 t1.1,-1.088 l1.15,-1.325 l1.025,1.05 q0.275,0.275,0.562,0.513 T17.825,15.125 l1.15,-3.725 l-6.975,-1.825 l-6.95,1.825 l1.15,3.725 q0.275,-0.25,0.562,-0.488 T7.325,14.125 l1.025,-1.05 l1.15,1.325 q0.5,0.6,1.125,1.1 t1.425,0.5 Z M7,8.825 l5,-1.325 l5,1.325 v-2.825 H7 v2.825 Z m5.025,3.95 Z" />
+</vector>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Train à grande vitesse et train de nuit, frise des portions (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M4,15.5 v-9.5 q0,-1.325,0.688,-2.113 t1.812,-1.2 q1.125,-0.413,2.562,-0.55 T12,2 q1.65,0,3.113,0.138 t2.55,0.55 q1.088,0.413,1.713,1.2 t0.625,2.113 v9.5 q0,1.475,-1.012,2.488 T16.5,19 l1.5,1.5 v0.5 h-2 l-2,-2 H10 l-2,2 h-2 v-0.5 l1.5,-1.5 q-1.475,0,-2.488,-1.012 T4,15.5 Z m8,-11.5 q-2.65,0,-3.875,0.312 T6.45,5 h11.2 q-0.375,-0.425,-1.613,-0.713 T12,4 Z M6,10 h5 v-3 H6 v3 Z m10.5,2 H6 h12 h-1.5 Z m-3.5,-2 h5 v-3 H13 v3 Z M9.575,15.575 q0.425,-0.425,0.425,-1.075 t-0.425,-1.075 q-0.425,-0.425,-1.075,-0.425 t-1.075,0.425 q-0.425,0.425,-0.425,1.075 t0.425,1.075 q0.425,0.425,1.075,0.425 t1.075,-0.425 Z m7,0 q0.425,-0.425,0.425,-1.075 t-0.425,-1.075 q-0.425,-0.425,-1.075,-0.425 t-1.075,0.425 q-0.425,0.425,-0.425,1.075 t0.425,1.075 q0.425,0.425,1.075,0.425 t1.075,-0.425 Z m-9.075,1.425 h9 q0.65,0,1.075,-0.425 t0.425,-1.075 v-3.5 H6 v3.5 q0,0.65,0.425,1.075 t1.075,0.425 Z m4.5,-12 h5.65 h-11.2 h5.55 Z" />
+</vector>

@@ -302,4 +302,22 @@ class PlanQueryBuilderTest {
       parameters,
     )
   }
+
+  // --- Plafond de durée lisible par l'interface ------------------------------------------------
+
+  @Test
+  fun `le plafond de duree annonce est celui reellement envoye`() {
+    // SPEC.md § 5.2 : l'état vide d'un onglet direct nomme la limite de durée. Elle doit être la
+    // même que celle de la requête, sans quoi le message mentirait.
+    listOf(JourneyCategory.CAR, JourneyCategory.BIKE, JourneyCategory.WALK).forEach { category ->
+      val sent = PlanQueryBuilder.build(query(category))["maxDirectTime"]
+      assertEquals(sent, PlanQueryBuilder.maxDirectTime(category)?.seconds?.toString())
+    }
+  }
+
+  @Test
+  fun `l onglet transport en commun n a pas de plafond de duree`() {
+    assertNull(PlanQueryBuilder.maxDirectTime(JourneyCategory.TRANSIT))
+    assertNull(PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))["maxDirectTime"])
+  }
 }

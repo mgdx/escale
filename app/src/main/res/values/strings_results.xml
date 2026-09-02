@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de la feuille de résultats (SPEC.md § 5.2).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+-->
+<resources>
+  <!-- Les quatre onglets, dans l'ordre imposé. Il n'y a pas d'onglet « libre-service » : un vélo
+       partagé relève de l'onglet Vélo (SPEC.md § 5.2). -->
+  <string name="results_tab_transit">Public transport</string>
+  <string name="results_tab_car">Car</string>
+  <string name="results_tab_bike">Bike</string>
+  <string name="results_tab_walk">On foot</string>
+
+  <!-- La feuille elle-même, qui monte au-dessus de la carte (SPEC.md § 5.1). -->
+  <string name="results_sheet_description">Search results</string>
+  <string name="results_sheet_expand">Expand the results</string>
+  <string name="results_sheet_collapse">Shrink the results</string>
+
+  <!-- Carte de résultat : heures, durée, correspondances (SPEC.md § 5.2). -->
+  <string name="results_time_range">%1$s → %2$s</string>
+  <string name="results_time_range_description">Leaves at %1$s, arrives at %2$s</string>
+  <string name="results_summary">%1$s · %2$s</string>
+  <string name="results_no_transfer">No transfer</string>
+  <plurals name="results_transfers">
+    <item quantity="one">%d transfer</item>
+    <item quantity="other">%d transfers</item>
+  </plurals>
+
+  <!-- Durées. Le découpage en heures et minutes vient de :core, la langue est ici. -->
+  <string name="results_duration_hours_minutes">%1$d hr %2$d min</string>
+  <string name="results_duration_hours">%1$d hr</string>
+  <string name="results_duration_minutes">%1$d min</string>
+  <string name="results_duration_under_minute">Under a minute</string>
+
+  <!-- Temps réel. Le texte et l'icône doublent la couleur : aucune information n'est portée par la
+       seule couleur (SPEC.md § 9). Une portion sans temps réel n'affiche aucune de ces mentions. -->
+  <string name="results_delay_on_time">On time</string>
+  <string name="results_delay_late">%1$s late</string>
+  <string name="results_delay_early">%1$s early</string>
+  <string name="results_cancelled">Cancelled</string>
+  <plurals name="results_disruptions">
+    <item quantity="one">%d service alert</item>
+    <item quantity="other">%d service alerts</item>
+  </plurals>
+
+  <!-- Frise des portions : le pictogramme de mode est toujours doublé d'un libellé (SPEC.md § 9). -->
+  <string name="results_timeline_description">Legs: %1$s</string>
+  <string name="results_leg_separator" translatable="false">" › "</string>
+  <string name="results_leg_detail">%1$s %2$s</string>
+
+  <!-- Libellés de mode. -->
+  <string name="results_mode_walk">Walk</string>
+  <string name="results_mode_bike">Bike</string>
+  <string name="results_mode_car">Car</string>
+  <string name="results_mode_car_parking">Park and ride</string>
+  <string name="results_mode_car_dropoff">Drop-off</string>
+  <string name="results_mode_hgv">Lorry</string>
+  <string name="results_mode_bus">Bus</string>
+  <string name="results_mode_coach">Coach</string>
+  <string name="results_mode_tram">Tram</string>
+  <string name="results_mode_subway">Metro</string>
+  <string name="results_mode_rail">Train</string>
+  <string name="results_mode_regional_rail">Regional train</string>
+  <string name="results_mode_suburban">Suburban train</string>
+  <string name="results_mode_highspeed_rail">High-speed train</string>
+  <string name="results_mode_long_distance">Intercity train</string>
+  <string name="results_mode_night_rail">Night train</string>
+  <string name="results_mode_ferry">Ferry</string>
+  <string name="results_mode_airplane">Plane</string>
+  <string name="results_mode_funicular">Funicular</string>
+  <string name="results_mode_aerial_lift">Cable car</string>
+  <string name="results_mode_on_demand">On-demand transport</string>
+  <string name="results_mode_transit">Public transport</string>
+
+  <!-- Libre-service : le type du véhicule et l'exploitant sont dits en toutes lettres
+       (SPEC.md § 5.2). Les disponibilités des stations relèvent du jalon 8. -->
+  <string name="results_mode_rental">Shared vehicle</string>
+  <string name="results_mode_rental_bike">Shared bike</string>
+  <string name="results_mode_rental_cargo_bike">Shared cargo bike</string>
+  <string name="results_mode_rental_scooter">Shared scooter</string>
+  <string name="results_mode_rental_moped">Shared moped</string>
+  <string name="results_mode_rental_car">Car sharing</string>
+  <string name="results_rental_operator">Operated by %1$s</string>
+
+  <!-- Filtre de l'onglet Vélo : vélo personnel ou libre-service (SPEC.md § 5.2). -->
+  <string name="results_filter_label">Vehicle</string>
+  <string name="results_filter_all">All</string>
+  <string name="results_filter_own">My own bike</string>
+  <string name="results_filter_shared">Shared</string>
+
+  <!-- Pagination par curseur, en tête et en pied de liste (SPEC.md § 5.2). -->
+  <string name="results_earlier">Earlier</string>
+  <string name="results_later">Later</string>
+
+  <!-- Sélection d'un trajet. L'écran de détail viendra plus tard : pour l'instant, l'appui
+       désigne le trajet que la carte cadrera (SPEC.md § 5.1). -->
+  <string name="results_select_journey">Select this trip</string>
+  <string name="results_journey_selected">Selected trip</string>
+
+  <!-- Chargement. -->
+  <string name="results_loading">Looking for trips…</string>
+
+  <!-- États vides (SPEC.md § 8), avec les suggestions que la spec impose. -->
+  <string name="results_empty_title">No trip found</string>
+  <string name="results_empty_transit_message">The server found no trip for this time.</string>
+  <string name="results_empty_direct_message">No trip found within the %1$s that Escale allows for this mode.</string>
+  <!-- Puce de liste : une mise en forme, pas un libellé — elle ne se traduit pas. -->
+  <string name="results_empty_hint_item" translatable="false">• %1$s</string>
+  <string name="results_empty_hint_window">Widen the time window</string>
+  <string name="results_empty_hint_transfers">Allow more transfers in the settings</string>
+  <string name="results_empty_hint_time">Try another departure time</string>
+  <string name="results_empty_hint_transit">Try the public transport tab</string>
+</resources>

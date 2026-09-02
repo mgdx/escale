@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scooter en libre-service (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M4.875,18.125 q-0.875,-0.875,-0.875,-2.125 H2 v-3 q0,-1.65,1.175,-2.825 t2.825,-1.175 h4 v5 h3.5 l3.5,-4.35 v-2.65 H14 v-2 h3 q0.825,0,1.413,0.588 T19,7 v3.35 L14.5,16 H10 q0,1.25,-0.875,2.125 t-2.125,0.875 q-1.25,0,-2.125,-0.875 Z m3.125,-4.125 Z m-0.288,2.713 Q8,16.425,8,16 h-2 q0,0.425,0.288,0.713 T7,17 q0.425,0,0.713,-0.288 Z M5,8 v-2 h5 v2 H5 Z m11.875,10.125 q-0.875,-0.875,-0.875,-2.125 t0.875,-2.125 q0.875,-0.875,2.125,-0.875 t2.125,0.875 q0.875,0.875,0.875,2.125 t-0.875,2.125 q-0.875,0.875,-2.125,0.875 t-2.125,-0.875 Z m2.838,-1.413 Q20,16.425,20,16 t-0.288,-0.713 Q19.425,15,19,15 t-0.713,0.288 Q18,15.575,18,16 t0.288,0.713 Q18.575,17,19,17 t0.713,-0.288 Z M4,14 h4 v-3 h-2 q-0.825,0,-1.413,0.588 T4,13 v1 Z" />
+</vector>

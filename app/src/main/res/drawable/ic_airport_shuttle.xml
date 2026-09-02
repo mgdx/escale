@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Autocar longue distance, distingué du bus urbain (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M3.875,18.125 q-0.875,-0.875,-0.875,-2.125 H1 v-9 q0,-0.825,0.588,-1.413 T3,5 h14 l6,6 v5 h-2 q0,1.25,-0.875,2.125 t-2.125,0.875 q-1.25,0,-2.125,-0.875 t-0.875,-2.125 H9 q0,1.25,-0.875,2.125 t-2.125,0.875 q-1.25,0,-2.125,-0.875 Z m11.125,-8.125 h4 L16,7 h-1 v3 Z m-6,0 h4 v-3 H9 v3 Z m-6,0 h4 v-3 H3 v3 Z m3.888,6.888 Q7.25,16.525,7.25,16 t-0.363,-0.888 Q6.525,14.75,6,14.75 t-0.888,0.363 Q4.75,15.475,4.75,16 t0.363,0.888 Q5.475,17.25,6,17.25 t0.888,-0.363 Z m12,0 Q19.25,16.525,19.25,16 t-0.363,-0.888 Q18.525,14.75,18,14.75 t-0.888,0.363 Q16.75,15.475,16.75,16 t0.363,0.888 Q17.475,17.25,18,17.25 t0.888,-0.363 Z M3,14 h0.8 q0.425,-0.45,0.975,-0.725 t1.225,-0.275 q0.675,0,1.225,0.275 t0.975,0.725 h7.6 q0.425,-0.45,0.975,-0.725 t1.225,-0.275 q0.675,0,1.225,0.275 t0.975,0.725 h0.8 v-2 H3 v2 Z m18,-2 H3 h18 Z" />
+</vector>

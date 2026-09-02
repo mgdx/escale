@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Transport en commun, mode non identifié (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M6,21 v-1 l1.5,-1 q-1.475,0,-2.488,-1.012 T4,15.5 v-9.5 q0,-2.075,1.925,-3.038 T12,2 q4.3,0,6.15,0.925 t1.85,3.075 v9.5 q0,1.475,-1.012,2.488 T16.5,19 l1.5,1 v1 H6 Z m0,-11 h5 v-3 H6 v3 Z m10.5,2 H6 h12 h-1.5 Z m-3.5,-2 h5 v-3 H13 v3 Z M9.562,15.562 Q10,15.125,10,14.5 t-0.438,-1.062 Q9.125,13,8.5,13 t-1.062,0.438 Q7,13.875,7,14.5 t0.438,1.062 Q7.875,16,8.5,16 t1.062,-0.438 Z m7,0 Q17,15.125,17,14.5 t-0.438,-1.062 Q16.125,13,15.5,13 t-1.062,0.438 Q14,13.875,14,14.5 t0.438,1.062 Q14.875,16,15.5,16 t1.062,-0.438 Z M7.5,17 h9 q0.65,0,1.075,-0.425 t0.425,-1.075 v-3.5 H6 v3.5 q0,0.65,0.425,1.075 t1.075,0.425 Z m4.5,-13 q-2.15,0,-3.562,0.25 T6.45,5 h11.2 q-0.45,-0.5,-1.863,-0.75 T12,4 Z m0,1 h5.65 h-11.2 h5.55 Z" />
+</vector>
