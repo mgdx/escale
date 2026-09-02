@@ -8,15 +8,19 @@ import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyPage
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.PedestrianProfile
 import io.github.mgdx.escale.core.model.Place
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalInfo
+import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.stableKey
+import io.github.mgdx.escale.core.query.PlanQueryBuilder
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.session.SearchSession
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,8 +46,11 @@ class ResultsViewModelTest {
   private val repository = FakePlanRepository()
   private val selection = SelectedJourneyStore()
 
+  /** Les réglages de SPEC.md § 5.6, tels que le dépôt les émettrait. */
+  private val preferences = MutableStateFlow(SearchPreferences())
+
   private fun viewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-    ResultsViewModel(session, repository, selection, savedState)
+    ResultsViewModel(session, repository, preferences, selection, savedState)
 
   private fun completeSearch() {
     session.setFrom(location("depart"))
@@ -351,5 +358,73 @@ class ResultsViewModelTest {
       transfers = 0,
       legs = listOf(leg),
     )
+  }
+
+  // --- Les réglages de recherche de SPEC.md § 5.6 ----------------------------------------------
+
+  @Test
+  fun `un reglage de recherche part avec la requete emise`() = runTest {
+    preferences.value = SearchPreferences(pedestrianProfile = PedestrianProfile.WHEELCHAIR)
+    viewModel()
+
+    completeSearch()
+
+    // Vérifié sur les paramètres réellement construits, et non sur l'objet transporté : c'est ce
+    // que le serveur recevra.
+    val parameters = PlanQueryBuilder.build(repository.queries.last())
+    assertEquals("WHEELCHAIR", parameters["pedestrianProfile"])
+  }
+
+  @Test
+  fun `changer un reglage relance le seul onglet consulte`() = runTest {
+    val model = viewModel()
+    completeSearch()
+    assertEquals(listOf(JourneyCategory.TRANSIT), repository.categories())
+
+    preferences.value = SearchPreferences(pedestrianProfile = PedestrianProfile.WHEELCHAIR)
+
+    // L'onglet consulté est rechargé avec les nouveaux réglages ; les trois autres, jamais
+    // ouverts, restent muets (SPEC.md § 7.3).
+    assertEquals(listOf(JourneyCategory.TRANSIT, JourneyCategory.TRANSIT), repository.categories())
+    assertEquals("WHEELCHAIR", PlanQueryBuilder.build(repository.queries.last())["pedestrianProfile"])
+    assertEquals(1, model.uiState.value.tabs.size)
+  }
+
+  @Test
+  fun `changer un reglage perime les onglets deja charges`() = runTest {
+    val model = viewModel()
+    completeSearch()
+    model.onCategorySelected(JourneyCategory.BIKE)
+    assertEquals(2, model.uiState.value.tabs.size)
+
+    preferences.value = SearchPreferences(allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE))
+
+    // Les trajets de l'onglet Vélo avaient été calculés avec les trottinettes : ils ne peuvent
+    // pas rester affichés. Seul l'onglet consulté est rechargé.
+    assertEquals(setOf(JourneyCategory.BIKE), model.uiState.value.tabs.keys)
+    assertEquals(
+      listOf(JourneyCategory.TRANSIT, JourneyCategory.BIKE, JourneyCategory.BIKE),
+      repository.categories(),
+    )
+  }
+
+  @Test
+  fun `reemettre les memes reglages ne relance aucune requete`() = runTest {
+    viewModel()
+    completeSearch()
+
+    preferences.value = SearchPreferences()
+
+    assertEquals(listOf(JourneyCategory.TRANSIT), repository.categories())
+  }
+
+  @Test
+  fun `sans recherche en cours, changer un reglage n emet rien`() = runTest {
+    val model = viewModel()
+
+    preferences.value = SearchPreferences(requireBikeTransport = true)
+
+    assertTrue(repository.calls.isEmpty())
+    assertFalse(model.uiState.value.open)
   }
 }

@@ -19,6 +19,9 @@ class FakePlanRepository : PlanRepository {
   /** Chaque appel reçu : l'onglet, et le curseur de pagination éventuel. */
   val calls = mutableListOf<Call>()
 
+  /** Les requêtes reçues, entières : c'est là que se lisent les réglages de SPEC.md § 5.6. */
+  val queries = mutableListOf<SearchQuery>()
+
   /** Réponse par onglet ; à défaut, une page vide. */
   val answers = mutableMapOf<JourneyCategory, Outcome<JourneyPage>>()
 
@@ -26,6 +29,7 @@ class FakePlanRepository : PlanRepository {
 
   override suspend fun plan(query: SearchQuery, cursor: String?, detailedLegs: Boolean): Outcome<JourneyPage> {
     calls += Call(query.category, cursor)
+    queries += query
     return answers[query.category] ?: Outcome.Success(JourneyPage(journeys = emptyList()))
   }
 
