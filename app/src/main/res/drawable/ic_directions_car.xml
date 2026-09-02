@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Voiture, y compris dépose et stationnement (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M6,19 v1 q0,0.425,-0.288,0.713 T5,21 h-1 q-0.425,0,-0.713,-0.288 T3,20 v-8 l2.1,-6 q0.15,-0.45,0.537,-0.725 t0.863,-0.275 h11 q0.475,0,0.863,0.275 t0.537,0.725 l2.1,6 v8 q0,0.425,-0.288,0.713 T20,21 h-1 q-0.425,0,-0.713,-0.288 T18,20 v-1 H6 Z m-0.2,-9 h12.4 l-1.05,-3 H6.85 l-1.05,3 Z m-0.8,2 v5 v-5 Z m2.5,4 q0.625,0,1.062,-0.438 T9,14.5 q0,-0.625,-0.438,-1.062 T7.5,13 q-0.625,0,-1.062,0.438 T6,14.5 q0,0.625,0.438,1.062 T7.5,16 Z m9,0 q0.625,0,1.062,-0.438 T18,14.5 q0,-0.625,-0.438,-1.062 T16.5,13 q-0.625,0,-1.062,0.438 T15,14.5 q0,0.625,0.438,1.062 T16.5,16 Z m-11.5,1 h14 v-5 H5 v5 Z" />
+</vector>

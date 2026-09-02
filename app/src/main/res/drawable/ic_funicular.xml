@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Funiculaire, frise des portions (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M1,23 v-2 l5,-1.375 v-2.625 H3 v-11 H2 v-2 h3 v-2 h14 v2 h3 v2 h-1 v9 H18 v1.375 l5,-1.375 v2 L1,23 Z m8,-4.175 l6,-1.65 v-2.175 h-2 v2 H9 v1.825 Z M5,15 h6 v-1 H5 v1 Z m8,-2 h6 v-1 H13 v1 Z m-8,-1 h6 v-6 H5 v6 Z m8,-2 h6 v-4 H13 v4 Z m-2,5 v-1 v1 Z m2,-2 v-1 v1 Z" />
+</vector>

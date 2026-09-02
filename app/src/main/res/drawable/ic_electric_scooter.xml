@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Trottinette en libre-service (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M5,18 q-1.25,0,-2.125,-0.875 t-0.875,-2.125 q0,-1.25,0.875,-2.125 t2.125,-0.875 q0.975,0,1.738,0.562 T7.8,14 h5.3 q0.275,-1.7,1.413,-2.975 T17.3,9.25 l-1.4,-6.25 H12 v-2 h3.9 q0.675,0,1.238,0.438 T17.85,2.55 l1.9,8.45 h-0.75 q-1.65,0,-2.825,1.175 t-1.175,2.825 v1 H7.8 q-0.3,0.875,-1.062,1.438 T5,18 Z m0.713,-2.288 Q6,15.425,6,15 t-0.288,-0.713 Q5.425,14,5,14 t-0.713,0.288 Q4,14.575,4,15 t0.288,0.713 Q4.575,16,5,16 t0.713,-0.288 Z M16.875,17.125 q-0.875,-0.875,-0.875,-2.125 t0.875,-2.125 q0.875,-0.875,2.125,-0.875 t2.125,0.875 q0.875,0.875,0.875,2.125 t-0.875,2.125 q-0.875,0.875,-2.125,0.875 t-2.125,-0.875 Z m2.838,-1.413 Q20,15.425,20,15 t-0.288,-0.713 Q19.425,14,19,14 t-0.713,0.288 Q18,14.575,18,15 t0.288,0.713 Q18.575,16,19,16 t0.713,-0.288 Z M13,23 L7,20 h4 v-2 l6,3 H13 v2 Z M5,15 Z m14,0 Z" />
+</vector>

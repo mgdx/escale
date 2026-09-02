@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Portion à pied, frise des portions (SPEC.md § 5.2).
+  Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
+  (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="m7,-1 l2.8,-14.1 l-1.8,0.7 v3.4 h-2 v-4.7 l5.05,-2.15 q0.35,-0.15,0.738,-0.175 t0.738,0.1 q0.35,0.125,0.663,0.35 t0.513,0.575 l1,1.6 q0.65,1.05,1.763,1.725 T19,11 v2 q-1.75,0,-3.125,-0.725 t-2.35,-1.85 l-0.625,3.075 l2.1,2 v7.5 h-2 v-6.5 l-2.1,-1.6 l-1.8,8.1 h-2.1 Z m5.088,-18.088 Q11.5,4.325,11.5,3.5 t0.588,-1.413 Q12.675,1.5,13.5,1.5 t1.413,0.588 Q15.5,2.675,15.5,3.5 t-0.588,1.413 Q14.325,5.5,13.5,5.5 t-1.413,-0.588 Z" />
+</vector>
