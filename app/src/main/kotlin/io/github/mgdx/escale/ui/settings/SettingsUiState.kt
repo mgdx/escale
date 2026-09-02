@@ -73,4 +73,10 @@ enum class SettingsMessage {
   CLEAR_FAILED,
   SETTINGS_RESET,
   SAVE_FAILED,
+
+  /**
+   * Aucun écran de langue n'a répondu : l'appui doit tout de même dire quelque chose, sinon
+   * l'usager conclut que l'application est cassée (SPEC.md § 8).
+   */
+  LANGUAGE_SETTINGS_UNAVAILABLE,
 }

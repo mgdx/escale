@@ -64,7 +64,7 @@ n'empêche l'usage du nom ; seul l'`applicationId` doit être unique.
 | Logiciel libre | Licence **GPLv3**, dépôt public, `LICENSE` à la racine |
 | Diffusion | **F-Droid** (dépôt principal), donc aucune dépendance propriétaire, aucun binaire pré-compilé, build reproductible depuis les sources |
 | Vie privée | **Aucune** télémétrie, aucun traqueur, aucun SDK publicitaire, aucun service Google Play. Aucune donnée ne quitte l'appareil sauf les requêtes vers le serveur MOTIS configuré |
-| Légèreté | APK visé < 15 Mo, pas de dépendance lourde inutile, pas de WebView |
+| Légèreté | APK visé < 15 Mo **par APK d'architecture**, et non pour un APK universel : MapLibre apporte à lui seul une dizaine de mégaoctets de code natif incompressible, par architecture. L'objectif se vérifie sur l'APK de publication minifié, jamais sur celui de débogage. Pas de dépendance lourde inutile, pas de WebView |
 | Fluidité | Démarrage à froid < 1,5 s jusqu'à la carte, 60 images/s en déplacement, rien de plus de 16 ms sur le fil principal. Critères vérifiés, pas seulement souhaités (§ 5.7) |
 | Localisation | Aucune chaîne codée en dur : tout dans `res/values/strings.xml`, pluriels via `<plurals>`, formats via paramètres positionnels |
 | Qualité | Aucun avertissement toléré sur `test`, `lint`, `ktlintCheck` |
@@ -349,10 +349,14 @@ Accessible depuis la recherche (en choisissant un arrêt), depuis la carte, ou d
 
 - **Domicile** et **Travail** : deux emplacements nommés, distincts des autres favoris, avec leur
   propre icône et une place réservée en tête des suggestions et des puces de l'écran d'accueil.
-  Tous deux sont **facultatifs** : tant qu'ils ne sont pas renseignés, la puce correspondante
-  propose « Définir mon domicile » ; une fois renseignés, ils sont modifiables et supprimables
-  depuis les réglages comme depuis un appui long sur la puce. L'application ne les réclame jamais
-  d'elle-même, en particulier pas à la première ouverture.
+  Tous deux sont **facultatifs** : tant que Domicile ou Travail n'est pas renseigné, **aucune
+  puce ne lui correspond**. Une puce absente n'est simplement pas affichée, conformément au § 5.1 ;
+  il n'existe pas de puce « Définir mon domicile ». Ces deux emplacements se créent depuis les
+  réglages, ou par appui long sur un résultat ; une fois renseignés, ils sont modifiables et
+  supprimables depuis les réglages comme depuis un appui long sur la puce. L'application ne les
+  réclame jamais d'elle-même, en particulier pas à la première ouverture — et cette règle-ci le
+  garantit, là où une invitation permanente en tête de l'écran d'accueil aurait été exactement la
+  réclamation que l'on refuse.
 - **Favoris** : autres lieux nommés, arrêts, et trajets complets (couple départ/arrivée,
   éventuellement avec préférences de modes).
 - **Historique** : les N dernières recherches (N = 50), horodatées, effaçables une par une ou en bloc.
@@ -431,6 +435,14 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
   exiger le transport des vélos (`requireBikeTransport`).
 - Affichage : thème (système / clair / sombre), langue, format 12 h ou 24 h,
   couches visibles sur la carte (arrêts, libre-service, points d'intérêt).
+- **Langue** : ce n'est pas un réglage interne. L'entrée ouvre l'écran système « Langue de
+  l'application » d'Android 13, alimenté par le `localeConfig` du manifeste, qui déclare les
+  langues réellement fournies. **Elle n'est affichée qu'à partir d'Android 13** ; en deçà, elle est
+  masquée et l'application suit la langue du système. Motif : la langue par application n'est pas
+  accessible sous l'API 33 sans `androidx.appcompat`, et le coût de cette bibliothèque — son poids,
+  son thème et ses ressources — n'est pas justifié pour une seule fonction dans un projet
+  entièrement Compose. Si la surcouche du constructeur a retiré cet écran, l'appui ne reste pas
+  sans réponse : l'application le dit.
 - Données : effacer l'historique, effacer le cache des tuiles, effacer le cache des résultats.
 - À propos : version, licence, lien vers le dépôt, attributions (§ 4.2).
 

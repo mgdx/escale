@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -69,6 +70,7 @@ fun SettingsScreen(
       onOpenServerSettings = onOpenServerSettings,
       onOpenAbout = onOpenAbout,
       onOpenDialog = viewModel::openDialog,
+      onLanguageSettingsUnavailable = viewModel::languageSettingsUnavailable,
       onDismissDialog = viewModel::dismissDialog,
       onSearchChanged = viewModel::updateSearchPreferences,
       onDisplayChanged = viewModel::updateDisplayPreferences,
@@ -91,6 +93,7 @@ internal data class SettingsActions(
   val onOpenServerSettings: () -> Unit,
   val onOpenAbout: () -> Unit,
   val onOpenDialog: (SettingsDialog) -> Unit,
+  val onLanguageSettingsUnavailable: () -> Unit,
   val onDismissDialog: () -> Unit,
   val onSearchChanged: (SearchPreferences) -> Unit,
   val onDisplayChanged: (DisplayPreferences) -> Unit,
@@ -236,6 +239,7 @@ private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions
     description = stringResource(R.string.settings_theme_description),
     onClick = { actions.onOpenDialog(SettingsDialog.Theme) },
   )
+  LanguageItem(actions)
   SettingsItem(
     title = stringResource(R.string.settings_clock_format_title),
     value = stringResource(display.clockFormat.labelRes()),
@@ -259,6 +263,29 @@ private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions
     description = stringResource(R.string.settings_show_points_of_interest_description),
     checked = display.showPointsOfInterest,
     onCheckedChange = { actions.onDisplayChanged(display.copy(showPointsOfInterest = it)) },
+  )
+}
+
+/**
+ * L'entrée « Langue » (SPEC.md § 5.6) : elle ouvre l'écran système « Langue de l'application ».
+ *
+ * **Elle n'existe qu'à partir d'Android 13**, seule version qui sache attribuer une langue à une
+ * seule application. En deçà, elle n'est pas affichée du tout et Escale suit la langue de
+ * l'appareil : montrer une commande sans effet serait pire que de ne rien montrer.
+ *
+ * Le raisonnement complet — pourquoi le système plutôt qu'un réglage interne — est dans
+ * `AppLanguageSettings.kt`.
+ */
+@Composable
+private fun LanguageItem(actions: SettingsActions) {
+  if (!appLanguageSettingsExist()) return
+  val context = LocalContext.current
+  SettingsItem(
+    title = stringResource(R.string.settings_language_title),
+    description = stringResource(R.string.settings_language_description),
+    onClick = {
+      if (!context.openAppLanguageSettings()) actions.onLanguageSettingsUnavailable()
+    },
   )
 }
 
@@ -300,6 +327,7 @@ private val previewActions = SettingsActions(
   onOpenServerSettings = {},
   onOpenAbout = {},
   onOpenDialog = {},
+  onLanguageSettingsUnavailable = {},
   onDismissDialog = {},
   onSearchChanged = {},
   onDisplayChanged = {},

@@ -94,6 +94,16 @@
   <string name="settings_theme_light">Light</string>
   <string name="settings_theme_dark">Dark</string>
 
+  <!--
+    Langue de l'application (SPEC.md § 5.6). L'entrée n'apparaît qu'à partir d'Android 13, la
+    première version qui sache attribuer une langue à une seule application ; en deçà elle est
+    masquée et l'application suit la langue de l'appareil.
+  -->
+  <string name="settings_language_title">Language</string>
+  <string name="settings_language_description">Pick the language Escale is displayed in, on Android\'s own “App language” screen. Escale follows your device language until you change it there.</string>
+  <!-- Quand aucun écran de langue ne répond : l'appui doit dire quelque chose. -->
+  <string name="settings_language_unavailable">This device has no app language screen. You can still change the language of every app in Android settings.</string>
+
   <string name="settings_clock_format_title">Time format</string>
   <string name="settings_clock_format_description">How departure and arrival times are written.</string>
   <string name="settings_clock_format_system">Same as the system</string>

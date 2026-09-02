@@ -97,12 +97,23 @@ Android fusionne tous les fichiers `res/values/*.xml` : le découpage n'a aucun 
 5. Conservez les paramètres de format (`%1$s`, `%2$d`) et leur numéro. Vous pouvez les réordonner
    dans la phrase, c'est précisément à cela que sert leur numérotation.
 6. Échappez l'apostrophe : `\'` dans un fichier de ressources Android.
+7. **Ajoutez votre langue à [`app/src/main/res/xml/locales_config.xml`](app/src/main/res/xml/locales_config.xml)**,
+   une ligne `<locale android:name="de" />` par langue, dans le même format que le nom du dossier
+   (`pt-rBR` s'y écrit `pt-BR`). C'est ce fichier, et lui seul, qui remplit l'écran « Langue de
+   l'application » d'Android 13 et des versions suivantes : une traduction absente de cette liste
+   n'y est jamais proposée, et reste inatteignable autrement qu'en changeant la langue de tout
+   l'appareil.
 
 ### Vérifier une traduction
 
 ```bash
 ./gradlew lint     # signale les chaînes non traduites et les paramètres de format incohérents
 ```
+
+Aucun `resourceConfigurations` ni `localeFilters` n'est déclaré dans `app/build.gradle.kts`, et il
+ne faut pas en ajouter : ces réglages *filtrent* les langues embarquées au lieu de les protéger, et
+une liste oubliée ferait disparaître silencieusement une traduction du paquet. Ce qui restreint la
+liste offerte à l'usager est `locales_config.xml`, pas la configuration de compilation.
 
 Puis regardez vos écrans sur un appareil réglé dans votre langue. Une traduction correcte qui
 déborde de son bouton reste une traduction à revoir : préférez une formulation courte, dans le
