@@ -23,4 +23,34 @@
   <string name="map_attribution_transitous_link">transitous.org/sources</string>
 
   <string name="map_tiles_unavailable">Ce serveur ne fournit pas de fond de carte.</string>
+
+  <!-- Arrêts sur la carte (SPEC.md § 5.7). Le mode est écrit en toutes lettres pour les lecteurs
+       d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins (SPEC.md § 9). -->
+  <string name="map_stop_mode_rail">Train</string>
+  <string name="map_stop_mode_regional_rail">Train régional</string>
+  <string name="map_stop_mode_subway">Métro</string>
+  <string name="map_stop_mode_tram">Tramway</string>
+  <string name="map_stop_mode_bus">Bus</string>
+  <string name="map_stop_mode_coach">Autocar</string>
+  <string name="map_stop_mode_ferry">Bateau</string>
+  <string name="map_stop_mode_aerial_lift">Téléphérique</string>
+  <string name="map_stop_mode_funicular">Funiculaire</string>
+  <string name="map_stop_mode_airplane">Avion</string>
+  <string name="map_stop_mode_transit">Transport en commun</string>
+
+  <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
+  <plurals name="map_stop_lines_served">
+    <item quantity="one">%d ligne desservie</item>
+    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
+         l'exige pour que le pluriel soit complet. -->
+    <item quantity="many">%d de lignes desservies</item>
+    <item quantity="other">%d lignes desservies</item>
+  </plurals>
+  <string name="map_stop_lines_loading">Chargement des lignes\u2026</string>
+  <string name="map_stop_lines_unavailable">Les lignes n\'ont pas pu être chargées.</string>
+  <string name="map_stop_lines_none">Aucune ligne ne dessert cet arrêt.</string>
+  <string name="map_stop_departures">Prochains départs</string>
+  <string name="map_stop_close">Fermer le détail de l\'arrêt</string>
+  <!-- Le mode, puis le numéro de ligne : « Métro 14 ». -->
+  <string name="map_stop_line_description">%1$s %2$s</string>
 </resources>

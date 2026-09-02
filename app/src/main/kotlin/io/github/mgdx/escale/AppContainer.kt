@@ -12,20 +12,24 @@ import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
+import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
+import io.github.mgdx.escale.data.net.StopsApi
 import io.github.mgdx.escale.data.prefs.PreferencesRepositoryImpl
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
 import io.github.mgdx.escale.data.repository.MapRepositoryImpl
 import io.github.mgdx.escale.data.repository.PlanCache
 import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
+import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
 import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.map.MapStyles
+import io.github.mgdx.escale.ui.map.StopDepartureRequests
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
@@ -109,6 +113,16 @@ class AppContainer(context: Context) {
     PlanRepositoryImpl(motisClient, serverRepository, planCache)
   }
 
+  /**
+   * Les arrêts affichés sur la carte (SPEC.md § 5.7).
+   *
+   * Le dépôt porte le cache par emprise et par palier de la règle 4 : une emprise déjà couverte
+   * n'est pas redemandée, et une réponse vaut dix minutes.
+   */
+  val stopsRepository: StopsRepository by lazy {
+    StopsRepositoryImpl(StopsApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
+  }
+
   /** Cadrage initial proposé par le serveur, dernier recours du cadrage de SPEC.md § 5.1. */
   val mapRepository: MapRepository by lazy {
     MapRepositoryImpl(MapApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
@@ -149,6 +163,15 @@ class AppContainer(context: Context) {
    * recherche (SPEC.md § 5.1). Partagé ici pour que les deux écrans n'aient pas à se connaître.
    */
   val mapSelection: MapSelection by lazy { MapSelection() }
+
+  /**
+   * L'arrêt dont l'usager a demandé les prochains départs depuis la carte (SPEC.md § 5.7).
+   *
+   * **Point d'accroche du jalon 9** : l'écran des prochains départs n'existe pas encore, et la
+   * carte n'a pas à le connaître. Elle dépose sa demande ici, la navigation la consommera — même
+   * dispositif que [mapSelection] pour l'écran de recherche.
+   */
+  val stopDepartureRequests: StopDepartureRequests by lazy { StopDepartureRequests() }
 
   /**
    * La recherche en cours — départ, arrivée, heure (SPEC.md § 5.1).

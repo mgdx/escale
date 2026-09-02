@@ -43,16 +43,18 @@ class StopMarkerTest {
 
   @Test
   fun `chaque arret rend un marqueur, palier et dessin compris`() {
+    val station = LatLon(48.84, 2.37)
+    val townHall = LatLon(48.85, 2.35)
     val markers = stopMarkers(
       listOf(
-        Stop("gare", "Gare centrale", LatLon(48.84, 2.37), listOf(TransitMode.RAIL, TransitMode.BUS)),
-        Stop("arret", "Mairie", LatLon(48.85, 2.35), listOf(TransitMode.BUS)),
+        Stop("gare", "Gare centrale", station, listOf(TransitMode.RAIL, TransitMode.BUS)),
+        Stop("arret", "Mairie", townHall, listOf(TransitMode.BUS)),
       ),
     )
     assertEquals(
       listOf(
-        StopMarker("gare", "Gare centrale", ZoomTier.MAJOR_STATIONS, TransitMode.RAIL),
-        StopMarker("arret", "Mairie", ZoomTier.ALL_STOPS, TransitMode.BUS),
+        StopMarker("gare", "Gare centrale", station, ZoomTier.MAJOR_STATIONS, TransitMode.RAIL),
+        StopMarker("arret", "Mairie", townHall, ZoomTier.ALL_STOPS, TransitMode.BUS),
       ),
       markers,
     )

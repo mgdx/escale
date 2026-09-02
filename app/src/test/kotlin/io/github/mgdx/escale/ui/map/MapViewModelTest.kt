@@ -46,16 +46,22 @@ class MapViewModelTest {
   private val geocode = FakeGeocodeRepository()
   private val selection = MapSelection()
   private val journeys = SelectedJourneyStore()
+  private val stops = FakeStopsRepository()
+  private val preferences = FakePreferencesRepository()
+  private val departures = StopDepartureRequests()
 
   private fun viewModel() = MapViewModel(
     serverRepository = servers,
     mapRepository = maps,
     geocodeRepository = geocode,
+    stopsRepository = stops,
+    preferencesRepository = preferences,
     styles = styles,
     cameraStore = cameras,
     locationSource = locations,
     selection = selection,
     selectedJourneys = journeys,
+    departureRequests = departures,
     computeDispatcher = UnconfinedTestDispatcher(),
   )
 
@@ -68,11 +74,14 @@ class MapViewModelTest {
       serverRepository = servers,
       mapRepository = maps,
       geocodeRepository = geocode,
+      stopsRepository = stops,
+      preferencesRepository = preferences,
       styles = styles,
       cameraStore = FakeCameraMemory(remembered),
       locationSource = FakeLocationSource(coarseGranted = true, lastKnown = lyon),
       selection = selection,
       selectedJourneys = journeys,
+      departureRequests = departures,
       computeDispatcher = UnconfinedTestDispatcher(),
     )
     assertEquals(remembered, model.uiState.value.cameraTarget?.camera)

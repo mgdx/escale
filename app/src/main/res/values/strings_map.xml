@@ -36,4 +36,31 @@
 
   <!-- Serveur sans tuiles : un message discret, aucun repli sur un tiers (SPEC.md § 5.7). -->
   <string name="map_tiles_unavailable">This server provides no map background.</string>
+
+  <!-- Arrêts sur la carte (SPEC.md § 5.7). Le mode est écrit en toutes lettres pour les lecteurs
+       d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins (SPEC.md § 9). -->
+  <string name="map_stop_mode_rail">Train</string>
+  <string name="map_stop_mode_regional_rail">Regional train</string>
+  <string name="map_stop_mode_subway">Underground</string>
+  <string name="map_stop_mode_tram">Tram</string>
+  <string name="map_stop_mode_bus">Bus</string>
+  <string name="map_stop_mode_coach">Coach</string>
+  <string name="map_stop_mode_ferry">Ferry</string>
+  <string name="map_stop_mode_aerial_lift">Cable car</string>
+  <string name="map_stop_mode_funicular">Funicular</string>
+  <string name="map_stop_mode_airplane">Flight</string>
+  <string name="map_stop_mode_transit">Public transport</string>
+
+  <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
+  <plurals name="map_stop_lines_served">
+    <item quantity="one">%d line served</item>
+    <item quantity="other">%d lines served</item>
+  </plurals>
+  <string name="map_stop_lines_loading">Loading lines\u2026</string>
+  <string name="map_stop_lines_unavailable">Lines could not be loaded.</string>
+  <string name="map_stop_lines_none">No line serves this stop.</string>
+  <string name="map_stop_departures">Next departures</string>
+  <string name="map_stop_close">Close stop details</string>
+  <!-- Le mode, puis le numéro de ligne : « Underground 14 ». -->
+  <string name="map_stop_line_description">%1$s %2$s</string>
 </resources>

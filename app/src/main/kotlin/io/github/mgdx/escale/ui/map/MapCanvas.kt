@@ -1,5 +1,7 @@
 package io.github.mgdx.escale.ui.map
 
+import android.graphics.PointF
+import android.graphics.RectF
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -16,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -25,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -36,6 +41,7 @@ import io.github.mgdx.escale.core.geo.MapLoadRules
 import io.github.mgdx.escale.core.geo.MapViewport
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.TransitMode
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
@@ -43,8 +49,11 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.Point
 
 /** Ce que la carte peut signaler à l'écran qui l'héberge. */
 @Immutable
@@ -91,6 +100,8 @@ fun MapCanvas(
   )
   val traceColors = mapTraceColors()
   val markerIcons = rememberTraceMarkerIcons(traceColors)
+  val stopColors = mapStopColors()
+  val stopIcons = rememberStopIcons(stopColors)
 
   Box(modifier = modifier) {
     AndroidView(
@@ -107,6 +118,19 @@ fun MapCanvas(
       onPick = actions.onPick,
       onDismiss = actions.onDismissPick,
     )
+    // L'infobulle se pose au bas de la carte, au-dessus de ce que le remplissage réserve à la
+    // feuille de résultats et aux encarts système (SPEC.md § 5.7 et § 9).
+    state.selectedStop?.let { stop ->
+      MapStopCard(
+        stop = stop,
+        onDepartures = { state.stopActions.onDepartures(stop) },
+        onDismiss = state.stopActions.onDismissStop,
+        modifier = Modifier
+          .align(Alignment.BottomCenter)
+          .padding(bottom = contentPadding.calculateBottomPadding())
+          .padding(StopCardMargin),
+      )
+    }
   }
 
   BindMapViewLifecycle(mapInstance)
@@ -116,33 +140,58 @@ fun MapCanvas(
     val styleJson = state.styleJson ?: return@LaunchedEffect
     loadedStyle = null
     target.setStyle(Style.Builder().fromJson(styleJson)) { style ->
-      // Le tracé d'abord : la position de l'usager et le point choisi restent au-dessus de lui.
+      // Le tracé d'abord, les arrêts par-dessus, puis la position de l'usager et le point choisi,
+      // qui restent au-dessus de tout.
       style.installJourneyTraceLayers(traceColors, markerIcons)
+      style.installStopLayers(stopColors, stopIcons)
       style.installOverlayLayers(colors)
       loadedStyle = style
     }
   }
 
-  // Deux sources GeoJSON, jamais des vues Android superposées (règle 6). Le GeoJSON arrive déjà
-  // sérialisé par le ViewModel, hors du fil principal (règle 7).
-  LaunchedEffect(loadedStyle, state.userLocationGeoJson) {
-    loadedStyle?.getSourceAs<GeoJsonSource>(USER_LOCATION_SOURCE)?.setGeoJson(state.userLocationGeoJson)
-  }
-  LaunchedEffect(loadedStyle, state.pickedPointGeoJson) {
-    loadedStyle?.getSourceAs<GeoJsonSource>(PICKED_POINT_SOURCE)?.setGeoJson(state.pickedPointGeoJson)
-  }
-  // Le tracé du trajet : une opération par source, jamais un ajout ni un retrait de couche
-  // (SPEC.md § 5.7, règles 7 et 8). Un trajet désélectionné y pose une collection vide.
-  LaunchedEffect(loadedStyle, state.journeyLinesGeoJson) {
-    loadedStyle?.getSourceAs<GeoJsonSource>(JOURNEY_LINES_SOURCE)?.setGeoJson(state.journeyLinesGeoJson)
-  }
-  LaunchedEffect(loadedStyle, state.journeyMarkersGeoJson) {
-    loadedStyle?.getSourceAs<GeoJsonSource>(JOURNEY_MARKERS_SOURCE)?.setGeoJson(state.journeyMarkersGeoJson)
-  }
+  ApplyMapSources(loadedStyle, state)
 
   ApplyCameraTarget(map, state.cameraTarget, contentPadding, actions.onCameraTargetApplied)
   ApplyCameraPadding(map, contentPadding)
-  BindMapListeners(mapInstance, map, actions)
+  BindMapListeners(mapInstance, map, actions, state.stopActions)
+}
+
+/**
+ * Pose le contenu de chaque source, et rien d'autre (SPEC.md § 5.7, règles 6, 7 et 8).
+ *
+ * **Une opération par source, jamais un ajout ni un retrait de couche.** Le GeoJSON arrive déjà
+ * sérialisé par le `ViewModel`, hors du fil principal, et une collection vide efface un contenu
+ * sans rien démonter. Des deux sources d'arrêts, une seule porte des entités à la fois : c'est
+ * ainsi que le regroupement s'allume et s'éteint sans toucher aux couches.
+ */
+@Composable
+private fun ApplyMapSources(style: Style?, state: MapUiState) {
+  LaunchedEffect(style, state.userLocationGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(USER_LOCATION_SOURCE)?.setGeoJson(state.userLocationGeoJson)
+  }
+  LaunchedEffect(style, state.pickedPointGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(PICKED_POINT_SOURCE)?.setGeoJson(state.pickedPointGeoJson)
+  }
+  LaunchedEffect(style, state.journeyLinesGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(JOURNEY_LINES_SOURCE)?.setGeoJson(state.journeyLinesGeoJson)
+  }
+  LaunchedEffect(style, state.journeyMarkersGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(JOURNEY_MARKERS_SOURCE)?.setGeoJson(state.journeyMarkersGeoJson)
+  }
+  LaunchedEffect(style, state.stopsGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(STOPS_SOURCE)?.setGeoJson(state.stopsGeoJson)
+  }
+  LaunchedEffect(style, state.clusteredStopsGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(STOPS_CLUSTERED_SOURCE)?.setGeoJson(state.clusteredStopsGeoJson)
+  }
+  // Les points d'intérêt ne font l'objet d'aucune requête : ils sont déjà dans les tuiles, et la
+  // feuille embarquée porte leur couche avec le bon `minzoom` (SPEC.md § 5.7). Le réglage de
+  // SPEC.md § 5.6 ne fait que l'allumer ou l'éteindre, indépendamment du zoom.
+  LaunchedEffect(style, state.pointsOfInterestVisible) {
+    style?.getLayer(POINTS_OF_INTEREST_LAYER)?.setProperties(
+      PropertyFactory.visibility(if (state.pointsOfInterestVisible) Property.VISIBLE else Property.NONE),
+    )
+  }
 }
 
 /**
@@ -268,8 +317,13 @@ private fun ApplyCameraPadding(map: MapLibreMap?, contentPadding: PaddingValues)
  * l'écran : c'est le revers de sa longévité.
  */
 @Composable
-private fun BindMapListeners(mapInstance: MapInstance, map: MapLibreMap?, actions: MapCanvasActions) {
-  DisposableEffect(map, actions) {
+private fun BindMapListeners(
+  mapInstance: MapInstance,
+  map: MapLibreMap?,
+  actions: MapCanvasActions,
+  stopActions: MapStopActions,
+) {
+  DisposableEffect(map, actions, stopActions) {
     val instance = map
     val view = mapInstance.view()
     if (instance == null) return@DisposableEffect onDispose { }
@@ -291,17 +345,30 @@ private fun BindMapListeners(mapInstance: MapInstance, map: MapLibreMap?, action
       actions.onLongClick(LatLon(point.latitude, point.longitude))
       true
     }
+    // Appui sur un arrêt ou sur un groupe (SPEC.md § 5.7). L'interrogation porte sur les seules
+    // couches d'arrêts : toucher une rue ou un bâtiment ne doit rien ouvrir.
+    val click = MapLibreMap.OnMapClickListener { point ->
+      when (val tap = instance.tapAt(instance.projection.toScreenLocation(point))) {
+        is MapTap.OnStop -> stopActions.onStopClick(tap.stop)
+        is MapTap.OnCluster -> stopActions.onClusterClick(tap.point)
+        null -> stopActions.onDismissStop()
+      }
+      // Faux : l'appui reste disponible pour le reste de la carte, qui n'en fait rien aujourd'hui.
+      false
+    }
     val failed = MapView.OnDidFailLoadingMapListener { actions.onLoadFailed() }
 
     instance.addOnCameraIdleListener(idle)
     instance.addOnCameraMoveStartedListener(moveStarted)
     instance.addOnMapLongClickListener(longClick)
+    instance.addOnMapClickListener(click)
     view.addOnDidFailLoadingMapListener(failed)
 
     onDispose {
       instance.removeOnCameraIdleListener(idle)
       instance.removeOnCameraMoveStartedListener(moveStarted)
       instance.removeOnMapLongClickListener(longClick)
+      instance.removeOnMapClickListener(click)
       view.removeOnDidFailLoadingMapListener(failed)
     }
   }
@@ -357,6 +424,67 @@ private fun mapTraceColors(): MapTraceColors = MapTraceColors(
   destination = MaterialTheme.colorScheme.tertiary,
 )
 
+/** Ce qu'un appui sur la carte a atteint, quand il a atteint quelque chose. */
+private sealed interface MapTap {
+  data class OnStop(val stop: SelectedStop) : MapTap
+
+  data class OnCluster(val point: LatLon) : MapTap
+}
+
+/**
+ * Ce que l'appui a atteint, ou `null` s'il n'a touché aucun marqueur d'arrêt.
+ *
+ * L'appui est élargi à un carré de [TAP_SLOP_PX] pixels de côté : un marqueur de 22 dp n'est pas
+ * une cible de 48 dp, et SPEC.md § 9 impose que la cible tactile en soit une. Un arrêt gagne
+ * toujours sur une pastille de regroupement dessinée sous lui.
+ */
+// La signature de `queryRenderedFeatures` est variadique : cinq identifiants recopiés une fois par
+// appui du doigt, le coût est nul et il n'y a pas d'autre appel possible.
+@Suppress("SpreadOperator")
+private fun MapLibreMap.tapAt(screen: PointF): MapTap? {
+  val features = queryRenderedFeatures(screen.tapArea(), *STOP_TAPPABLE_LAYERS)
+  features.firstOrNull { !it.hasProperty(CLUSTER_COUNT_PROPERTY) }
+    ?.toSelectedStop()
+    ?.let { return MapTap.OnStop(it) }
+  return features.firstOrNull { it.hasProperty(CLUSTER_COUNT_PROPERTY) }
+    ?.let { feature -> feature.geometry() as? Point }
+    ?.let { point -> MapTap.OnCluster(LatLon(lat = point.latitude(), lon = point.longitude())) }
+}
+
+/** L'entité GeoJSON touchée, relue dans les termes de l'interface. */
+private fun Feature.toSelectedStop(): SelectedStop? {
+  val id = getStringProperty(MapGeoJson.PROPERTY_STOP_ID) ?: return null
+  return SelectedStop(
+    id = id,
+    name = getStringProperty(MapGeoJson.PROPERTY_LABEL).orEmpty(),
+    mode = modeOf(getStringProperty(MapGeoJson.PROPERTY_MODE)),
+  )
+}
+
+/** Le mode écrit dans l'entité. Une valeur qu'on ne sait pas relire devient [TransitMode.OTHER]. */
+private fun modeOf(name: String?): TransitMode =
+  TransitMode.entries.firstOrNull { it.name == name } ?: TransitMode.OTHER
+
+/** Le carré d'appui autour du doigt : une cible de 48 dp, pas un marqueur de 22 dp. */
+private fun PointF.tapArea(): RectF = RectF(x - TAP_SLOP_PX, y - TAP_SLOP_PX, x + TAP_SLOP_PX, y + TAP_SLOP_PX)
+
+/**
+ * Les couleurs des arrêts, prises au thème Material.
+ *
+ * Elles sont lues ici et non passées par l'écran : les arrêts appartiennent au lot « carte », et
+ * `HomeScreen` n'a pas à connaître la palette de couches qu'il ne dessine pas.
+ */
+@Composable
+private fun mapStopColors(): MapStopColors = MapStopColors(
+  plate = MaterialTheme.colorScheme.surface,
+  onPlate = MaterialTheme.colorScheme.onSurfaceVariant,
+  plateStroke = MaterialTheme.colorScheme.outlineVariant,
+  label = MaterialTheme.colorScheme.onSurface,
+  labelHalo = MaterialTheme.colorScheme.surface,
+  cluster = MaterialTheme.colorScheme.primaryContainer,
+  onCluster = MaterialTheme.colorScheme.onPrimaryContainer,
+)
+
 /** L'emprise, dans le type de MapLibre. */
 private fun BoundingBox.asLatLngBounds(): LatLngBounds = LatLngBounds.from(
   latNorth = max.lat,
@@ -405,3 +533,18 @@ private const val HALO_OPACITY = 0.2f
 private const val DOT_RADIUS = 7f
 private const val PICKED_RADIUS = 9f
 private const val STROKE_WIDTH = 2.5f
+
+/** La couche de points d'intérêt des feuilles de `res/raw`, que le réglage allume ou éteint. */
+private const val POINTS_OF_INTEREST_LAYER = "poi-landmarks"
+
+/**
+ * Demi-côté du carré d'appui, en pixels.
+ *
+ * Volontairement exprimé en pixels et non en dp : `queryRenderedFeatures` raisonne en pixels
+ * d'écran, et 24 px valent une cible de 48 px de côté, soit 48 dp sur un écran de densité 1 et
+ * davantage ailleurs — jamais moins que le minimum de SPEC.md § 9.
+ */
+private const val TAP_SLOP_PX = 24f
+
+/** De l'air entre l'infobulle et les bords de l'écran. */
+private val StopCardMargin = 12.dp

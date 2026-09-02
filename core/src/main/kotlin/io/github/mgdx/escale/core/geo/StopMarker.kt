@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.core.geo
 
+import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.TransitMode
 
@@ -15,13 +16,14 @@ import io.github.mgdx.escale.core.model.TransitMode
  * @param mode mode qui donne son **dessin** au marqueur. Une forme, jamais une teinte seule
  *   (SPEC.md § 9) : le nom de l'arrêt reste écrit à côté.
  */
-data class StopMarker(val id: String, val name: String, val tier: ZoomTier, val mode: TransitMode)
+data class StopMarker(val id: String, val name: String, val point: LatLon, val tier: ZoomTier, val mode: TransitMode)
 
 /** Les marqueurs à poser pour une réponse du serveur, dans l'ordre où elle est arrivée. */
 fun stopMarkers(stops: List<Stop>): List<StopMarker> = stops.map { stop ->
   StopMarker(
     id = stop.id,
     name = stop.name,
+    point = stop.coordinates,
     tier = stopTier(stop.modes),
     mode = principalMode(stop.modes),
   )
