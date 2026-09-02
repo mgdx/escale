@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -217,32 +220,59 @@ private fun ResultsTabs(selected: JourneyCategory, onSelected: (JourneyCategory)
  *
  * L'ordre des cas n'est pas indifférent : une erreur l'emporte sur une liste périmée, et un onglet
  * qui n'a rien demandé n'affiche ni liste vide ni erreur, mais l'attente.
+ *
+ * Le contenu prend **la place qui reste** sous les onglets, et pas un pixel de plus : sans ce
+ * `weight`, une liste haute déborderait sous le bord de la feuille et ses dernières cartes
+ * deviendraient inatteignables.
  */
 @Composable
-private fun ResultsContent(state: ResultsUiState, actions: ResultsActions, padding: PaddingValues) {
+private fun ColumnScope.ResultsContent(state: ResultsUiState, actions: ResultsActions, padding: PaddingValues) {
   val tab = state.current
+  val fill = Modifier
+    .weight(1f)
+    .fillMaxWidth()
   when {
-    tab.error != null -> ErrorMessage(
-      error = tab.error,
-      onRetry = actions.onRetry,
-      modifier = Modifier.padding(ContentPadding),
-    )
+    tab.error != null -> CenteredState(fill, padding) {
+      ErrorMessage(error = tab.error, onRetry = actions.onRetry)
+    }
 
-    tab.loading || tab.feed == null -> ResultsLoading()
+    tab.loading || tab.feed == null -> CenteredState(fill, padding) { ResultsLoading() }
 
-    tab.isEmpty -> ResultsEmpty(category = state.category)
+    tab.isEmpty -> CenteredState(fill, padding) { ResultsEmpty(category = state.category) }
 
-    else -> JourneyList(state = state, actions = actions, padding = padding)
+    else -> JourneyList(state = state, actions = actions, padding = padding, modifier = fill)
+  }
+}
+
+/**
+ * Un état court, centré dans la place disponible et **défilable** : à 200 % d'agrandissement, un
+ * état vide et ses suggestions dépassent la hauteur de la feuille repliée, et rien ne doit devenir
+ * illisible pour autant (SPEC.md § 9).
+ */
+@Composable
+private fun CenteredState(modifier: Modifier, padding: PaddingValues, content: @Composable () -> Unit) {
+  Box(
+    modifier = modifier
+      .verticalScroll(rememberScrollState())
+      .padding(bottom = padding.calculateBottomPadding()),
+    contentAlignment = Alignment.Center,
+  ) {
+    content()
   }
 }
 
 /** La liste des trajets, encadrée par « Plus tôt » et « Plus tard » (SPEC.md § 5.2). */
 @Composable
-private fun JourneyList(state: ResultsUiState, actions: ResultsActions, padding: PaddingValues) {
+private fun JourneyList(
+  state: ResultsUiState,
+  actions: ResultsActions,
+  padding: PaddingValues,
+  modifier: Modifier = Modifier,
+) {
   val tab = state.current
   val journeys = state.visibleJourneys
   LazyColumn(
-    modifier = Modifier.fillMaxSize(),
+    modifier = modifier,
     contentPadding = PaddingValues(
       start = ContentPadding,
       end = ContentPadding,
