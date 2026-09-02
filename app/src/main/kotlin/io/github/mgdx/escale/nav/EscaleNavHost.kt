@@ -1,6 +1,12 @@
 package io.github.mgdx.escale.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,9 +15,12 @@ import io.github.mgdx.escale.ui.about.AboutRoute
 import io.github.mgdx.escale.ui.about.AboutScreen
 import io.github.mgdx.escale.ui.about.LicenseRoute
 import io.github.mgdx.escale.ui.about.LicenseScreen
+import io.github.mgdx.escale.ui.detail.DetailRoute
+import io.github.mgdx.escale.ui.detail.DetailScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
 import io.github.mgdx.escale.ui.home.HomeScreen
 import io.github.mgdx.escale.ui.results.ResultsSheetSlot
+import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.search.SearchCardSlot
 import io.github.mgdx.escale.ui.server.ServerSettingsRoute
 import io.github.mgdx.escale.ui.server.ServerSettingsScreen
@@ -26,6 +35,7 @@ import io.github.mgdx.escale.ui.settings.SettingsScreen
  */
 @Composable
 fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
+  OpenSelectedJourney(navController)
   NavHost(navController = navController, startDestination = HomeRoute) {
     composable<HomeRoute> {
       // Les deux emplacements de l'écran d'accueil (docs/architecture.md § 11.4). Ils sont branchés
@@ -56,6 +66,41 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
     }
     composable<LicenseRoute> {
       LicenseScreen(onBack = navController::popBackStack)
+    }
+    composable<DetailRoute> {
+      DetailScreen(
+        onBack = {
+          // Quitter le détail, c'est ne plus avoir de trajet choisi. Sans cette remise à zéro,
+          // `SelectedJourneyStore` garderait la même valeur et un second appui sur la même carte
+          // de résultat n'émettrait rien : la StateFlow ne republie pas une valeur égale.
+          SelectedJourneyStore.shared.select(null)
+          navController.popBackStack()
+        },
+      )
+    }
+  }
+}
+
+/**
+ * Ouvre l'écran de détail dès qu'un trajet est choisi dans la feuille de résultats (SPEC.md § 5.3).
+ *
+ * Le geste appartient au lot « résultats », qui publie le trajet dans `SelectedJourneyStore` sans
+ * rien connaître de la navigation ; le branchement se fait donc ici, dans le seul fichier partagé
+ * (docs/architecture.md § 3, règle 4). Le repère de passage est mémorisé par `rememberSaveable`
+ * pour qu'une rotation ne réempile pas une seconde fois le même écran.
+ */
+@Composable
+private fun OpenSelectedJourney(navController: NavHostController) {
+  val selected by SelectedJourneyStore.shared.selected.collectAsStateWithLifecycle()
+  var opened by rememberSaveable { mutableStateOf(false) }
+  LaunchedEffect(selected) {
+    when {
+      selected == null -> opened = false
+
+      !opened -> {
+        opened = true
+        navController.navigate(DetailRoute)
+      }
     }
   }
 }
