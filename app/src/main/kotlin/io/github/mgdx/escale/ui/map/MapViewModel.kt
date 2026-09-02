@@ -7,13 +7,19 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapViewport
+import io.github.mgdx.escale.core.geo.center
+import io.github.mgdx.escale.core.geo.isPointLike
+import io.github.mgdx.escale.core.geo.journeyTrace
 import io.github.mgdx.escale.core.geo.mapDataRequests
+import io.github.mgdx.escale.core.model.BoundingBox
+import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.ServerConfig
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.result.getOrNull
+import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +28,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -47,6 +54,7 @@ class MapViewModel(
   private val cameraStore: MapCameraMemory,
   private val locationSource: LocationSource,
   private val selection: MapSelection,
+  private val selectedJourneys: SelectedJourneyStore,
   private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
@@ -67,6 +75,7 @@ class MapViewModel(
   init {
     observeStyle()
     observePlannedRequests()
+    observeSelectedJourney()
     applyInitialCamera()
   }
 
@@ -225,6 +234,40 @@ class MapViewModel(
     }
   }
 
+  /**
+   * Trace le trajet choisi dans la feuille de résultats, et le cadre (SPEC.md § 5.1 et § 5.3).
+   *
+   * Trois règles de fluidité se jouent ici (SPEC.md § 5.7) :
+   *
+   * - **règle 7** : le calcul du tracé et sa mise en GeoJSON se font sur [computeDispatcher], hors
+   *   du fil principal, et les deux sources sont mises à jour en une seule modification d'état ;
+   * - **règle 8** : rien n'est ajouté ni retiré des couches. Une désélection, ou une nouvelle
+   *   recherche qui vide le magasin, pose une collection vide sur les deux sources : le tracé
+   *   disparaît, les couches restent, et rien ne s'empile d'un trajet au suivant ;
+   * - **règle 9** : le cadrage est une emprise, à laquelle le composable appliquera le
+   *   remplissage de la feuille ouverte.
+   *
+   * `collectLatest` abandonne le calcul du trajet précédent dès qu'un autre est choisi : sur une
+   * frise de plusieurs centaines de points, c'est ce qui évite d'afficher un tracé périmé.
+   */
+  private fun observeSelectedJourney() {
+    viewModelScope.launch {
+      selectedJourneys.selected.collectLatest { journey ->
+        val drawing = withContext(computeDispatcher) { drawingOf(journey) }
+        state.update { current ->
+          current.copy(
+            journeyLinesGeoJson = drawing.lines,
+            journeyMarkersGeoJson = drawing.markers,
+            journeyTraced = drawing.traced,
+            cameraTarget = drawing.goal
+              ?.let { CameraTarget(it, animated = true, token = nextToken()) }
+              ?: current.cameraTarget,
+          )
+        }
+      }
+    }
+  }
+
   /** Le cadrage initial de SPEC.md § 5.1, dans l'ordre exact que la spec impose. */
   private fun applyInitialCamera() {
     viewModelScope.launch {
@@ -232,7 +275,9 @@ class MapViewModel(
         ?: locationSource.lastKnownLocation()?.let { MapCamera(it, NEARBY_ZOOM) }
         ?: mapRepository.initialCamera().getOrNull()
         ?: WORLD_CAMERA
-      state.update { it.copy(cameraTarget = CameraTarget(camera, animated = false, token = nextToken())) }
+      state.update {
+        it.copy(cameraTarget = CameraTarget(CameraGoal.Center(camera), animated = false, token = nextToken()))
+      }
     }
   }
 
@@ -255,7 +300,8 @@ class MapViewModel(
   private fun centerOn(point: LatLon) {
     centerOnNextFix = false
     state.update {
-      it.copy(cameraTarget = CameraTarget(MapCamera(point, NEARBY_ZOOM), animated = true, token = nextToken()))
+      val goal = CameraGoal.Center(MapCamera(point, NEARBY_ZOOM))
+      it.copy(cameraTarget = CameraTarget(goal, animated = true, token = nextToken()))
     }
   }
 
@@ -278,6 +324,33 @@ class MapViewModel(
     return tokens
   }
 
+  /** Le tracé d'un trajet, prêt à poser : deux sources GeoJSON et un cadrage. */
+  private data class JourneyDrawing(val lines: String, val markers: String, val traced: Boolean, val goal: CameraGoal?)
+
+  private fun drawingOf(journey: Journey?): JourneyDrawing {
+    val trace = journeyTrace(journey)
+    return JourneyDrawing(
+      lines = MapGeoJson.journeyLines(trace.segments),
+      markers = MapGeoJson.journeyMarkers(trace.markers),
+      traced = !trace.isEmpty,
+      goal = frameOf(trace.bounds),
+    )
+  }
+
+  /**
+   * Le cadrage d'une emprise de trajet (SPEC.md § 5.3).
+   *
+   * L'emprise est élargie de [FRAME_MARGIN_RATIO] plutôt que de recevoir un remplissage
+   * supplémentaire : le remplissage de la caméra est déjà celui des encarts système et de la
+   * feuille de résultats, et lui ajouter une marge le ferait diverger de celui que le composable
+   * applique en permanence. Une emprise réduite à un point se cadre par son centre.
+   */
+  private fun frameOf(bounds: BoundingBox?): CameraGoal? = when {
+    bounds == null -> null
+    bounds.isPointLike() -> CameraGoal.Center(MapCamera(bounds.center, NEARBY_ZOOM))
+    else -> CameraGoal.Fit(bounds.expandBy(FRAME_MARGIN_RATIO))
+  }
+
   companion object {
     /** Le zoom d'un centrage sur la position : le quartier, pas la rue ni la région. */
     const val NEARBY_ZOOM = 15.0
@@ -286,6 +359,9 @@ class MapViewModel(
     val WORLD_CAMERA = MapCamera(center = LatLon(lat = 20.0, lon = 0.0), zoom = 1.5)
 
     private const val EXTRA_BUFFER = 4
+
+    /** De l'air autour d'un trajet cadré : le tracé ne colle pas aux bords de la zone visible. */
+    private const val FRAME_MARGIN_RATIO = 0.12
 
     fun factory(container: AppContainer) = viewModelFactory {
       initializer {
@@ -297,6 +373,7 @@ class MapViewModel(
           cameraStore = container.mapCameraStore,
           locationSource = container.deviceLocationSource,
           selection = container.mapSelection,
+          selectedJourneys = container.selectedJourneyStore,
         )
       }
     }

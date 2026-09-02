@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="map_content_description">Carte</string>
+  <string name="map_content_description_journey">Carte affichant le trajet sélectionné</string>
 
   <string name="map_locate_unknown">Afficher ma position</string>
   <string name="map_locate_centered">Centré sur ma position. Appuyer pour me suivre</string>

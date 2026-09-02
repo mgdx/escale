@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.map
 
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapDataRequest
+import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 
 /** Les trois états du bouton de position (SPEC.md § 5.1). */
@@ -34,13 +35,32 @@ enum class LocationPermission {
 data class PermissionRequest(val permission: LocationPermission, val token: Long)
 
 /**
+ * Ce que la caméra doit montrer : un point à une échelle, ou une emprise à faire tenir à l'écran.
+ */
+sealed interface CameraGoal {
+  /** Se poser sur un point, à une échelle donnée : cadrage initial, recentrage sur la position. */
+  data class Center(val camera: MapCamera) : CameraGoal
+
+  /**
+   * Faire tenir une emprise à l'écran : c'est le cadrage d'un trajet (SPEC.md § 5.3).
+   *
+   * Le remplissage n'est pas ici : il est appliqué au moment du cadrage, à partir des encarts
+   * système et de la hauteur de la feuille de résultats ouverte (SPEC.md § 5.7, règle 9).
+   */
+  data class Fit(val bounds: BoundingBox) : CameraGoal
+}
+
+/**
  * Un cadrage que la caméra doit prendre.
  *
  * [animated] est faux pour le cadrage initial, qui doit être en place avant la première image, et
- * vrai pour un recentrage demandé par l'usager. L'animation ne dépasse jamais 500 ms
- * (SPEC.md § 5.7, règle 9).
+ * vrai pour un recentrage demandé par l'usager ou un cadrage de trajet. L'animation ne dépasse
+ * jamais 500 ms (SPEC.md § 5.7, règle 9).
  */
-data class CameraTarget(val camera: MapCamera, val animated: Boolean, val token: Long)
+data class CameraTarget(val goal: CameraGoal, val animated: Boolean, val token: Long) {
+  /** Le point visé, quand le cadrage en vise un. Nul pour un cadrage par emprise. */
+  val camera: MapCamera? get() = (goal as? CameraGoal.Center)?.camera
+}
 
 /**
  * Tout ce que l'écran de carte a à afficher, en une seule `data class` exposée en `StateFlow`
@@ -63,6 +83,20 @@ data class MapUiState(
 
   /** Le point d'appui long, en GeoJSON. */
   val pickedPointGeoJson: String = MapGeoJson.EMPTY,
+
+  /**
+   * Les portions du trajet sélectionné, en GeoJSON prêt à poser sur la source (SPEC.md § 5.3).
+   *
+   * Vaut [MapGeoJson.EMPTY] quand aucun trajet n'est sélectionné : poser une collection vide efface
+   * le tracé sans démonter la moindre couche (SPEC.md § 5.7, règle 8).
+   */
+  val journeyLinesGeoJson: String = MapGeoJson.EMPTY,
+
+  /** Les marqueurs de départ, de correspondance et d'arrivée du trajet, en GeoJSON. */
+  val journeyMarkersGeoJson: String = MapGeoJson.EMPTY,
+
+  /** Vrai quand un trajet est tracé : la carte l'annonce alors aux lecteurs d'écran (SPEC.md § 9). */
+  val journeyTraced: Boolean = false,
 
   /** Le point sur lequel le menu « Partir d'ici » / « Aller ici » est ouvert. */
   val longPressPoint: LatLon? = null,

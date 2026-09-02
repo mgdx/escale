@@ -39,4 +39,22 @@ class HexColorTest {
     assertEquals(0.0, HexColor.luminance(0xFF000000L), 1e-6)
     assertEquals(1.0, HexColor.luminance(0xFFFFFFFFL), 1e-6)
   }
+
+  @Test
+  fun `une couleur est ramenee a la forme que MapLibre attend`() {
+    // Le serveur envoie aussi bien `4dbd38` que `#4DBD38` ; une couche MapLibre n'accepte que la
+    // seconde forme (SPEC.md § 5.3).
+    assertEquals("#4DBD38", HexColor.normalize("4dbd38"))
+    assertEquals("#4DBD38", HexColor.normalize("#4dbd38"))
+    assertEquals("#FFCC00", HexColor.normalize("fc0"))
+    assertNull(HexColor.normalize(null))
+    assertNull(HexColor.normalize("bleu"))
+  }
+
+  @Test
+  fun `le texte lisible sur une couleur de ligne est noir ou blanc`() {
+    assertEquals("#FFFFFF", HexColor.readableTextOn("#00205B"))
+    assertEquals("#000000", HexColor.readableTextOn("#FFCD00"))
+    assertNull(HexColor.readableTextOn(null))
+  }
 }

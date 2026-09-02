@@ -60,4 +60,19 @@ class BoundsTest {
     assertTrue(box.contains(LatLon(48.5, 2.5)))
     assertFalse(box.contains(LatLon(47.9, 2.5)))
   }
+
+  @Test
+  fun `le centre d une emprise est a mi-chemin de ses coins`() {
+    val box = BoundingBox(LatLon(48.0, 2.0), LatLon(49.0, 3.0))
+    assertEquals(48.5, box.center.lat, 1e-9)
+    assertEquals(2.5, box.center.lon, 1e-9)
+  }
+
+  @Test
+  fun `une emprise de quelques metres se cadre par son centre, pas par ses bords`() {
+    // Un trajet de trente metres, ou une portion reduite a un point : cadrer bord a bord
+    // enverrait la camera au zoom maximal sur un mouchoir de poche (SPEC.md § 5.7, regle 9).
+    assertTrue(BoundingBox(LatLon(48.8566, 2.3522), LatLon(48.85662, 2.35222)).isPointLike())
+    assertFalse(BoundingBox(LatLon(48.84, 2.35), LatLon(48.88, 2.40)).isPointLike())
+  }
 }
