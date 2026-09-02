@@ -1,6 +1,5 @@
 package io.github.mgdx.escale.ui.search
 
-import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,13 +20,13 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
+import io.github.mgdx.escale.ui.settings.uses24HourClock
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -125,8 +124,12 @@ private fun TimeOfDayDialog(actions: SearchActions) {
   val state = rememberTimePickerState(
     initialHour = now.hour,
     initialMinute = now.minute,
-    // Le réglage 12 h / 24 h du système, jamais une préférence de l'application (SPEC.md § 5.1).
-    is24Hour = DateFormat.is24HourFormat(LocalContext.current),
+    // Le réglage 12 h / 24 h **de l'application** (SPEC.md § 5.6), celui-là même qui écrit les
+    // heures des résultats et le libellé de la ligne d'heure. Ce que l'application affiche et ce
+    // qu'elle fait saisir doivent être cohérents : quelqu'un qui lit « 2:30 pm » partout ne doit
+    // pas se retrouver devant un cadran sur 24 heures. À défaut de choix explicite, la fonction
+    // rend celui du système.
+    is24Hour = uses24HourClock(),
   )
   AlertDialog(
     onDismissRequest = actions.onDismissTimePicker,

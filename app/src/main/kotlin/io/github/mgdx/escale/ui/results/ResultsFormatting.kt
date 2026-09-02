@@ -1,6 +1,5 @@
 package io.github.mgdx.escale.ui.results
 
-import android.text.format.DateFormat
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -8,9 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import io.github.mgdx.escale.R
+import io.github.mgdx.escale.core.format.ClockTime
 import io.github.mgdx.escale.core.format.DelayQuality
 import io.github.mgdx.escale.core.format.FormattedDuration
 import io.github.mgdx.escale.core.format.HexColor
@@ -18,9 +18,10 @@ import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.TransitMode
+import io.github.mgdx.escale.ui.settings.uses24HourClock
 import java.time.Duration
 import java.time.Instant
-import java.util.Date
+import java.time.ZoneId
 
 /*
  * Ce qui traduit le domaine en ressources : pictogrammes, libellés, heures, durées et couleurs.
@@ -155,16 +156,25 @@ private fun RentalFormFactor?.rentalLabelRes(): Int = when (this) {
 }
 
 /**
- * L'heure d'une portion, dans le fuseau de l'appareil et au format de l'usager.
+ * L'heure d'une portion, dans le fuseau de l'appareil, dans sa langue, et **au format choisi par
+ * l'usager** (SPEC.md § 5.6).
  *
- * Le format vient du système, et non d'un motif codé en dur : quelqu'un qui a choisi l'affichage
- * sur 24 heures doit le voir ici aussi.
+ * Le réglage 12 h / 24 h l'emporte sur celui du système quand il est explicite : `uses24HourClock`
+ * fait la lecture, `ClockTime` le formatage, et cet écran ne décide de rien. C'est le seul moyen
+ * d'être cohérent avec l'écran de recherche et le sélecteur d'heure, qui passent par les mêmes
+ * deux fonctions.
+ *
+ * `LocalConfiguration`, et non `LocalContext.current.resources` : seul le premier invalide la
+ * composition quand la langue ou le fuseau de l'appareil changent.
  */
 @Composable
 internal fun rememberTimeFormatter(): (Instant) -> String {
-  val context = LocalContext.current
-  val format = remember(context) { DateFormat.getTimeFormat(context) }
-  return remember(format) { { instant: Instant -> format.format(Date.from(instant)) } }
+  val locale = LocalConfiguration.current.locales[0]
+  val use24Hour = uses24HourClock()
+  val zone = ZoneId.systemDefault()
+  return remember(locale, use24Hour, zone) {
+    { instant: Instant -> ClockTime.format(instant, zone, locale, use24Hour) }
+  }
 }
 
 /** Une durée en toutes lettres. Le découpage vient de `:core`, la langue de `strings_results.xml`. */

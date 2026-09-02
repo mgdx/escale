@@ -1,17 +1,16 @@
 package io.github.mgdx.escale.ui.search
 
-import android.text.format.DateFormat
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.format.SearchTime
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
+import io.github.mgdx.escale.ui.settings.uses24HourClock
 import java.time.ZoneId
 
 /**
@@ -19,16 +18,15 @@ import java.time.ZoneId
  *
  * Il **reflète toujours le choix en cours** : « Maintenant », « Départ jeu. 14:30 », « Arrivée
  * avant ven. 09:00 ». Il se compose d'une chaîne de `strings_search.xml` et d'une date formatée par
- * `:core` — jamais de texte concaténé en dur. Le fuseau est celui de l'appareil, et le réglage
- * 12 h / 24 h celui du système.
+ * `:core` — jamais de texte concaténé en dur. Le fuseau est celui de l'appareil, et le format
+ * 12 h / 24 h celui que l'usager a réglé (SPEC.md § 5.6).
  */
 @Composable
 fun timeChoiceLabel(time: TimeChoice): String {
-  val context = LocalContext.current
   // `LocalConfiguration`, et non `LocalContext.current.resources` : seul le premier invalide la
   // composition quand la langue ou le fuseau de l'appareil changent.
   val locale = LocalConfiguration.current.locales[0]
-  val use24Hour = DateFormat.is24HourFormat(context)
+  val use24Hour = uses24HourClock()
   val zone = ZoneId.systemDefault()
   return when (time) {
     TimeChoice.Now -> stringResource(R.string.search_time_now)
