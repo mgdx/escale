@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="detail_title">Détail du trajet</string>
+
+  <string name="detail_action_share">Partager ce trajet</string>
+  <string name="detail_action_refresh">Rafraîchir</string>
+
+  <string name="detail_loading_details">Chargement du détail…</string>
+  <string name="detail_refreshed_at">Temps réel arrêté à %1$s</string>
+
+  <string name="detail_timeline_description">Portions : %1$s</string>
+  <string name="detail_origin">Départ</string>
+  <string name="detail_destination">Arrivée</string>
+
+  <string name="detail_leg_expand">Afficher le détail de cette portion</string>
+  <string name="detail_leg_collapse">Masquer le détail de cette portion</string>
+
+  <string name="detail_direction">Direction %1$s</string>
+  <string name="detail_agency">Exploité par %1$s</string>
+  <string name="detail_board">Montée à %1$s</string>
+  <string name="detail_alight">Descente à %1$s</string>
+  <string name="detail_scheduled_time">Théorique %1$s</string>
+  <string name="detail_track">Voie %1$s</string>
+  <string name="detail_no_intermediate_stop">Sans arrêt</string>
+  <plurals name="detail_intermediate_stops">
+    <item quantity="one">%d arrêt desservi</item>
+    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
+         l'exige pour que le pluriel soit complet. -->
+    <item quantity="many">%d d\'arrêts desservis</item>
+    <item quantity="other">%d arrêts desservis</item>
+  </plurals>
+  <string name="detail_show_stops">Afficher les arrêts desservis</string>
+  <string name="detail_hide_stops">Masquer les arrêts desservis</string>
+  <string name="detail_stop_cancelled">Arrêt supprimé</string>
+
+  <string name="detail_wheelchair_accessible">Accessible en fauteuil roulant</string>
+  <string name="detail_wheelchair_not_accessible">Non accessible en fauteuil roulant</string>
+  <string name="detail_bikes_allowed">Vélos admis à bord</string>
+  <string name="detail_bikes_not_allowed">Vélos non admis à bord</string>
+
+  <string name="detail_trip_action">Voir la desserte complète de cette course</string>
+
+  <string name="detail_alert_severity_info">Information</string>
+  <string name="detail_alert_severity_warning">Avertissement</string>
+  <string name="detail_alert_severity_severe">Perturbation majeure</string>
+  <string name="detail_alert_severity_unknown">Perturbation</string>
+  <string name="detail_alert_period">Du %1$s au %2$s</string>
+  <string name="detail_alert_period_from">À partir du %1$s</string>
+  <string name="detail_alert_period_until">Jusqu\'au %1$s</string>
+  <string name="detail_alert_link">Plus d\'informations chez le transporteur</string>
+
+  <string name="detail_distance_meters">%1$s m</string>
+  <string name="detail_distance_kilometers">%1$s km</string>
+  <string name="detail_elevation">Dénivelé +%1$d m / −%2$d m</string>
+  <string name="detail_show_steps">Afficher les instructions</string>
+  <string name="detail_hide_steps">Masquer les instructions</string>
+  <string name="detail_no_steps">Le serveur n\'a pas fourni d\'instructions pas-à-pas pour cette portion.</string>
+  <string name="detail_step_named">%1$s sur %2$s</string>
+
+  <string name="detail_step_depart">Partir</string>
+  <string name="detail_step_continue">Continuer</string>
+  <string name="detail_step_left">Tourner à gauche</string>
+  <string name="detail_step_slightly_left">Serrer à gauche</string>
+  <string name="detail_step_hard_left">Tourner franchement à gauche</string>
+  <string name="detail_step_right">Tourner à droite</string>
+  <string name="detail_step_slightly_right">Serrer à droite</string>
+  <string name="detail_step_hard_right">Tourner franchement à droite</string>
+  <string name="detail_step_circle_clockwise">Prendre le rond-point à droite</string>
+  <string name="detail_step_circle_counterclockwise">Prendre le rond-point à gauche</string>
+  <string name="detail_step_stairs">Emprunter l\'escalier</string>
+  <string name="detail_step_elevator">Emprunter l\'ascenseur</string>
+  <string name="detail_step_uturn_left">Faire demi-tour par la gauche</string>
+  <string name="detail_step_uturn_right">Faire demi-tour par la droite</string>
+
+  <string name="detail_rental_pickup">Prise à %1$s</string>
+  <string name="detail_rental_dropoff">Retour à %1$s</string>
+  <string name="detail_rental_free_floating">Véhicule en libre accès, sans station</string>
+  <string name="detail_rental_return_none">Peut être laissé n\'importe où dans la zone de service</string>
+  <string name="detail_rental_return_any_station">Doit être rendu dans une station du service</string>
+  <string name="detail_rental_return_roundtrip">Doit être rendu dans la station où il a été pris</string>
+  <string name="detail_rental_return_unknown">L\'exploitant ne dit pas où le véhicule doit être rendu</string>
+  <string name="detail_rental_propulsion_human">Sans assistance</string>
+  <string name="detail_rental_propulsion_electric_assist">Assistance électrique</string>
+  <string name="detail_rental_propulsion_electric">Électrique</string>
+  <string name="detail_rental_propulsion_combustion">Essence</string>
+  <string name="detail_rental_propulsion_combustion_diesel">Diesel</string>
+  <string name="detail_rental_propulsion_hybrid">Hybride</string>
+  <string name="detail_rental_propulsion_plug_in_hybrid">Hybride rechargeable</string>
+  <string name="detail_rental_propulsion_hydrogen">Pile à hydrogène</string>
+  <string name="detail_rental_open_app">Ouvrir l\'application %1$s</string>
+  <string name="detail_rental_open_app_generic">Ouvrir l\'application de l\'exploitant</string>
+
+  <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>
+  <string name="detail_share_origin">Départ : %1$s (%2$s)</string>
+  <string name="detail_share_destination">Arrivée : %1$s (%2$s)</string>
+  <string name="detail_share_transit">%1$s : %2$s (%3$s) → %4$s (%5$s)</string>
+  <string name="detail_share_transit_direction">%1$s direction %2$s</string>
+  <string name="detail_share_street">%1$s %2$s → %3$s</string>
+</resources>

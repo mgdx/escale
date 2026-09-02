@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran de détail d'un trajet (SPEC.md § 5.3).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+
+  Les libellés de mode, de durée et de retard ne sont pas repris ici : ils vivent dans
+  strings_results.xml et l'écran de détail les réutilise tels quels, pour qu'une ligne de bus
+  s'appelle pareil dans la liste et dans le détail.
+-->
+<resources>
+  <string name="detail_title">Trip details</string>
+
+  <!-- Actions de la barre supérieure (SPEC.md § 5.3). -->
+  <string name="detail_action_share">Share this trip</string>
+  <string name="detail_action_refresh">Refresh</string>
+
+  <!-- Le détail complet des portions n'arrive qu'après une seconde requête (SPEC.md § 7.6) :
+       pendant ce temps, l'écran montre déjà les heures, la durée et la frise. -->
+  <string name="detail_loading_details">Loading the full details…</string>
+  <string name="detail_refreshed_at">Real-time data as of %1$s</string>
+
+  <!-- Résumé du trajet. -->
+  <string name="detail_timeline_description">Legs: %1$s</string>
+  <string name="detail_origin">Departure</string>
+  <string name="detail_destination">Arrival</string>
+
+  <!-- Une portion se déplie d'un appui (SPEC.md § 5.3). -->
+  <string name="detail_leg_expand">Show the details of this leg</string>
+  <string name="detail_leg_collapse">Hide the details of this leg</string>
+
+  <!-- Portion en transport en commun. -->
+  <string name="detail_direction">Towards %1$s</string>
+  <string name="detail_agency">Operated by %1$s</string>
+  <string name="detail_board">Board at %1$s</string>
+  <string name="detail_alight">Get off at %1$s</string>
+  <string name="detail_scheduled_time">Scheduled %1$s</string>
+  <string name="detail_track">Platform %1$s</string>
+  <string name="detail_no_intermediate_stop">Non-stop</string>
+  <plurals name="detail_intermediate_stops">
+    <item quantity="one">%d stop on the way</item>
+    <item quantity="other">%d stops on the way</item>
+  </plurals>
+  <string name="detail_show_stops">Show the stops served</string>
+  <string name="detail_hide_stops">Hide the stops served</string>
+  <string name="detail_stop_cancelled">Stop cancelled</string>
+
+  <!-- Accessibilité de la portion (SPEC.md § 9). Le pictogramme est toujours doublé du texte. -->
+  <string name="detail_wheelchair_accessible">Wheelchair accessible</string>
+  <string name="detail_wheelchair_not_accessible">Not wheelchair accessible</string>
+  <string name="detail_bikes_allowed">Bikes allowed on board</string>
+  <string name="detail_bikes_not_allowed">Bikes not allowed on board</string>
+
+  <!-- Jalon 9 : l'écran « détail de la course ». La commande n'apparaît que branchée. -->
+  <string name="detail_trip_action">Show every stop of this service</string>
+
+  <!-- Perturbations (SPEC.md § 5.3) : titre, description, gravité, période, lien. -->
+  <string name="detail_alert_severity_info">Information</string>
+  <string name="detail_alert_severity_warning">Warning</string>
+  <string name="detail_alert_severity_severe">Major disruption</string>
+  <string name="detail_alert_severity_unknown">Service alert</string>
+  <string name="detail_alert_period">From %1$s to %2$s</string>
+  <string name="detail_alert_period_from">From %1$s</string>
+  <string name="detail_alert_period_until">Until %1$s</string>
+  <string name="detail_alert_link">More information from the operator</string>
+
+  <!-- Cheminement à pied, à vélo ou en voiture. -->
+  <string name="detail_distance_meters">%1$s m</string>
+  <string name="detail_distance_kilometers">%1$s km</string>
+  <string name="detail_elevation">Elevation +%1$d m / −%2$d m</string>
+  <string name="detail_show_steps">Show the directions</string>
+  <string name="detail_hide_steps">Hide the directions</string>
+  <string name="detail_no_steps">The server sent no step-by-step directions for this leg.</string>
+  <string name="detail_step_named">%1$s onto %2$s</string>
+
+  <!-- Manœuvres, décalque du schéma Direction de l'API. Chaque pictogramme est doublé du texte. -->
+  <string name="detail_step_depart">Set off</string>
+  <string name="detail_step_continue">Keep going</string>
+  <string name="detail_step_left">Turn left</string>
+  <string name="detail_step_slightly_left">Bear left</string>
+  <string name="detail_step_hard_left">Turn sharp left</string>
+  <string name="detail_step_right">Turn right</string>
+  <string name="detail_step_slightly_right">Bear right</string>
+  <string name="detail_step_hard_right">Turn sharp right</string>
+  <string name="detail_step_circle_clockwise">Take the roundabout clockwise</string>
+  <string name="detail_step_circle_counterclockwise">Take the roundabout anticlockwise</string>
+  <string name="detail_step_stairs">Take the stairs</string>
+  <string name="detail_step_elevator">Take the lift</string>
+  <string name="detail_step_uturn_left">Make a U-turn to the left</string>
+  <string name="detail_step_uturn_right">Make a U-turn to the right</string>
+
+  <!-- Libre-service (SPEC.md § 5.3). Les disponibilités des stations relèvent du jalon 8. -->
+  <string name="detail_rental_pickup">Pick up at %1$s</string>
+  <string name="detail_rental_dropoff">Drop off at %1$s</string>
+  <string name="detail_rental_free_floating">Free-floating vehicle, not tied to a station</string>
+  <string name="detail_rental_return_none">Can be left anywhere in the service area</string>
+  <string name="detail_rental_return_any_station">Must be returned to a station of the service</string>
+  <string name="detail_rental_return_roundtrip">Must be returned to the station it was picked up from</string>
+  <string name="detail_rental_return_unknown">The operator does not say where the vehicle must be returned</string>
+  <string name="detail_rental_propulsion_human">Pedal power</string>
+  <string name="detail_rental_propulsion_electric_assist">Electrically assisted</string>
+  <string name="detail_rental_propulsion_electric">Electric</string>
+  <string name="detail_rental_propulsion_combustion">Petrol</string>
+  <string name="detail_rental_propulsion_combustion_diesel">Diesel</string>
+  <string name="detail_rental_propulsion_hybrid">Hybrid</string>
+  <string name="detail_rental_propulsion_plug_in_hybrid">Plug-in hybrid</string>
+  <string name="detail_rental_propulsion_hydrogen">Hydrogen fuel cell</string>
+  <!-- Ouverture de l'application de l'exploitant : intention externe, jamais de WebView (SPEC.md § 2). -->
+  <string name="detail_rental_open_app">Open the %1$s app</string>
+  <string name="detail_rental_open_app_generic">Open the operator\'s app</string>
+
+  <!-- Texte de partage. Chaque ligne est composée ici, jamais concaténée dans le code. -->
+  <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>
+  <string name="detail_share_origin">Departure: %1$s (%2$s)</string>
+  <string name="detail_share_destination">Arrival: %1$s (%2$s)</string>
+  <string name="detail_share_transit">%1$s: %2$s (%3$s) → %4$s (%5$s)</string>
+  <string name="detail_share_transit_direction">%1$s towards %2$s</string>
+  <string name="detail_share_street">%1$s %2$s → %3$s</string>
+</resources>
