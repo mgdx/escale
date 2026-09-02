@@ -33,7 +33,12 @@ class RecordingPlanRepository : PlanRepository {
 
   var planAnswer: Outcome<JourneyPage> = Outcome.Success(JourneyPage(journeys = emptyList()))
 
-  override suspend fun plan(query: SearchQuery, cursor: String?, detailedLegs: Boolean): Outcome<JourneyPage> {
+  override suspend fun plan(
+    query: SearchQuery,
+    cursor: String?,
+    detailedLegs: Boolean,
+    fresh: Boolean,
+  ): Outcome<JourneyPage> {
     planCalls += detailedLegs
     return planAnswer
   }

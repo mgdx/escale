@@ -11,6 +11,7 @@ import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyRefresh
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.withEndpointNames
+import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
@@ -43,8 +44,10 @@ import java.time.Instant
  * - **Le même chemin sert au bouton « Rafraîchir »** de SPEC.md § 5.3 : rafraîchir, c'est
  *   redemander le trajet détaillé. Il n'y a donc qu'un seul code réseau à lire et à vérifier.
  *
- * Aucun polling (SPEC.md § 7.4) : les deux seuls déclencheurs sont l'ouverture de l'écran et
- * l'appui de l'usager. Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et
+ * Aucun polling (SPEC.md § 7.4) : les seuls déclencheurs sont l'ouverture de l'écran, l'appui de
+ * l'usager sur « Rafraîchir », et le retour au premier plan sur des horaires de plus de 60
+ * secondes — la même règle que la feuille de résultats, tenue par le même `RealtimeRefreshPolicy`.
+ * Ni minuterie, ni boucle, ni tâche de fond. Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et
  * **ne journalise rien** : il manipule des adresses et des coordonnées (SPEC.md § 11).
  */
 class DetailViewModel(
@@ -68,6 +71,18 @@ class DetailViewModel(
 
   /** Le bouton « Rafraîchir » (SPEC.md § 5.3) et le bouton « Réessayer » du bandeau (§ 8). */
   fun onRefresh() = load()
+
+  /**
+   * Le retour au premier plan (SPEC.md § 7.4).
+   *
+   * Même règle que la feuille de résultats, et surtout le même juge : `RealtimeRefreshPolicy`,
+   * dans `:core`, qui porte le seuil de 60 secondes et ses cas limites. Un écran encore en train
+   * de charger n'en redemande pas.
+   */
+  fun onForeground() {
+    if (state.value.loading) return
+    if (RealtimeRefreshPolicy.shouldRefreshOnForeground(state.value.refreshedAt, now())) load()
+  }
 
   fun onLegToggled(index: Int) {
     state.update { it.copy(expandedLegs = it.expandedLegs.toggled(index)) }

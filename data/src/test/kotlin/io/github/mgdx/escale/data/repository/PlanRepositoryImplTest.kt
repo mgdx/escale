@@ -149,6 +149,25 @@ class PlanRepositoryImplTest {
   }
 
   @Test
+  fun `un rafraichissement ignore le cache et va rechercher les horaires du moment`() = runTest {
+    val repository = PlanTestSupport.repository(recordingEngine(), backgroundScope)
+    val query = PlanTestSupport.query()
+    repository.plan(query)
+    repository.plan(query)
+    assertEquals(1, seen.size)
+
+    // SPEC.md § 7.4 : « tirer pour rafraîchir » et le retour au premier plan sur des données de
+    // plus de 60 secondes doivent vraiment interroger le serveur, sans quoi le geste n'a aucun
+    // effet visible. C'est le seul contournement du cache du § 7.5.
+    repository.plan(query, fresh = true)
+    assertEquals(2, seen.size)
+
+    // Et la réponse fraîche remplace l'entrée de cache : la requête suivante n'est pas relancée.
+    repository.plan(query)
+    assertEquals(2, seen.size)
+  }
+
+  @Test
   fun `vider le cache fait repartir la requete`() = runTest {
     val repository = PlanTestSupport.repository(recordingEngine(), backgroundScope)
     repository.plan(PlanTestSupport.query())

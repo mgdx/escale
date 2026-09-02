@@ -54,8 +54,11 @@ class ResultsViewModelTest {
   /** Les réglages de SPEC.md § 5.6, tels que le dépôt les émettrait. */
   private val preferences = MutableStateFlow(SearchPreferences())
 
+  /** L'horloge du ViewModel, avancée à la main : c'est elle qui décide de la fraîcheur (§ 7.4). */
+  private var clock = Instant.parse("2026-09-01T08:00:00Z")
+
   private fun viewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-    ResultsViewModel(session, repository, preferences, selection, savedState)
+    ResultsViewModel(session, repository, preferences, selection, savedState) { clock }
 
   private fun completeSearch() {
     session.setFrom(location("depart"))
@@ -120,6 +123,94 @@ class ResultsViewModelTest {
 
     assertEquals(listOf(JourneyCategory.CAR), repository.categories())
     assertEquals(1, model.uiState.value.tabs.size)
+  }
+
+  // --- Rafraîchissement du temps réel, SPEC.md § 7.4 --------------------------------------------
+
+  @Test
+  fun `tirer pour rafraichir relance l onglet consulte en contournant le cache`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    val model = viewModel()
+    completeSearch()
+
+    model.onPullToRefresh()
+
+    // Le geste rafraîchit sans condition, et la requête doit ignorer le cache mémoire : sinon la
+    // réponse précédente reviendrait telle quelle et le geste n'aurait servi à rien.
+    assertEquals(
+      listOf(
+        FakePlanRepository.Call(JourneyCategory.TRANSIT, cursor = null, fresh = false),
+        FakePlanRepository.Call(JourneyCategory.TRANSIT, cursor = null, fresh = true),
+      ),
+      repository.calls,
+    )
+    assertFalse(model.uiState.value.current.refreshing)
+  }
+
+  @Test
+  fun `tirer pour rafraichir ne reveille pas les autres onglets`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    val model = viewModel()
+    completeSearch()
+    model.onCategorySelected(JourneyCategory.WALK)
+    repository.calls.clear()
+
+    model.onPullToRefresh()
+
+    // SPEC.md § 7.3 : un onglet non consulté n'émet aucune requête, pas même sur un geste.
+    assertEquals(listOf(JourneyCategory.WALK), repository.categories())
+  }
+
+  @Test
+  fun `au retour au premier plan, des horaires de moins de 60 secondes ne sont pas rafraichis`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    viewModel().let { model ->
+      completeSearch()
+      clock = clock.plusSeconds(59)
+
+      model.onForeground()
+    }
+
+    assertEquals(1, repository.calls.size)
+  }
+
+  @Test
+  fun `au retour au premier plan, des horaires de plus de 60 secondes sont rafraichis`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    val model = viewModel()
+    completeSearch()
+    clock = clock.plusSeconds(61)
+
+    model.onForeground()
+
+    assertEquals(2, repository.calls.size)
+    assertTrue(repository.calls.last().fresh)
+  }
+
+  @Test
+  fun `au retour au premier plan, un onglet qui n a rien charge n emet rien`() = runTest {
+    val model = viewModel()
+
+    // Aucune recherche en cours : il n'y a rien à rafraîchir, et surtout rien à lancer.
+    model.onForeground()
+
+    assertTrue(repository.calls.isEmpty())
+  }
+
+  @Test
+  fun `plusieurs retours au premier plan ne font pas une boucle`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    val model = viewModel()
+    completeSearch()
+    clock = clock.plusSeconds(61)
+
+    model.onForeground()
+    model.onForeground()
+    model.onForeground()
+
+    // Le rafraîchissement remet le compteur de fraîcheur à zéro : les deux retours suivants
+    // n'émettent rien. C'est la seule protection nécessaire, puisqu'il n'y a aucune minuterie.
+    assertEquals(2, repository.calls.size)
   }
 
   // --- Les états de SPEC.md § 8 -----------------------------------------------------------------

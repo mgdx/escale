@@ -13,6 +13,7 @@ import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyPage
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.stableKey
+import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 /**
  * La feuille de résultats (SPEC.md § 5.2).
@@ -48,6 +50,11 @@ import kotlinx.coroutines.launch
  * route, et afficher « une erreur est survenue » à quelqu'un qui vient de relancer sa recherche
  * serait un défaut visible (docs/architecture.md § 6).
  *
+ * **Le temps réel se rafraîchit sur geste, jamais tout seul** (§ 7.4). Il n'y a ici ni minuterie,
+ * ni boucle, ni rafraîchissement périodique : [onPullToRefresh] rafraîchit parce que l'usager l'a
+ * demandé, [onForeground] parce que l'application revient au premier plan **et** que
+ * `RealtimeRefreshPolicy` juge les horaires périmés. Les deux ne touchent que l'onglet consulté.
+ *
  * **La mise en évidence d'un trajet est un état, son ouverture est un événement.** SPEC.md § 5.1
  * veut que la carte « cadre le trajet sélectionné » : dès qu'une liste arrive, son premier trajet
  * est publié dans [SelectedJourneyStore] sans aucun appui, et la sélection suit ensuite la liste
@@ -64,6 +71,7 @@ class ResultsViewModel(
   private val searchPreferences: Flow<SearchPreferences>,
   private val selection: SelectedJourneyStore,
   private val savedState: SavedStateHandle,
+  private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
 
   private val state = MutableStateFlow(ResultsUiState(category = restoredCategory()))
@@ -154,6 +162,30 @@ class ResultsViewModel(
     load(category)
   }
 
+  /**
+   * « Tirer pour rafraîchir » (SPEC.md § 7.4).
+   *
+   * Le geste de l'usager rafraîchit **toujours**, sans condition de fraîcheur : c'est lui qui
+   * décide. La liste reste affichée pendant la requête, qui repart de la première page avec les
+   * horaires temps réel du moment — d'où `fresh`, sans quoi le cache mémoire du § 7.5 rendrait la
+   * réponse précédente et le geste n'aurait aucun effet.
+   */
+  fun onPullToRefresh() = refresh(state.value.category)
+
+  /**
+   * Le retour au premier plan (SPEC.md § 7.4 : « ou au retour au premier plan si les données ont
+   * plus de 60 secondes »).
+   *
+   * **La règle n'est pas ici** : elle est dans `RealtimeRefreshPolicy`, en Kotlin pur et vérifiée
+   * en JVM, seuil compris. Cet écran fournit les deux instants et applique la réponse. Et il ne
+   * réveille que l'onglet consulté : les autres restent muets (§ 7.3).
+   */
+  fun onForeground() {
+    val category = state.value.category
+    val tab = state.value.tabs[category] ?: return
+    if (RealtimeRefreshPolicy.shouldRefreshOnForeground(tab.loadedAt, now())) refresh(category)
+  }
+
   /** « Plus tôt » : la requête d'origine, seul le curseur change (SPEC.md § 5.2). */
   fun onEarlier() = paginate(ResultsPage.EARLIER)
 
@@ -202,6 +234,20 @@ class ResultsViewModel(
     if (open) load(category)
   }
 
+  /**
+   * Relance l'onglet demandé avec les horaires du moment, si tant est qu'il ait déjà quelque chose
+   * à rafraîchir.
+   *
+   * Un onglet en cours de chargement, déjà en train de se rafraîchir ou qui n'a encore rien reçu
+   * n'émet rien : rafraîchir une liste qui n'existe pas serait une requête de plus pour rien
+   * (SPEC.md § 7).
+   */
+  private fun refresh(category: JourneyCategory) {
+    val tab = state.value.tabs[category] ?: return
+    if (tab.loading || tab.refreshing || tab.feed == null) return
+    load(category, refresh = true)
+  }
+
   private fun paginate(page: ResultsPage) {
     val category = state.value.category
     val tab = state.value.tabs[category] ?: return
@@ -213,14 +259,27 @@ class ResultsViewModel(
     load(category, cursor, page)
   }
 
-  private fun load(category: JourneyCategory, cursor: String? = null, page: ResultsPage? = null) {
+  private fun load(
+    category: JourneyCategory,
+    cursor: String? = null,
+    page: ResultsPage? = null,
+    refresh: Boolean = false,
+  ) {
     val query = session.toQuery(category, preferences) ?: return
     jobs[category]?.cancel()
     jobs[category] = viewModelScope.launch {
       updateTab(category) { tab ->
-        if (page == null) TabResults(loading = true) else tab.copy(paging = page, error = null)
+        when {
+          page != null -> tab.copy(paging = page, error = null)
+
+          // Un rafraîchissement garde la liste sous les yeux : elle est périmée de quelques
+          // secondes, pas fausse, et la remplacer par un écran d'attente serait un recul.
+          refresh -> tab.copy(refreshing = true, error = null)
+
+          else -> TabResults(loading = true)
+        }
       }
-      when (val outcome = planRepository.plan(query, cursor)) {
+      when (val outcome = planRepository.plan(query, cursor, fresh = refresh)) {
         is Outcome.Success -> updateTab(category) { it.extendedWith(outcome.value, page) }
         is Outcome.Failure -> onFailure(category, outcome.error)
       }
@@ -231,7 +290,7 @@ class ResultsViewModel(
     // Une requête supplantée ne s'affiche jamais : le résultat plus récent arrive derrière, et
     // c'est lui qui remplacera l'état de chargement en cours (SPEC.md § 7.2).
     if (error == EscaleError.Superseded) return
-    updateTab(category) { it.copy(loading = false, paging = null, error = error) }
+    updateTab(category) { it.copy(loading = false, paging = null, refreshing = false, error = error) }
   }
 
   /** Recolle une page à la liste déjà affichée, ou la remplace s'il s'agit d'une nouvelle recherche. */
@@ -242,7 +301,9 @@ class ResultsViewModel(
       direction == ResultsPage.EARLIER -> previous.earlier(page)
       else -> previous.later(page)
     }
-    return TabResults(feed = next)
+    // L'heure du chargement sert au seul retour au premier plan (SPEC.md § 7.4) : c'est elle que
+    // `RealtimeRefreshPolicy` compare au seuil de 60 secondes.
+    return TabResults(feed = next, loadedAt = now())
   }
 
   private fun updateTab(category: JourneyCategory, transform: (TabResults) -> TabResults) {

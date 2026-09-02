@@ -159,6 +159,7 @@ private val previewActions = ResultsActions(
   onLater = {},
   onJourneySelected = {},
   onBikeFilterChanged = {},
+  onRefresh = {},
 )
 
 @Composable

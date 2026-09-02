@@ -5,6 +5,7 @@ import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.result.EscaleError
+import java.time.Instant
 
 /** Le sens d'une pagination : « Plus tôt » ou « Plus tard » (SPEC.md § 5.2). */
 enum class ResultsPage {
@@ -34,8 +35,17 @@ data class TabResults(
   val loading: Boolean = false,
   /** Non nul pendant qu'une page supplémentaire arrive : la liste reste affichée. */
   val paging: ResultsPage? = null,
+  /** Vrai pendant un rafraîchissement du temps réel : la liste reste affichée, elle aussi. */
+  val refreshing: Boolean = false,
   val feed: JourneyFeed? = null,
   val error: EscaleError? = null,
+  /**
+   * Heure du dernier chargement réussi, `null` tant qu'il n'y en a pas eu.
+   *
+   * Elle ne sert qu'à une chose : décider, au retour au premier plan, si les horaires ont plus de
+   * 60 secondes (SPEC.md § 7.4). Le seuil et la comparaison sont dans `RealtimeRefreshPolicy`.
+   */
+  val loadedAt: Instant? = null,
 ) {
   /** Vrai quand l'onglet a répondu et n'a rien trouvé. */
   val isEmpty: Boolean

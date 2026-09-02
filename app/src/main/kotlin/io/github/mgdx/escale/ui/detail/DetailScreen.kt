@@ -57,6 +57,7 @@ import io.github.mgdx.escale.core.format.transitLineLabel
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.ui.common.ErrorMessage
+import io.github.mgdx.escale.ui.results.ForegroundEffect
 import io.github.mgdx.escale.ui.results.durationText
 import io.github.mgdx.escale.ui.results.modeIcon
 import io.github.mgdx.escale.ui.results.modeLabel
@@ -73,8 +74,8 @@ import java.time.Instant
  * `ui/map`. Il se contente de republier le trajet détaillé — celui qui porte enfin la géométrie —
  * dans `SelectedJourneyStore`, où le lot « tracé » le lit déjà.
  *
- * @param onBack sortie de l'écran. Le graphe de navigation en profite pour libérer le trajet
- *   choisi : sans cela, réappuyer sur la même carte de résultat n'émettrait plus rien.
+ * @param onBack sortie de l'écran. Elle ne libère rien : le trajet reste mis en évidence et tracé
+ *   sur la carte au retour dans la liste (SPEC.md § 5.1).
  */
 @Composable
 fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -84,6 +85,9 @@ fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   // Le retour système passe par le même chemin que la flèche de la barre : un seul endroit libère
   // le trajet choisi.
   BackHandler(onBack = onBack)
+  // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires affichés ont plus de
+  // 60 secondes. Le bouton « Rafraîchir » de la barre, lui, rafraîchit sans condition.
+  ForegroundEffect(viewModel::onForeground)
   // Plus rien à montrer — typiquement au retour après la mort du processus, où le magasin en
   // mémoire est vide : l'écran se referme au lieu d'afficher une page blanche.
   LaunchedEffect(state.closed) { if (state.closed) onBack() }

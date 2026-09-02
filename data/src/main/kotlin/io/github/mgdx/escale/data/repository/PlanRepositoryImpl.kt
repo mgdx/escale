@@ -32,7 +32,9 @@ import kotlinx.coroutines.sync.withLock
  *   deux.
  * - **§ 7.3** : aucune requête n'est déclenchée d'elle-même. Un onglet que l'usager n'ouvre pas
  *   n'appelle jamais [plan] : ce dépôt est entièrement passif, il n'a pas de boucle à lui.
- * - **§ 7.5** : les pages obtenues sont mises en cache mémoire pour la durée de la recherche.
+ * - **§ 7.5** : les pages obtenues sont mises en cache mémoire pour la durée de la recherche. Le
+ *   paramètre `fresh` de [plan] est la seule façon de passer outre, et il est réservé aux deux
+ *   déclencheurs de rafraîchissement du § 7.4.
  * - **§ 7.8** : expiration de 30 s, reprise unique, aucune reprise sur 4xx — c'est déjà la
  *   politique du [MotisClient], vérifiée avant d'être réécrite ici. Elle ne l'est donc pas.
  *
@@ -59,9 +61,17 @@ class PlanRepositoryImpl(
   // L'annulation d'une requête supplantée est délibérément avalée : ce n'est pas une panne, mais
   // le comportement voulu par SPEC.md § 7.2, et son message ne dirait rien d'utile.
   @Suppress("SwallowedException")
-  override suspend fun plan(query: SearchQuery, cursor: String?, detailedLegs: Boolean): Outcome<JourneyPage> {
+  override suspend fun plan(
+    query: SearchQuery,
+    cursor: String?,
+    detailedLegs: Boolean,
+    fresh: Boolean,
+  ): Outcome<JourneyPage> {
     val key = PlanCache.Key(servers.current.first().baseUrl, query, cursor, detailedLegs)
-    cache.get(key)?.let { return Outcome.Success(it) }
+    // Un rafraîchissement va chercher les horaires du moment : la réponse en cache n'a par
+    // définition rien à y faire (SPEC.md § 7.4). Une requête déjà en vol, elle, est partagée même
+    // dans ce cas — elle vient tout juste de partir sur le réseau, elle est donc fraîche.
+    if (!fresh) cache.get(key)?.let { return Outcome.Success(it) }
 
     val request = mutex.withLock {
       val running = inFlight[query.category]

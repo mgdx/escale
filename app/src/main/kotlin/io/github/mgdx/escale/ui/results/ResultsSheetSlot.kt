@@ -23,12 +23,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,6 +88,9 @@ fun ResultsSheetSlot(padding: PaddingValues, onOpenJourney: () -> Unit, modifier
   LaunchedEffect(viewModel) {
     viewModel.openDetail.collect { open() }
   }
+  // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires ont plus de 60
+  // secondes. Aucune minuterie, aucune boucle — c'est le système qui prévient.
+  ForegroundEffect(viewModel::onForeground)
   if (!state.open) return
   ResultsSheet(
     state = state,
@@ -105,6 +110,7 @@ private fun rememberResultsActions(viewModel: ResultsViewModel): ResultsActions 
     onLater = viewModel::onLater,
     onJourneySelected = viewModel::onJourneySelected,
     onBikeFilterChanged = viewModel::onBikeFilterChanged,
+    onRefresh = viewModel::onPullToRefresh,
   )
 }
 
@@ -115,6 +121,8 @@ internal data class ResultsActions(
   val onLater: () -> Unit,
   val onJourneySelected: (Journey) -> Unit,
   val onBikeFilterChanged: (BikeFilter) -> Unit,
+  /** « Tirer pour rafraîchir » : le geste de SPEC.md § 7.4. */
+  val onRefresh: () -> Unit,
 )
 
 /**
@@ -273,7 +281,14 @@ private fun CenteredState(modifier: Modifier, padding: PaddingValues, content: @
   }
 }
 
-/** La liste des trajets, encadrée par « Plus tôt » et « Plus tard » (SPEC.md § 5.2). */
+/**
+ * La liste des trajets, encadrée par « Plus tôt » et « Plus tard » (SPEC.md § 5.2), et **tirable
+ * pour rafraîchir le temps réel** (SPEC.md § 7.4).
+ *
+ * Le geste est le seul déclencheur volontaire de rafraîchissement : il n'y a ni minuterie ni
+ * rechargement périodique derrière cette liste.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun JourneyList(
   state: ResultsUiState,
@@ -283,8 +298,25 @@ private fun JourneyList(
 ) {
   val tab = state.current
   val journeys = state.visibleJourneys
-  LazyColumn(
+  PullToRefreshBox(
+    isRefreshing = tab.refreshing,
+    onRefresh = actions.onRefresh,
     modifier = modifier,
+  ) {
+    JourneyColumn(state = state, actions = actions, padding = padding, journeys = journeys, tab = tab)
+  }
+}
+
+@Composable
+private fun JourneyColumn(
+  state: ResultsUiState,
+  actions: ResultsActions,
+  padding: PaddingValues,
+  journeys: List<Journey>,
+  tab: TabResults,
+) {
+  LazyColumn(
+    modifier = Modifier.fillMaxSize(),
     contentPadding = PaddingValues(
       start = ContentPadding,
       end = ContentPadding,
