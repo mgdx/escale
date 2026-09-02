@@ -23,10 +23,46 @@ Serveur de référence : `https://api.transitous.org`. L'usager peut en configur
 | `GET /api/v1/reverse-geocode` | `GeocodeApi.reverseGeocode` | « Choisir sur la carte », position courante |
 | `GET /api/v6/plan` | `MotisClient.plan` | La recherche d'itinéraire, une requête par onglet |
 | `GET /api/v6/refresh-itinerary` | `MotisClient.refreshItinerary` | Recalcul temps réel d'un trajet déjà obtenu |
+| `GET /api/v6/map/stops` | `StopsApi.mapStops` | Les arrêts affichés sur la carte, par emprise et par palier de zoom (§ 5.7) |
+| `GET /api/v6/stop` | `StopsApi.stop` | Les lignes desservant un arrêt, pour l'infobulle de la carte (§ 5.7) |
 
 Prévus par `SPEC.md` § 4.3 mais **pas encore appelés** à ce stade du projet : `/api/v6/trip`,
-`/api/v6/stoptimes`, `/api/v6/stop`, `/api/v1/rentals`, et `/api/v6/map/stops` pour son vrai usage
-(les arrêts affichés sur la carte, et non la seule détection de version).
+`/api/v6/stoptimes` et `/api/v1/rentals`.
+
+### `GET /api/v6/map/stops`, pour son vrai usage
+
+Les paramètres sont assemblés par `core/query/StopsQueryBuilder.kt`.
+
+| Paramètre | Valeur envoyée | Pourquoi |
+|---|---|---|
+| `min`, `max` | `latitude,longitude`, coin sud-ouest puis coin nord-est | l'emprise de l'écran **élargie de 30 %** (§ 5.7, règle 3) |
+| `grouped` | `true` | le serveur regroupe lui-même les quais d'une même gare, ce qui divise d'autant le nombre de points à dessiner |
+| `modes` | les modes du palier de zoom courant, séparés par des virgules | zoom 11 → 13 : les cinq modes ferrés lourds ; à partir de 13 : tout le reste |
+
+Le paramètre `modes` est **omis** quand aucun mode n'est retenu : une valeur vide n'a pas le même
+sens qu'une absence — côté serveur, ne pas envoyer `modes` veut dire « tous les modes ».
+
+Forme des `modes` vérifiée sur `api.transitous.org` : la même emprise du centre de Paris rend onze
+arrêts sans filtre et cinq avec `modes=RAIL,HIGHSPEED_RAIL,LONG_DISTANCE,SUBURBAN,SUBWAY`. Les deux
+captures sont les fixtures `map_stops_paris.json` et `map_stops_rail_only.json`.
+
+Le corps est un tableau de `Place`. Deux points à connaître :
+
+- un `Place` **sans `stopId`** est écarté par le mapping : sans identifiant, le marqueur ne mènerait
+  ni à l'infobulle ni aux prochains départs ;
+- le champ `modes` d'un arrêt regroupé n'est **pas** le filtre qui l'a fait ressortir. La requête du
+  palier 11 ci-dessus rend « Châtelet - Les Halles » avec le seul mode `REGIONAL_RAIL`, qui ne fait
+  pourtant pas partie des cinq modes demandés. C'est le tableau de `SPEC.md` § 5.7 qui décide du
+  palier d'affichage, à partir des modes rendus, et non la générosité du serveur : cette gare-là
+  n'apparaît donc qu'à partir du zoom 13.
+
+### `GET /api/v6/stop`
+
+`stopId`, et rien d'autre. Le corps rend `place` et `routes` ; chaque `Route` porte `routeShortName`,
+`routeLongName`, `mode`, `agencyName`, et les couleurs `routeColor` / `routeTextColor` quand le
+réseau les publie. Le serveur les rend déjà dédoublonnées — trente lignes distinctes à Châtelet —
+mais dans un ordre alphabétique où le bus 21 précède le métro 4 : `StopMapper` les réordonne par
+mode puis par numéro. Fixture : `stop_chatelet.json`.
 
 ### Politique de transport, commune à tous les appels
 
