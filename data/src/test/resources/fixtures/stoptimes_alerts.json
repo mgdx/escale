@@ -1,0 +1,445 @@
+{
+  "stopTimes": [
+    {
+      "place": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:483442",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.8582,
+        "lon": 2.3474095,
+        "tz": "Europe/Paris",
+        "departure": "2026-09-02T06:00:00Z",
+        "scheduledDeparture": "2026-09-02T06:00:00Z",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "alerts": [
+          {
+            "communicationPeriod": [
+              {
+                "start": "2026-09-02T04:00:00Z",
+                "end": "2026-09-02T05:00:00Z"
+              }
+            ],
+            "impactPeriod": [
+              {
+                "start": "2026-09-02T04:00:00Z",
+                "end": "2026-09-02T05:00:00Z"
+              }
+            ],
+            "cause": "TECHNICAL_PROBLEM",
+            "effect": "NO_SERVICE",
+            "headerText": "Bus 85 : Difficultés de circulation - Arrêt(s) non desservi(s)",
+            "descriptionText": "<p>La ligne 85 est déviée : les arrêts situés entre Barbès - Rochechouart et Châteaudun - Lamartine ne sont plus desservis en direction de Châtelet. Reprise estimée : 07h00. Raison : difficultés de circulation.</p>"
+          }
+        ],
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "mode": "BUS",
+      "realTime": false,
+      "headsign": "Saint-Ouen - Les Docks",
+      "tripFrom": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:483442",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.8582,
+        "lon": 2.3474095,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "tripTo": {
+        "name": "Saint-Ouen - Les Docks",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:480107",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:420402",
+        "importance": 1.6963205780484714e-05,
+        "lat": 48.91538,
+        "lon": 2.3243968,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NOT_ALLOWED",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "BUS"
+        ]
+      },
+      "agencyId": "IDFM:1090",
+      "agencyName": "Boucles Nord de Seine",
+      "agencyUrl": "https://www.iledefrance-mobilites.fr",
+      "routeId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:C01117",
+      "routeUrl": "",
+      "directionId": "1",
+      "routeColor": "6e491e",
+      "routeTextColor": "ffffff",
+      "tripId": "20260902_08:00_fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:RDBOUCLENORDDESEINE:46837486",
+      "routeType": 3,
+      "routeShortName": "85",
+      "routeLongName": "",
+      "tripShortName": "46837486",
+      "displayName": "85",
+      "pickupDropoffType": "NORMAL",
+      "cancelled": false,
+      "tripCancelled": false,
+      "bikesAllowed": false,
+      "wheelchairAccessible": "ACCESSIBLE",
+      "reservation": "NONE",
+      "source": "fr_reseau-urbain-et-interurbain-dile-de-france-mobilites.gtfs.zip/stop_times.txt:7705694:7705719"
+    },
+    {
+      "place": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:22092",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.859759999999994,
+        "lon": 2.3466674999999997,
+        "level": -3.5,
+        "tz": "Europe/Paris",
+        "arrival": "2026-09-02T06:00:00Z",
+        "departure": "2026-09-02T06:00:00Z",
+        "scheduledArrival": "2026-09-02T06:00:00Z",
+        "scheduledDeparture": "2026-09-02T06:00:00Z",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "mode": "SUBWAY",
+      "realTime": false,
+      "headsign": "Bagneux - Lucie Aubrac",
+      "tripFrom": {
+        "name": "Porte de Clignancourt",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:463073",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:478883",
+        "importance": 0.0014583483571186662,
+        "lat": 48.897526,
+        "lon": 2.344624,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "TRAM",
+          "BUS"
+        ]
+      },
+      "tripTo": {
+        "name": "Bagneux - Lucie Aubrac",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:483314",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:483315",
+        "importance": 0.0013735875254496932,
+        "lat": 48.803546999999995,
+        "lon": 2.317458399999999,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NOT_ALLOWED",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY"
+        ]
+      },
+      "agencyId": "IDFM:Operator_100",
+      "agencyName": "RATP",
+      "agencyUrl": "https://www.iledefrance-mobilites.fr",
+      "routeId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:C01374",
+      "routeUrl": "",
+      "directionId": "1",
+      "routeColor": "a0006e",
+      "routeTextColor": "ffffff",
+      "tripId": "20260902_07:44_fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:RATP:COU_RATP_04JOVENDEE1_2026_1366177130_Bagl04Clig06-4",
+      "routeType": 1,
+      "routeShortName": "4",
+      "routeLongName": "",
+      "tripShortName": "RATP",
+      "displayName": "4",
+      "pickupDropoffType": "NORMAL",
+      "cancelled": false,
+      "tripCancelled": false,
+      "bikesAllowed": false,
+      "wheelchairAccessible": "NOT_ACCESSIBLE",
+      "reservation": "NONE",
+      "source": "fr_reseau-urbain-et-interurbain-dile-de-france-mobilites.gtfs.zip/stop_times.txt:491669:491697"
+    },
+    {
+      "place": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:463079",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.85759999999999,
+        "lon": 2.348071,
+        "tz": "Europe/Paris",
+        "departure": "2026-09-02T06:00:00Z",
+        "scheduledDeparture": "2026-09-02T06:00:00Z",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "mode": "SUBWAY",
+      "realTime": false,
+      "headsign": "Rosny-Bois-Perrier",
+      "tripFrom": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:463079",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.85759999999999,
+        "lon": 2.348071,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "tripTo": {
+        "name": "Rosny Bois Perrier",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490793",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:426280",
+        "importance": 0.0015452960506081581,
+        "lat": 48.882799999999996,
+        "lon": 2.4805167000000004,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NOT_ALLOWED",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "REGIONAL_RAIL",
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "agencyId": "IDFM:Operator_100",
+      "agencyName": "RATP",
+      "agencyUrl": "https://www.iledefrance-mobilites.fr",
+      "routeId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:C01381",
+      "routeUrl": "",
+      "directionId": "0",
+      "routeColor": "6e491e",
+      "routeTextColor": "ffffff",
+      "tripId": "20260902_08:00_fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:RATP:COU_RATP_11JOMISTRAL_2026_-492808082_Robp02Chat08-6",
+      "routeType": 1,
+      "routeShortName": "11",
+      "routeLongName": "",
+      "tripShortName": "RATP",
+      "displayName": "11",
+      "pickupDropoffType": "NORMAL",
+      "cancelled": false,
+      "tripCancelled": false,
+      "bikesAllowed": false,
+      "wheelchairAccessible": "NOT_ACCESSIBLE",
+      "reservation": "NONE",
+      "source": "fr_reseau-urbain-et-interurbain-dile-de-france-mobilites.gtfs.zip/stop_times.txt:1285210:1285228"
+    },
+    {
+      "place": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:21959",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.85986699999999,
+        "lon": 2.3461753999999995,
+        "level": -3.5,
+        "tz": "Europe/Paris",
+        "arrival": "2026-09-02T06:00:00Z",
+        "departure": "2026-09-02T06:00:00Z",
+        "scheduledArrival": "2026-09-02T06:00:00Z",
+        "scheduledDeparture": "2026-09-02T06:00:00Z",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "mode": "SUBWAY",
+      "realTime": false,
+      "headsign": "Aéroport d'Orly",
+      "tripFrom": {
+        "name": "Saint-Denis - Pleyel",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490774",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490784",
+        "importance": 0.0014100486878305674,
+        "lat": 48.9175,
+        "lon": 2.3458060999999995,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "tripTo": {
+        "name": "Aéroport d’Orly (Terminaux 1-2-3)",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490908",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:63284",
+        "importance": 0.0014295342843979597,
+        "lat": 48.72824500000001,
+        "lon": 2.3625336,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NOT_ALLOWED",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "TRAM",
+          "BUS"
+        ]
+      },
+      "agencyId": "IDFM:Operator_100",
+      "agencyName": "RATP",
+      "agencyUrl": "https://www.iledefrance-mobilites.fr",
+      "routeId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:C01384",
+      "routeUrl": "",
+      "directionId": "1",
+      "routeColor": "640082",
+      "routeTextColor": "ffffff",
+      "tripId": "20260902_07:46_fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:RATP:COU_RATP_14JONINEY02_2026_1317761393_Sm1408Or1430-4",
+      "routeType": 1,
+      "routeShortName": "14",
+      "routeLongName": "",
+      "tripShortName": "RATP",
+      "displayName": "14",
+      "pickupDropoffType": "NORMAL",
+      "cancelled": false,
+      "tripCancelled": false,
+      "bikesAllowed": false,
+      "wheelchairAccessible": "ACCESSIBLE",
+      "reservation": "NONE",
+      "source": "fr_reseau-urbain-et-interurbain-dile-de-france-mobilites.gtfs.zip/stop_times.txt:445476:445496"
+    },
+    {
+      "place": {
+        "name": "Châtelet",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:463159",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+        "importance": 0.0067915841937065125,
+        "lat": 48.85988199999999,
+        "lon": 2.346243399999999,
+        "level": -3.5,
+        "tz": "Europe/Paris",
+        "arrival": "2026-09-02T06:00:00Z",
+        "departure": "2026-09-02T06:00:00Z",
+        "scheduledArrival": "2026-09-02T06:00:00Z",
+        "scheduledDeparture": "2026-09-02T06:00:00Z",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "mode": "SUBWAY",
+      "realTime": false,
+      "headsign": "Saint-Denis - Pleyel",
+      "tripFrom": {
+        "name": "Aéroport d’Orly (Terminaux 1-2-3)",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490917",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:63284",
+        "importance": 0.0014295342843979597,
+        "lat": 48.72827000000001,
+        "lon": 2.3626148999999996,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NORMAL",
+        "dropoffType": "NOT_ALLOWED",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "TRAM",
+          "BUS"
+        ]
+      },
+      "tripTo": {
+        "name": "Saint-Denis - Pleyel",
+        "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490794",
+        "parentId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:490784",
+        "importance": 0.0014100486878305674,
+        "lat": 48.91744599999999,
+        "lon": 2.3458749999999995,
+        "tz": "Europe/Paris",
+        "vertexType": "TRANSIT",
+        "pickupType": "NOT_ALLOWED",
+        "dropoffType": "NORMAL",
+        "cancelled": false,
+        "modes": [
+          "SUBWAY",
+          "BUS"
+        ]
+      },
+      "agencyId": "IDFM:Operator_100",
+      "agencyName": "RATP",
+      "agencyUrl": "https://www.iledefrance-mobilites.fr",
+      "routeId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:C01384",
+      "routeUrl": "",
+      "directionId": "0",
+      "routeColor": "640082",
+      "routeTextColor": "ffffff",
+      "tripId": "20260902_07:35_fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:RATP:COU_RATP_14JONINEY02_2026_1222173864_Sm1406Sm1404-5",
+      "routeType": 1,
+      "routeShortName": "14",
+      "routeLongName": "",
+      "tripShortName": "RATP",
+      "displayName": "14",
+      "pickupDropoffType": "NORMAL",
+      "cancelled": false,
+      "tripCancelled": false,
+      "bikesAllowed": false,
+      "wheelchairAccessible": "ACCESSIBLE",
+      "reservation": "NONE",
+      "source": "fr_reseau-urbain-et-interurbain-dile-de-france-mobilites.gtfs.zip/stop_times.txt:1316936:1316956"
+    }
+  ],
+  "place": {
+    "name": "Châtelet",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+    "importance": 0.0067915841937065125,
+    "lat": 48.858353,
+    "lon": 2.348491,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ]
+  },
+  "previousPageCursor": "EARLIER|1788328740",
+  "nextPageCursor": "LATER|1788328860"
+}
