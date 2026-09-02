@@ -17,8 +17,18 @@ interface PlanRepository {
    *   boutons « Plus tôt » et « Plus tard ». La requête est par ailleurs renvoyée telle quelle.
    * @param detailedLegs `false` pour la liste de résultats, `true` seulement à l'ouverture d'un
    *   trajet : la réponse est nettement plus lourde (SPEC.md § 7.6).
+   * @param fresh `true` pour ignorer le cache mémoire et redemander les horaires au serveur. C'est
+   *   le seul moyen de rafraîchir le temps réel d'une liste de résultats (SPEC.md § 7.4) : sans
+   *   lui, la réponse mise en cache serait rendue telle quelle et le geste de l'usager n'aurait
+   *   aucun effet. Réservé aux deux déclencheurs du § 7.4 — « tirer pour rafraîchir » et le retour
+   *   au premier plan sur des données périmées — jamais à un chargement ordinaire.
    */
-  suspend fun plan(query: SearchQuery, cursor: String? = null, detailedLegs: Boolean = false): Outcome<JourneyPage>
+  suspend fun plan(
+    query: SearchQuery,
+    cursor: String? = null,
+    detailedLegs: Boolean = false,
+    fresh: Boolean = false,
+  ): Outcome<JourneyPage>
 
   /**
    * Recalcule un trajet déjà obtenu avec les données temps réel du moment, sans relancer une

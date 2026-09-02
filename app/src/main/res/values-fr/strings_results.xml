@@ -30,11 +30,29 @@
   <string name="results_delay_late">%1$s de retard</string>
   <string name="results_delay_early">%1$s d\'avance</string>
   <string name="results_cancelled">Supprimé</string>
+  <string name="results_journey_cancelled">Trajet supprimé</string>
+  <string name="results_leg_cancelled">%1$s — supprimé</string>
   <plurals name="results_disruptions">
     <item quantity="one">%d perturbation</item>
     <item quantity="many">%d de perturbations</item>
     <item quantity="other">%d perturbations</item>
   </plurals>
+
+  <plurals name="results_disruptions_in_effect">
+    <item quantity="one">%d perturbation en vigueur</item>
+    <item quantity="many">%d de perturbations en vigueur</item>
+    <item quantity="other">%d perturbations en vigueur</item>
+  </plurals>
+  <plurals name="results_disruptions_upcoming">
+    <item quantity="one">%d perturbation à venir</item>
+    <item quantity="many">%d de perturbations à venir</item>
+    <item quantity="other">%d perturbations à venir</item>
+  </plurals>
+  <string name="results_alert_severity">Gravité : %1$s</string>
+  <string name="results_alert_severity_info">Information</string>
+  <string name="results_alert_severity_warning">Avertissement</string>
+  <string name="results_alert_severity_severe">Perturbation majeure</string>
+  <string name="results_alert_severity_unknown">Perturbation</string>
 
   <string name="results_timeline_description">Portions : %1$s</string>
   <string name="results_leg_detail">%1$s %2$s</string>
@@ -78,8 +96,8 @@
   <string name="results_earlier">Plus tôt</string>
   <string name="results_later">Plus tard</string>
 
-  <string name="results_select_journey">Choisir ce trajet</string>
-  <string name="results_journey_selected">Trajet choisi</string>
+  <string name="results_select_journey">Ouvrir ce trajet</string>
+  <string name="results_journey_selected">Tracé sur la carte</string>
 
   <string name="results_loading">Recherche de trajets…</string>
 

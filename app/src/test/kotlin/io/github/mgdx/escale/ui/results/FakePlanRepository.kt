@@ -25,10 +25,16 @@ class FakePlanRepository : PlanRepository {
   /** Réponse par onglet ; à défaut, une page vide. */
   val answers = mutableMapOf<JourneyCategory, Outcome<JourneyPage>>()
 
-  data class Call(val category: JourneyCategory, val cursor: String?)
+  /** [fresh] vaut vrai quand la requête contourne le cache pour du temps réel (SPEC.md § 7.4). */
+  data class Call(val category: JourneyCategory, val cursor: String?, val fresh: Boolean = false)
 
-  override suspend fun plan(query: SearchQuery, cursor: String?, detailedLegs: Boolean): Outcome<JourneyPage> {
-    calls += Call(query.category, cursor)
+  override suspend fun plan(
+    query: SearchQuery,
+    cursor: String?,
+    detailedLegs: Boolean,
+    fresh: Boolean,
+  ): Outcome<JourneyPage> {
+    calls += Call(query.category, cursor, fresh)
     queries += query
     return answers[query.category] ?: Outcome.Success(JourneyPage(journeys = emptyList()))
   }

@@ -28,6 +28,9 @@ class DetailViewModelTest {
 
   private val fixedNow = Instant.parse("2026-09-01T09:30:00Z")
 
+  /** L'horloge du ViewModel, avancée à la main pour éprouver la règle de fraîcheur (§ 7.4). */
+  private var clock = fixedNow
+
   @Test
   fun `sans trajet choisi, l'ecran se referme et n'emet aucune requete`() {
     val viewModel = viewModel()
@@ -222,11 +225,39 @@ class DetailViewModelTest {
     assertEquals(emptySet<Int>(), viewModel.uiState.value.expandedLegs)
   }
 
+  // --- Retour au premier plan, SPEC.md § 7.4 ---------------------------------------------------
+
+  @Test
+  fun `au retour au premier plan, un detail de moins de 60 secondes n'est pas rafraichi`() {
+    selection.select(journeyOf("id-1"))
+    val viewModel = viewModel()
+    assertEquals(1, repository.refreshCalls.size)
+
+    clock = clock.plusSeconds(59)
+    viewModel.onForeground()
+
+    assertEquals(1, repository.refreshCalls.size)
+  }
+
+  @Test
+  fun `au retour au premier plan, un detail de plus de 60 secondes est rafraichi`() {
+    selection.select(journeyOf("id-1"))
+    val viewModel = viewModel()
+
+    clock = clock.plusSeconds(61)
+    viewModel.onForeground()
+
+    // Un seul rafraîchissement de plus : la règle est arithmétique, elle ne boucle pas.
+    assertEquals(2, repository.refreshCalls.size)
+    viewModel.onForeground()
+    assertEquals(2, repository.refreshCalls.size)
+  }
+
   private fun viewModel(session: SearchSession = sessionWithSearch()) = DetailViewModel(
     selection = selection,
     session = session,
     planRepository = repository,
     savedState = savedState,
-    now = { fixedNow },
+    now = { clock },
   )
 }

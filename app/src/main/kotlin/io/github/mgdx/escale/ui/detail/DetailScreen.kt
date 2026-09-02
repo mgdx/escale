@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +58,8 @@ import io.github.mgdx.escale.core.format.transitLineLabel
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.ui.common.ErrorMessage
+import io.github.mgdx.escale.ui.results.DisruptionBanner
+import io.github.mgdx.escale.ui.results.ForegroundEffect
 import io.github.mgdx.escale.ui.results.durationText
 import io.github.mgdx.escale.ui.results.modeIcon
 import io.github.mgdx.escale.ui.results.modeLabel
@@ -73,8 +76,8 @@ import java.time.Instant
  * `ui/map`. Il se contente de republier le trajet détaillé — celui qui porte enfin la géométrie —
  * dans `SelectedJourneyStore`, où le lot « tracé » le lit déjà.
  *
- * @param onBack sortie de l'écran. Le graphe de navigation en profite pour libérer le trajet
- *   choisi : sans cela, réappuyer sur la même carte de résultat n'émettrait plus rien.
+ * @param onBack sortie de l'écran. Elle ne libère rien : le trajet reste mis en évidence et tracé
+ *   sur la carte au retour dans la liste (SPEC.md § 5.1).
  */
 @Composable
 fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -84,6 +87,9 @@ fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   // Le retour système passe par le même chemin que la flèche de la barre : un seul endroit libère
   // le trajet choisi.
   BackHandler(onBack = onBack)
+  // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires affichés ont plus de
+  // 60 secondes. Le bouton « Rafraîchir » de la barre, lui, rafraîchit sans condition.
+  ForegroundEffect(viewModel::onForeground)
   // Plus rien à montrer — typiquement au retour après la mort du processus, où le magasin en
   // mémoire est vide : l'écran se referme au lieu d'afficher une page blanche.
   LaunchedEffect(state.closed) { if (state.closed) onBack() }
@@ -201,6 +207,11 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
     item(key = SUMMARY_KEY) { DetailSummary(journey = journey, state = state) }
+    if (journey.alerts.isNotEmpty()) {
+      // Le bandeau des perturbations en vigueur, le même qu'en tête de carte de résultat
+      // (SPEC.md § 5.2). Le détail de chacune reste dans la portion qui la porte.
+      item(key = ALERTS_KEY) { DisruptionBanner(alerts = journey.alerts, at = state.refreshedAt) }
+    }
     if (state.error != null) {
       item(key = ERROR_KEY) { ErrorMessage(error = state.error, onRetry = actions.onRefresh) }
     }
@@ -248,6 +259,9 @@ private fun DetailSummary(journey: Journey, state: DetailUiState) {
       Text(
         text = stringResource(R.string.results_time_range, departure, arrival),
         style = MaterialTheme.typography.titleLarge,
+        // Comme sur la carte de résultat : des heures barrées quand une portion est supprimée,
+        // doublées de la mention en toutes lettres de `StatusLines` (SPEC.md § 9).
+        textDecoration = if (status.cancelled) TextDecoration.LineThrough else null,
         modifier = Modifier.semantics { contentDescription = description },
       )
       val transfers = transfersText(journey.transfers)
@@ -466,6 +480,7 @@ private fun transitHeading(line: JourneyShareLine.Transit): String {
 }
 
 private const val SUMMARY_KEY = "resume"
+private const val ALERTS_KEY = "perturbations"
 private const val ERROR_KEY = "erreur"
 private const val ORIGIN_KEY = "depart"
 private const val DESTINATION_KEY = "arrivee"

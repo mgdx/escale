@@ -23,17 +23,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,12 +72,25 @@ import io.github.mgdx.escale.ui.common.ErrorMessage
  * caméra : la feuille n'a donc pas à publier sa hauteur.
  *
  * @param padding les encarts système transmis par `HomeScreen`.
+ * @param onOpenJourney ouverture de l'écran de détail (SPEC.md § 5.3), branchée par le graphe de
+ *   navigation. Elle est appelée sur un **événement** de [ResultsViewModel.openDetail], et non sur
+ *   l'observation du trajet mis en évidence : celui-ci reste publié tant qu'il y a des résultats,
+ *   pour que la carte continue de le tracer et de le cadrer (SPEC.md § 5.1).
  */
 @Composable
-fun ResultsSheetSlot(padding: PaddingValues, modifier: Modifier = Modifier) {
+fun ResultsSheetSlot(padding: PaddingValues, onOpenJourney: () -> Unit, modifier: Modifier = Modifier) {
   val container = appContainer()
   val viewModel: ResultsViewModel = viewModel(factory = ResultsViewModel.factory(container))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
+  // La demande d'ouverture se consomme une fois : le canal est vidé au fil de l'eau, et le
+  // rappel le plus récent est celui qui sert, sans jamais relancer la collecte.
+  val open by rememberUpdatedState(onOpenJourney)
+  LaunchedEffect(viewModel) {
+    viewModel.openDetail.collect { open() }
+  }
+  // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires ont plus de 60
+  // secondes. Aucune minuterie, aucune boucle — c'est le système qui prévient.
+  ForegroundEffect(viewModel::onForeground)
   if (!state.open) return
   ResultsSheet(
     state = state,
@@ -93,6 +110,7 @@ private fun rememberResultsActions(viewModel: ResultsViewModel): ResultsActions 
     onLater = viewModel::onLater,
     onJourneySelected = viewModel::onJourneySelected,
     onBikeFilterChanged = viewModel::onBikeFilterChanged,
+    onRefresh = viewModel::onPullToRefresh,
   )
 }
 
@@ -103,6 +121,8 @@ internal data class ResultsActions(
   val onLater: () -> Unit,
   val onJourneySelected: (Journey) -> Unit,
   val onBikeFilterChanged: (BikeFilter) -> Unit,
+  /** « Tirer pour rafraîchir » : le geste de SPEC.md § 7.4. */
+  val onRefresh: () -> Unit,
 )
 
 /**
@@ -261,7 +281,14 @@ private fun CenteredState(modifier: Modifier, padding: PaddingValues, content: @
   }
 }
 
-/** La liste des trajets, encadrée par « Plus tôt » et « Plus tard » (SPEC.md § 5.2). */
+/**
+ * La liste des trajets, encadrée par « Plus tôt » et « Plus tard » (SPEC.md § 5.2), et **tirable
+ * pour rafraîchir le temps réel** (SPEC.md § 7.4).
+ *
+ * Le geste est le seul déclencheur volontaire de rafraîchissement : il n'y a ni minuterie ni
+ * rechargement périodique derrière cette liste.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun JourneyList(
   state: ResultsUiState,
@@ -271,8 +298,25 @@ private fun JourneyList(
 ) {
   val tab = state.current
   val journeys = state.visibleJourneys
-  LazyColumn(
+  PullToRefreshBox(
+    isRefreshing = tab.refreshing,
+    onRefresh = actions.onRefresh,
     modifier = modifier,
+  ) {
+    JourneyColumn(state = state, actions = actions, padding = padding, journeys = journeys, tab = tab)
+  }
+}
+
+@Composable
+private fun JourneyColumn(
+  state: ResultsUiState,
+  actions: ResultsActions,
+  padding: PaddingValues,
+  journeys: List<Journey>,
+  tab: TabResults,
+) {
+  LazyColumn(
+    modifier = Modifier.fillMaxSize(),
     contentPadding = PaddingValues(
       start = ContentPadding,
       end = ContentPadding,
@@ -301,6 +345,9 @@ private fun JourneyList(
       JourneyCard(
         journey = journey,
         isSelected = journey.stableKey() == state.selectedKey,
+        // Les perturbations « en vigueur » se jugent à l'heure du chargement des horaires
+        // affichés, et non à la seconde près : sans quoi la liste se recomposerait sans fin.
+        at = tab.loadedAt,
         onSelect = { actions.onJourneySelected(journey) },
       )
     }

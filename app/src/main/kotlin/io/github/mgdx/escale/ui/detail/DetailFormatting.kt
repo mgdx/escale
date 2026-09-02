@@ -11,7 +11,6 @@ import androidx.compose.ui.res.stringResource
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.format.DistanceUnit
 import io.github.mgdx.escale.core.format.FormattedDistance
-import io.github.mgdx.escale.core.model.DisruptionSeverity
 import io.github.mgdx.escale.core.model.RentalPropulsionType
 import io.github.mgdx.escale.core.model.RentalReturnConstraint
 import io.github.mgdx.escale.core.model.StepDirection
@@ -86,15 +85,6 @@ internal fun StepDirection.labelRes(): Int = when (this) {
   StepDirection.ELEVATOR -> R.string.detail_step_elevator
   StepDirection.UTURN_LEFT -> R.string.detail_step_uturn_left
   StepDirection.UTURN_RIGHT -> R.string.detail_step_uturn_right
-}
-
-/** La gravité d'une perturbation, dite en toutes lettres : jamais une couleur seule (SPEC.md § 9). */
-@StringRes
-internal fun DisruptionSeverity.labelRes(): Int = when (this) {
-  DisruptionSeverity.INFO -> R.string.detail_alert_severity_info
-  DisruptionSeverity.WARNING -> R.string.detail_alert_severity_warning
-  DisruptionSeverity.SEVERE -> R.string.detail_alert_severity_severe
-  DisruptionSeverity.UNKNOWN_SEVERITY -> R.string.detail_alert_severity_unknown
 }
 
 @StringRes

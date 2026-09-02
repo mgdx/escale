@@ -99,7 +99,7 @@ class JourneyDetailFixturesTest {
     val page = PlanTestSupport.page("plan_with_alerts.json", backgroundScope)
     val alert = page.journeys.flatMap { it.alerts }.first()
 
-    assertEquals("Umleitung der Linie S2", alert.headerText)
+    assertEquals("Le 05 & 06/09 : Triathlon de Bordeaux !", alert.headerText)
     assertTrue(alert.descriptionText.isNotBlank())
     assertEquals(1, alert.periods.size)
     assertNotNull(alert.url)
