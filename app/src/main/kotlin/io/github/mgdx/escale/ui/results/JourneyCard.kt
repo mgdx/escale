@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.results
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +62,15 @@ internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> 
     modifier = modifier
       .fillMaxWidth()
       .clickable(onClickLabel = selectLabel, onClick = onSelect)
+      // Le trajet mis en évidence se distingue par un liseré **et** par la mention en toutes
+      // lettres qui ferme la carte : jamais par la seule couleur (SPEC.md § 9).
+      .then(
+        if (isSelected) {
+          Modifier.border(SelectedBorder, MaterialTheme.colorScheme.primary, CardDefaults.elevatedShape)
+        } else {
+          Modifier
+        },
+      )
       .semantics { selected = isSelected },
     colors = if (isSelected) {
       CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
@@ -84,9 +94,9 @@ internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> 
       )
       JourneyStatusLines(journey, status)
       if (isSelected) {
-        Text(
+        StatusLine(
+          icon = R.drawable.ic_map,
           text = stringResource(R.string.results_journey_selected),
-          style = MaterialTheme.typography.labelLarge,
           color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
       }
@@ -336,6 +346,7 @@ private const val MIN_WEIGHT_FOR_LINE = 0.22f
 private const val MAX_FONT_SCALE = 2f
 
 private val CardPadding: Dp = 16.dp
+private val SelectedBorder: Dp = 2.dp
 private val CardSpacing: Dp = 8.dp
 private val HeaderSpacing: Dp = 4.dp
 private val StatusSpacing: Dp = 8.dp

@@ -78,8 +78,8 @@
   <string name="results_earlier">Plus tôt</string>
   <string name="results_later">Plus tard</string>
 
-  <string name="results_select_journey">Choisir ce trajet</string>
-  <string name="results_journey_selected">Trajet choisi</string>
+  <string name="results_select_journey">Ouvrir ce trajet</string>
+  <string name="results_journey_selected">Tracé sur la carte</string>
 
   <string name="results_loading">Recherche de trajets…</string>
 

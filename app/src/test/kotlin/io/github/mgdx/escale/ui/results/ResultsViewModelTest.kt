@@ -20,7 +20,12 @@ import io.github.mgdx.escale.core.query.PlanQueryBuilder
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.session.SearchSession
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -223,29 +228,109 @@ class ResultsViewModelTest {
     assertTrue(repository.calls.isEmpty())
   }
 
-  // --- Choix d'un trajet et filtre de l'onglet Vélo ----------------------------------------------
+  // --- Mise en évidence d'un trajet et ouverture du détail (SPEC.md § 5.1 et § 5.3) -------------
 
   @Test
-  fun `le trajet choisi est publie pour la carte`() = runTest {
+  fun `des resultats mettent en evidence leur premier trajet sans aucun appui`() = runTest {
+    val first = journey("a", 0)
+    val second = journey("b", 10)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(first, second)))
+    val model = viewModel()
+
+    completeSearch()
+
+    // SPEC.md § 5.1 : « la carte reste visible en haut et cadre le trajet sélectionné ». Sans
+    // sélection d'office, elle ne cadrerait jamais rien tant que personne n'a appuyé.
+    assertEquals(first, selection.selected.value)
+    assertEquals(first.stableKey(), model.uiState.value.selectedKey)
+  }
+
+  @Test
+  fun `un appui met le trajet en evidence et demande l ouverture du detail`() = runTest {
+    val first = journey("a", 0)
+    val second = journey("b", 10)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(first, second)))
+    val model = viewModel()
+    val openings = openingsOf(model)
+    completeSearch()
+
+    model.onJourneySelected(second)
+
+    assertEquals(second, selection.selected.value)
+    assertEquals(second.stableKey(), model.uiState.value.selectedKey)
+    assertEquals(1, openings.size)
+  }
+
+  @Test
+  fun `le retour depuis le detail conserve le trajet mis en evidence`() = runTest {
     val trip = journey("a", 0)
     repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(trip)))
     val model = viewModel()
     completeSearch()
-
     model.onJourneySelected(trip)
 
+    // Quitter l'écran de détail ne passe par aucun chemin de ce ViewModel : c'est précisément ce
+    // qui fait survivre le tracé au retour en arrière (anomalie A11).
     assertEquals(trip, selection.selected.value)
     assertEquals(trip.stableKey(), model.uiState.value.selectedKey)
   }
 
   @Test
-  fun `une nouvelle recherche oublie le trajet choisi`() = runTest {
+  fun `reappuyer sur la meme carte redemande l ouverture du detail`() = runTest {
+    val trip = journey("a", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(trip)))
+    val model = viewModel()
+    val openings = openingsOf(model)
+    completeSearch()
+
+    model.onJourneySelected(trip)
+    model.onJourneySelected(trip)
+
+    // Le trajet ne change pas : seule une `StateFlow` s'en tairait. L'événement, lui, repart.
+    assertEquals(2, openings.size)
+  }
+
+  @Test
+  fun `changer d onglet met en evidence le premier trajet du nouveau jeu`() = runTest {
+    val transit = journey("transit", 0)
+    val walk = journey("walk", 5)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(transit)))
+    repository.answers[JourneyCategory.WALK] = Outcome.Success(JourneyPage(journeys = listOf(walk)))
+    val model = viewModel()
+    completeSearch()
+    assertEquals(transit, selection.selected.value)
+
+    model.onCategorySelected(JourneyCategory.WALK)
+
+    assertEquals(walk, selection.selected.value)
+    assertEquals(walk.stableKey(), model.uiState.value.selectedKey)
+  }
+
+  @Test
+  fun `une nouvelle recherche met en evidence le premier trajet de ses resultats`() = runTest {
     val trip = journey("a", 0)
     repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(trip)))
     val model = viewModel()
     completeSearch()
     model.onJourneySelected(trip)
 
+    val other = journey("b", 45)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(other)))
+    session.setTime(TimeChoice.DepartAt(Instant.parse("2026-09-01T09:00:00Z")))
+
+    assertEquals(other, selection.selected.value)
+    assertEquals(other.stableKey(), model.uiState.value.selectedKey)
+  }
+
+  @Test
+  fun `une recherche sans resultat n en met aucun en evidence`() = runTest {
+    val trip = journey("a", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(trip)))
+    val model = viewModel()
+    completeSearch()
+    assertEquals(trip, selection.selected.value)
+
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = emptyList()))
     session.setTime(TimeChoice.DepartAt(Instant.parse("2026-09-01T09:00:00Z")))
 
     assertNull(selection.selected.value)
@@ -286,6 +371,20 @@ class ResultsViewModelTest {
     assertEquals(JourneyCategory.CAR, restored.uiState.value.category)
     // Et les résultats, eux, ne sont pas sauvegardés : ils repartent d'une requête (SPEC.md § 11).
     assertEquals(JourneyCategory.CAR, repository.calls.last().category)
+  }
+
+  /**
+   * Les demandes d'ouverture reçues jusqu'ici, collectées **au fil de l'eau**.
+   *
+   * Le répartiteur non confiné est celui de l'application réelle, où un `LaunchedEffect` collecte
+   * en continu : sans lui, deux appuis se retrouveraient conflatés en un seul dans le canal, ce
+   * qui ne se produit jamais à l'écran.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun TestScope.openingsOf(model: ResultsViewModel): List<Unit> {
+    val received = mutableListOf<Unit>()
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.openDetail.toList(received) }
+    return received
   }
 
   // --- Fabriques ---------------------------------------------------------------------------------

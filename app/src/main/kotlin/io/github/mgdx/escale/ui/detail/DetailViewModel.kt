@@ -224,7 +224,7 @@ class DetailViewModel(
     fun factory(container: AppContainer) = viewModelFactory {
       initializer {
         DetailViewModel(
-          selection = SelectedJourneyStore.shared,
+          selection = container.selectedJourneyStore,
           session = container.searchSession,
           planRepository = container.planRepository,
           savedState = createSavedStateHandle(),

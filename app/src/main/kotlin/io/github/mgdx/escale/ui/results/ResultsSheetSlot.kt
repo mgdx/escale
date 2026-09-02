@@ -30,10 +30,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,12 +70,22 @@ import io.github.mgdx.escale.ui.common.ErrorMessage
  * caméra : la feuille n'a donc pas à publier sa hauteur.
  *
  * @param padding les encarts système transmis par `HomeScreen`.
+ * @param onOpenJourney ouverture de l'écran de détail (SPEC.md § 5.3), branchée par le graphe de
+ *   navigation. Elle est appelée sur un **événement** de [ResultsViewModel.openDetail], et non sur
+ *   l'observation du trajet mis en évidence : celui-ci reste publié tant qu'il y a des résultats,
+ *   pour que la carte continue de le tracer et de le cadrer (SPEC.md § 5.1).
  */
 @Composable
-fun ResultsSheetSlot(padding: PaddingValues, modifier: Modifier = Modifier) {
+fun ResultsSheetSlot(padding: PaddingValues, onOpenJourney: () -> Unit, modifier: Modifier = Modifier) {
   val container = appContainer()
   val viewModel: ResultsViewModel = viewModel(factory = ResultsViewModel.factory(container))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
+  // La demande d'ouverture se consomme une fois : le canal est vidé au fil de l'eau, et le
+  // rappel le plus récent est celui qui sert, sans jamais relancer la collecte.
+  val open by rememberUpdatedState(onOpenJourney)
+  LaunchedEffect(viewModel) {
+    viewModel.openDetail.collect { open() }
+  }
   if (!state.open) return
   ResultsSheet(
     state = state,

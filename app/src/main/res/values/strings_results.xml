@@ -92,10 +92,10 @@
   <string name="results_earlier">Earlier</string>
   <string name="results_later">Later</string>
 
-  <!-- Sélection d'un trajet. L'écran de détail viendra plus tard : pour l'instant, l'appui
-       désigne le trajet que la carte cadrera (SPEC.md § 5.1). -->
-  <string name="results_select_journey">Select this trip</string>
-  <string name="results_journey_selected">Selected trip</string>
+  <!-- Sélection d'un trajet. Le premier trajet de la liste est mis en évidence sans aucun appui :
+       la carte le trace et le cadre (SPEC.md § 5.1). L'appui, lui, ouvre le détail (§ 5.3). -->
+  <string name="results_select_journey">Open this trip</string>
+  <string name="results_journey_selected">Shown on the map</string>
 
   <!-- Chargement. -->
   <string name="results_loading">Looking for trips…</string>

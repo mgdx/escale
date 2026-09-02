@@ -19,10 +19,12 @@ import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -46,6 +48,12 @@ import kotlinx.coroutines.launch
  * route, et afficher « une erreur est survenue » à quelqu'un qui vient de relancer sa recherche
  * serait un défaut visible (docs/architecture.md § 6).
  *
+ * **La mise en évidence d'un trajet est un état, son ouverture est un événement.** SPEC.md § 5.1
+ * veut que la carte « cadre le trajet sélectionné » : dès qu'une liste arrive, son premier trajet
+ * est publié dans [SelectedJourneyStore] sans aucun appui, et la sélection suit ensuite la liste
+ * affichée ([syncSelection]). L'appui, lui, ajoute une demande d'ouverture de l'écran de détail
+ * sur [openDetail], à consommation unique.
+ *
  * Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et **ne journalise rien** :
  * il manipule des adresses et des coordonnées, que SPEC.md § 11 interdit d'écrire dans une trace,
  * y compris en débogage.
@@ -61,6 +69,24 @@ class ResultsViewModel(
   private val state = MutableStateFlow(ResultsUiState(category = restoredCategory()))
 
   val uiState: StateFlow<ResultsUiState> = state.asStateFlow()
+
+  /**
+   * **L'ouverture de l'écran de détail, et rien d'autre : un événement à consommation unique.**
+   *
+   * Ce n'est délibérément pas une valeur observable. Le trajet choisi, lui, en est une — il vit
+   * dans [SelectedJourneyStore] et dure tant qu'il y a des résultats — et c'est justement pour ça
+   * qu'il ne peut pas servir à naviguer : une `StateFlow` ne republie pas une valeur égale, si
+   * bien qu'un second appui sur la même carte n'ouvrirait plus rien. Séparer les deux évite le
+   * contournement qui remettait la sélection à `null` en quittant l'écran de détail, et avec lui
+   * la disparition du tracé au retour en arrière (SPEC.md § 5.1).
+   *
+   * Le canal est conflaté : deux appuis très rapprochés n'empilent pas deux ouvertures, et un
+   * événement émis pendant que la feuille n'est pas à l'écran ne s'accumule pas.
+   */
+  private val detailRequests = Channel<Unit>(Channel.CONFLATED)
+
+  /** À collecter une seule fois, par la feuille de résultats, pour ouvrir l'écran de détail. */
+  val openDetail: Flow<Unit> = detailRequests.receiveAsFlow()
 
   /** Un travail par onglet, au plus. C'est ce qui permet d'annuler sans toucher aux autres. */
   private val jobs = mutableMapOf<JourneyCategory, Job>()
@@ -118,7 +144,7 @@ class ResultsViewModel(
     savedState[KEY_CATEGORY] = category.name
     state.update { it.copy(category = category) }
     val tab = state.value.tabs[category]
-    if (tab == null) load(category)
+    if (tab == null) load(category) else syncSelection()
   }
 
   /** Le bouton « Réessayer » du bandeau d'erreur (SPEC.md § 8). */
@@ -135,18 +161,21 @@ class ResultsViewModel(
   fun onLater() = paginate(ResultsPage.LATER)
 
   /**
-   * L'usager choisit un trajet.
+   * L'usager appuie sur une carte de résultat : **deux choses distinctes s'ensuivent**.
    *
-   * L'écran de détail (SPEC.md § 5.3) relève du sprint suivant : pour l'instant, le geste désigne
-   * le trajet que la carte cadrera, et le publie dans [SelectedJourneyStore].
+   * Le trajet devient le trajet mis en évidence — c'est un état, que la carte trace et cadre
+   * (SPEC.md § 5.1) et qui survivra au passage par l'écran de détail — et une ouverture de l'écran
+   * de détail est demandée, une fois, par [openDetail] (SPEC.md § 5.3).
    */
   fun onJourneySelected(journey: Journey) {
-    state.update { it.copy(selectedKey = journey.stableKey()) }
-    selection.select(journey)
+    select(journey)
+    detailRequests.trySend(Unit)
   }
 
   fun onBikeFilterChanged(filter: BikeFilter) {
     state.update { it.copy(bikeFilter = filter) }
+    // Le filtre change la liste visible : le trajet mis en évidence peut ne plus en faire partie.
+    syncSelection()
   }
 
   /**
@@ -165,9 +194,11 @@ class ResultsViewModel(
   private fun restart(open: Boolean) {
     jobs.values.forEach(Job::cancel)
     jobs.clear()
-    selection.select(null)
     val category = state.value.category
     state.value = ResultsUiState(open = open, category = category)
+    // Plus aucun résultat à montrer : la carte n'a plus rien à tracer, jusqu'à ce que la nouvelle
+    // recherche en rende. Le premier trajet du nouveau jeu sera mis en évidence tout seul.
+    syncSelection()
     if (open) load(category)
   }
 
@@ -219,6 +250,30 @@ class ResultsViewModel(
       val tab = current.tabs[category] ?: TabResults()
       current.copy(tabs = current.tabs + (category to transform(tab)))
     }
+    syncSelection()
+  }
+
+  /**
+   * Remet la sélection en accord avec la liste affichée (SPEC.md § 5.1).
+   *
+   * La règle tient en une phrase : **le trajet mis en évidence est celui que l'usager a choisi
+   * s'il est encore dans la liste, sinon le premier de la liste, et rien du tout si la liste est
+   * vide.** C'est ce qui fait qu'une recherche trace son premier trajet sans qu'on ait à appuyer,
+   * qu'un changement d'onglet met en évidence le premier trajet du nouveau jeu de résultats, et
+   * qu'un jeu vide n'en laisse aucun derrière lui.
+   *
+   * Rien n'est publié en dehors de cette fonction et de [onJourneySelected] : le retour depuis
+   * l'écran de détail ne passe par aucune des deux, la sélection et son tracé lui survivent donc.
+   */
+  private fun syncSelection() {
+    val journeys = state.value.visibleJourneys
+    val chosen = journeys.firstOrNull { it.stableKey() == state.value.selectedKey } ?: journeys.firstOrNull()
+    select(chosen)
+  }
+
+  private fun select(journey: Journey?) {
+    state.update { it.copy(selectedKey = journey?.stableKey()) }
+    selection.select(journey)
   }
 
   private fun restoredCategory(): JourneyCategory {
@@ -244,7 +299,7 @@ class ResultsViewModel(
           session = container.searchSession,
           planRepository = container.planRepository,
           searchPreferences = container.preferencesRepository.searchPreferences,
-          selection = SelectedJourneyStore.shared,
+          selection = container.selectedJourneyStore,
           savedState = createSavedStateHandle(),
         )
       }
