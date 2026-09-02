@@ -20,6 +20,11 @@ object HexColor {
   private const val GREEN_SHIFT = 8
   private const val CHANNEL_MASK = 0xFFL
   private const val CHANNEL_MAX = 255.0
+  private const val RGB_MASK = 0xFFFFFFL
+
+  /** Les deux seules couleurs de texte qui se posent sur n'importe quelle couleur de ligne. */
+  private const val WHITE = "#FFFFFF"
+  private const val BLACK = "#000000"
 
   /** Seuil de luminance au-delà duquel la couleur est claire et réclame un texte sombre. */
   private const val LIGHT_THRESHOLD = 0.5
@@ -51,6 +56,23 @@ object HexColor {
     }
     return expanded.toLongOrNull(HEX_RADIX)?.let { OPAQUE or it }
   }
+
+  /**
+   * La couleur [value] ramenée à la forme canonique `#RRGGBB`, ou `null` si elle n'en décrit aucune.
+   *
+   * C'est cette forme-là que les couches MapLibre attendent : une feuille de style refuse `4dbd38`
+   * tout court, et le serveur, lui, l'envoie aussi bien avec que sans `#` (SPEC.md § 5.2).
+   */
+  fun normalize(value: String?): String? = parse(value)?.let { "#%06X".format(it and RGB_MASK) }
+
+  /**
+   * Le noir ou le blanc, celui des deux qui se lit sur [color].
+   *
+   * Sert quand le réseau publie `routeColor` sans `routeTextColor`, ce qui est fréquent : SPEC.md
+   * § 9 exige un contraste conforme, et il vaut mieux le calculer que de parier sur le blanc.
+   * Rend `null` si [color] n'est pas une couleur.
+   */
+  fun readableTextOn(color: String?): String? = parse(color)?.let { if (needsLightText(it)) WHITE else BLACK }
 
   /**
    * Vrai si un texte clair est lisible sur [argb].
