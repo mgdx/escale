@@ -13,6 +13,8 @@
   <!-- Actions de la barre supérieure (SPEC.md § 5.3). -->
   <string name="detail_action_share">Share this trip</string>
   <string name="detail_action_refresh">Refresh</string>
+  <!-- Jalon 10 : les favoris. La commande n'apparaît que branchée. -->
+  <string name="detail_action_favorite">Add to favourites</string>
 
   <!-- Le détail complet des portions n'arrive qu'après une seconde requête (SPEC.md § 7.6) :
        pendant ce temps, l'écran montre déjà les heures, la durée et la frise. -->

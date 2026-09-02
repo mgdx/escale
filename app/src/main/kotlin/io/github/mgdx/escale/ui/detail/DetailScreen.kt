@@ -168,6 +168,15 @@ internal fun DetailContent(
 @Composable
 private fun RowScope.DetailBarActions(journey: Journey, actions: DetailActions) {
   val share = rememberShareAction(journey)
+  val favorite = actions.onAddToFavorites
+  if (favorite != null) {
+    IconButton(onClick = favorite) {
+      Icon(
+        painter = painterResource(R.drawable.ic_star_outline),
+        contentDescription = stringResource(R.string.detail_action_favorite),
+      )
+    }
+  }
   IconButton(onClick = actions.onRefresh) {
     Icon(
       painter = painterResource(R.drawable.ic_refresh),

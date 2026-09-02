@@ -4,6 +4,7 @@
 
   <string name="detail_action_share">Partager ce trajet</string>
   <string name="detail_action_refresh">Rafraîchir</string>
+  <string name="detail_action_favorite">Ajouter aux favoris</string>
 
   <string name="detail_loading_details">Chargement du détail…</string>
   <string name="detail_refreshed_at">Temps réel arrêté à %1$s</string>
