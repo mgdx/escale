@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.settings
 
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -215,7 +216,17 @@ private fun SearchSection(search: SearchPreferences, actions: SettingsActions) {
   )
 }
 
-/** Affichage : thème, format d'heure, couches de la carte (SPEC.md § 5.6 et § 5.7). */
+/**
+ * Affichage : thème, format d'heure, couches de la carte (SPEC.md § 5.6 et § 5.7).
+ *
+ * **Point d'accroche du jalon 6, les arrêts sur la carte** : les trois bascules de couches sont
+ * persistées dès maintenant et lisibles par `PreferencesRepository.displayPreferences`, champs
+ * `showStops`, `showRentals` et `showPointsOfInterest`. Le lot qui affichera les arrêts n'a rien à
+ * ajouter ici : il observe ce flux et masque la couche correspondante, indépendamment du zoom.
+ *
+ * Le format d'heure (`clockFormat`) attend de même son lecteur : le formatage des heures vit dans
+ * `:core.format`, qui ne le consulte pas encore.
+ */
 @Composable
 private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions) {
   SettingsSectionHeader(title = stringResource(R.string.settings_section_display))
@@ -276,7 +287,7 @@ private fun DataSection(uiState: SettingsUiState, actions: SettingsActions) {
 }
 
 @Composable
-private fun ClearItem(target: ClearTarget, descriptionRes: Int, actions: SettingsActions) {
+private fun ClearItem(target: ClearTarget, @StringRes descriptionRes: Int, actions: SettingsActions) {
   SettingsItem(
     title = stringResource(target.titleRes()),
     description = stringResource(descriptionRes),
