@@ -203,7 +203,8 @@ private fun TripHook(leg: JourneyLeg.Transit, actions: DetailActions) {
 @Composable
 private fun PlaceBlock(@DrawableRes icon: Int, @StringRes labelRes: Int, place: Place) {
   val formatTime = rememberTimeFormatter()
-  DetailRow(icon = icon, text = stringResource(labelRes, place.name), trailing = formatTime(place.time))
+  val name = placeLabel(place.name, R.string.detail_place_unnamed)
+  DetailRow(icon = icon, text = stringResource(labelRes, name), trailing = formatTime(place.time))
   // L'horaire théorique n'est montré que s'il diffère de l'heure effective : sans temps réel les
   // deux sont égales par construction, et l'afficher ferait croire à une information qu'on n'a pas.
   if (place.scheduledTime != place.time) {
@@ -242,7 +243,7 @@ private fun IntermediateStops(index: Int, leg: JourneyLeg.Transit, state: Detail
 private fun StopRow(visit: StopVisit) {
   val formatTime = rememberTimeFormatter()
   val time = visit.arrival ?: visit.departure
-  val name = visit.place.name
+  val name = placeLabel(visit.place.name, R.string.detail_place_unnamed)
   val text = if (visit.cancelled) stringResource(R.string.detail_stop_cancelled) else name
   Row(
     modifier = Modifier

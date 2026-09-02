@@ -10,6 +10,7 @@ import io.github.mgdx.escale.AppContainer
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyRefresh
 import io.github.mgdx.escale.core.model.SearchPreferences
+import io.github.mgdx.escale.core.model.withEndpointNames
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
@@ -134,7 +135,8 @@ class DetailViewModel(
     }
   }
 
-  private fun onDetailed(journey: Journey) {
+  private fun onDetailed(detailed: Journey) {
+    val journey = named(detailed)
     val previous = state.value.journey
     // Le repli peut rendre un trajet recomposé : les positions de portions ne désignent alors plus
     // les mêmes portions, et un dépliage restitué au mauvais endroit serait pire que pas de
@@ -167,11 +169,24 @@ class DetailViewModel(
   private fun initialState(): DetailUiState {
     val chosen = selection.selected.value ?: return DetailUiState(closed = true)
     return DetailUiState(
-      journey = chosen,
+      journey = named(chosen),
       expandedLegs = restored(KEY_LEGS),
       expandedStops = restored(KEY_STOPS),
       expandedSteps = restored(KEY_STEPS),
     )
+  }
+
+  /**
+   * Le trajet, ses extrémités anonymes nommées par ce que l'usager a saisi.
+   *
+   * MOTIS ne nomme pas un point envoyé en coordonnées : `:data` traduit ses marqueurs internes en
+   * absence de nom, et le seul endroit où le libellé existe encore est le brouillon de recherche.
+   * Le nommage est fait **ici**, et non à l'affichage, pour que le trajet republié dans
+   * `SelectedJourneyStore` en profite aussi : le lot « tracé » y lit le nom de ses marqueurs.
+   */
+  private fun named(journey: Journey): Journey {
+    val draft = session.draft.value
+    return journey.withEndpointNames(origin = draft.from?.name, destination = draft.to?.name)
   }
 
   private fun restored(key: String): Set<Int> = savedState.get<IntArray>(key)?.toSet().orEmpty()

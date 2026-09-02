@@ -25,6 +25,10 @@
   <string name="detail_timeline_description">Legs: %1$s</string>
   <string name="detail_origin">Departure</string>
   <string name="detail_destination">Arrival</string>
+  <!-- Dernier recours quand ni le serveur ni la saisie de l'usager ne nomment un point : MOTIS
+       ne nomme pas une extrémité envoyée en coordonnées, et ses marqueurs internes ne doivent
+       jamais s'afficher (docs/architecture.md § 1). -->
+  <string name="detail_place_unnamed">Unnamed place</string>
 
   <!-- Une portion se déplie d'un appui (SPEC.md § 5.3). -->
   <string name="detail_leg_expand">Show the details of this leg</string>

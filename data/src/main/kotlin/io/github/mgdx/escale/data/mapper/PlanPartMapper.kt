@@ -34,7 +34,7 @@ internal fun PlanPlaceDto.toDomain(prefersDeparture: Boolean, fallback: Instant)
   val actualRaw = if (prefersDeparture) departure ?: arrival else arrival ?: departure
   val scheduled = instantOrNull(scheduledRaw) ?: instantOrNull(actualRaw) ?: fallback
   return Place(
-    name = name,
+    name = placeName(name),
     coordinates = LatLon(lat = lat, lon = lon),
     stopId = stopId.trimToNull(),
     // Le quai temps réel prime sur celui de la base horaire, qui sert de repli.
@@ -133,6 +133,27 @@ internal fun instantOrNull(raw: String?): Instant? {
     null
   }
 }
+
+/**
+ * **`"START"` et `"END"` ne sont pas des noms de lieu.**
+ *
+ * Ce sont les marqueurs que MOTIS pose sur les extrémités d'un trajet exprimées en coordonnées :
+ * une adresse envoyée en `lat,lon` revient nommée `"END"`, là où un arrêt envoyé par son `stopId`
+ * revient avec son vrai nom. Le schéma `Place` rend `name` obligatoire, si bien que le serveur
+ * doit écrire quelque chose ; ces deux valeurs ne sont documentées nulle part dans
+ * `docs/motis-openapi.yaml`, et les laisser passer fait remonter du vocabulaire d'API jusqu'à
+ * l'écran (docs/architecture.md § 1 et § 2).
+ *
+ * Elles valent donc « pas de nom », exactement comme la chaîne vide que renvoient `from` et `to`
+ * à la racine de la réponse. C'est ensuite à l'interface de nommer ce point — par ce que l'usager
+ * a saisi, ou par un libellé traduit.
+ *
+ * La comparaison est **sensible à la casse** : le serveur émet ces marqueurs en capitales, et un
+ * arrêt qui s'appellerait « Start » ne doit pas disparaître pour autant.
+ */
+internal fun placeName(raw: String): String = raw.trim().takeUnless { it in PLACE_NAME_SENTINELS }.orEmpty()
+
+private val PLACE_NAME_SENTINELS = setOf("START", "END")
 
 /** Une chaîne vide ou blanche de l'API vaut « champ absent » côté domaine. */
 internal fun String?.trimToNull(): String? = this?.trim()?.ifEmpty { null }

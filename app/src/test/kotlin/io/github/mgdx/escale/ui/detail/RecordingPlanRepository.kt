@@ -94,6 +94,21 @@ internal fun journeyOf(id: String?, legs: List<JourneyLeg> = listOf(walkLeg(0, 5
   legs = legs,
 )
 
+/**
+ * Une portion à pied dont les deux bouts sont anonymes : c'est ce que rend le serveur pour un
+ * trajet exprimé en coordonnées, où il pose ses marqueurs `"START"` et `"END"` que `:data`
+ * traduit en absence de nom.
+ */
+internal fun anonymousWalkLeg(from: Long, to: Long) = JourneyLeg.Walk(
+  startTime = at(from),
+  endTime = at(to),
+  scheduledStartTime = at(from),
+  scheduledEndTime = at(to),
+  duration = Duration.ofMinutes(to - from),
+  from = place("", at(from)),
+  to = place("", at(to)),
+)
+
 /** Une recherche complète : sans elle, `SearchSession.toQuery` rend `null` et le repli est impossible. */
 internal fun sessionWithSearch(): SearchSession = SearchSession().apply {
   setFrom(Location(null, "Bercy", null, LatLon(48.84, 2.38), PlaceKind.ADDRESS))

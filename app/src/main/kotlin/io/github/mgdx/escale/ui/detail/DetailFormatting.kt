@@ -136,6 +136,18 @@ internal fun RentalReturnConstraint?.labelRes(): Int = when (this) {
 }
 
 /**
+ * Le nom d'un point du trajet, garanti lisible.
+ *
+ * MOTIS ne nomme pas une extrémité envoyée en coordonnées : `:data` traduit ses marqueurs internes
+ * `"START"` et `"END"` en absence de nom, et `DetailViewModel` y substitue ce que l'usager a saisi.
+ * Ce dernier repli ne sert donc que lorsque même cela manque — après la mort du processus, par
+ * exemple, où le brouillon de recherche est vide. **Aucun vocabulaire d'API ne doit s'afficher.**
+ */
+@Composable
+internal fun placeLabel(name: String, @StringRes genericRes: Int): String =
+  name.takeIf(String::isNotBlank) ?: stringResource(genericRes)
+
+/**
  * Une distance mise en forme dans la langue de l'usager : « 450 m », « 2,3 km ».
  *
  * L'arrondi vient de `:core` ; seule la ponctuation du nombre est ici, parce qu'elle dépend de la
