@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -31,6 +32,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
@@ -137,10 +139,13 @@ private fun JourneyHeader(journey: Journey) {
  */
 @Composable
 private fun JourneyTimelineRow(segments: List<TimelineSegment>) {
+  // La frise est un graphique, mais elle porte du texte : sa hauteur suit donc l'agrandissement des
+  // polices, plafonné à 200 %, sans quoi le nom de ligne y serait à l'étroit (SPEC.md § 9).
+  val scale = LocalDensity.current.fontScale.coerceIn(1f, MAX_FONT_SCALE)
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .height(TimelineHeight)
+      .height(TimelineHeight * scale)
       .clearAndSetSemantics { },
     horizontalArrangement = Arrangement.spacedBy(TimelineGap),
   ) {
@@ -158,21 +163,45 @@ private fun RowScope.TimelineSegmentBox(segment: TimelineSegment) {
       .weight(segment.weight)
       .fillMaxHeight()
       .clip(RoundedCornerShape(SegmentCorner))
-      .background(background),
+      .background(background)
+      .padding(horizontal = SegmentPadding),
     contentAlignment = Alignment.Center,
   ) {
-    // Sous une certaine largeur, un pictogramme n'est plus qu'une tache : le segment reste alors
-    // une simple barre de couleur, et le libellé sous la frise dit ce qu'elle est.
-    if (segment.weight >= MIN_WEIGHT_FOR_ICON) {
-      Icon(
-        painter = painterResource(if (leg.cancelled) R.drawable.ic_cancel else leg.modeIcon()),
-        contentDescription = null,
-        modifier = Modifier.size(SegmentIconSize),
-        tint = content,
-      )
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(SegmentGap),
+    ) {
+      // Sous une certaine largeur, un pictogramme n'est plus qu'une tache : le segment reste alors
+      // une simple barre de couleur, et le libellé sous la frise dit ce qu'elle est.
+      if (segment.weight >= MIN_WEIGHT_FOR_ICON) {
+        Icon(
+          painter = painterResource(if (leg.cancelled) R.drawable.ic_cancel else leg.modeIcon()),
+          contentDescription = null,
+          modifier = Modifier.size(SegmentIconSize),
+          tint = content,
+        )
+      }
+      // Le nom de ligne dans la frise, quand le segment est assez large pour l'accueillir. Il est
+      // coupé plutôt que renvoyé à la ligne : ce n'est qu'un rappel visuel, la même information est
+      // écrite en entier juste en dessous, et c'est elle que lisent les lecteurs d'écran.
+      val line = (leg as? JourneyLeg.Transit)?.lineLabel()
+      if (line != null && segment.weight >= MIN_WEIGHT_FOR_LINE) {
+        Text(
+          text = line,
+          style = MaterialTheme.typography.labelMedium,
+          color = content,
+          maxLines = 1,
+          softWrap = false,
+          overflow = TextOverflow.Clip,
+        )
+      }
     }
   }
 }
+
+/** Le libellé de ligne arbitré par le serveur : le numéro court s'il existe, sinon `displayName`. */
+private fun JourneyLeg.Transit.lineLabel(): String? =
+  (routeShortName?.takeIf(String::isNotBlank) ?: lineName).takeIf(String::isNotBlank)
 
 /** La couleur d'une portion : celle de la ligne quand le serveur la publie, sinon celle du thème. */
 @Composable
@@ -216,8 +245,7 @@ private fun legendOf(journey: Journey): String {
 @Composable
 private fun legLabel(leg: JourneyLeg): String {
   val mode = stringResource(leg.modeLabel())
-  val line = (leg as? JourneyLeg.Transit)?.let { it.routeShortName?.takeIf(String::isNotBlank) ?: it.lineName }
-  val detail = line?.takeIf(String::isNotBlank) ?: durationText(leg.duration)
+  val detail = (leg as? JourneyLeg.Transit)?.lineLabel() ?: durationText(leg.duration)
   return stringResource(R.string.results_leg_detail, mode, detail)
 }
 
@@ -301,6 +329,12 @@ private fun StatusLine(@DrawableRes icon: Int, text: String, color: Color) {
 /** En deçà, le pictogramme d'un segment de frise n'est plus qu'une tache. */
 private const val MIN_WEIGHT_FOR_ICON = 0.12f
 
+/** En deçà, le nom de ligne n'a pas la place de tenir dans le segment. */
+private const val MIN_WEIGHT_FOR_LINE = 0.22f
+
+/** SPEC.md § 9 demande la lisibilité jusqu'à 200 % : au-delà, la frise cesse de grandir. */
+private const val MAX_FONT_SCALE = 2f
+
 private val CardPadding: Dp = 16.dp
 private val CardSpacing: Dp = 8.dp
 private val HeaderSpacing: Dp = 4.dp
@@ -310,3 +344,5 @@ private val TimelineHeight: Dp = 24.dp
 private val TimelineGap: Dp = 2.dp
 private val SegmentCorner: Dp = 4.dp
 private val SegmentIconSize: Dp = 16.dp
+private val SegmentPadding: Dp = 4.dp
+private val SegmentGap: Dp = 2.dp
