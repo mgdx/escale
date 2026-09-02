@@ -1,0 +1,140 @@
+[
+  {
+    "name": "Châtelet - Les Halles",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:474151",
+    "importance": 0.0030074233654886484,
+    "lat": 48.86174392700195,
+    "lon": 2.3469765186309814,
+    "level": -5.0,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "REGIONAL_RAIL"
+    ]
+  },
+  {
+    "name": "Châtelet",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71264",
+    "importance": 0.006790424231439829,
+    "lat": 48.85835266113281,
+    "lon": 2.3484909534454346,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ]
+  },
+  {
+    "name": "Cité",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71223",
+    "importance": 0.0014532048953697085,
+    "lat": 48.85533142089844,
+    "lon": 2.3469479084014893,
+    "level": -2.0,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ]
+  },
+  {
+    "name": "Louvre - Rivoli",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:73630",
+    "importance": 0.001511869952082634,
+    "lat": 48.860897064208984,
+    "lon": 2.340635299682617,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ]
+  },
+  {
+    "name": "Les Halles - Centre Georges Pompidou",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:420150",
+    "importance": 9.469116776017472e-06,
+    "lat": 48.86100769042969,
+    "lon": 2.349759578704834,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  },
+  {
+    "name": "Pont des Arts - Quai de Conti",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71239",
+    "importance": 9.731584214023314e-06,
+    "lat": 48.85761642456055,
+    "lon": 2.337644338607788,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  },
+  {
+    "name": "Pont des Arts",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71248",
+    "importance": 1.3976010450278409e-05,
+    "lat": 48.859039306640625,
+    "lon": 2.338484764099121,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  },
+  {
+    "name": "Pont Neuf - Quai des Orfèvres",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71228",
+    "importance": 5.075330591353122e-06,
+    "lat": 48.85654830932617,
+    "lon": 2.3415422439575195,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  },
+  {
+    "name": "Pont Neuf - Quai des Grands Augustins",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:74042",
+    "importance": 2.552891237428412e-05,
+    "lat": 48.856056213378906,
+    "lon": 2.340144634246826,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  },
+  {
+    "name": "Pont Neuf",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71253",
+    "importance": 0.0012519506271928549,
+    "lat": 48.8589973449707,
+    "lon": 2.343010663986206,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "SUBWAY",
+      "BUS"
+    ]
+  },
+  {
+    "name": "Mazarine / Saint-André des Arts",
+    "stopId": "fr-reseau-urbain-et-interurbain-dile-de-france-mobilites_IDFM:71218",
+    "importance": 1.5254993741109502e-05,
+    "lat": 48.85429763793945,
+    "lon": 2.338395118713379,
+    "tz": "Europe/Paris",
+    "vertexType": "TRANSIT",
+    "modes": [
+      "BUS"
+    ]
+  }
+]
