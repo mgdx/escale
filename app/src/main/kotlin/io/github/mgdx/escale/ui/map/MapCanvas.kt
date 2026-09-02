@@ -140,8 +140,8 @@ fun MapCanvas(
     val styleJson = state.styleJson ?: return@LaunchedEffect
     loadedStyle = null
     target.setStyle(Style.Builder().fromJson(styleJson)) { style ->
-      // Le tracé d'abord, les arrêts par-dessus, puis la position de l'usager et le point choisi,
-      // qui restent au-dessus de tout.
+      // Le tracé d'abord, les arrêts par-dessus ses traits mais sous ses marqueurs, puis la
+      // position de l'usager et le point choisi, qui restent au-dessus de tout.
       style.installJourneyTraceLayers(traceColors, markerIcons)
       style.installStopLayers(stopColors, stopIcons)
       style.installOverlayLayers(colors)

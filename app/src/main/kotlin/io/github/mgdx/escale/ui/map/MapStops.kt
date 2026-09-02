@@ -126,11 +126,14 @@ fun Style.installStopLayers(colors: MapStopColors, icons: Map<StopIcon, Bitmap>)
   )
   icons.forEach { (icon, bitmap) -> addImage(icon.imageId, bitmap) }
 
-  // La source regroupante d'abord : ses pastilles chiffrées passent derrière les arrêts détaillés.
-  addLayer(clusterCircleLayer(colors))
-  addLayer(clusterCountLayer(colors))
+  // Sous les libellés de rue du fond de carte, comme les traits du trajet : les arrêts se posent
+  // au-dessus des tracés, et les marqueurs de départ et d'arrivée restent au-dessus d'eux. Chaque
+  // ajout se glisse juste sous les libellés, donc au-dessus du précédent : les pastilles de
+  // regroupement passent derrière les arrêts détaillés.
+  addLayerUnderLabels(clusterCircleLayer(colors))
+  addLayerUnderLabels(clusterCountLayer(colors))
   for (source in listOf(STOPS_SOURCE, STOPS_CLUSTERED_SOURCE)) {
-    for (tier in STOP_TIERS) addLayer(stopLayer(source, tier, colors))
+    for (tier in STOP_TIERS) addLayerUnderLabels(stopLayer(source, tier, colors))
   }
 }
 

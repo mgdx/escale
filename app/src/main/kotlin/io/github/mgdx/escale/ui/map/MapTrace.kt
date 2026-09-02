@@ -195,7 +195,7 @@ private fun markerLayer(kind: TraceMarkerKind, colors: MapTraceColors): SymbolLa
  * La feuille neutre d'un serveur sans tuiles n'a qu'un fond : il n'y a alors rien sous quoi se
  * glisser, et le tracé se pose simplement par-dessus (SPEC.md § 5.7).
  */
-private fun Style.addLayerUnderLabels(layer: Layer) {
+internal fun Style.addLayerUnderLabels(layer: Layer) {
   if (getLayer(STREET_LABELS_LAYER) != null) addLayerBelow(layer, STREET_LABELS_LAYER) else addLayer(layer)
 }
 
@@ -284,7 +284,7 @@ private const val JOURNEY_CASING_LAYER = "$JOURNEY_PREFIX-casing"
 private const val JOURNEY_LINE_LABEL_LAYER = "$JOURNEY_PREFIX-line-label"
 
 /** La couche de libellés de rue des feuilles de `res/raw`, sous laquelle les traits se glissent. */
-private const val STREET_LABELS_LAYER = "street-labels"
+internal const val STREET_LABELS_LAYER = "street-labels"
 
 /** La seule fonte que le serveur MOTIS sert en glyphes, et celle qu'emploient les feuilles. */
 private const val LABEL_FONT = "Noto Sans Bold"
