@@ -22,8 +22,6 @@ object SearchTime {
   /** Au-delà d'une semaine, le jour de la semaine ne suffit plus à situer une date. */
   private const val WEEKDAY_HORIZON_DAYS = 7L
 
-  private const val TIME_24_HOUR = "HH:mm"
-  private const val TIME_12_HOUR = "h:mm a"
   private const val WEEKDAY_PREFIX = "EEE "
   private const val DATE_PREFIX = "d MMM "
 
@@ -36,7 +34,8 @@ object SearchTime {
    *   ambigu.
    *
    * @param zone le fuseau de l'appareil : une heure de départ se lit toujours en heure locale.
-   * @param use24Hour le réglage 12 h / 24 h du système, que `:core` ne peut pas lire lui-même.
+   * @param use24Hour le format d'heure retenu, tel que `ClockFormat.uses24Hour(...)` le résout à
+   *   partir du réglage de l'usager (SPEC.md § 5.6) et de celui du système.
    * @param reference l'instant qui sert de « maintenant », paramétrable pour les tests.
    */
   fun format(
@@ -49,7 +48,8 @@ object SearchTime {
     val target = instant.atZone(zone)
     val today = reference.atZone(zone).toLocalDate()
     val date = target.toLocalDate()
-    val time = if (use24Hour) TIME_24_HOUR else TIME_12_HOUR
+    // Le motif d'heure vient de [ClockTime] : 12 h ou 24 h se décide à un seul endroit.
+    val time = ClockTime.pattern(use24Hour)
     val prefix = when {
       date == today -> ""
       date.isAfter(today) && date.isBefore(today.plusDays(WEEKDAY_HORIZON_DAYS)) -> WEEKDAY_PREFIX
