@@ -33,11 +33,12 @@ fun stopMarkers(stops: List<Stop>): List<StopMarker> = stops.map { stop ->
  * Le palier à partir duquel un arrêt s'affiche (tableau de SPEC.md § 5.7).
  *
  * Gares et stations de métro dès le zoom 11, tout le reste à partir du zoom 13. La liste des modes
- * ferrés lourds est celle de la spec, mot pour mot, et vit dans `TransitMode.HEAVY_RAIL_MODES`.
+ * du palier 11 vit dans `TransitMode.HEAVY_RAIL_MODES`, où l'on trouvera pourquoi elle est plus
+ * longue que celle du § 5.7 : `RAIL` y est une valeur **parapluie** qu'il faut développer avant de
+ * s'en servir comme filtre.
  *
- * Un arrêt que le serveur rend à une requête de palier 11 sans porter l'un de ces modes — cela
- * arrive sur un arrêt regroupé dont le serveur ne publie que le mode d'un enfant — n'apparaît qu'au
- * zoom 13. C'est le tableau de la spec qui fait foi, pas la générosité du serveur.
+ * C'est bien le tableau de la spec qui fait foi, mais lu avec l'enum `Mode` de l'OpenAPI en main :
+ * un arrêt que MOTIS annonce en `REGIONAL_RAIL` seul est une gare, et il s'affiche dès le zoom 11.
  */
 fun stopTier(modes: List<TransitMode>): ZoomTier =
   if (modes.any { it in TransitMode.HEAVY_RAIL_MODES }) ZoomTier.MAJOR_STATIONS else ZoomTier.ALL_STOPS

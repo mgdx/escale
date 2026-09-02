@@ -65,16 +65,17 @@ enum class ZoomTier(val minZoom: Double) {
 
     /**
      * À partir du zoom 13, les modes de surface s'ajoutent aux modes ferrés lourds
-     * (SPEC.md § 5.7). `TRANSIT` est une valeur agrégée qui demanderait tout, et `OTHER` n'existe
-     * que côté application : ni l'une ni l'autre n'a sa place dans une requête.
+     * (SPEC.md § 5.7). `TRANSIT` est un **parapluie** qui demanderait tout, et `OTHER` n'existe
+     * que côté application : ni l'un ni l'autre n'a sa place ici.
+     *
+     * `NIGHT_RAIL` et `REGIONAL_RAIL` ne sont pas répétés : ils appartiennent déjà au parapluie
+     * `RAIL`, donc à `HEAVY_RAIL_MODES` (voir sa documentation).
      */
     private val ALL_TRANSIT_MODES: Set<TransitMode> = TransitMode.HEAVY_RAIL_MODES + setOf(
       TransitMode.TRAM,
       TransitMode.BUS,
       TransitMode.COACH,
       TransitMode.FERRY,
-      TransitMode.NIGHT_RAIL,
-      TransitMode.REGIONAL_RAIL,
       TransitMode.FUNICULAR,
       TransitMode.AERIAL_LIFT,
       TransitMode.AIRPLANE,

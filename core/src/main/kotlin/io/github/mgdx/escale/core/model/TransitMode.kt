@@ -88,7 +88,30 @@ enum class TransitMode {
     /**
      * Paliers de zoom de la carte (SPEC.md § 5.7) : les modes ferrés lourds apparaissent dès le
      * zoom 11, le reste à partir du zoom 13.
+     *
+     * **Cette liste est plus longue que celle du § 5.7, et c'est voulu.** Le tableau de la spec
+     * écrit « `RAIL`, `HIGHSPEED_RAIL`, `LONG_DISTANCE`, `SUBURBAN`, `SUBWAY` », mais `RAIL` n'est
+     * pas une feuille : `docs/motis-openapi.yaml` ligne 3845 le décrit comme un **parapluie**,
+     * « `RAIL`: translates to `HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,REGIONAL_RAIL,SUBURBAN,SUBWAY` ».
+     * Le palier du zoom 11 contient donc déjà `NIGHT_RAIL` et `REGIONAL_RAIL` : les développer ici
+     * ne change pas la requête — le serveur développe le parapluie lui-même —, cela corrige le
+     * **filtrage d'affichage côté client**, qui compare les modes rendus par le serveur à cet
+     * ensemble. Sans eux, Châtelet - Les Halles, que MOTIS annonce en `REGIONAL_RAIL` seul, ne
+     * s'affichait qu'à partir du zoom 13.
+     *
+     * `RAIL` lui-même y reste : rien n'interdit à un serveur de le renvoyer tel quel sur un arrêt.
+     *
+     * **N'abrégez pas cette liste pour la faire coïncider mot pour mot avec le § 5.7** : ce serait
+     * confondre une valeur parapluie avec une feuille, et rendre invisibles la moitié des gares.
      */
-    val HEAVY_RAIL_MODES = setOf(RAIL, HIGHSPEED_RAIL, LONG_DISTANCE, SUBURBAN, SUBWAY)
+    val HEAVY_RAIL_MODES = setOf(
+      RAIL,
+      HIGHSPEED_RAIL,
+      LONG_DISTANCE,
+      NIGHT_RAIL,
+      REGIONAL_RAIL,
+      SUBURBAN,
+      SUBWAY,
+    )
   }
 }
