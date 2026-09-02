@@ -175,8 +175,29 @@ class JourneyMapperTest {
   }
 
   @Test
-  fun `une perturbation est reprise avec sa gravite, sa cause et sa periode d impact`() = runTest {
+  fun `une perturbation reelle est reprise avec son titre, son lien et sa periode d impact`() = runTest {
+    // Capture réelle sur api.transitous.org : deux trajets en tram portent le même message du
+    // réseau, dont la période d'impact est à venir. C'est le cas courant — les alertes riches en
+    // métadonnées sont rares, d'où la fixture enrichie ci-dessous.
     val page = PlanTestSupport.page("plan_with_alerts.json", backgroundScope)
+    val disruption = page.journeys.flatMap { it.alerts }.distinct().single()
+    assertEquals("Le 05 & 06/09 : Triathlon de Bordeaux !", disruption.headerText)
+    assertTrue(disruption.descriptionText.isNotBlank())
+    assertEquals("https://www.infotbm.com/fr/perturbations", disruption.url)
+    // Le serveur ne publie pas toujours la gravité : l'absence se traduit en `UNKNOWN_SEVERITY`,
+    // jamais en gravité inventée.
+    assertEquals(DisruptionSeverity.UNKNOWN_SEVERITY, disruption.severity)
+    assertEquals(DisruptionCause.UNKNOWN_CAUSE, disruption.cause)
+    assertEquals(DisruptionEffect.OTHER_EFFECT, disruption.effect)
+    assertEquals(Instant.parse("2026-09-05T06:00:00Z"), disruption.periods.single().start)
+    assertEquals(Instant.parse("2026-09-06T18:00:00Z"), disruption.periods.single().end)
+  }
+
+  @Test
+  fun `une perturbation est reprise avec sa gravite, sa cause et sa periode d impact`() = runTest {
+    // Fixture **enrichie à la main** : aucune alerte réellement capturée ne portait à la fois
+    // `severityLevel`, `cause` et `effect`, et ces trois champs doivent tout de même être mappés.
+    val page = PlanTestSupport.page("plan_with_alerts_enriched.json", backgroundScope)
     val disruption = page.journeys.single().alerts.single()
     assertEquals("Umleitung der Linie S2", disruption.headerText)
     assertEquals(DisruptionSeverity.WARNING, disruption.severity)

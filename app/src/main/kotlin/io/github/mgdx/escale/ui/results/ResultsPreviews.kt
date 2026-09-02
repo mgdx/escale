@@ -147,6 +147,8 @@ private val previewState = ResultsUiState(
         previousPageCursor = "avant",
         nextPageCursor = "apres",
       ),
+      // L'heure du chargement : c'est elle qui décide des perturbations « en vigueur ».
+      loadedAt = ORIGIN,
     ),
   ),
   selectedKey = "transit",

@@ -38,10 +38,29 @@
   <string name="results_delay_late">%1$s late</string>
   <string name="results_delay_early">%1$s early</string>
   <string name="results_cancelled">Cancelled</string>
+  <string name="results_journey_cancelled">Trip cancelled</string>
+  <string name="results_leg_cancelled">%1$s — cancelled</string>
   <plurals name="results_disruptions">
     <item quantity="one">%d service alert</item>
     <item quantity="other">%d service alerts</item>
   </plurals>
+
+  <!-- Bandeau des perturbations en vigueur (SPEC.md § 5.2 et § 5.3). La gravité est écrite en
+       toutes lettres : SPEC.md § 9 interdit de la confier à la seule couleur. Ces mots servent
+       aussi à l'écran de détail. -->
+  <plurals name="results_disruptions_in_effect">
+    <item quantity="one">%d service alert in effect</item>
+    <item quantity="other">%d service alerts in effect</item>
+  </plurals>
+  <plurals name="results_disruptions_upcoming">
+    <item quantity="one">%d planned service alert</item>
+    <item quantity="other">%d planned service alerts</item>
+  </plurals>
+  <string name="results_alert_severity">Severity: %1$s</string>
+  <string name="results_alert_severity_info">Information</string>
+  <string name="results_alert_severity_warning">Warning</string>
+  <string name="results_alert_severity_severe">Major disruption</string>
+  <string name="results_alert_severity_unknown">Service alert</string>
 
   <!-- Frise des portions : le pictogramme de mode est toujours doublé d'un libellé (SPEC.md § 9). -->
   <string name="results_timeline_description">Legs: %1$s</string>

@@ -345,6 +345,9 @@ private fun JourneyColumn(
       JourneyCard(
         journey = journey,
         isSelected = journey.stableKey() == state.selectedKey,
+        // Les perturbations « en vigueur » se jugent à l'heure du chargement des horaires
+        // affichés, et non à la seconde près : sans quoi la liste se recomposerait sans fin.
+        at = tab.loadedAt,
         onSelect = { actions.onJourneySelected(journey) },
       )
     }

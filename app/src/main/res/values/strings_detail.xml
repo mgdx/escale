@@ -59,11 +59,8 @@
   <!-- Jalon 9 : l'écran « détail de la course ». La commande n'apparaît que branchée. -->
   <string name="detail_trip_action">Show every stop of this service</string>
 
-  <!-- Perturbations (SPEC.md § 5.3) : titre, description, gravité, période, lien. -->
-  <string name="detail_alert_severity_info">Information</string>
-  <string name="detail_alert_severity_warning">Warning</string>
-  <string name="detail_alert_severity_severe">Major disruption</string>
-  <string name="detail_alert_severity_unknown">Service alert</string>
+  <!-- Perturbations (SPEC.md § 5.3) : titre, description, gravité, période, lien. Les mots de la
+       gravité sont dans strings_results.xml : le bandeau de la liste les emploie aussi. -->
   <string name="detail_alert_period">From %1$s to %2$s</string>
   <string name="detail_alert_period_from">From %1$s</string>
   <string name="detail_alert_period_until">Until %1$s</string>

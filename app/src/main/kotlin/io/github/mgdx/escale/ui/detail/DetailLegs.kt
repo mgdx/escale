@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
@@ -45,6 +46,7 @@ import io.github.mgdx.escale.core.model.TravelStep
 import io.github.mgdx.escale.core.model.travelSteps
 import io.github.mgdx.escale.ui.results.delayColor
 import io.github.mgdx.escale.ui.results.durationText
+import io.github.mgdx.escale.ui.results.labelRes
 import io.github.mgdx.escale.ui.results.modeIcon
 import io.github.mgdx.escale.ui.results.modeLabel
 import io.github.mgdx.escale.ui.results.rememberTimeFormatter
@@ -102,8 +104,11 @@ private fun LegHeader(leg: JourneyLeg, expanded: Boolean) {
       modifier = Modifier.size(HeaderIconSize),
       tint = MaterialTheme.colorScheme.primary,
     )
+    // Une portion supprimée est barrée, en plus du pictogramme et de la mention en toutes lettres
+    // que porte la ligne d'état juste en dessous (SPEC.md § 5.2 et § 9).
+    val strike = if (leg.cancelled) TextDecoration.LineThrough else null
     Column(modifier = Modifier.weight(1f)) {
-      Text(text = legTitle(leg), style = MaterialTheme.typography.titleMedium)
+      Text(text = legTitle(leg), style = MaterialTheme.typography.titleMedium, textDecoration = strike)
       val subtitle = legSubtitle(leg)
       if (subtitle != null) {
         Text(
@@ -114,8 +119,16 @@ private fun LegHeader(leg: JourneyLeg, expanded: Boolean) {
       }
     }
     Column(horizontalAlignment = Alignment.End) {
-      Text(text = formatTime(leg.startTime), style = MaterialTheme.typography.bodyMedium)
-      Text(text = formatTime(leg.endTime), style = MaterialTheme.typography.bodyMedium)
+      Text(
+        text = formatTime(leg.startTime),
+        style = MaterialTheme.typography.bodyMedium,
+        textDecoration = strike,
+      )
+      Text(
+        text = formatTime(leg.endTime),
+        style = MaterialTheme.typography.bodyMedium,
+        textDecoration = strike,
+      )
     }
     Icon(
       painter = painterResource(if (expanded) R.drawable.ic_expand_less else R.drawable.ic_expand_more),
@@ -255,6 +268,9 @@ private fun StopRow(visit: StopVisit) {
       text = if (visit.cancelled) stringResource(R.string.results_summary, name, text) else name,
       style = MaterialTheme.typography.bodyMedium,
       color = if (visit.cancelled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+      // Un arrêt non desservi est barré, et le mot « Supprimé » suit son nom : le trait seul ne
+      // dirait rien à qui écoute l'écran (SPEC.md § 9).
+      textDecoration = if (visit.cancelled) TextDecoration.LineThrough else null,
       modifier = Modifier.weight(1f),
     )
     if (time != null) {
@@ -262,6 +278,7 @@ private fun StopRow(visit: StopVisit) {
         text = formatTime(time),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textDecoration = if (visit.cancelled) TextDecoration.LineThrough else null,
       )
     }
   }

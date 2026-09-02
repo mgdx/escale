@@ -42,10 +42,6 @@
 
   <string name="detail_trip_action">Voir la desserte complète de cette course</string>
 
-  <string name="detail_alert_severity_info">Information</string>
-  <string name="detail_alert_severity_warning">Avertissement</string>
-  <string name="detail_alert_severity_severe">Perturbation majeure</string>
-  <string name="detail_alert_severity_unknown">Perturbation</string>
   <string name="detail_alert_period">Du %1$s au %2$s</string>
   <string name="detail_alert_period_from">À partir du %1$s</string>
   <string name="detail_alert_period_until">Jusqu\'au %1$s</string>

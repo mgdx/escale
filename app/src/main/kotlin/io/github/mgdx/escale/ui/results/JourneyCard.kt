@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,17 +44,28 @@ import io.github.mgdx.escale.core.format.TimeStatus
 import io.github.mgdx.escale.core.format.TimelineSegment
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
+import java.time.Instant
 
 /**
  * Une carte de résultat : un trajet proposé (SPEC.md § 5.2).
  *
  * Tout ce qui est porté par une couleur est aussi porté par un texte et une icône — retard,
- * suppression, perturbation (SPEC.md § 9). Rien n'est tronqué à 200 % d'agrandissement : la frise
- * est un graphique de hauteur fixe, et l'information qu'elle porte est reprise juste en dessous,
- * en toutes lettres, sur autant de lignes qu'il faut.
+ * suppression, perturbation (SPEC.md § 9). Un trajet dont une portion est supprimée voit ses
+ * heures barrées, en plus de la mention et du pictogramme. Rien n'est tronqué à 200 %
+ * d'agrandissement : la frise est un graphique de hauteur fixe, et l'information qu'elle porte est
+ * reprise juste en dessous, en toutes lettres, sur autant de lignes qu'il faut.
+ *
+ * @param at l'instant auquel juger qu'une perturbation est en vigueur : l'heure du chargement des
+ *   horaires affichés (SPEC.md § 5.2).
  */
 @Composable
-internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> Unit, modifier: Modifier = Modifier) {
+internal fun JourneyCard(
+  journey: Journey,
+  isSelected: Boolean,
+  at: Instant?,
+  onSelect: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
   val status = TimeStatus.of(journey)
   val legend = legendOf(journey)
   val legendDescription = stringResource(R.string.results_timeline_description, legend)
@@ -82,7 +94,7 @@ internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> 
       modifier = Modifier.padding(CardPadding),
       verticalArrangement = Arrangement.spacedBy(CardSpacing),
     ) {
-      JourneyHeader(journey)
+      JourneyHeader(journey, cancelled = status.cancelled)
       JourneyTimelineRow(JourneyTimeline.of(journey))
       Text(
         text = legend,
@@ -93,6 +105,7 @@ internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> 
         modifier = Modifier.semantics { contentDescription = legendDescription },
       )
       JourneyStatusLines(journey, status)
+      DisruptionBanner(alerts = journey.alerts, at = at)
       if (isSelected) {
         StatusLine(
           icon = R.drawable.ic_map,
@@ -106,7 +119,7 @@ internal fun JourneyCard(journey: Journey, isSelected: Boolean, onSelect: () -> 
 
 /** Heures de départ et d'arrivée, durée totale, nombre de correspondances (SPEC.md § 5.2). */
 @Composable
-private fun JourneyHeader(journey: Journey) {
+private fun JourneyHeader(journey: Journey, cancelled: Boolean) {
   val formatTime = rememberTimeFormatter()
   val departure = formatTime(journey.startTime)
   val arrival = formatTime(journey.endTime)
@@ -120,6 +133,9 @@ private fun JourneyHeader(journey: Journey) {
     Text(
       text = stringResource(R.string.results_time_range, departure, arrival),
       style = MaterialTheme.typography.titleMedium,
+      // Des heures barrées pour un trajet dont une portion est supprimée : le trait dit ce que la
+      // ligne d'état écrit juste en dessous, il ne le remplace pas (SPEC.md § 9).
+      textDecoration = if (cancelled) TextDecoration.LineThrough else null,
       modifier = Modifier.semantics { contentDescription = timesDescription },
     )
     Row(
@@ -256,7 +272,10 @@ private fun legendOf(journey: Journey): String {
 private fun legLabel(leg: JourneyLeg): String {
   val mode = stringResource(leg.modeLabel())
   val detail = (leg as? JourneyLeg.Transit)?.lineLabel() ?: durationText(leg.duration)
-  return stringResource(R.string.results_leg_detail, mode, detail)
+  val label = stringResource(R.string.results_leg_detail, mode, detail)
+  // La frise ne peut pas barrer un segment : c'est le résumé en toutes lettres qui dit laquelle
+  // des portions est supprimée, et le lecteur d'écran l'entend comme tel (SPEC.md § 9).
+  return if (leg.cancelled) stringResource(R.string.results_leg_cancelled, label) else label
 }
 
 /**
@@ -270,7 +289,7 @@ private fun JourneyStatusLines(journey: Journey, status: TimeStatus) {
   if (status.cancelled) {
     StatusLine(
       icon = R.drawable.ic_cancel,
-      text = stringResource(R.string.results_cancelled),
+      text = stringResource(R.string.results_journey_cancelled),
       color = MaterialTheme.colorScheme.error,
     )
   } else {
@@ -290,14 +309,6 @@ private fun JourneyStatusLines(journey: Journey, status: TimeStatus) {
         color = delayColor(delay.quality),
       )
     }
-  }
-  val alerts = journey.alerts
-  if (alerts.isNotEmpty()) {
-    StatusLine(
-      icon = R.drawable.ic_warning,
-      text = pluralStringResource(R.plurals.results_disruptions, alerts.size, alerts.size),
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
   }
   RentalLine(journey)
 }

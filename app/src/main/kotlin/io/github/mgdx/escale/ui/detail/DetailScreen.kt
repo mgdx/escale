@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +58,7 @@ import io.github.mgdx.escale.core.format.transitLineLabel
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.ui.common.ErrorMessage
+import io.github.mgdx.escale.ui.results.DisruptionBanner
 import io.github.mgdx.escale.ui.results.ForegroundEffect
 import io.github.mgdx.escale.ui.results.durationText
 import io.github.mgdx.escale.ui.results.modeIcon
@@ -205,6 +207,11 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
     item(key = SUMMARY_KEY) { DetailSummary(journey = journey, state = state) }
+    if (journey.alerts.isNotEmpty()) {
+      // Le bandeau des perturbations en vigueur, le même qu'en tête de carte de résultat
+      // (SPEC.md § 5.2). Le détail de chacune reste dans la portion qui la porte.
+      item(key = ALERTS_KEY) { DisruptionBanner(alerts = journey.alerts, at = state.refreshedAt) }
+    }
     if (state.error != null) {
       item(key = ERROR_KEY) { ErrorMessage(error = state.error, onRetry = actions.onRefresh) }
     }
@@ -252,6 +259,9 @@ private fun DetailSummary(journey: Journey, state: DetailUiState) {
       Text(
         text = stringResource(R.string.results_time_range, departure, arrival),
         style = MaterialTheme.typography.titleLarge,
+        // Comme sur la carte de résultat : des heures barrées quand une portion est supprimée,
+        // doublées de la mention en toutes lettres de `StatusLines` (SPEC.md § 9).
+        textDecoration = if (status.cancelled) TextDecoration.LineThrough else null,
         modifier = Modifier.semantics { contentDescription = description },
       )
       val transfers = transfersText(journey.transfers)
@@ -470,6 +480,7 @@ private fun transitHeading(line: JourneyShareLine.Transit): String {
 }
 
 private const val SUMMARY_KEY = "resume"
+private const val ALERTS_KEY = "perturbations"
 private const val ERROR_KEY = "erreur"
 private const val ORIGIN_KEY = "depart"
 private const val DESTINATION_KEY = "arrivee"
