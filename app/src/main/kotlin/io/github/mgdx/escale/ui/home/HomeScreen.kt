@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +54,7 @@ import io.github.mgdx.escale.ui.map.LocateButton
 import io.github.mgdx.escale.ui.map.LocateState
 import io.github.mgdx.escale.ui.map.LocationPermissionDialog
 import io.github.mgdx.escale.ui.map.MIN_TOUCH_TARGET
+import io.github.mgdx.escale.ui.map.MapCameraInsets
 import io.github.mgdx.escale.ui.map.MapCanvas
 import io.github.mgdx.escale.ui.map.MapCanvasActions
 import io.github.mgdx.escale.ui.map.MapInstance
@@ -60,6 +63,7 @@ import io.github.mgdx.escale.ui.map.MapUiState
 import io.github.mgdx.escale.ui.map.MapViewModel
 import io.github.mgdx.escale.ui.map.TileWarning
 import io.github.mgdx.escale.ui.map.manifestPermission
+import io.github.mgdx.escale.ui.map.mapCameraInsets
 
 /**
  * L'écran d'accueil : **la carte, en plein écran, du bord haut au bord bas** (SPEC.md § 5.1).
@@ -73,9 +77,10 @@ import io.github.mgdx.escale.ui.map.manifestPermission
  * - le lot **résultats** remplira [resultsSheet].
  *
  * Les deux emplacements ont une valeur par défaut vide : l'écran compile et s'affiche avant que
- * ces lots existent. Le `PaddingValues` transmis porte les encarts système, et la hauteur de la
- * feuille de résultats est mesurée ici pour devenir le `padding` de la caméra — c'est ce qui
- * permettra à un cadrage de trajet de tenir compte de la feuille ouverte (SPEC.md § 5.7, règle 9).
+ * ces lots existent. Le `PaddingValues` transmis porte les encarts système ; les hauteurs des deux
+ * emplacements, elles, sont mesurées ici pour devenir le `padding` de la caméra — c'est ce qui
+ * permet à un cadrage de trajet de tenir compte de la carte de recherche comme de la feuille
+ * ouverte (SPEC.md § 5.7, règle 9).
  *
  * @param onOpenSettings chemin vers les réglages. Tant que la carte de recherche est vide, c'est
  *   le seul accès aux réglages ; le lot « recherche » pourra le reprendre à son compte.
@@ -99,22 +104,24 @@ fun HomeScreen(
   LocationPermissionEffect(state, viewModel)
 
   val systemInsets = WindowInsets.safeDrawing.asPaddingValues()
-  var sheetHeightPx by remember { mutableIntStateOf(0) }
-  val sheetHeight = with(LocalDensity.current) { sheetHeightPx.toDp() }
+  val measured = remember { FloatingHeights() }
+  val sheetHeight = with(LocalDensity.current) { measured.sheetPx.toDp() }
   val bottomInset = maxOf(systemInsets.calculateBottomPadding(), sheetHeight)
+  val cameraInsets = cameraInsetsOf(systemInsets, measured)
   val actions = remember(viewModel) { viewModel.canvasActions() }
 
-  Box(modifier = modifier.fillMaxSize()) {
+  Box(modifier = modifier.fillMaxSize().onSizeChanged { measured.screenPx = it.height }) {
     FullScreenMap(
       state = state,
       mapInstance = container.mapInstance,
       actions = actions,
       systemInsets = systemInsets,
-      bottomInset = bottomInset,
+      cameraInsets = cameraInsets,
     )
 
-    // Emplacement du lot « recherche » : il se place lui-même sous la barre d'état.
-    searchCard(systemInsets)
+    // Emplacement du lot « recherche ». Sa hauteur est mesurée ici, comme celle de la feuille et
+    // pour la même raison : elle décide de la part de carte visible, donc du cadrage d'un trajet.
+    MeasuredSlot(Alignment.TopCenter, { measured.searchCardPx = it }) { searchCard(systemInsets) }
 
     if (state.tilesUnavailable) {
       // Juste au-dessus des commandes, et non en haut : le haut de l'écran appartient à la carte
@@ -145,24 +152,59 @@ fun HomeScreen(
 
     // Emplacement du lot « résultats ». Sa hauteur est mesurée ici, et non demandée au lot :
     // c'est ce qui permet de le brancher sans qu'il ait à connaître la carte.
-    Box(
-      modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .onSizeChanged { sheetHeightPx = it.height },
-    ) {
-      resultsSheet(systemInsets)
-    }
+    MeasuredSlot(Alignment.BottomCenter, { measured.sheetPx = it }) { resultsSheet(systemInsets) }
   }
 
   MapDialogs(state = state, viewModel = viewModel, uriHandler = uriHandler, context = context)
 }
 
 /**
+ * Les hauteurs mesurées à l'écran : les deux emplacements flottants, et la carte qui les porte.
+ *
+ * Elles sont dans un état mutable unique plutôt qu'en trois `remember` séparés, pour que le corps
+ * de [HomeScreen] reste lisible d'un bloc.
+ */
+@Stable
+private class FloatingHeights {
+  var searchCardPx by mutableIntStateOf(0)
+  var sheetPx by mutableIntStateOf(0)
+  var screenPx by mutableIntStateOf(0)
+}
+
+/**
+ * Le remplissage de la caméra : les encarts système, plus ce que les deux emplacements recouvrent.
+ *
+ * Un trajet cadré derrière la carte de recherche est aussi caché qu'un trajet cadré sous la
+ * feuille (SPEC.md § 5.1 et § 5.7, règle 9). La règle de calcul est dans `ui.map`, testée en JVM.
+ */
+@Composable
+private fun cameraInsetsOf(systemInsets: PaddingValues, measured: FloatingHeights): MapCameraInsets =
+  with(LocalDensity.current) {
+    mapCameraInsets(
+      systemTop = systemInsets.calculateTopPadding(),
+      systemBottom = systemInsets.calculateBottomPadding(),
+      searchCardHeight = measured.searchCardPx.toDp(),
+      resultsSheetHeight = measured.sheetPx.toDp(),
+      screenHeight = measured.screenPx.toDp(),
+    )
+  }
+
+/** Un emplacement dont la hauteur est mesurée : le lot qui le remplit n'a rien à en dire. */
+@Composable
+private fun BoxScope.MeasuredSlot(
+  alignment: Alignment,
+  onHeightChanged: (Int) -> Unit,
+  content: @Composable () -> Unit,
+) {
+  Box(modifier = Modifier.align(alignment).onSizeChanged { onHeightChanged(it.height) }) { content() }
+}
+
+/**
  * La carte, du bord haut au bord bas (SPEC.md § 5.1).
  *
- * Le `padding` de caméra reprend les encarts système et [bottomInset], qui vaut la hauteur de la
- * feuille de résultats quand elle est ouverte : c'est ce qui permettra à un cadrage de trajet de
- * ne pas se faire manger par la feuille (SPEC.md § 5.7, règle 9).
+ * Le `padding` de caméra reprend les encarts système latéraux et [cameraInsets], qui porte ce que
+ * la carte de recherche cache en haut et la feuille de résultats en bas : c'est ce qui permet à un
+ * cadrage de trajet de ne se faire manger ni par l'une ni par l'autre (SPEC.md § 5.7, règle 9).
  */
 @Composable
 private fun FullScreenMap(
@@ -170,7 +212,7 @@ private fun FullScreenMap(
   mapInstance: MapInstance,
   actions: MapCanvasActions,
   systemInsets: PaddingValues,
-  bottomInset: Dp,
+  cameraInsets: MapCameraInsets,
 ) {
   val direction = LocalLayoutDirection.current
   MapCanvas(
@@ -184,9 +226,9 @@ private fun FullScreenMap(
     ),
     contentPadding = PaddingValues(
       start = systemInsets.calculateStartPadding(direction),
-      top = systemInsets.calculateTopPadding(),
+      top = cameraInsets.top,
       end = systemInsets.calculateEndPadding(direction),
-      bottom = bottomInset,
+      bottom = cameraInsets.bottom,
     ),
     modifier = Modifier.fillMaxSize(),
   )
