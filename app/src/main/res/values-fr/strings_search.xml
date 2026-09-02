@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="search_from_label">Départ</string>
+  <string name="search_to_label">Arrivée</string>
+  <string name="search_from_hint">Choisir un point de départ</string>
+  <string name="search_to_hint">Choisir une destination</string>
+  <string name="search_swap">Inverser le départ et l\'arrivée</string>
+
+  <string name="search_time_now">Maintenant</string>
+  <string name="search_time_depart_at">Départ %1$s</string>
+  <string name="search_time_arrive_by">Arrivée avant %1$s</string>
+  <string name="search_time_change">Modifier l\'heure du trajet</string>
+
+  <string name="search_time_title">Quand partez-vous ?</string>
+  <string name="search_time_option_now">Partir maintenant</string>
+  <string name="search_time_option_depart">Partir à…</string>
+  <string name="search_time_option_arrive">Arriver avant…</string>
+  <string name="search_time_pick_date">Choisir la date</string>
+  <string name="search_time_pick_time">Choisir l\'heure</string>
+  <string name="search_action_next">Suivant</string>
+  <string name="search_action_confirm">Valider</string>
+  <string name="search_action_cancel">Annuler</string>
+
+  <string name="search_clear">Effacer le champ</string>
+  <string name="search_loading">Recherche en cours…</string>
+  <string name="search_no_results">Aucun lieu ne correspond à cette recherche.</string>
+  <plurals name="search_min_length">
+    <item quantity="one">Saisissez au moins %1$d caractère.</item>
+    <item quantity="many">Saisissez au moins %1$d caractères.</item>
+    <item quantity="other">Saisissez au moins %1$d caractères.</item>
+  </plurals>
+
+  <string name="search_entry_my_location">Ma position</string>
+  <string name="search_entry_home">Domicile</string>
+  <string name="search_entry_work">Travail</string>
+  <string name="search_entry_pick_on_map">Choisir sur la carte</string>
+  <string name="search_pick_on_map_hint">Appuyez longuement sur la carte pour choisir un point.</string>
+
+  <string name="search_kind_address">Adresse</string>
+  <string name="search_kind_place">Lieu</string>
+  <string name="search_kind_stop">Arrêt</string>
+
+  <string name="search_chip_recent">%1$s → %2$s</string>
+
+  <string name="search_served_modes">Desservi par %1$s</string>
+  <string name="search_mode_tram">Tram</string>
+  <string name="search_mode_subway">Métro</string>
+  <string name="search_mode_ferry">Bateau</string>
+  <string name="search_mode_airplane">Avion</string>
+  <string name="search_mode_bus">Bus</string>
+  <string name="search_mode_coach">Autocar</string>
+  <string name="search_mode_rail">Train</string>
+  <string name="search_mode_highspeed_rail">Train à grande vitesse</string>
+  <string name="search_mode_long_distance">Train grandes lignes</string>
+  <string name="search_mode_night_rail">Train de nuit</string>
+  <string name="search_mode_regional_rail">Train régional</string>
+  <string name="search_mode_suburban">Train de banlieue</string>
+  <string name="search_mode_funicular">Funiculaire</string>
+  <string name="search_mode_aerial_lift">Téléphérique</string>
+  <string name="search_mode_other">Autre</string>
+</resources>
