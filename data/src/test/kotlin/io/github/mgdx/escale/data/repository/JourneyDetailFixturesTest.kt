@@ -54,6 +54,24 @@ class JourneyDetailFixturesTest {
   }
 
   @Test
+  fun `les marqueurs START et END du serveur ne remontent jamais dans le domaine`() = runTest {
+    val page = PlanTestSupport.page("plan_walk_detailed.json", backgroundScope, JourneyCategory.WALK)
+    val leg = page.direct.single().legs.single()
+
+    // La fixture porte littéralement "START" et "END" : le mapping les traduit en absence de nom.
+    assertEquals("", leg.from.name)
+    assertEquals("", leg.to.name)
+  }
+
+  @Test
+  fun `un vrai nom d'arret traverse le mapping intact`() = runTest {
+    val leg = transitLeg(backgroundScope)
+
+    assertEquals("Nürnberg Hbf", leg.from.name)
+    assertEquals("Nürnberg Tiergarten", leg.to.name)
+  }
+
+  @Test
   fun `un cheminement detaille porte ses manoeuvres et son denivele`() = runTest {
     val page = PlanTestSupport.page("plan_walk_detailed.json", backgroundScope, JourneyCategory.WALK)
     val leg = page.direct.single().legs.single()
