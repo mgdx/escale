@@ -10,10 +10,12 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
+import io.github.mgdx.escale.core.repository.PreferencesRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
+import io.github.mgdx.escale.data.prefs.PreferencesRepositoryImpl
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
 import io.github.mgdx.escale.data.repository.MapRepositoryImpl
@@ -56,6 +58,16 @@ class AppContainer(context: Context) {
 
   val serverRepository: ServerRepository by lazy {
     ServerRepositoryImpl(preferences, motisClient)
+  }
+
+  /**
+   * Réglages de recherche et d'affichage (SPEC.md § 5.6).
+   *
+   * Il partage le fichier DataStore du serveur configuré : c'est le même stockage privé, et il ne
+   * possède que ses propres clés — « rétablir les valeurs par défaut » n'efface pas le serveur.
+   */
+  val preferencesRepository: PreferencesRepository by lazy {
+    PreferencesRepositoryImpl(preferences)
   }
 
   /**
