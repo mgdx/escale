@@ -37,24 +37,18 @@ Les paramètres sont assemblés par `core/query/StopsQueryBuilder.kt`.
 |---|---|---|
 | `min`, `max` | `latitude,longitude`, coin sud-ouest puis coin nord-est | l'emprise de l'écran **élargie de 30 %** (§ 5.7, règle 3) |
 | `grouped` | `true` | le serveur regroupe lui-même les quais d'une même gare, ce qui divise d'autant le nombre de points à dessiner |
-| `modes` | les modes du palier de zoom courant, séparés par des virgules | zoom 11 → 13 : les cinq modes ferrés lourds ; à partir de 13 : tout le reste |
+| `modes` | les modes du palier de zoom courant, séparés par des virgules | zoom 11 → 13 : les modes ferrés lourds ; à partir de 13 : tout le reste |
 
 Le paramètre `modes` est **omis** quand aucun mode n'est retenu : une valeur vide n'a pas le même
 sens qu'une absence — côté serveur, ne pas envoyer `modes` veut dire « tous les modes ».
 
 Forme des `modes` vérifiée sur `api.transitous.org` : la même emprise du centre de Paris rend onze
-arrêts sans filtre et cinq avec `modes=RAIL,HIGHSPEED_RAIL,LONG_DISTANCE,SUBURBAN,SUBWAY`. Les deux
-captures sont les fixtures `map_stops_paris.json` et `map_stops_rail_only.json`.
+arrêts sans filtre et cinq avec les modes ferrés lourds. Les deux captures sont les fixtures
+`map_stops_paris.json` et `map_stops_rail_only.json`.
 
-Le corps est un tableau de `Place`. Deux points à connaître :
-
-- un `Place` **sans `stopId`** est écarté par le mapping : sans identifiant, le marqueur ne mènerait
-  ni à l'infobulle ni aux prochains départs ;
-- le champ `modes` d'un arrêt regroupé n'est **pas** le filtre qui l'a fait ressortir. La requête du
-  palier 11 ci-dessus rend « Châtelet - Les Halles » avec le seul mode `REGIONAL_RAIL`, qui ne fait
-  pourtant pas partie des cinq modes demandés. C'est le tableau de `SPEC.md` § 5.7 qui décide du
-  palier d'affichage, à partir des modes rendus, et non la générosité du serveur : cette gare-là
-  n'apparaît donc qu'à partir du zoom 13.
+Le corps est un tableau de `Place`. Un `Place` **sans `stopId`** est écarté par le mapping : sans
+identifiant, le marqueur ne mènerait ni à l'infobulle ni aux prochains départs. Pour le champ
+`modes` d'un arrêt, voir le piège n° 8.
 
 ### `GET /api/v6/stop`
 
@@ -235,6 +229,44 @@ Remède : `data/net/HttpFailures.kt` transforme un 404 en `EscaleError.ApiVersio
 seulement si** le chemin commence par `/api/v6/`. Un 404 sur `/api/v1/geocode` reste un
 `ServerUnreachable` ordinaire. L'écran propose alors de revenir au serveur par défaut. Pas de repli
 automatique vers `v5` ou `v3` en v1 (`SPEC.md` § 4.3).
+
+### 8. Certaines valeurs de `Mode` sont des **parapluies**, et les confondre avec des feuilles fausse tout filtrage côté client
+
+`docs/motis-openapi.yaml`, schéma `Mode` (ligne 3838 et suivantes), définit deux valeurs qui n'en
+sont pas :
+
+```
+- `TRANSIT`: translates to `TRAM,FERRY,AIRPLANE,BUS,COACH,RAIL,ODM,RIDE_SHARING,FUNICULAR,AERIAL_LIFT,OTHER`
+- `RAIL`:    translates to `HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,REGIONAL_RAIL,SUBURBAN,SUBWAY`
+```
+
+**Côté requête, il n'y a aucun piège** : le serveur développe le parapluie lui-même. Envoyer
+`modes=RAIL,…` ou envoyer les six feuilles une par une rend exactement le même jeu d'arrêts, ce qui
+a été vérifié sur `api.transitous.org` — mêmes cinq arrêts, mêmes `stopId`.
+
+**Le piège est côté client, quand un parapluie sert de filtre d'affichage.** Le tableau de
+`SPEC.md` § 5.7 écrit, pour le palier 11 → 13 : « `RAIL`, `HIGHSPEED_RAIL`, `LONG_DISTANCE`,
+`SUBURBAN`, `SUBWAY` ». Recopié littéralement dans un `Set<TransitMode>` puis comparé aux modes que
+le serveur **renvoie** sur chaque arrêt, cet ensemble laisse tomber `NIGHT_RAIL` et `REGIONAL_RAIL`,
+qui sont pourtant dans `RAIL`.
+
+Conséquence pratique : la requête du palier 11 rend bien « Châtelet - Les Halles » — la plus grande
+gare souterraine d'Europe —, MOTIS l'annonce avec le seul mode `REGIONAL_RAIL`, et le filtre
+d'affichage la faisait disparaître jusqu'au zoom 13. Aucune erreur, aucune requête en trop : une
+gare simplement invisible. La fixture `map_stops_rail_only.json` en est la trace : elle est obtenue
+avec `modes=RAIL,HIGHSPEED_RAIL,LONG_DISTANCE,SUBURBAN,SUBWAY` et contient un arrêt dont le seul
+mode est `REGIONAL_RAIL`.
+
+Remède : **développer le parapluie avant de s'en servir comme filtre**. `TransitMode.HEAVY_RAIL_MODES`
+énumère les six feuilles de `RAIL`, plus `RAIL` lui-même — rien n'interdit à un serveur de le
+renvoyer tel quel —, et sa documentation dit pourquoi la liste est plus longue que celle de la spec.
+Un `Mode` renvoyé par le serveur se compare toujours à des feuilles ; un `Mode` **envoyé** au serveur
+peut être un parapluie, et c'est même ce que fait `PlanQueryBuilder` avec `transitModes=TRANSIT`.
+
+Vérifié pour le reste du projet : partout ailleurs où `RAIL` et `TRANSIT` apparaissent
+(`ResultsFormatting`, `SearchLabels`, `JourneyTrace`, `StopIcon`), ils servent à choisir une icône,
+une couleur ou un libellé de repli pour une valeur reçue — jamais à filtrer. Aucune autre confusion
+feuille / parapluie dans le dépôt à ce jour.
 
 ---
 
