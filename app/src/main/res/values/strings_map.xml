@@ -4,8 +4,10 @@
   Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
 -->
 <resources>
-  <!-- La carte elle-même, pour les lecteurs d'écran. -->
+  <!-- La carte elle-même, pour les lecteurs d'écran. Le second libellé remplace le premier dès
+       qu'un trajet y est tracé : l'information ne doit pas tenir au seul dessin (SPEC.md § 9). -->
   <string name="map_content_description">Map</string>
+  <string name="map_content_description_journey">Map showing the selected journey</string>
 
   <!-- Bouton de position, trois états (SPEC.md § 5.1). Le libellé, et pas seulement la couleur,
        distingue les états : aucune information n'est portée par la couleur seule (SPEC.md § 9). -->

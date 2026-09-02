@@ -24,6 +24,7 @@ import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
 import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.map.MapStyles
+import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import io.github.mgdx.escale.ui.session.SearchSession
@@ -109,6 +110,15 @@ class AppContainer(context: Context) {
    * venir du fil principal, ce qui est le cas puisque seul un composable le demande.
    */
   val mapInstance: MapInstance by lazy { MapInstance(appContext) }
+
+  /**
+   * Le trajet choisi dans la feuille de résultats, que la carte trace et cadre (SPEC.md § 5.1).
+   *
+   * Il est partagé ici pour que la feuille de résultats et la carte n'aient pas à se connaître,
+   * comme [mapSelection] et [searchSession]. Le magasin lui-même reste dans `ui/results`, avec le
+   * lot qui l'écrit ; ce conteneur n'en publie que l'unique instance, à celui qui la lit.
+   */
+  val selectedJourneyStore: SelectedJourneyStore by lazy { SelectedJourneyStore.shared }
 
   /** Les feuilles de style embarquées, en clair et en sombre (SPEC.md § 5.7). */
   val mapStyles: MapStyles by lazy { MapStyles(appContext.resources) }

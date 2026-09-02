@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
@@ -83,7 +84,13 @@ fun MapCanvas(
 ) {
   val map by mapInstance.map.collectAsStateWithLifecycle()
   var loadedStyle by remember { mutableStateOf<Style?>(null) }
-  val label = stringResource(R.string.map_content_description)
+  // Le trajet tracé est annoncé aux lecteurs d'écran : une carte muette ne dirait pas qu'elle vient
+  // de changer de contenu (SPEC.md § 9).
+  val label = stringResource(
+    if (state.journeyTraced) R.string.map_content_description_journey else R.string.map_content_description,
+  )
+  val traceColors = mapTraceColors()
+  val markerIcons = rememberTraceMarkerIcons(traceColors)
 
   Box(modifier = modifier) {
     AndroidView(
@@ -109,6 +116,8 @@ fun MapCanvas(
     val styleJson = state.styleJson ?: return@LaunchedEffect
     loadedStyle = null
     target.setStyle(Style.Builder().fromJson(styleJson)) { style ->
+      // Le tracé d'abord : la position de l'usager et le point choisi restent au-dessus de lui.
+      style.installJourneyTraceLayers(traceColors, markerIcons)
       style.installOverlayLayers(colors)
       loadedStyle = style
     }
@@ -122,8 +131,16 @@ fun MapCanvas(
   LaunchedEffect(loadedStyle, state.pickedPointGeoJson) {
     loadedStyle?.getSourceAs<GeoJsonSource>(PICKED_POINT_SOURCE)?.setGeoJson(state.pickedPointGeoJson)
   }
+  // Le tracé du trajet : une opération par source, jamais un ajout ni un retrait de couche
+  // (SPEC.md § 5.7, règles 7 et 8). Un trajet désélectionné y pose une collection vide.
+  LaunchedEffect(loadedStyle, state.journeyLinesGeoJson) {
+    loadedStyle?.getSourceAs<GeoJsonSource>(JOURNEY_LINES_SOURCE)?.setGeoJson(state.journeyLinesGeoJson)
+  }
+  LaunchedEffect(loadedStyle, state.journeyMarkersGeoJson) {
+    loadedStyle?.getSourceAs<GeoJsonSource>(JOURNEY_MARKERS_SOURCE)?.setGeoJson(state.journeyMarkersGeoJson)
+  }
 
-  ApplyCameraTarget(map, state.cameraTarget, actions.onCameraTargetApplied)
+  ApplyCameraTarget(map, state.cameraTarget, contentPadding, actions.onCameraTargetApplied)
   ApplyCameraPadding(map, contentPadding)
   BindMapListeners(mapInstance, map, actions)
 }
@@ -159,16 +176,41 @@ private fun BindMapViewLifecycle(mapInstance: MapInstance) {
   }
 }
 
-/** Applique un cadrage, sans jamais dépasser 500 ms d'animation (règle 9). */
+/**
+ * Applique un cadrage, sans jamais dépasser 500 ms d'animation (règle 9).
+ *
+ * Un cadrage par emprise — celui d'un trajet — reçoit exactement le même remplissage que celui que
+ * [ApplyCameraPadding] pose en permanence : les encarts système et la hauteur de la feuille de
+ * résultats ouverte. C'est ce qui fait qu'un trajet cadré tient dans la partie visible de la carte
+ * et non sous la feuille (règle 9). L'air autour du tracé vient d'un élargissement de l'emprise,
+ * calculé dans `:core`, et non d'un remplissage supplémentaire qui décalerait la caméra à chaque
+ * changement de hauteur de feuille.
+ */
 @Composable
-private fun ApplyCameraTarget(map: MapLibreMap?, target: CameraTarget?, onApplied: () -> Unit) {
-  LaunchedEffect(map, target?.token) {
+private fun ApplyCameraTarget(
+  map: MapLibreMap?,
+  target: CameraTarget?,
+  contentPadding: PaddingValues,
+  onApplied: () -> Unit,
+) {
+  val padding = rememberCameraPadding(contentPadding)
+  LaunchedEffect(map, target?.token, padding) {
     val instance = map ?: return@LaunchedEffect
     val camera = target ?: return@LaunchedEffect
-    val update = CameraUpdateFactory.newLatLngZoom(
-      LatLng(camera.camera.center.lat, camera.camera.center.lon),
-      camera.camera.zoom,
-    )
+    val update = when (val goal = camera.goal) {
+      is CameraGoal.Center -> CameraUpdateFactory.newLatLngZoom(
+        LatLng(goal.camera.center.lat, goal.camera.center.lon),
+        goal.camera.zoom,
+      )
+
+      is CameraGoal.Fit -> CameraUpdateFactory.newLatLngBounds(
+        goal.bounds.asLatLngBounds(),
+        padding.left.within(instance.width),
+        padding.top.within(instance.height),
+        padding.right.within(instance.width),
+        padding.bottom.within(instance.height),
+      )
+    }
     if (camera.animated) {
       instance.easeCamera(update, MapLoadRules.MAX_CAMERA_ANIMATION_MILLIS)
     } else {
@@ -178,25 +220,51 @@ private fun ApplyCameraTarget(map: MapLibreMap?, target: CameraTarget?, onApplie
   }
 }
 
+/**
+ * Borne un remplissage à une fraction de la dimension de la carte.
+ *
+ * Une feuille de résultats dépliée jusqu'en haut de l'écran donnerait un remplissage plus grand que
+ * la carte elle-même, et il n'existe alors plus aucune échelle à laquelle une emprise « tienne » :
+ * mieux vaut un cadrage un peu large qu'un calcul impossible.
+ */
+private fun Int.within(dimension: Float): Int = coerceIn(0, (dimension * MAX_PADDING_RATIO).toInt())
+
+/** Le remplissage de la caméra, en pixels : encarts système et feuille de résultats ouverte. */
+@Immutable
+private data class CameraPadding(val left: Int, val top: Int, val right: Int, val bottom: Int)
+
+@Composable
+private fun rememberCameraPadding(contentPadding: PaddingValues): CameraPadding {
+  val density = LocalDensity.current
+  val direction = LocalLayoutDirection.current
+  return remember(contentPadding, density, direction) {
+    with(density) {
+      CameraPadding(
+        left = contentPadding.calculateStartPadding(direction).roundToPx(),
+        top = contentPadding.calculateTopPadding().roundToPx(),
+        right = contentPadding.calculateEndPadding(direction).roundToPx(),
+        bottom = contentPadding.calculateBottomPadding().roundToPx(),
+      )
+    }
+  }
+}
+
 /** Le `padding` de caméra : les encarts système et la feuille de résultats ouverte (règle 9). */
 @Composable
 private fun ApplyCameraPadding(map: MapLibreMap?, contentPadding: PaddingValues) {
-  val density = LocalDensity.current
-  val direction = LocalLayoutDirection.current
-  LaunchedEffect(map, contentPadding, density, direction) {
+  val padding = rememberCameraPadding(contentPadding)
+  LaunchedEffect(map, padding) {
     val instance = map ?: return@LaunchedEffect
     // `MapLibreMap.setPadding` est déprécié : le remplissage fait désormais partie de la position
     // de caméra, et se pose donc par une mise à jour de caméra comme le reste.
-    with(density) {
-      instance.moveCamera(
-        CameraUpdateFactory.paddingTo(
-          contentPadding.calculateStartPadding(direction).toPx().toDouble(),
-          contentPadding.calculateTopPadding().toPx().toDouble(),
-          contentPadding.calculateEndPadding(direction).toPx().toDouble(),
-          contentPadding.calculateBottomPadding().toPx().toDouble(),
-        ),
-      )
-    }
+    instance.moveCamera(
+      CameraUpdateFactory.paddingTo(
+        padding.left.toDouble(),
+        padding.top.toDouble(),
+        padding.right.toDouble(),
+        padding.bottom.toDouble(),
+      ),
+    )
   }
 }
 
@@ -280,6 +348,30 @@ private fun Style.installOverlayLayers(colors: MapOverlayColors) {
   )
 }
 
+/**
+ * Les couleurs du tracé, prises au thème Material.
+ *
+ * Elles sont lues ici et non passées par l'écran : le tracé appartient au lot « carte », et
+ * `HomeScreen` n'a pas à connaître la palette de couches qu'il ne dessine pas.
+ */
+@Composable
+private fun mapTraceColors(): MapTraceColors = MapTraceColors(
+  casing = MaterialTheme.colorScheme.surface,
+  label = MaterialTheme.colorScheme.onSurface,
+  labelHalo = MaterialTheme.colorScheme.surface,
+  origin = MaterialTheme.colorScheme.primary,
+  transfer = MaterialTheme.colorScheme.onSurface,
+  destination = MaterialTheme.colorScheme.tertiary,
+)
+
+/** L'emprise, dans le type de MapLibre. */
+private fun BoundingBox.asLatLngBounds(): LatLngBounds = LatLngBounds.from(
+  latNorth = max.lat,
+  lonEast = max.lon,
+  latSouth = min.lat,
+  lonWest = min.lon,
+)
+
 /** L'emprise visible, dans le type de `:core`. */
 private fun LatLngBounds.asBoundingBox(): BoundingBox = BoundingBox(
   min = LatLon(latitudeSouth, longitudeWest),
@@ -320,3 +412,6 @@ private const val HALO_OPACITY = 0.2f
 private const val DOT_RADIUS = 7f
 private const val PICKED_RADIUS = 9f
 private const val STROKE_WIDTH = 2.5f
+
+/** Part maximale de la carte qu'un remplissage de cadrage peut consommer, de chaque côté. */
+private const val MAX_PADDING_RATIO = 0.4f

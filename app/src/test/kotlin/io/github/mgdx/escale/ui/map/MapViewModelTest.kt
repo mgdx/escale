@@ -2,10 +2,15 @@ package io.github.mgdx.escale.ui.map
 
 import io.github.mgdx.escale.MainDispatcherRule
 import io.github.mgdx.escale.core.geo.MapCamera
+import io.github.mgdx.escale.core.model.BoundingBox
+import io.github.mgdx.escale.core.model.Journey
+import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.Place
 import io.github.mgdx.escale.core.model.ServerConfig
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.result.Outcome
+import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.FakeServerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -17,6 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -39,6 +45,7 @@ class MapViewModelTest {
   private val maps = FakeMapRepository()
   private val geocode = FakeGeocodeRepository()
   private val selection = MapSelection()
+  private val journeys = SelectedJourneyStore()
 
   private fun viewModel() = MapViewModel(
     serverRepository = servers,
@@ -48,6 +55,7 @@ class MapViewModelTest {
     cameraStore = cameras,
     locationSource = locations,
     selection = selection,
+    selectedJourneys = journeys,
     computeDispatcher = UnconfinedTestDispatcher(),
   )
 
@@ -64,6 +72,7 @@ class MapViewModelTest {
       cameraStore = FakeCameraMemory(remembered),
       locationSource = FakeLocationSource(coarseGranted = true, lastKnown = lyon),
       selection = selection,
+      selectedJourneys = journeys,
       computeDispatcher = UnconfinedTestDispatcher(),
     )
     assertEquals(remembered, model.uiState.value.cameraTarget?.camera)
@@ -281,14 +290,98 @@ class MapViewModelTest {
     val camera = MapCamera(lyon, zoom = 13.0)
     model.onCameraIdle(
       viewport = io.github.mgdx.escale.core.geo.MapViewport(
-        visibleArea = io.github.mgdx.escale.core.model.BoundingBox(
-          min = LatLon(45.7, 4.8),
-          max = LatLon(45.8, 4.9),
-        ),
+        visibleArea = BoundingBox(min = LatLon(45.7, 4.8), max = LatLon(45.8, 4.9)),
         zoom = 13.0,
       ),
       camera = camera,
     )
     assertEquals(listOf(camera), cameras.saved)
+  }
+
+  // --- Tracé du trajet sélectionné, SPEC.md § 5.3 et § 5.7 -----------------------------------
+
+  @Test
+  fun `un trajet sélectionné alimente les deux sources et cadre la carte`() = runTest {
+    val model = viewModel()
+    journeys.select(journeyBetween(paris, lyon))
+
+    val state = model.uiState.value
+    assertTrue(state.journeyTraced)
+    assertTrue(state.journeyLinesGeoJson.contains("\"LineString\""))
+    assertTrue(state.journeyMarkersGeoJson.contains("ORIGIN"))
+    assertTrue(state.journeyMarkersGeoJson.contains("DESTINATION"))
+
+    // Le cadrage est une emprise, jamais un centre et un zoom devinés : c'est le composable qui y
+    // appliquera le remplissage de la feuille ouverte (règle 9).
+    val goal = checkNotNull(state.cameraTarget).goal
+    assertTrue(goal is CameraGoal.Fit)
+    val bounds = (goal as CameraGoal.Fit).bounds
+    assertTrue(bounds.contains(paris))
+    assertTrue(bounds.contains(lyon))
+    // L'emprise est élargie pour que le tracé ne colle pas aux bords.
+    assertTrue(bounds.min.lat < lyon.lat)
+    assertTrue(bounds.max.lat > paris.lat)
+    // Une animation de cadrage, donc bornée à 500 ms par le composable.
+    assertTrue(checkNotNull(state.cameraTarget).animated)
+  }
+
+  @Test
+  fun `désélectionner un trajet vide les deux sources sans rien démonter`() = runTest {
+    val model = viewModel()
+    journeys.select(journeyBetween(paris, lyon))
+    assertTrue(model.uiState.value.journeyTraced)
+
+    // C'est aussi ce que fait une nouvelle recherche : elle vide le magasin.
+    journeys.select(null)
+
+    val state = model.uiState.value
+    assertFalse(state.journeyTraced)
+    assertEquals(MapGeoJson.EMPTY, state.journeyLinesGeoJson)
+    assertEquals(MapGeoJson.EMPTY, state.journeyMarkersGeoJson)
+  }
+
+  @Test
+  fun `un trajet remplace le précédent, il ne s'y ajoute pas`() = runTest {
+    val model = viewModel()
+    journeys.select(journeyBetween(paris, lyon))
+    journeys.select(journeyBetween(paris, paris.copy(lat = paris.lat + 0.02)))
+
+    // Deux portions tracées d'affilée ne laissent qu'une seule entité dans la source : la carte
+    // reçoit un remplacement, pas un empilement (règle 8).
+    assertEquals(1, model.uiState.value.journeyLinesGeoJson.split("LineString").size - 1)
+    assertFalse(model.uiState.value.journeyLinesGeoJson.contains("${lyon.lon}"))
+  }
+
+  @Test
+  fun `un trajet de quelques mètres se cadre par son centre`() = runTest {
+    val model = viewModel()
+    journeys.select(journeyBetween(paris, paris.copy(lat = paris.lat + 0.00002)))
+
+    val goal = checkNotNull(model.uiState.value.cameraTarget).goal
+    assertTrue(goal is CameraGoal.Center)
+  }
+
+  private fun journeyBetween(from: LatLon, to: LatLon): Journey {
+    val instant = Instant.parse("2026-09-01T08:00:00Z")
+    val leg = JourneyLeg.Walk(
+      startTime = instant,
+      endTime = instant,
+      scheduledStartTime = instant,
+      scheduledEndTime = instant,
+      duration = Duration.ofMinutes(10),
+      from = Place("Départ", from, null, null, instant, instant),
+      to = Place("Arrivée", to, null, null, instant, instant),
+      geometry = listOf(from, to),
+    )
+    return Journey(
+      id = null,
+      startTime = instant,
+      endTime = instant,
+      scheduledStartTime = instant,
+      scheduledEndTime = instant,
+      duration = Duration.ofMinutes(10),
+      transfers = 0,
+      legs = listOf(leg),
+    )
   }
 }
