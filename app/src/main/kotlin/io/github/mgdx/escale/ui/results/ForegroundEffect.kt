@@ -21,17 +21,23 @@ import androidx.lifecycle.LifecycleOwner
  * s'exécute qu'aux transitions du système, et l'appelant décide ensuite s'il y a lieu de faire
  * quelque chose — c'est `RealtimeRefreshPolicy`, dans `:core`, qui tranche.
  *
- * Un observateur ajouté à un cycle de vie déjà démarré reçoit aussitôt un `ON_START` : le premier
- * appel a donc lieu à l'affichage de l'écran. La règle des 60 secondes le rend inoffensif — il n'y
- * a alors rien de périmé à rafraîchir.
+ * Un observateur ajouté à un cycle de vie déjà démarré en reçoit aussitôt l'état courant, `ON_START`
+ * compris. Seul un `ON_START` qui **suit** un `ON_STOP` est un vrai retour au premier plan : c'est
+ * la condition retenue ici, faute de quoi le simple affichage de l'écran — au premier lancement,
+ * après une rotation, ou au retour depuis un autre écran — passerait pour un retour de l'arrière-plan.
  */
 @Composable
 internal fun ForegroundEffect(onForeground: () -> Unit) {
   val owner = LocalActivity.current as? LifecycleOwner ?: return
   val callback by rememberUpdatedState(onForeground)
   DisposableEffect(owner) {
+    var backgrounded = false
     val observer = LifecycleEventObserver { _, event ->
-      if (event == Lifecycle.Event.ON_START) callback()
+      if (event == Lifecycle.Event.ON_STOP) backgrounded = true
+      if (event == Lifecycle.Event.ON_START && backgrounded) {
+        backgrounded = false
+        callback()
+      }
     }
     owner.lifecycle.addObserver(observer)
     onDispose { owner.lifecycle.removeObserver(observer) }
