@@ -37,6 +37,7 @@ import java.time.Instant
 class ServerSettingsViewModel(
   private val serverRepository: ServerRepository,
   private val cleartextConsentStore: CleartextConsentStore,
+  private val cacheReset: ServerCacheReset,
   private val savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -278,15 +279,21 @@ class ServerSettingsViewModel(
   }
 
   /**
-   * Point d'accroche du vidage des caches lors d'un changement de serveur (SPEC.md § 5.6.1).
+   * Vide les caches de résultats, de géocodage et de tuiles (SPEC.md § 5.6.1).
    *
-   * **À COMPLÉTER AU JALON 3** : vider les caches de résultats, de géocodage et de tuiles. Les
-   * favoris et l'historique sont conservés, et un arrêt favori que le nouveau serveur ne reconnaît
-   * plus reste affiché avec ses coordonnées et un signalement discret — il n'est jamais supprimé.
-   * Aucun de ces caches n'existe à ce jalon ; la fonction est néanmoins appelée sur tous les chemins
-   * de changement de serveur, pour que le lot qui les ajoutera n'ait qu'un seul endroit à remplir.
+   * **C'est le seul endroit qui le fasse**, et il est atteint par tous les chemins de changement de
+   * serveur : « Enregistrer », « Utiliser quand même », le retour au serveur par défaut et la
+   * bascule vers un serveur mémorisé passent tous par la confirmation des effets, donc par
+   * [onConfirmSwitch].
+   *
+   * Les favoris et l'historique sont conservés : [ServerCacheReset] n'a aucun moyen de les
+   * atteindre. La politique en cas d'échec est décrite là-bas ; elle tient en une phrase, un cache
+   * récalcitrant ne fait jamais échouer un changement de serveur.
+   *
+   * L'appel vient **après** l'enregistrement : vider avant laisserait une fenêtre où les réponses
+   * de l'ancien serveur cohabitent avec le nouveau.
    */
-  private fun clearCaches() = Unit
+  private suspend fun clearCaches() = cacheReset.clearAll()
 
   companion object {
     /** Clé de la saisie dans l'état sauvegardé. */
@@ -309,9 +316,15 @@ class ServerSettingsViewModel(
     fun factory(container: AppContainer) = viewModelFactory {
       initializer {
         ServerSettingsViewModel(
-          container.serverRepository,
-          container.cleartextConsentStore,
-          createSavedStateHandle(),
+          serverRepository = container.serverRepository,
+          cleartextConsentStore = container.cleartextConsentStore,
+          cacheReset = ServerCacheReset(
+            resultsCache = { container.planRepository.clearCache() },
+            geocodeCache = { container.geocodeRepository.clearGeocodeCache() },
+            // Paresseux : ouvrir l'écran du serveur ne doit pas construire la carte.
+            tileCache = { container.mapInstance.purgeTileCache() },
+          ),
+          savedState = createSavedStateHandle(),
         )
       }
     }

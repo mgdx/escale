@@ -118,8 +118,11 @@
   <string name="settings_clear_results_cache_description">Les trajets gardés en mémoire pour la recherche en cours.</string>
   <string name="settings_clear_results_cache_confirmation">Les trajets gardés en mémoire pour la recherche en cours seront supprimés. La prochaine recherche interrogera de nouveau le serveur.</string>
 
-  <string name="settings_clear_geocode_cache_title">Effacer les lieux en mémoire</string>
-  <string name="settings_clear_geocode_cache_description">Les adresses et arrêts trouvés en cherchant, conservés 24 heures.</string>
+  <!-- « enregistrés » et non « en mémoire » : contrairement aux résultats de recherche, ce cache
+       est sur le disque et survit à la fermeture de l\'application. C\'est précisément ce qui
+       compte pour la vie privée (SPEC.md § 11), le libellé doit le dire. -->
+  <string name="settings_clear_geocode_cache_title">Effacer les lieux enregistrés</string>
+  <string name="settings_clear_geocode_cache_description">Les adresses et arrêts trouvés en cherchant, gardés 24 heures dans le stockage de l\'appareil.</string>
   <string name="settings_clear_geocode_cache_confirmation">Les adresses et les arrêts trouvés en cherchant, conservés 24 heures sur cet appareil, seront supprimés.</string>
 
   <string name="settings_reset_title">Rétablir les réglages par défaut</string>

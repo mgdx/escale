@@ -78,3 +78,44 @@ class FakeCleartextConsentStore(initial: Set<String> = emptySet()) : CleartextCo
     hosts.value = hosts.value + host.lowercase()
   }
 }
+
+/**
+ * Les trois purges de SPEC.md § 5.6.1, comptées plutôt qu'exécutées.
+ *
+ * Chacune rend ce que le cas d'essai a programmé : c'est ce qui permet de vérifier qu'un échec de
+ * purge ne bloque ni les deux autres, ni le changement de serveur.
+ */
+class RecordingCacheReset(
+  resultsOutcome: Outcome<Unit> = Outcome.Success(Unit),
+  geocodeOutcome: Outcome<Unit> = Outcome.Success(Unit),
+  tilesPurged: Boolean = true,
+) {
+
+  var resultsCacheCleared: Int = 0
+    private set
+
+  var geocodeCacheCleared: Int = 0
+    private set
+
+  var tileCacheCleared: Int = 0
+    private set
+
+  /** Le vrai objet, monté sur les compteurs ci-dessus. */
+  val reset: ServerCacheReset = ServerCacheReset(
+    resultsCache = {
+      resultsCacheCleared++
+      resultsOutcome
+    },
+    geocodeCache = {
+      geocodeCacheCleared++
+      geocodeOutcome
+    },
+    tileCache = {
+      tileCacheCleared++
+      tilesPurged
+    },
+  )
+
+  /** Le triplet des compteurs, pour lire une assertion d'un coup d'œil. */
+  fun counts(): Triple<Int, Int, Int> = Triple(resultsCacheCleared, geocodeCacheCleared, tileCacheCleared)
+}

@@ -134,8 +134,10 @@
   <string name="settings_clear_results_cache_description">Journeys kept in memory for the search in progress.</string>
   <string name="settings_clear_results_cache_confirmation">The journeys kept in memory for the search in progress will be deleted. The next search will ask the server again.</string>
 
+  <!-- Ce cache est sur le disque et survit à la fermeture de l'application, à la différence de
+       celui des résultats : le libellé le dit, c'est ce qui compte pour la vie privée. -->
   <string name="settings_clear_geocode_cache_title">Clear saved places</string>
-  <string name="settings_clear_geocode_cache_description">Addresses and stops found while searching, kept for 24 hours.</string>
+  <string name="settings_clear_geocode_cache_description">Addresses and stops found while searching, kept for 24 hours in the device\'s storage.</string>
   <string name="settings_clear_geocode_cache_confirmation">The addresses and stops found while searching, kept on this device for 24 hours, will be deleted.</string>
 
   <string name="settings_reset_title">Restore default settings</string>

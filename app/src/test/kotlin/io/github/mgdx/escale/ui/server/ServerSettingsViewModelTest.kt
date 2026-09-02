@@ -23,6 +23,7 @@ class ServerSettingsViewModelTest {
 
   private val repository = FakeServerRepository()
   private val consentStore = FakeCleartextConsentStore()
+  private val cacheReset = RecordingCacheReset()
 
   /**
    * Le même `SavedStateHandle` d'un `ViewModel` à l'autre : c'est ce que fait le système quand il
@@ -30,7 +31,7 @@ class ServerSettingsViewModelTest {
    */
   private val savedState = SavedStateHandle()
 
-  private fun viewModel() = ServerSettingsViewModel(repository, consentStore, savedState)
+  private fun viewModel() = ServerSettingsViewModel(repository, consentStore, cacheReset.reset, savedState)
 
   @Test
   fun `le champ reprend le serveur en service tant que rien n est saisi`() = runTest {
@@ -221,7 +222,7 @@ class ServerSettingsViewModelTest {
     repository.testOutcome = Outcome.Success(
       ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = false),
     )
-    val viewModel = ServerSettingsViewModel(repository, store, savedState)
+    val viewModel = ServerSettingsViewModel(repository, store, cacheReset.reset, savedState)
 
     viewModel.onInputChange("http://192.168.1.10:8080")
     viewModel.onTestConnection()
@@ -297,6 +298,93 @@ class ServerSettingsViewModelTest {
 
     assertNull(viewModel.uiState.value.dialog)
     assertEquals(emptyList<ServerConfig>(), repository.savedConfigs)
+  }
+
+  @Test
+  fun `un changement de serveur vide les trois caches`() = runTest {
+    // SPEC.md § 5.6.1 : la boîte de confirmation annonce à l'usager que « les caches de résultats,
+    // de géocodage et de tuiles sont vidés ». Elle l'annonçait sans que rien ne le fasse.
+    repository.testOutcome = Outcome.Success(
+      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
+    )
+    val viewModel = viewModel()
+
+    viewModel.onInputChange("https://motis.exemple.org")
+    viewModel.onTestConnection()
+    viewModel.onSave()
+
+    // Rien n'est vidé tant que l'usager n'a pas confirmé : il peut encore renoncer.
+    assertEquals(Triple(0, 0, 0), cacheReset.counts())
+
+    viewModel.onConfirmSwitch()
+
+    assertEquals(Triple(1, 1, 1), cacheReset.counts())
+  }
+
+  @Test
+  fun `les quatre chemins de changement de serveur vident les caches`() = runTest {
+    val known = ServerConfig(baseUrl = "https://connu.exemple.org", label = "connu.exemple.org")
+    repository.addKnown(known)
+    val viewModel = viewModel()
+
+    // 1. « Utiliser quand même », sans test concluant.
+    viewModel.onInputChange("https://force.exemple.org")
+    viewModel.onUseAnyway()
+    viewModel.onConfirmSwitch()
+    assertEquals(Triple(1, 1, 1), cacheReset.counts())
+
+    // 2. Bascule vers un serveur déjà mémorisé, sans ressaisie.
+    viewModel.onSelectKnownServer(known)
+    viewModel.onConfirmSwitch()
+    assertEquals(Triple(2, 2, 2), cacheReset.counts())
+
+    // 3. Retour au serveur par défaut.
+    viewModel.onResetToDefault()
+    viewModel.onConfirmSwitch()
+    assertEquals(Triple(3, 3, 3), cacheReset.counts())
+
+    // 4. « Enregistrer » après un test concluant.
+    repository.testOutcome = Outcome.Success(
+      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
+    )
+    viewModel.onInputChange("https://teste.exemple.org")
+    viewModel.onTestConnection()
+    viewModel.onSave()
+    viewModel.onConfirmSwitch()
+    assertEquals(Triple(4, 4, 4), cacheReset.counts())
+
+    assertEquals(4, repository.savedConfigs.size)
+  }
+
+  @Test
+  fun `un cache recalcitrant n empeche ni les autres purges ni le changement de serveur`() = runTest {
+    val stubborn = RecordingCacheReset(
+      resultsOutcome = Outcome.Failure(EscaleError.Unknown(cause = null)),
+      geocodeOutcome = Outcome.Failure(EscaleError.Unknown(cause = null)),
+      tilesPurged = false,
+    )
+    val viewModel = ServerSettingsViewModel(repository, consentStore, stubborn.reset, savedState)
+
+    viewModel.onInputChange("https://motis.exemple.org")
+    viewModel.onUseAnyway()
+    viewModel.onConfirmSwitch()
+
+    // Les trois sont tentées, aucune n'interrompt les suivantes...
+    assertEquals(Triple(1, 1, 1), stubborn.counts())
+    // ...et le serveur est bel et bien changé, sans dialogue d'erreur.
+    assertEquals("https://motis.exemple.org", repository.savedConfigs.single().baseUrl)
+    assertNull(viewModel.uiState.value.dialog)
+  }
+
+  @Test
+  fun `oublier un serveur ne vide aucun cache`() = runTest {
+    // Le balayage retire une fiche de la liste ; il ne change pas le serveur en service, et
+    // SPEC.md § 5.6.1 ne rattache la purge qu'au changement de serveur.
+    val viewModel = viewModel()
+
+    viewModel.onForgetServer("https://motis.exemple.org")
+
+    assertEquals(Triple(0, 0, 0), cacheReset.counts())
   }
 
   @Test
