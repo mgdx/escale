@@ -208,7 +208,7 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
       EndpointRow(
         labelRes = R.string.detail_origin,
         icon = R.drawable.ic_trip_origin,
-        name = journey.legs.firstOrNull()?.from?.name.orEmpty(),
+        name = placeLabel(journey.legs.firstOrNull()?.from?.name.orEmpty(), R.string.detail_origin),
         time = journey.startTime,
       )
     }
@@ -219,7 +219,7 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
       EndpointRow(
         labelRes = R.string.detail_destination,
         icon = R.drawable.ic_place,
-        name = journey.legs.lastOrNull()?.to?.name.orEmpty(),
+        name = placeLabel(journey.legs.lastOrNull()?.to?.name.orEmpty(), R.string.detail_destination),
         time = journey.endTime,
       )
     }
@@ -434,16 +434,16 @@ private fun shareLine(line: JourneyShareLine, formatTime: (Instant) -> String): 
 
   is JourneyShareLine.Endpoint -> stringResource(
     if (line.isOrigin) R.string.detail_share_origin else R.string.detail_share_destination,
-    line.name,
+    placeLabel(line.name, if (line.isOrigin) R.string.detail_origin else R.string.detail_destination),
     formatTime(line.time),
   )
 
   is JourneyShareLine.Transit -> stringResource(
     R.string.detail_share_transit,
     transitHeading(line),
-    line.leg.from.name,
+    placeLabel(line.leg.from.name, R.string.detail_place_unnamed),
     formatTime(line.leg.startTime),
-    line.leg.to.name,
+    placeLabel(line.leg.to.name, R.string.detail_place_unnamed),
     formatTime(line.leg.endTime),
   )
 
@@ -451,7 +451,7 @@ private fun shareLine(line: JourneyShareLine, formatTime: (Instant) -> String): 
     R.string.detail_share_street,
     stringResource(line.leg.modeLabel()),
     durationText(line.leg.duration),
-    line.leg.to.name,
+    placeLabel(line.leg.to.name, R.string.detail_place_unnamed),
   )
 }
 

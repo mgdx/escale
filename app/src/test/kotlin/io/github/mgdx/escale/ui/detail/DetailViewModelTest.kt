@@ -146,6 +146,39 @@ class DetailViewModelTest {
   }
 
   @Test
+  fun `un point que le serveur ne nomme pas prend le libelle saisi par l'usager`() {
+    selection.select(journeyOf("id-1", legs = listOf(anonymousWalkLeg(0, 20))))
+    repository.refreshAnswer = Outcome.Failure(EscaleError.Timeout)
+
+    val viewModel = viewModel()
+
+    val legs = viewModel.uiState.value.journey?.legs.orEmpty()
+    assertEquals("Bercy", legs.first().from.name)
+    assertEquals("Nation", legs.last().to.name)
+  }
+
+  @Test
+  fun `le trajet republie pour la carte porte lui aussi ces noms`() {
+    selection.select(journeyOf("id-1"))
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1", legs = listOf(anonymousWalkLeg(0, 20))))
+
+    viewModel()
+
+    assertEquals("Bercy", selection.selected.value?.legs?.first()?.from?.name)
+    assertEquals("Nation", selection.selected.value?.legs?.last()?.to?.name)
+  }
+
+  @Test
+  fun `sans recherche en cours, le point reste anonyme plutot que de recevoir un nom faux`() {
+    selection.select(journeyOf("id-1", legs = listOf(anonymousWalkLeg(0, 20))))
+    repository.refreshAnswer = Outcome.Failure(EscaleError.Timeout)
+
+    val viewModel = viewModel(session = SearchSession())
+
+    assertEquals("", viewModel.uiState.value.journey?.legs?.first()?.from?.name)
+  }
+
+  @Test
   fun `le depliage d'une portion survit a la mort du processus`() {
     selection.select(journeyOf("id-1"))
     val viewModel = viewModel()

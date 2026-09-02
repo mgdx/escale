@@ -12,6 +12,7 @@
   <string name="detail_timeline_description">Portions : %1$s</string>
   <string name="detail_origin">Départ</string>
   <string name="detail_destination">Arrivée</string>
+  <string name="detail_place_unnamed">Lieu sans nom</string>
 
   <string name="detail_leg_expand">Afficher le détail de cette portion</string>
   <string name="detail_leg_collapse">Masquer le détail de cette portion</string>
