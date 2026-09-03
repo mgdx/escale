@@ -306,7 +306,9 @@ private fun List<QuickChip>.savedLocation(kind: SavedPlaceKind): Location? =
 /** Une clé stable par puce, pour que le défilement ne recompose pas tout à chaque frappe. */
 private fun chipKey(chip: QuickChip): String = when (chip) {
   is QuickChip.Saved -> chip.kind.name
-  is QuickChip.Recent -> chip.search.from.name + " " + chip.search.to.name
+  // L'identifiant, jamais les noms : la même paire cherchée à deux heures différentes donne
+  // deux puces, et deux clés identiques font planter la liste paresseuse.
+  is QuickChip.Recent -> "recent-" + chip.search.id
 }
 
 /** Marges de SPEC.md § 5.1 : 12 dp entre la carte de recherche et le bord de l'écran. */
