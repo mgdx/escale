@@ -45,7 +45,7 @@ class EscaleDatabaseMigrationTest {
 
   @Test
   fun `la migration 1 vers 2 ajoute l heure demandee sans perdre une recherche`() {
-    writeVersion1 { db ->
+    writeVersion(1) { db ->
       db.execSQL(
         """
         INSERT INTO search_history (
@@ -61,10 +61,7 @@ class EscaleDatabaseMigrationTest {
       )
     }
 
-    val database = Room.databaseBuilder(context, EscaleDatabase::class.java, FILE_NAME)
-      .addMigrations(EscaleDatabase.MIGRATION_1_2)
-      .allowMainThreadQueries()
-      .build()
+    val database = openMigrated()
     try {
       // L'ouverture seule vaut vérification : Room compare la base migrée au schéma de la version 2
       // et refuse de s'ouvrir au moindre écart, valeur par défaut comprise.
@@ -97,20 +94,81 @@ class EscaleDatabaseMigrationTest {
     }
   }
 
+  @Test
+  fun `la migration 2 vers 3 fusionne les doublons deja crees, sans perdre la surveillance`() {
+    writeVersion(2) { db ->
+      // Quatre fois le même trajet, comme l'écran de détail savait en créer avant la version 3.
+      repeat(4) { rang -> db.execSQL(insertJourney(id = rang + 1, name = "Nation")) }
+      // Un autre trajet, qui n'a rien à voir et doit survivre entier.
+      db.execSQL(insertJourney(id = 5, name = "Opéra"))
+      // La surveillance s'était attachée au troisième doublon : c'est lui qu'il faut garder.
+      db.execSQL(
+        "INSERT INTO watched_journeys (journeyId, departureMinuteOfDay, daysOfWeek, createdAt) " +
+          "VALUES (3, 490, 'MONDAY', 1740816600000)",
+      )
+    }
+
+    val database = openMigrated()
+    try {
+      val journeys = runBlocking { database.favoritesDao().observeJourneys().first() }
+      assertEquals(2, journeys.size)
+      // Le doublon conservé est celui qui portait la surveillance, et non le plus ancien.
+      assertEquals(listOf(3L, 5L), journeys.map { it.id }.sorted())
+      val watched = runBlocking { database.watchedJourneysDao().observeWatched().first() }
+      assertEquals(listOf(3L), watched.map { it.journeyId })
+
+      // Et l'index unique tient désormais : un cinquième essai n'ajoute plus rien.
+      val existing = runBlocking {
+        database.favoritesDao().findJourney("Bastille", 48.85, 2.37, "Nation", 48.84, 2.39, "TRANSIT")
+      }
+      assertEquals(3L, existing)
+    } finally {
+      database.close()
+    }
+  }
+
+  /** Une ligne de `favorite_journeys` en version 2, écrite à la main. */
+  private fun insertJourney(id: Int, name: String): String = """
+    INSERT INTO favorite_journeys (
+      id, label, category, createdAt,
+      from_stopId, from_name, from_description, from_lat, from_lon, from_kind, from_servedModes,
+      to_stopId, to_name, to_description, to_lat, to_lon, to_kind, to_servedModes
+    ) VALUES (
+      $id, NULL, 'TRANSIT', 1740816600000,
+      NULL, 'Bastille', NULL, 48.85, 2.37, 'ADDRESS', '',
+      NULL, '$name', NULL, 48.84, 2.39, 'ADDRESS', ''
+    )
+  """.trimIndent()
+
   /**
-   * Écrit une base de version 1 conforme au schéma exporté, puis y laisse écrire [seed].
+   * Ouvre la base avec toutes les migrations.
+   *
+   * L'ouverture vaut vérification : Room compare la base migrée au schéma de la version courante —
+   * tables, colonnes, valeurs par défaut **et index** — et refuse de s'ouvrir au moindre écart.
+   */
+  private fun openMigrated(): EscaleDatabase = Room.databaseBuilder(context, EscaleDatabase::class.java, FILE_NAME)
+    .addMigrations(EscaleDatabase.MIGRATION_1_2, EscaleDatabase.MIGRATION_2_3)
+    .allowMainThreadQueries()
+    .build()
+
+  /**
+   * Écrit une base de version [version] conforme au schéma exporté, puis y laisse écrire [seed].
    *
    * `room_master_table` et `PRAGMA user_version` sont posés comme Room les pose : sans eux, Room
    * croirait à une base créée de zéro et n'exécuterait aucune migration — le test passerait sans
    * rien avoir vérifié.
    */
-  private fun writeVersion1(seed: (SupportSQLiteDatabase) -> Unit) {
-    val schema = JSONObject(context.assets.open(SCHEMA_V1).bufferedReader().use { it.readText() })
+  private fun writeVersion(version: Int, seed: (SupportSQLiteDatabase) -> Unit) {
+    val schema = JSONObject(
+      context.assets.open("$SCHEMA_DIRECTORY/$version.json").bufferedReader().use {
+        it.readText()
+      },
+    )
       .getJSONObject("database")
     val configuration = SupportSQLiteOpenHelper.Configuration.builder(context)
       .name(FILE_NAME)
       .callback(
-        object : SupportSQLiteOpenHelper.Callback(1) {
+        object : SupportSQLiteOpenHelper.Callback(version) {
           override fun onCreate(db: SupportSQLiteDatabase) = Unit
 
           override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
@@ -123,11 +181,16 @@ class EscaleDatabaseMigrationTest {
       val entities = schema.getJSONArray("entities")
       for (index in 0 until entities.length()) {
         val entity = entities.getJSONObject(index)
-        db.execSQL(entity.getString("createSql").replace(TABLE_PLACEHOLDER, "`${entity.getString("tableName")}`"))
+        val table = "`" + entity.getString("tableName") + "`"
+        db.execSQL(entity.getString("createSql").replace(TABLE_PLACEHOLDER, table))
+        val indices = entity.optJSONArray("indices") ?: continue
+        for (position in 0 until indices.length()) {
+          db.execSQL(indices.getJSONObject(position).getString("createSql").replace(TABLE_PLACEHOLDER, table))
+        }
       }
       val setup = schema.getJSONArray("setupQueries")
       for (index in 0 until setup.length()) db.execSQL(setup.getString(index))
-      db.execSQL("PRAGMA user_version = 1")
+      db.execSQL("PRAGMA user_version = $version")
       seed(db)
     } finally {
       helper.close()
@@ -136,7 +199,7 @@ class EscaleDatabaseMigrationTest {
 
   private companion object {
     const val FILE_NAME = "migration-test.db"
-    const val SCHEMA_V1 = "io.github.mgdx.escale.data.db.EscaleDatabase/1.json"
+    const val SCHEMA_DIRECTORY = "io.github.mgdx.escale.data.db.EscaleDatabase"
 
     /** Le jeton que Room laisse dans le schéma exporté à la place du nom de table. */
     const val TABLE_PLACEHOLDER = "`\${TABLE_NAME}`"

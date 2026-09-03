@@ -59,3 +59,25 @@ data class SearchHistoryEntry(
   val time: TimeChoice,
   val searchedAt: Instant,
 )
+
+/**
+ * Ce qui fait que deux trajets favoris **sont le même** (SPEC.md § 5.5).
+ *
+ * Un favori de trajet est un couple départ / arrivée et une catégorie ; deux enregistrements qui
+ * partagent les trois désignent le même trajet, et le second n'apporte rien. La règle est écrite
+ * ici, dans `:core`, parce qu'elle sert à deux endroits qui doivent dire la même chose : l'écran de
+ * détail, dont l'étoile reflète l'état, et le stockage, qui refuse le doublon.
+ *
+ * **Le nom et les coordonnées font l'identité, pas l'identifiant d'arrêt.** Un `stopId` est nul
+ * pour une adresse, et deux valeurs nulles ne se comparent jamais égales en SQL : un index unique
+ * bâti dessus laisserait passer tous les doublons d'adresses. Le nom et la position, eux, sont
+ * toujours renseignés, et c'est l'index unique de `favorite_journeys` qui reprend exactement ces
+ * colonnes-là.
+ */
+fun Location.sameJourneyEndpointAs(other: Location): Boolean = name == other.name && coordinates == other.coordinates
+
+/** Le favori qui désigne déjà ce trajet, ou `null`. Voir [sameJourneyEndpointAs]. */
+fun List<FavoriteJourney>.matching(from: Location, to: Location, category: JourneyCategory): FavoriteJourney? =
+  firstOrNull {
+    it.category == category && it.from.sameJourneyEndpointAs(from) && it.to.sameJourneyEndpointAs(to)
+  }
