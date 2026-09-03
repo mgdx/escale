@@ -11,6 +11,7 @@ import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
@@ -29,6 +30,7 @@ import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
 import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.map.MapStyles
+import io.github.mgdx.escale.ui.map.PendingRentalsRepository
 import io.github.mgdx.escale.ui.map.StopDepartureRequests
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
@@ -182,6 +184,16 @@ class AppContainer(context: Context) {
    * (docs/architecture.md § 11.4).
    */
   val searchSession: SearchSession by lazy { SearchSession() }
+
+  /**
+   * Les stations et véhicules en libre-service affichés sur la carte (SPEC.md § 5.7).
+   *
+   * **Provisoire, à remplacer à la fusion du jalon 8** : `RentalsRepositoryImpl` est écrit en
+   * parallèle dans `:data` par le lot « libre-service ». Cette propriété est placée ici, en fin de
+   * conteneur, pour ne pas entrer en conflit avec celle que ce lot ajoute après [stopsRepository] ;
+   * à la fusion, il ne reste qu'à garder la sienne et à supprimer [PendingRentalsRepository].
+   */
+  val rentalsRepository: RentalsRepository by lazy { PendingRentalsRepository() }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"
