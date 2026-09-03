@@ -191,6 +191,19 @@ class TripApiTest {
   }
 
   @Test
+  fun `la description d'une perturbation arrive en texte, jamais en HTML`() = runTest {
+    // La fixture porte bien le balisage tel que le réseau francilien l'émet : c'est le mapping,
+    // et non l'écran, qui le réduit (docs/architecture.md § 1, SPEC.md § 2 — aucune WebView).
+    val raw = fixture("stoptimes_alerts.json")
+    assertTrue(raw.contains("<p>"))
+
+    val alert = departures("stoptimes_alerts.json").entries.first { it.alerts.isNotEmpty() }.alerts.single()
+    assertFalse(alert.descriptionText.contains('<'))
+    assertTrue(alert.descriptionText.startsWith("La ligne 85 est déviée"))
+    assertTrue(alert.descriptionText.endsWith("Raison : difficultés de circulation."))
+  }
+
+  @Test
   fun `la couleur de ligne est normalisee en dièse RRGGBB`() = runTest {
     val entry = checkNotNull(departures("stoptimes_alerts.json").entries.firstOrNull { it.lineName == "4" })
     assertEquals("#a0006e", entry.routeColor?.lowercase())

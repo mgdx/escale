@@ -8,6 +8,7 @@ import io.github.mgdx.escale.core.model.RentalInfo
 import io.github.mgdx.escale.core.model.StopVisit
 import io.github.mgdx.escale.core.model.TimeWindow
 import io.github.mgdx.escale.core.model.TravelStep
+import io.github.mgdx.escale.core.text.HtmlText
 import io.github.mgdx.escale.data.dto.PlanAlertDto
 import io.github.mgdx.escale.data.dto.PlanPlaceDto
 import io.github.mgdx.escale.data.dto.PlanPolylineDto
@@ -73,10 +74,18 @@ internal fun PlanStepDto.toDomain(): TravelStep = TravelStep(
 /**
  * Une perturbation. Seule la période d'impact est retenue : c'est celle qui dit quand le service
  * est réellement perturbé, là où la période de communication ne dit que quand montrer le message.
+ *
+ * **Le titre et le corps sont réduits en texte simple ici, et nulle part ailleurs.** Les alertes du
+ * réseau francilien arrivent enveloppées dans du HTML — `<p>…</p>` au minimum, relevé sur
+ * `stoptimes_alerts.json` — et l'écran qui les affiche montrerait les balises telles quelles.
+ * C'est la frontière DTO -> domaine qui est le bon endroit : SPEC.md § 2 interdit la `WebView`,
+ * et faire porter la conversion à chaque écran serait la garantie qu'un écran l'oublie. Le domaine
+ * porte donc du texte, jamais du balisage. La règle elle-même est dans `:core`
+ * (`HtmlText`, docs/architecture.md § 1), où elle se vérifie en JVM.
  */
 internal fun PlanAlertDto.toDomain(): Disruption = Disruption(
-  headerText = headerText,
-  descriptionText = descriptionText,
+  headerText = HtmlText.toPlainText(headerText),
+  descriptionText = HtmlText.toPlainText(descriptionText),
   severity = disruptionSeverityOf(severityLevel),
   cause = disruptionCauseOf(cause),
   effect = disruptionEffectOf(effect),

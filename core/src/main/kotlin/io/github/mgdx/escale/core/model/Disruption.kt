@@ -55,11 +55,17 @@ data class TimeWindow(val start: Instant?, val end: Instant?)
  *
  * Les champs de synthèse vocale (`ttsHeaderText`, `ttsDescriptionText`) et l'illustration ne sont
  * pas repris : l'application lit le texte simple, que TalkBack sait déjà énoncer.
+ *
+ * **[headerText] et [descriptionText] sont du texte, jamais du balisage.** Certains réseaux — celui
+ * d'Île-de-France notamment — publient leurs messages en HTML ; c'est le mapping de `:data` qui les
+ * réduit, à l'entrée, avec `io.github.mgdx.escale.core.text.HtmlText`. Un écran affiche donc ces
+ * deux champs tels quels : il n'a rien à en retirer, et surtout rien à en interpréter (SPEC.md § 2,
+ * aucune `WebView`).
  */
 data class Disruption(
-  /** Titre, mis en évidence à l'affichage. */
+  /** Titre, mis en évidence à l'affichage. Texte simple. */
   val headerText: String,
-  /** Corps du message, replié par défaut. */
+  /** Corps du message, replié par défaut. Texte simple. */
   val descriptionText: String,
   val severity: DisruptionSeverity = DisruptionSeverity.UNKNOWN_SEVERITY,
   val cause: DisruptionCause = DisruptionCause.UNKNOWN_CAUSE,
