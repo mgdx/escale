@@ -134,6 +134,7 @@ RentalsRepository     stations et véhicules en libre-service, disponibilités
 PreferencesRepository réglages (Flow), écriture
 FavoritesRepository   domicile, travail, lieux, arrêts, trajets
 HistoryRepository     dernières recherches, effacement
+WatchedJourneysRepository  trajets surveillés (§5.5.1) : heure, jours, identifiant d'itinéraire
 ```
 
 ## 6. Résultat et erreurs (`:core.result`)
