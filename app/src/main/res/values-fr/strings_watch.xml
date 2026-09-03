@@ -15,7 +15,7 @@
   <string name="watch_notification_impossible_body">Le serveur ne propose plus ce trajet. Ouvrez Escale pour relancer une recherche.</string>
   <string name="watch_notification_fine">Rien à signaler</string>
   <string name="watch_notification_fine_body">Départ à %1$s, comme prévu.</string>
-  <string name="watch_notification_suggested">Départ conseillé : %1$s.</string>
+  <string name="watch_notification_suggested">Départ conseillé&#160;: %1$s.</string>
   <plurals name="watch_notification_delay">
     <item quantity="one">%1$d minute de retard.</item>
     <item quantity="many">%1$d minutes de retard.</item>
@@ -27,14 +27,14 @@
   <string name="watch_close">Fermer</string>
   <string name="watch_enable">Surveiller ce trajet</string>
 
-  <string name="watch_privacy_notice">Escale enverra une requête au serveur MOTIS que vous avez configuré, une heure avant chaque départ surveillé ; comme ces requêtes partent à heure fixe, elles révèlent vos habitudes de déplacement à qui observe ce serveur ou le réseau.</string>
+  <string name="watch_privacy_notice">Escale enverra une requête au serveur MOTIS que vous avez configuré, une heure avant chaque départ surveillé&#160;; comme ces requêtes partent à heure fixe, elles révèlent vos habitudes de déplacement à qui observe ce serveur ou le réseau.</string>
 
   <string name="watch_summary_off">Une vérification une heure avant le départ, si vous l\'activez.</string>
   <string name="watch_stop">Arrêter la surveillance</string>
   <string name="watch_summary_format">%1$s · %2$s</string>
   <string name="watch_value_separator">", "</string>
 
-  <string name="watch_restart_notice">Si vous redémarrez votre téléphone, les trajets surveillés sont reprogrammés à la prochaine ouverture d\'Escale plutôt qu\'au démarrage : l\'application ne demande aucune permission pour se lancer d\'elle-même.</string>
+  <string name="watch_restart_notice">Si vous redémarrez votre téléphone, les trajets surveillés sont reprogrammés à la prochaine ouverture d\'Escale plutôt qu\'au démarrage&#160;: l\'application ne demande aucune permission pour se lancer d\'elle-même.</string>
 
   <string name="watch_time_label">Heure de départ habituelle</string>
   <string name="watch_time_action">Modifier l\'heure de départ</string>

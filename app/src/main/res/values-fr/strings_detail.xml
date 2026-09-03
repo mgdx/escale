@@ -13,7 +13,7 @@
   <string name="detail_loading_details">Chargement du détail…</string>
   <string name="detail_refreshed_at">Temps réel relevé à %1$s</string>
 
-  <string name="detail_timeline_description">Portions : %1$s</string>
+  <string name="detail_timeline_description">Portions&#160;: %1$s</string>
   <string name="detail_origin">Départ</string>
   <string name="detail_destination">Arrivée</string>
   <string name="detail_place_unnamed">Lieu sans nom</string>
@@ -22,7 +22,7 @@
   <string name="detail_leg_collapse">Masquer le détail de cette portion</string>
 
   <string name="detail_direction">Direction %1$s</string>
-  <string name="detail_agency">Transporteur : %1$s</string>
+  <string name="detail_agency">Transporteur&#160;: %1$s</string>
   <string name="detail_board">Montée à %1$s</string>
   <string name="detail_alight">Descente à %1$s</string>
   <string name="detail_scheduled_time">Prévu à %1$s</string>
@@ -140,9 +140,9 @@
   <string name="detail_rental_open_app_failed">Aucune application de cet appareil ne peut ouvrir ce lien</string>
 
   <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>
-  <string name="detail_share_origin">Départ : %1$s (%2$s)</string>
-  <string name="detail_share_destination">Arrivée : %1$s (%2$s)</string>
-  <string name="detail_share_transit">%1$s : %2$s (%3$s) → %4$s (%5$s)</string>
+  <string name="detail_share_origin">Départ&#160;: %1$s (%2$s)</string>
+  <string name="detail_share_destination">Arrivée&#160;: %1$s (%2$s)</string>
+  <string name="detail_share_transit">%1$s&#160;: %2$s (%3$s) → %4$s (%5$s)</string>
   <string name="detail_share_transit_direction">%1$s direction %2$s</string>
   <string name="detail_share_street">%1$s %2$s → %3$s</string>
 

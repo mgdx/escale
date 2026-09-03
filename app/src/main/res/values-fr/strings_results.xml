@@ -50,13 +50,13 @@
     <item quantity="many">%d perturbations à venir</item>
     <item quantity="other">%d perturbations à venir</item>
   </plurals>
-  <string name="results_alert_severity">Gravité : %1$s</string>
+  <string name="results_alert_severity">Gravité&#160;: %1$s</string>
   <string name="results_alert_severity_info">Information</string>
   <string name="results_alert_severity_warning">Avertissement</string>
   <string name="results_alert_severity_severe">Perturbation majeure</string>
   <string name="results_alert_severity_unknown">Perturbation</string>
 
-  <string name="results_timeline_description">Portions : %1$s</string>
+  <string name="results_timeline_description">Portions&#160;: %1$s</string>
   <string name="results_leg_detail">%1$s %2$s</string>
 
   <string name="results_mode_walk">Marche</string>

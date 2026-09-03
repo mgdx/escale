@@ -25,7 +25,7 @@
   <string name="settings_walking_speed_very_fast">Très rapide, environ 6 km/h</string>
 
   <string name="settings_pedestrian_profile_title">Profil piéton</string>
-  <string name="settings_pedestrian_profile_description">Le profil « fauteuil roulant » évite les escaliers, les marches et les cheminements trop pentus ou trop étroits. Il change l\'itinéraire lui-même, pas seulement son affichage.</string>
+  <string name="settings_pedestrian_profile_description">Le profil «&#160;fauteuil roulant&#160;» évite les escaliers, les marches et les cheminements trop pentus ou trop étroits. Il change l\'itinéraire lui-même, pas seulement son affichage.</string>
   <string name="settings_pedestrian_profile_foot">À pied</string>
   <string name="settings_pedestrian_profile_wheelchair">Fauteuil roulant</string>
 
@@ -88,7 +88,7 @@
   <string name="settings_theme_dark">Sombre</string>
 
   <string name="settings_language_title">Langue</string>
-  <string name="settings_language_description">Choisissez la langue d\'affichage d\'Escale, sur l\'écran « Langue de l\'application » d\'Android. Tant que vous n\'y touchez pas, Escale suit la langue de votre appareil.</string>
+  <string name="settings_language_description">Choisissez la langue d\'affichage d\'Escale, sur l\'écran «&#160;Langue de l\'application&#160;» d\'Android. Tant que vous n\'y touchez pas, Escale suit la langue de votre appareil.</string>
   <string name="settings_language_unavailable">Cet appareil ne propose pas d\'écran de langue par application. Vous pouvez tout de même changer la langue de toutes les applications dans les réglages d\'Android.</string>
 
   <string name="settings_clock_format_title">Format de l\'heure</string>
@@ -163,7 +163,7 @@
   <string name="server_settings_step_passed">Réussi</string>
   <string name="server_settings_step_failed">Échec</string>
   <string name="server_settings_step_absent">Non disponible</string>
-  <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable : la carte sera simplement sans fond.</string>
+  <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable&#160;: la carte sera simplement sans fond.</string>
 
   <string name="server_settings_known_title">Serveurs déjà utilisés</string>
   <string name="server_settings_known_empty">Aucun serveur n\'a encore été utilisé.</string>
@@ -175,9 +175,9 @@
   <string name="server_settings_cleartext_message">%1$s est contacté en http://, sans chiffrement. Toute personne présente sur le réseau peut lire ou modifier ce qu\'Escale envoie et reçoit, y compris les lieux que vous recherchez. N\'acceptez que pour un serveur situé sur un réseau de confiance.</string>
   <string name="server_settings_cleartext_accept">Accepter et continuer</string>
 
-  <string name="server_settings_switch_title">Changer de serveur ?</string>
+  <string name="server_settings_switch_title">Changer de serveur&#160;?</string>
   <string name="server_settings_switch_message">Escale utilisera %1$s. Les caches de résultats, de géocodage et de tuiles sont vidés.</string>
-  <string name="server_settings_switch_favorites">Vos favoris et votre historique sont conservés. Un arrêt enregistré en favori peut ne pas être reconnu par le nouveau serveur : il reste alors affiché avec ses coordonnées et un signalement discret, et n\'est jamais supprimé.</string>
+  <string name="server_settings_switch_favorites">Vos favoris et votre historique sont conservés. Un arrêt enregistré en favori peut ne pas être reconnu par le nouveau serveur&#160;: il reste alors affiché avec ses coordonnées et un signalement discret, et n\'est jamais supprimé.</string>
   <string name="server_settings_switch_untested">Ce serveur n\'a pas passé le test de connexion. Les recherches risquent de ne pas fonctionner.</string>
   <string name="server_settings_switch_confirm">Changer de serveur</string>
 
