@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Redéfinition d'une valeur booléenne d'androidx.work (SPEC.md § 5.5.1 et § 11).
+
+  La bibliothèque déclare `SystemForegroundService`, un service de premier plan qu'elle n'active
+  que si une tâche appelle `setForeground`. Escale ne l'appelle jamais : la surveillance d'un
+  trajet est une requête de quelques secondes, pas un travail à notification permanente. Le
+  service est donc désactivé dès la fusion des manifestes, ce qui permet de retirer la permission
+  FOREGROUND_SERVICE que SPEC.md § 11 exclut.
+
+  `enable_system_job_service_default` n'est pas touchée : `SystemJobService` est le mécanisme par
+  lequel la tâche unique de T − 60 minutes s'exécute réellement.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <!--
+    `tools:override` : la ressource est déclarée « privée » par androidx.work. La redéfinir est le
+    mécanisme prévu par la bibliothèque pour désactiver ce service, et l'attribut dit que c'est
+    délibéré. `tools:ignore="UnusedResources"` : elle n'est référencée que par le manifeste de la
+    bibliothèque, que lint n'associe pas à cette déclaration.
+  -->
+  <bool
+      name="enable_system_foreground_service_default"
+      tools:ignore="UnusedResources"
+      tools:override="true">false</bool>
+</resources>

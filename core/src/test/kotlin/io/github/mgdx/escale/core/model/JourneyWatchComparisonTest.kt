@@ -105,6 +105,8 @@ class JourneyWatchComparisonTest {
 
     assertEquals(WatchIssue.DISRUPTED, notice?.issue)
     assertEquals("M4", notice?.lineName)
+    // Le message du transporteur est repris tel quel : la notification dit la nature du problème.
+    assertEquals("Travaux", notice?.detail)
   }
 
   @Test

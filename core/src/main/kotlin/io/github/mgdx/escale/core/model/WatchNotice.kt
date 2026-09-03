@@ -37,6 +37,13 @@ data class WatchNotice(
   val delay: Duration? = null,
   /** L'heure de départ conseillée, `null` quand il n'y en a pas de meilleure à proposer. */
   val suggestedDeparture: Instant? = null,
+  /**
+   * Le message du transporteur, quand c'est une perturbation qui motive la notification.
+   *
+   * C'est du **texte simple** venu du serveur, réduit à l'entrée par `:data` : l'interface
+   * l'affiche tel quel et n'en interprète rien (voir `Disruption`).
+   */
+  val detail: String? = null,
 )
 
 /**
@@ -101,7 +108,7 @@ object JourneyWatchComparison {
     if (refreshed == null) return WatchNotice(issue = WatchIssue.IMPOSSIBLE)
     val cancelled = refreshed.legs.firstOrNull { it.cancelled }
     val delay = departureDelay(refreshed, expectedDeparture)
-    val disrupted = disruptedLeg(refreshed)
+    val disruption = disruption(refreshed)
     val suggestion = refreshed.startTime.takeIf { it != expectedDeparture }
     return when {
       cancelled != null -> WatchNotice(WatchIssue.CANCELLED, lineOf(cancelled), suggestedDeparture = suggestion)
@@ -109,7 +116,12 @@ object JourneyWatchComparison {
       delay >= settings.delayThreshold ->
         WatchNotice(WatchIssue.DELAYED, lineOf(delayedLeg(refreshed)), delay, suggestion)
 
-      disrupted != null -> WatchNotice(WatchIssue.DISRUPTED, lineOf(disrupted), suggestedDeparture = suggestion)
+      disruption != null -> WatchNotice(
+        issue = WatchIssue.DISRUPTED,
+        lineName = lineOf(disruption.first),
+        suggestedDeparture = suggestion,
+        detail = disruption.second.headerText,
+      )
 
       settings.notifyWhenNothingChanged -> WatchNotice(WatchIssue.NOTHING, suggestedDeparture = refreshed.startTime)
 
@@ -139,16 +151,20 @@ object JourneyWatchComparison {
     journey.legs.firstOrNull { it is JourneyLeg.Transit } ?: journey.legs.firstOrNull()
 
   /**
-   * La première portion touchée par une perturbation en vigueur à son propre départ.
+   * La première portion touchée par une perturbation en vigueur à son propre départ, et le message
+   * qui l'annonce.
    *
    * Le tri des périodes d'impact n'est pas refait ici : `Disruptions.inEffect` le fait déjà pour
    * les écrans, et une règle appliquée à deux endroits est une règle qui finit par diverger. Les
    * perturbations sans effet sur le service — « service supplémentaire », « aucun effet » — ne
    * réveillent personne.
    */
-  private fun disruptedLeg(journey: Journey): JourneyLeg? = journey.legs.firstOrNull { leg ->
-    Disruptions.inEffect(leg.alerts, leg.startTime).any { it.effect !in HARMLESS_EFFECTS }
-  }
+  private fun disruption(journey: Journey): Pair<JourneyLeg, Disruption>? = journey.legs
+    .firstNotNullOfOrNull { leg ->
+      Disruptions.inEffect(leg.alerts, leg.startTime)
+        .firstOrNull { it.effect !in HARMLESS_EFFECTS }
+        ?.let { leg to it }
+    }
 
   private fun lineOf(leg: JourneyLeg?): String? = (leg as? JourneyLeg.Transit)?.let(::transitLineLabel)
 
