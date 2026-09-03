@@ -22,6 +22,7 @@
   <string name="trip_track">Quai %1$s</string>
   <string name="trip_call_cancelled">Arrêt non desservi</string>
   <string name="trip_call_unnamed">Arrêt sans nom</string>
+  <string name="trip_call_alerts">Perturbations à cet arrêt</string>
 
   <string name="trip_loading">Chargement de la desserte complète…</string>
   <string name="trip_empty">Cette course n\'a aucun arrêt publié</string>

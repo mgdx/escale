@@ -59,6 +59,14 @@ internal data class PlanPlaceDto(
   /** Quai courant, mis à jour en temps réel quand le serveur le sait. */
   val track: String? = null,
   val cancelled: Boolean = false,
+  /**
+   * Perturbations propres à ce point.
+   *
+   * Le schéma `Place` porte son **propre** tableau d'alertes, distinct de celui de la portion :
+   * `/api/v6/trip` y annonce ce qui ne concerne qu'un arrêt de la desserte. Ne pas le lire ferait
+   * disparaître un « arrêt non desservi » qui ne figure nulle part ailleurs dans la réponse.
+   */
+  val alerts: List<PlanAlertDto> = emptyList(),
 )
 
 /**

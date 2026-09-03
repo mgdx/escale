@@ -97,9 +97,31 @@ class DisruptionsTest {
     assertEquals(DisruptionSeverity.INFO, Disruptions.worstSeverity(alerts))
   }
 
+  @Test
+  fun `une perturbation deja annoncee ailleurs n est pas repetee sur l arret`() {
+    val course = disruption("Retard prévisible")
+    val stop = disruption("Arrêt non desservi")
+
+    assertEquals(listOf(stop), Disruptions.excluding(listOf(course, stop), listOf(course)))
+    assertTrue(Disruptions.excluding(listOf(course), listOf(course)).isEmpty())
+    assertEquals(listOf(stop), Disruptions.excluding(listOf(stop, stop), emptyList()))
+  }
+
+  @Test
+  fun `deux messages qui ne different que par leur periode restent deux perturbations`() {
+    val today = disruption("Travaux", TimeWindow(start = noon, end = null))
+    val tomorrow = disruption("Travaux", TimeWindow(start = noon.plusSeconds(SECONDS_PER_DAY), end = null))
+
+    assertEquals(listOf(tomorrow), Disruptions.excluding(listOf(today, tomorrow), listOf(today)))
+  }
+
   private fun disruption(header: String, vararg periods: TimeWindow) = Disruption(
     headerText = header,
     descriptionText = "Description",
     periods = periods.toList(),
   )
+
+  private companion object {
+    const val SECONDS_PER_DAY = 86_400L
+  }
 }

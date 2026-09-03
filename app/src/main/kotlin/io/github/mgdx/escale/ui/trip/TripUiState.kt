@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.trip
 
 import io.github.mgdx.escale.core.model.Disruption
+import io.github.mgdx.escale.core.model.Disruptions
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.StopVisit
@@ -53,4 +54,16 @@ data class TripUiState(
   /** Les perturbations de la course, pour le bandeau. */
   val alerts: List<Disruption>
     get() = journey?.alerts.orEmpty()
+
+  /**
+   * Les perturbations propres à [call] : celles que le bandeau de la course n'annonce pas déjà.
+   *
+   * `/api/v6/trip` rend des `alerts` dans le `place` de **chaque** arrêt, et pas seulement au niveau
+   * de la course : c'est là qu'un réseau annonce qu'un arrêt précis n'est pas desservi. Les
+   * mélanger au bandeau de tête les noierait ; les taire perdrait l'information.
+   *
+   * Le tri est dans `:core` (`Disruptions.excluding`), où il se vérifie en JVM : cet écran ne fait
+   * que l'afficher.
+   */
+  fun alertsAt(call: StopVisit): List<Disruption> = Disruptions.excluding(call.place.alerts, alerts)
 }

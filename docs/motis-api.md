@@ -25,9 +25,13 @@ Serveur de référence : `https://api.transitous.org`. L'usager peut en configur
 | `GET /api/v6/refresh-itinerary` | `MotisClient.refreshItinerary` | Recalcul temps réel d'un trajet déjà obtenu |
 | `GET /api/v6/map/stops` | `StopsApi.mapStops` | Les arrêts affichés sur la carte, par emprise et par palier de zoom (§ 5.7) |
 | `GET /api/v6/stop` | `StopsApi.stop` | Les lignes desservant un arrêt, pour l'infobulle de la carte (§ 5.7) |
+| `GET /api/v6/stoptimes` | `TripApi.stopTimes` | Les prochains départs à un arrêt (§ 5.4) |
+| `GET /api/v6/trip` | `TripApi.trip` | La desserte complète d'une course (§ 5.3) |
+| `GET /api/v1/rentals` | `RentalsApi.around`, `RentalsApi.within` | Le libre-service : stations d'une portion, marqueurs de la carte (§ 5.3, § 5.7) |
+| `GET /api/v1/map/initial` | `MapApi.initialCamera` | Dernier recours du cadrage initial de la carte (§ 5.1) |
 
-Prévus par `SPEC.md` § 4.3 mais **pas encore appelés** à ce stade du projet : `/api/v6/trip`,
-`/api/v6/stoptimes` et `/api/v1/rentals`.
+La liste ci-dessus est **complète** : tout ce que `SPEC.md` § 4.3 prévoit est appelé, et rien
+d'autre ne l'est. Aucun point d'entrée n'est en attente.
 
 ### `GET /api/v6/map/stops`, pour son vrai usage
 
@@ -58,6 +62,54 @@ réseau les publie. Le serveur les rend déjà dédoublonnées — trente lignes
 mais dans un ordre alphabétique où le bus 21 précède le métro 4 : `StopMapper` les réordonne par
 mode puis par numéro. Fixture : `stop_chatelet.json`.
 
+### `GET /api/v6/stoptimes`, les prochains départs
+
+Les paramètres sont assemblés par `core/query/StopTimesQueryBuilder.kt`, comme ceux de `plan` et de
+`map/stops`. Les noms viennent de l'opération `stoptimes` de l'OpenAPI, qui écrit `mode` **au
+singulier** là où `map/stops` écrit `modes` : recopier le nom de l'opération voisine fait
+silencieusement disparaître le filtre.
+
+| Paramètre | Valeur envoyée | Pourquoi |
+|---|---|---|
+| `stopId` | l'identifiant rendu par le serveur | jamais des coordonnées, voir le piège n° 4 |
+| `n` | le nombre d'événements voulus | c'est un **minimum**, pas un maximum : le serveur complète la dernière minute atteinte et rend souvent une dizaine d'entrées de plus |
+| `withAlerts` | `true`, toujours | § 5.4 le demande ; c'est déjà le défaut serveur, mais un défaut n'est pas un engagement |
+| `time` | l'instant demandé | **omis** quand `pageCursor` est fourni : une page suivante s'ancre sur son seul curseur |
+| `direction` | `LATER`, ou `EARLIER` sur une recherche d'arrivées | voir le piège n° 9 — **omis** quand `pageCursor` est fourni |
+| `arriveBy` | `true` pour lister des arrivées | absent sinon |
+| `mode` | les feuilles de la puce de filtre choisie | **omis** quand aucune puce n'est active : un `mode` vide n'a pas le même sens qu'une absence |
+| `pageCursor` | pagination | `previousPageCursor` / `nextPageCursor` d'une page déjà obtenue |
+
+Les valeurs de `mode` sont des **feuilles**, jamais un parapluie : c'est `DepartureModeFilter`, dans
+`:core`, qui tient les deux listes — celle qu'on envoie et celle à laquelle on compare un mode reçu
+(piège n° 8). Fixtures : `stoptimes_hamburg.json`, `stoptimes_rail_only.json` et
+`stoptimes_alerts.json`.
+
+**Les perturbations arrivent dans le `place` de chaque `StopTime`**, et non à la racine de l'entrée.
+C'est ce que dit à sa façon la description de `withAlerts` (« alerts are omitted in the metadata of
+place »). Un DTO qui ne lirait `alerts` qu'au niveau de l'entrée n'en trouverait jamais aucune : ce
+sont `StopTimePlaceDto` et son champ `alerts` qui les portent.
+
+### `GET /api/v6/trip`, la desserte d'une course
+
+Deux paramètres, et rien d'autre : `tripId`, et `detailedLegs` que l'application met délibérément à
+`false` — l'écran liste des arrêts, il ne trace rien, et la géométrie divise par sept la taille de la
+réponse (55 ko contre 8 ko sur un ICE Hambourg → Nuremberg, fixture `trip_ice91.json`).
+
+**Le corps n'est pas une réponse de recherche : c'est un `Itinerary` seul**, sans enveloppe, sans
+`itineraries` ni `direct`. Le mapping réemployé est donc exactement celui des trajets
+(`PlanItineraryDto.toDomain`) ; écrire un second mapping pour le même schéma serait la garantie que
+les deux divergent au premier changement d'API.
+
+Conséquence pour l'écran : les arrêts de la course sont **répartis** entre le `from`, les
+`intermediateStops` et le `to` de la portion, et `intermediateStops` exclut les deux extrémités —
+onze arrêts desservis pour neuf arrêts intermédiaires sur l'ICE 91. Le recollement est une règle de
+`:core` (`Journey.calls`), pas un morceau de composable.
+
+Le schéma `Place` porte lui aussi un tableau `alerts` : `/api/v6/trip` rend donc des perturbations
+**par arrêt**, en plus de celles de la course. Ce sont deux niveaux distincts, et les confondre fait
+disparaître une perturbation qui ne concerne qu'un quai.
+
 ### Politique de transport, commune à tous les appels
 
 Tenue en un seul endroit, `data/net/MotisTransport.kt` :
@@ -69,7 +121,12 @@ Tenue en un seul endroit, `data/net/MotisTransport.kt` :
 - expiration 30 s, **une seule** reprise, **aucune reprise sur 4xx** (§ 7.8) ;
 - **aucune journalisation** de corps de requête ni de réponse, même en débogage (§ 8, § 11) : le
   greffon `Logging` de Ktor n'est délibérément pas installé ;
-- cache disque de 24 h **sur le seul géocodage** (§ 7.5), porté par un client OkHttp distinct.
+- cache disque de 24 h **sur le seul géocodage** (§ 7.5), porté par un client OkHttp distinct. Le
+  reste n'est jamais écrit sur disque : les réponses `plan` (`PlanCache`), les arrêts de la carte et
+  les disponibilités de libre-service sont mis en cache **en mémoire seulement**, et pour des durées
+  très différentes — dix minutes pour un arrêt, **soixante secondes** pour une disponibilité de
+  libre-service, qui n'est pas une donnée un peu ancienne au-delà mais une donnée fausse (§ 5.7,
+  règle 4). Un relevé demandé explicitement par l'usager contourne le cache.
 
 ---
 
@@ -103,6 +160,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `additionalTransferTime` | onglet Transport | **en minutes**, pas en secondes (`docs/motis-openapi.yaml`, « Additional transfer time reserved for each transfer in minutes ») |
 | `maxTransfers` | onglet Transport | absent = valeur serveur, volontairement très haute |
 | `requireBikeTransport` | onglet Transport | vélo embarqué dans les véhicules |
+| `directRentalFormFactors`, `preTransitRentalFormFactors`, `postTransitRentalFormFactors` | l'usager a restreint les types de véhicules partagés | assemblés par `core/query/RentalFormFactorQuery.kt` — voir le piège n° 6, un filtre vide n'y veut pas dire « aucun véhicule » |
 
 Une préférence laissée à sa valeur par défaut **n'est pas envoyée** : la valeur par défaut du
 domaine est celle du serveur, et une requête plus courte est une requête moins fragile.
@@ -263,10 +321,56 @@ renvoyer tel quel —, et sa documentation dit pourquoi la liste est plus longue
 Un `Mode` renvoyé par le serveur se compare toujours à des feuilles ; un `Mode` **envoyé** au serveur
 peut être un parapluie, et c'est même ce que fait `PlanQueryBuilder` avec `transitModes=TRANSIT`.
 
+Le second endroit où le piège se joue est `core/model/DepartureFilter.kt`, arrivé depuis avec les
+prochains départs : chaque puce de filtre y porte **deux** ensembles, `requestModes` — des feuilles,
+envoyées au serveur — et `matchedModes` — les mêmes feuilles plus le parapluie, pour comparer un
+mode reçu. Envoyer `RAIL` pour la puce « train » ferait remonter le métro avec, ce qui a été vérifié
+à Hamburg Hbf ; ne comparer qu'à `RAIL` raterait `REGIONAL_RAIL`, c'est-à-dire la moitié des trains
+d'une gare régionale.
+
 Vérifié pour le reste du projet : partout ailleurs où `RAIL` et `TRANSIT` apparaissent
 (`ResultsFormatting`, `SearchLabels`, `JourneyTrace`, `StopIcon`), ils servent à choisir une icône,
 une couleur ou un libellé de repli pour une valeur reçue — jamais à filtrer. Aucune autre confusion
 feuille / parapluie dans le dépôt à ce jour.
+
+### 9. La documentation de `direction` sur `/api/v6/stoptimes` inverse `EARLIER` et `LATER`
+
+`docs/motis-openapi.yaml`, opération `stoptimes`, paramètre `direction` :
+
+> The response will contain the next `n` arrivals / departures in case `EARLIER` is selected and the
+> previous `n` arrivals / departures if `LATER` is selected.
+
+**Cette phrase est fausse.** Vérifié sur `api.transitous.org`, à Hambourg, autour de 08:00 :
+`direction=EARLIER` rend 07:58 → 08:00, `direction=LATER` rend 08:00 → 08:01. `EARLIER` rend donc
+les événements **avant** `time`, `LATER` ceux d'**après** — l'inverse de ce que la prose annonce.
+
+L'OpenAPI se contredit d'ailleurs lui-même trois lignes plus haut, et c'est cette moitié-là qui a
+raison : « Default is `LATER` for `arriveBy=false`, `EARLIER` for `arriveBy=true` ». Un tableau de
+départs par défaut regarde bien vers l'avenir. Les curseurs de pagination lèvent le dernier doute :
+ils s'appellent littéralement `EARLIER|…` et `LATER|…`.
+
+Conséquence pratique : suivre la prose fait afficher **le passé** sur un tableau de départs. Aucune
+erreur, aucun code HTTP anormal — juste un écran qui annonce des trains partis il y a dix minutes,
+et un « page suivante » qui remonte le temps. Le défaut est d'autant plus vicieux qu'à une gare
+fréquentée les deux réponses se ressemblent : il faut lire les heures pour s'en apercevoir.
+
+Remède : les deux constantes sont écrites **une seule fois**, dans
+`core/query/StopTimesQueryBuilder.kt`, avec ce constat de terrain en commentaire juste au-dessus.
+**Ne « corrigez » pas ce code d'après `docs/motis-openapi.yaml`** : la documentation est le côté
+faux, et l'échange se fait sans que rien ne casse — c'est exactement le genre de correction qu'un
+relecteur pressé fait de bonne foi. Si le doute revient, la vérification tient en une requête :
+`?stopId=…&time=…&direction=EARLIER` doit rendre des heures **antérieures** à `time`.
+
+### 10. `min` et `max` de `/api/v1/rentals` ne sont pas les coins que la prose annonce
+
+L'OpenAPI décrit `min` comme le coin « lower right » et `max` comme le coin « upper left », sur
+`rentals` comme sur `map/stops`. Le comportement observé sur `api.transitous.org` est celui de la
+convention habituelle : `min` est le coin **sud-ouest**, `max` le coin **nord-est**.
+
+Conséquence pratique : croire la prose fait envoyer une emprise inversée, à laquelle le serveur
+répond une liste vide — donc « aucune station dans ce quartier », sans erreur ni indice. C'est la
+même convention que `map/stops`, et `RentalsQueryBuilder` la documente à l'endroit où elle
+s'applique.
 
 ---
 
@@ -287,15 +391,19 @@ feuille / parapluie dans le dépôt à ce jour.
 `SPEC.md` § 8 impose de distinguer les cas à l'écran. La traduction est faite une seule fois, dans
 `data/net/HttpFailures.kt`, vers `core/result/EscaleError.kt` :
 
-| Ce qui arrive | Ce que l'usager lit |
-|---|---|
-| `UnknownHostException` | « Serveur introuvable. Vérifiez l'adresse ou votre connexion. » — le cas est ambigu, le libellé nomme les deux hypothèses |
-| `NoRouteToHostException` | « Pas de connexion réseau. » |
-| `ConnectException` | « Le serveur ne répond pas. » — l'hôte existe, il refuse la connexion |
-| expiration | « Le serveur a mis trop de temps à répondre. » |
-| 400 / 422 | le champ `error` du corps, quand il est exploitable |
-| 404 sur `/api/v6/*` | « Ce serveur utilise une version de MOTIS trop ancienne. » |
-| 4xx / 5xx | « Le serveur ne répond pas. » |
+| Ce qui arrive | `EscaleError` produite | Ce que l'usager lit |
+|---|---|---|
+| `UnknownHostException` | `HostNotFound` | « Serveur introuvable. Vérifiez l'adresse ou votre connexion. » — le cas est ambigu, le libellé nomme les deux hypothèses |
+| `NoRouteToHostException` | `NoNetwork` | « Pas de connexion réseau. » |
+| `ConnectException`, autre `IOException` | `ServerUnreachable(null)` | « Le serveur ne répond pas. » — l'hôte existe, il refuse la connexion |
+| expiration | `Timeout` | « Le serveur a mis trop de temps à répondre. » |
+| `SerializationException` | `Unknown` | « Une erreur est survenue. » — le nom de la classe seul est conservé, jamais son message |
+| 400 / 422 | `BadRequest` | le champ `error` du corps quand il est exploitable, « Une erreur est survenue. » sinon |
+| 404 sur `/api/v6/*` | `ApiVersionTooOld` | « Ce serveur utilise une version de MOTIS trop ancienne pour Escale. » |
+| 4xx / 5xx | `ServerUnreachable(code)` | « Le serveur ne répond pas. » |
+
+`EscaleError.Superseded` ne figure pas dans ce tableau : elle ne vient pas du réseau. C'est le cas
+d'une requête supplantée par une plus récente, que l'appelant ignore au lieu de l'afficher.
 
 **Aucun message d'exception n'est repris tel quel** : il pourrait contenir l'URL appelée, donc les
 coordonnées de l'usager. Seul le nom de la classe est conservé, et `EscaleError` ne transporte

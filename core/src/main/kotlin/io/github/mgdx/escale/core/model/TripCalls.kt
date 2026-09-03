@@ -67,9 +67,16 @@ private fun StopVisit.isSameStopAs(other: StopVisit): Boolean {
 /**
  * Recolle un arrêt de jonction : on y arrive par la portion précédente, on en repart par la
  * suivante. Le quai est celui que l'une des deux connaît, l'annulation vaut dès que l'une la porte.
+ *
+ * Les perturbations des deux moitiés sont **réunies**, sans doublon : la portion qui arrive et
+ * celle qui repart décrivent le même quai, et n'en garder qu'une moitié ferait disparaître un
+ * message que le serveur n'a attaché qu'à l'autre.
  */
 private fun StopVisit.mergedWith(next: StopVisit): StopVisit = copy(
-  place = if (place.track == null) place.copy(track = next.place.track) else place,
+  place = place.copy(
+    track = place.track ?: next.place.track,
+    alerts = (place.alerts + next.place.alerts).distinct(),
+  ),
   arrival = arrival ?: next.arrival,
   departure = next.departure ?: departure,
   cancelled = cancelled || next.cancelled,

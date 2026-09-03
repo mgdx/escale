@@ -48,6 +48,8 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
 import io.github.mgdx.escale.core.format.Delay
 import io.github.mgdx.escale.core.format.DelayQuality
+import io.github.mgdx.escale.core.model.Disruption
+import io.github.mgdx.escale.core.model.Disruptions
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.StopVisit
 import io.github.mgdx.escale.ui.common.ErrorMessage
@@ -232,7 +234,12 @@ private fun CallList(state: TripUiState) {
       )
     }
     items(items = calls, key = { it.key() }) { call ->
-      CallRow(call = call, realTime = state.leg?.realTime == true)
+      CallRow(
+        call = call,
+        realTime = state.leg?.realTime == true,
+        alerts = state.alertsAt(call),
+        at = state.loadedAt,
+      )
       HorizontalDivider()
     }
   }
@@ -305,9 +312,14 @@ private fun LineBadge(leg: JourneyLeg.Transit, modeLabel: String) {
  * @param realTime vrai si la course est suivie en temps réel. **Sans lui, aucun écart n'est
  *   annoncé** : les deux heures sont alors égales par construction, et « à l'heure » serait un
  *   mensonge (SPEC.md § 5.2). C'est `Delay.between` qui applique la règle, dans `:core`.
+ * @param alerts les perturbations **propres à cet arrêt**, déjà débarrassées de celles que le
+ *   bandeau de la course annonce (`TripUiState.alertsAt`).
+ * @param at l'instant auquel juger qu'une perturbation est en vigueur : l'heure du dernier
+ *   chargement, comme pour le bandeau de tête, pour que l'affichage ne change pas au fil des
+ *   secondes.
  */
 @Composable
-private fun CallRow(call: StopVisit, realTime: Boolean) {
+private fun CallRow(call: StopVisit, realTime: Boolean, alerts: List<Disruption>, at: Instant?) {
   Column(
     modifier = Modifier
       .fillMaxWidth()
@@ -333,6 +345,39 @@ private fun CallRow(call: StopVisit, realTime: Boolean) {
         text = stringResource(R.string.trip_call_cancelled),
         color = MaterialTheme.colorScheme.error,
       )
+    }
+    CallAlerts(alerts = alerts, at = at)
+  }
+}
+
+/**
+ * Les perturbations qui ne concernent que cet arrêt (SPEC.md § 5.3).
+ *
+ * Le bandeau réemployé est **celui de la course et des résultats**, sans variante : il dit le
+ * nombre de perturbations en vigueur, la gravité **en toutes lettres** — SPEC.md § 9 interdit de la
+ * confier à la seule couleur — et le titre de la plus grave. Un second vocabulaire visuel pour dire
+ * la même chose serait une occasion de divergence.
+ *
+ * Le libellé qui le précède existe pour lever le seul doute que le bandeau laisse : lu à la suite
+ * de la desserte, à l'œil comme à la synthèse vocale, il faut savoir que ce message-ci parle de cet
+ * arrêt-ci et non de toute la course.
+ *
+ * Les descriptions sont celles des perturbations **en vigueur** seulement. Le texte est déjà du
+ * texte simple : la réduction du HTML est faite à l'entrée, dans le mapping (`core.text.HtmlText`).
+ */
+@Composable
+private fun CallAlerts(alerts: List<Disruption>, at: Instant?) {
+  if (alerts.isEmpty()) return
+  Column(verticalArrangement = Arrangement.spacedBy(RowSpacing)) {
+    Text(
+      text = stringResource(R.string.trip_call_alerts),
+      style = MaterialTheme.typography.labelLarge,
+    )
+    DisruptionBanner(alerts = alerts, at = at)
+    Disruptions.inEffect(alerts, at).forEach { alert ->
+      if (alert.descriptionText.isNotBlank()) {
+        Text(text = alert.descriptionText, style = MaterialTheme.typography.bodyMedium)
+      }
     }
   }
 }
