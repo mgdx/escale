@@ -7,7 +7,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import io.github.mgdx.escale.core.repository.FavoritesRepository
 import io.github.mgdx.escale.core.repository.GeocodeRepository
+import io.github.mgdx.escale.core.repository.HistoryRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
@@ -15,6 +17,8 @@ import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.repository.TripRepository
+import io.github.mgdx.escale.core.repository.WatchedJourneysRepository
+import io.github.mgdx.escale.data.db.EscaleDatabase
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
@@ -23,13 +27,16 @@ import io.github.mgdx.escale.data.net.StopsApi
 import io.github.mgdx.escale.data.net.TripApi
 import io.github.mgdx.escale.data.prefs.PreferencesRepositoryImpl
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
+import io.github.mgdx.escale.data.repository.FavoritesRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
+import io.github.mgdx.escale.data.repository.HistoryRepositoryImpl
 import io.github.mgdx.escale.data.repository.MapRepositoryImpl
 import io.github.mgdx.escale.data.repository.PlanCache
 import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
 import io.github.mgdx.escale.data.repository.RentalsRepositoryImpl
 import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
 import io.github.mgdx.escale.data.repository.TripRepositoryImpl
+import io.github.mgdx.escale.data.repository.WatchedJourneysRepositoryImpl
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
@@ -79,6 +86,38 @@ class AppContainer(context: Context) {
    */
   val preferencesRepository: PreferencesRepository by lazy {
     PreferencesRepositoryImpl(preferences)
+  }
+
+  /**
+   * La base locale : favoris, historique et trajets surveillés (SPEC.md § 5.5).
+   *
+   * Elle est **privée**. C'est la donnée la plus sensible de l'application — le domicile, le lieu
+   * de travail, tout ce qui a été cherché — et rien n'y accède autrement que par les trois dépôts
+   * ci-dessous. Exposer la base laisserait un écran écrire une requête à lui, hors de tout contrat.
+   */
+  private val database: EscaleDatabase by lazy { EscaleDatabase.create(appContext) }
+
+  /** Domicile, travail, lieux, arrêts et trajets favoris (SPEC.md § 5.5). */
+  val favoritesRepository: FavoritesRepository by lazy { FavoritesRepositoryImpl(database) }
+
+  /**
+   * Les dernières recherches (SPEC.md § 5.5).
+   *
+   * Il reçoit [preferencesRepository] parce que la bascule « historique désactivé » y vit déjà :
+   * `DisplayPreferences.historyEnabled`. Réglage éteint, `record()` n'écrit rien.
+   */
+  val historyRepository: HistoryRepository by lazy {
+    HistoryRepositoryImpl(database, preferencesRepository)
+  }
+
+  /**
+   * Les trajets surveillés (SPEC.md § 5.5.1), **persistance seulement**.
+   *
+   * Aucune tâche `WorkManager`, aucune notification, aucune permission : le lot qui les écrira se
+   * branchera ici. La limite de cinq est appliquée à l'écriture, d'après `JourneyWatchLimit`.
+   */
+  val watchedJourneysRepository: WatchedJourneysRepository by lazy {
+    WatchedJourneysRepositoryImpl(database)
   }
 
   /**
