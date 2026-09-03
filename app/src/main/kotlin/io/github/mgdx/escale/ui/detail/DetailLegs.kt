@@ -225,7 +225,12 @@ private fun TripHook(leg: JourneyLeg.Transit, actions: DetailActions) {
   DetailRow(
     icon = R.drawable.ic_directions_transit,
     text = label,
-    modifier = Modifier.clickable(onClickLabel = label, role = Role.Button) { open(tripId) },
+    // Une ligne d'information fait 24 dp ; celle-ci est une **commande**, et une commande fait
+    // 48 dp (SPEC.md § 9). La hauteur se pose avant le `clickable`, sinon la zone sensible reste
+    // celle du contenu.
+    modifier = Modifier
+      .heightIn(min = TouchTarget)
+      .clickable(onClickLabel = label, role = Role.Button) { open(tripId) },
   )
 }
 
