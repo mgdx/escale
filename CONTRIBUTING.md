@@ -73,17 +73,73 @@ Les chaînes sont éclatées par écran, pour que plusieurs contributions ne se 
 
 ```
 strings.xml             commun : nom, accroche, actions génériques, erreurs générales
-strings_map.xml         carte
+strings_map.xml         écran d'accueil et carte
 strings_search.xml      recherche et autocomplétion
-strings_results.xml     liste de résultats
+strings_results.xml     liste de résultats, libellés de mode, retards et perturbations
 strings_detail.xml      détail d'un trajet
+strings_trip.xml        détail d'une course
 strings_departures.xml  prochains départs
 strings_settings.xml    réglages, dont l'écran « Serveur MOTIS »
 strings_favorites.xml   favoris et historique
-strings_alerts.xml      perturbations
+strings_watch.xml       trajets surveillés et notifications
+strings_about.xml       écran « À propos » et attributions
 ```
 
 Android fusionne tous les fichiers `res/values/*.xml` : le découpage n'a aucun effet à l'exécution.
+
+Les libellés de **mode, de durée, de retard et de suppression** vivent tous dans
+`strings_results.xml`, et les autres écrans les réutilisent tels quels : un métro doit s'appeler
+pareil dans l'infobulle de la carte, dans un résultat et sur un tableau de départs. N'en
+redéclarez pas une copie locale dans le fichier de votre écran.
+
+### Glossaire
+
+Dix personnes ont écrit ces chaînes, sprint après sprint. Ce tableau existe pour qu'elles finissent
+par dire la même chose. **Un terme source donne un seul terme cible, partout.** Une entrée ne se
+change pas sans repasser sur toutes ses occurrences.
+
+| Anglais | Français | Note |
+|---|---|---|
+| journey, trip | trajet | ce que l'usager cherche : un départ, une arrivée, des portions |
+| itinerary | itinéraire | le tracé retenu ; jamais employé pour parler d'une proposition de la liste |
+| leg | portion | un segment d'un trajet, d'un mode donné |
+| trip *(API MOTIS)*, service | course | un passage précis d'un véhicule ; l'écran « Détail de la course » |
+| transfer | correspondance | jamais « change » ni « connection » en anglais |
+| stop | arrêt | vaut aussi pour une gare ou une station de métro |
+| station *(libre-service)* | station | le point d'attache d'un véhicule partagé, jamais « borne » |
+| platform | quai | jamais « voie », y compris pour un train |
+| departure / arrival | départ / arrivée | |
+| operator *(transport)* | transporteur | « Transporteur : X », qui n'a pas de genre |
+| operator *(libre-service)* | exploitant | |
+| rental, shared | libre-service, partagé | jamais « libre accès » |
+| free-floating | sans station | s'oppose à « station » |
+| service alert, disruption | perturbation | en anglais toujours « service alert » |
+| cancelled *(course, arrêt)* | supprimé | un arrêt sauté se dit « non desservi » / « stop skipped » |
+| delay | retard | |
+| metro | métro | jamais « underground » ni « subway » en anglais |
+| regional train | train régional | jamais « TER », qui est une marque SNCF |
+| moped | cyclomoteur | GBFS `moped` ; « scooter » désignerait aussi la trottinette |
+| standing scooter | trottinette | GBFS `scooter_standing` |
+| settings | réglages | choix du projet, constant sur tous les écrans |
+
+**Registre.** L'application vouvoie. Un bouton ou une entrée de liste est à l'**infinitif**
+(« Ajouter un lieu », « Rétablir le serveur par défaut ») ; une phrase adressée à l'usager est à
+l'**impératif de politesse** (« Réessayez plus tard. », « Saisissez la racine du serveur. »). Les
+titres portent une majuscule au premier mot seulement — « Prochains départs », jamais « Prochains
+Départs ». Pas de point final sur un libellé court ; point final sur une phrase.
+
+### Typographie française
+
+Deux conventions, tenues sans exception dans `values-fr/` :
+
+- **Espace insécable** avant `: ; ? !` et à l'intérieur des guillemets `« … »`. Dans un fichier de
+  ressources Android elle s'écrit **`&#160;`**, en entité XML plutôt qu'en caractère invisible :
+  `<string name="results_alert_severity">Gravité&#160;: %1$s</string>`.
+- **Apostrophe droite échappée `\'`**, jamais l'apostrophe typographique `’`. Les deux se valent en
+  soi ; c'est le mélange qui se voit. Le dossier emploie la première partout.
+
+Ces règles valent pour le français seul. L'anglais de `values/` emploie les guillemets courbes
+`“ … ”` et l'orthographe britannique (*favourites*, *centred*, *anticlockwise*, *lift*).
 
 ### Ajouter une langue
 
@@ -109,6 +165,20 @@ Android fusionne tous les fichiers `res/values/*.xml` : le découpage n'a aucun 
 ```bash
 ./gradlew lint     # signale les chaînes non traduites et les paramètres de format incohérents
 ```
+
+Les règles qui comptent ici sont `MissingTranslation`, `ExtraTranslation`, `StringFormatInvalid`,
+`ImpliedQuantity` et `Typos`. **Si l'une se déclenche, corrigez-la ; ne la désactivez pas.**
+
+Deux défauts que `lint` attrape mal, et qui ne se voient qu'à l'exécution, chez l'usager :
+
+- **Le nombre et le type des paramètres doivent concorder** entre `values/` et votre langue. Une
+  chaîne qui gagne ou perd un `%2$s` en traduction lève une `IllegalFormatException` au moment où
+  l'écran s'affiche, sans que rien n'ait échoué à la compilation.
+- **Les catégories de `<plurals>` sont celles de votre langue, pas celles de l'anglais.** En
+  français, `one` couvre 0 **et** 1 — « 0 correspondance » — là où l'anglais range 0 dans `other`.
+  La catégorie `many` du français ne vaut que pour les millions et sert la construction
+  « 2 millions **de** X » : elle ne s'écrit avec « de » que si le nombre est en toutes lettres.
+  Nos pluriels sont rendus avec `%d`, donc `many` y reprend mot pour mot `other`.
 
 Aucun `resourceConfigurations` ni `localeFilters` n'est déclaré dans `app/build.gradle.kts`, et il
 ne faut pas en ajouter : ces réglages *filtrent* les langues embarquées au lieu de les protéger, et

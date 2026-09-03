@@ -7,13 +7,13 @@
   <string name="trip_title">Détail de la course</string>
   <string name="trip_action_refresh">Rafraîchir</string>
 
-  <string name="trip_towards">Vers %1$s</string>
-  <string name="trip_agency">Exploitée par %1$s</string>
+  <string name="trip_towards">Direction %1$s</string>
+  <string name="trip_agency">Transporteur&#160;: %1$s</string>
   <string name="trip_line_description">%1$s, ligne %2$s</string>
 
   <plurals name="trip_calls_count">
     <item quantity="one">%1$d arrêt</item>
-    <item quantity="many">%1$d d\'arrêts</item>
+    <item quantity="many">%1$d arrêts</item>
     <item quantity="other">%1$d arrêts</item>
   </plurals>
   <string name="trip_arrival">Arrivée à %1$s</string>

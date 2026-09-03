@@ -11,7 +11,7 @@
   <string name="search_time_arrive_by">Arrivée avant %1$s</string>
   <string name="search_time_change">Modifier l\'heure du trajet</string>
 
-  <string name="search_time_title">Quand partez-vous ?</string>
+  <string name="search_time_title">Quand partez-vous&#160;?</string>
   <string name="search_time_option_now">Partir maintenant</string>
   <string name="search_time_option_depart">Partir à…</string>
   <string name="search_time_option_arrive">Arriver avant…</string>

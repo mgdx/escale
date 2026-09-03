@@ -9,7 +9,7 @@
 
   <plurals name="departures_lines_served">
     <item quantity="one">%1$d ligne</item>
-    <item quantity="many">%1$d de lignes</item>
+    <item quantity="many">%1$d lignes</item>
     <item quantity="other">%1$d lignes</item>
   </plurals>
   <!-- « 30 lignes · 1, 4, 7 » : le compte, puis les numéros que la place permet. -->
@@ -24,7 +24,7 @@
   <string name="departures_filter_ferry">Bateau</string>
   <string name="departures_filter_other">Autre</string>
 
-  <string name="departures_towards">Vers %1$s</string>
+  <string name="departures_towards">Direction %1$s</string>
   <string name="departures_track">Quai %1$s</string>
   <string name="departures_scheduled_time">Prévu à %1$s</string>
   <string name="departures_open_trip">Voir la desserte complète de cette course</string>
@@ -34,7 +34,7 @@
   <string name="departures_later">Plus tard</string>
 
   <string name="departures_empty">Aucun départ dans les prochaines heures</string>
-  <string name="departures_empty_hint">Réessayez plus tard, ou élargissez la plage horaire avec « Plus tard ».</string>
+  <string name="departures_empty_hint">Réessayez plus tard, ou élargissez la plage horaire avec «&#160;Plus tard&#160;».</string>
   <string name="departures_empty_filtered">Aucun départ pour ce mode</string>
-  <string name="departures_empty_filtered_hint">Choisissez « Tous » pour voir tous les départs de cet arrêt.</string>
+  <string name="departures_empty_filtered_hint">Choisissez «&#160;Tous&#160;» pour voir tous les départs de cet arrêt.</string>
 </resources>

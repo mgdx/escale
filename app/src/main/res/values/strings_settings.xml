@@ -14,7 +14,7 @@
 
   <string name="settings_action_close">Close</string>
   <string name="settings_action_done">Done</string>
-  <string name="settings_action_delete">Delete</string>
+  <string name="settings_action_delete">Clear</string>
   <string name="settings_action_reset">Restore</string>
   <!-- Sépare deux valeurs énumérées sur une même ligne. -->
   <string name="settings_value_separator">, </string>
@@ -27,7 +27,7 @@
   <!-- Vitesse de marche. Les libellés donnent l'allure et l'ordre de grandeur : personne ne
        connaît sa vitesse de marche en mètres par seconde, qui est l'unité de l'API. -->
   <string name="settings_walking_speed_title">Walking speed</string>
-  <string name="settings_walking_speed_description">How fast Escale assumes you walk. A slower speed makes walking legs longer and rules out tight connections.</string>
+  <string name="settings_walking_speed_description">How fast Escale assumes you walk. A slower speed makes walking legs longer and rules out tight transfers.</string>
   <string name="settings_walking_speed_very_slow">Very slow, about 3 km/h</string>
   <string name="settings_walking_speed_slow">Slow, about 3.6 km/h</string>
   <string name="settings_walking_speed_normal">Normal, about 4.3 km/h</string>
@@ -55,21 +55,21 @@
   <string name="settings_elevation_costs_low">Avoid the steepest climbs</string>
   <string name="settings_elevation_costs_high">Avoid climbs as much as possible</string>
 
-  <string name="settings_transfer_margin_title">Extra time to change</string>
-  <string name="settings_transfer_margin_description">Added to every connection, on top of the time the operator allows. Useful when walking between platforms takes you longer.</string>
+  <string name="settings_transfer_margin_title">Extra transfer time</string>
+  <string name="settings_transfer_margin_description">Added to every transfer, on top of the time the operator allows. Useful when walking between platforms takes you longer.</string>
   <string name="settings_transfer_margin_none">No extra time</string>
   <plurals name="settings_transfer_margin_minutes">
     <item quantity="one">%1$d extra minute</item>
     <item quantity="other">%1$d extra minutes</item>
   </plurals>
 
-  <string name="settings_max_transfers_title">Maximum number of changes</string>
-  <string name="settings_max_transfers_description">Journeys with more changes than this are not offered. Fewer changes usually means a longer journey.</string>
+  <string name="settings_max_transfers_title">Maximum number of transfers</string>
+  <string name="settings_max_transfers_description">Journeys with more transfers than this are not offered. Fewer transfers usually mean a longer journey.</string>
   <string name="settings_max_transfers_unlimited">No limit</string>
   <string name="settings_max_transfers_none">Direct journeys only</string>
   <plurals name="settings_max_transfers_count">
-    <item quantity="one">%1$d change at most</item>
-    <item quantity="other">%1$d changes at most</item>
+    <item quantity="one">%1$d transfer at most</item>
+    <item quantity="other">%1$d transfers at most</item>
   </plurals>
 
   <string name="settings_require_bike_transport_title">Only services that carry bikes</string>

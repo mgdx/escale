@@ -11,9 +11,9 @@
   <string name="detail_action_favorite_remove">Retirer des favoris</string>
 
   <string name="detail_loading_details">Chargement du détail…</string>
-  <string name="detail_refreshed_at">Temps réel arrêté à %1$s</string>
+  <string name="detail_refreshed_at">Temps réel relevé à %1$s</string>
 
-  <string name="detail_timeline_description">Portions : %1$s</string>
+  <string name="detail_timeline_description">Portions&#160;: %1$s</string>
   <string name="detail_origin">Départ</string>
   <string name="detail_destination">Arrivée</string>
   <string name="detail_place_unnamed">Lieu sans nom</string>
@@ -22,22 +22,24 @@
   <string name="detail_leg_collapse">Masquer le détail de cette portion</string>
 
   <string name="detail_direction">Direction %1$s</string>
-  <string name="detail_agency">Exploité par %1$s</string>
+  <string name="detail_agency">Transporteur&#160;: %1$s</string>
   <string name="detail_board">Montée à %1$s</string>
   <string name="detail_alight">Descente à %1$s</string>
-  <string name="detail_scheduled_time">Théorique %1$s</string>
-  <string name="detail_track">Voie %1$s</string>
+  <string name="detail_scheduled_time">Prévu à %1$s</string>
+  <string name="detail_track">Quai %1$s</string>
   <string name="detail_no_intermediate_stop">Sans arrêt</string>
   <plurals name="detail_intermediate_stops">
     <item quantity="one">%d arrêt desservi</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d d\'arrêts desservis</item>
+    <!-- Catégorie CLDR « many » du français : elle ne vaut que pour les millions (1000000,
+         2000000…), et lint l'exige dès qu'un pluriel porte un nombre. La construction « 2 millions
+         DE X » suppose le nombre écrit en toutes lettres ; avec %d, qui rend « 2000000 », elle
+         serait fautive. La forme reprend donc « other ». -->
+    <item quantity="many">%d arrêts desservis</item>
     <item quantity="other">%d arrêts desservis</item>
   </plurals>
   <string name="detail_show_stops">Afficher les arrêts desservis</string>
   <string name="detail_hide_stops">Masquer les arrêts desservis</string>
-  <string name="detail_stop_cancelled">Arrêt supprimé</string>
+  <string name="detail_stop_cancelled">Arrêt non desservi</string>
 
   <string name="detail_wheelchair_accessible">Accessible en fauteuil roulant</string>
   <string name="detail_wheelchair_not_accessible">Non accessible en fauteuil roulant</string>
@@ -49,7 +51,7 @@
   <string name="detail_alert_period">Du %1$s au %2$s</string>
   <string name="detail_alert_period_from">À partir du %1$s</string>
   <string name="detail_alert_period_until">Jusqu\'au %1$s</string>
-  <string name="detail_alert_link">Plus d\'informations chez le transporteur</string>
+  <string name="detail_alert_link">Plus d\'informations auprès du transporteur</string>
 
   <string name="detail_distance_meters">%1$s m</string>
   <string name="detail_distance_kilometers">%1$s km</string>
@@ -67,8 +69,8 @@
   <string name="detail_step_right">Tourner à droite</string>
   <string name="detail_step_slightly_right">Serrer à droite</string>
   <string name="detail_step_hard_right">Tourner franchement à droite</string>
-  <string name="detail_step_circle_clockwise">Prendre le rond-point à droite</string>
-  <string name="detail_step_circle_counterclockwise">Prendre le rond-point à gauche</string>
+  <string name="detail_step_circle_clockwise">Prendre le rond-point dans le sens horaire</string>
+  <string name="detail_step_circle_counterclockwise">Prendre le rond-point dans le sens antihoraire</string>
   <string name="detail_step_stairs">Emprunter l\'escalier</string>
   <string name="detail_step_elevator">Emprunter l\'ascenseur</string>
   <string name="detail_step_uturn_left">Faire demi-tour par la gauche</string>
@@ -76,7 +78,7 @@
 
   <string name="detail_rental_pickup">Prise à %1$s</string>
   <string name="detail_rental_dropoff">Retour à %1$s</string>
-  <string name="detail_rental_free_floating">Véhicule en libre accès, sans station</string>
+  <string name="detail_rental_free_floating">Véhicule en libre-service, sans station</string>
   <string name="detail_rental_return_none">Peut être laissé n\'importe où dans la zone de service</string>
   <string name="detail_rental_return_any_station">Doit être rendu dans une station du service</string>
   <string name="detail_rental_return_roundtrip">Doit être rendu dans la station où il a été pris</string>
@@ -98,39 +100,38 @@
   <string name="detail_rental_not_returning">La station de retour n\'accepte plus de retour pour le moment</string>
   <plurals name="detail_rental_available_bikes">
     <item quantity="one">%d vélo disponible</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l\'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d de vélos disponibles</item>
+    <!-- Voir la note ci-dessus : forme « many » exigée par lint, identique à « other ». -->
+    <item quantity="many">%d vélos disponibles</item>
     <item quantity="other">%d vélos disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_cargo_bikes">
     <item quantity="one">%d vélo cargo disponible</item>
-    <item quantity="many">%d de vélos cargos disponibles</item>
-    <item quantity="other">%d vélos cargos disponibles</item>
+    <item quantity="many">%d vélos cargo disponibles</item>
+    <item quantity="other">%d vélos cargo disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_scooters">
     <item quantity="one">%d trottinette disponible</item>
-    <item quantity="many">%d de trottinettes disponibles</item>
+    <item quantity="many">%d trottinettes disponibles</item>
     <item quantity="other">%d trottinettes disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_mopeds">
-    <item quantity="one">%d scooter disponible</item>
-    <item quantity="many">%d de scooters disponibles</item>
-    <item quantity="other">%d scooters disponibles</item>
+    <item quantity="one">%d cyclomoteur disponible</item>
+    <item quantity="many">%d cyclomoteurs disponibles</item>
+    <item quantity="other">%d cyclomoteurs disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_cars">
     <item quantity="one">%d voiture disponible</item>
-    <item quantity="many">%d de voitures disponibles</item>
+    <item quantity="many">%d voitures disponibles</item>
     <item quantity="other">%d voitures disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_vehicles">
     <item quantity="one">%d véhicule disponible</item>
-    <item quantity="many">%d de véhicules disponibles</item>
+    <item quantity="many">%d véhicules disponibles</item>
     <item quantity="other">%d véhicules disponibles</item>
   </plurals>
   <plurals name="detail_rental_docks_free">
     <item quantity="one">%d place libre à l\'arrivée</item>
-    <item quantity="many">%d de places libres à l\'arrivée</item>
+    <item quantity="many">%d places libres à l\'arrivée</item>
     <item quantity="other">%d places libres à l\'arrivée</item>
   </plurals>
 
@@ -139,9 +140,9 @@
   <string name="detail_rental_open_app_failed">Aucune application de cet appareil ne peut ouvrir ce lien</string>
 
   <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>
-  <string name="detail_share_origin">Départ : %1$s (%2$s)</string>
-  <string name="detail_share_destination">Arrivée : %1$s (%2$s)</string>
-  <string name="detail_share_transit">%1$s : %2$s (%3$s) → %4$s (%5$s)</string>
+  <string name="detail_share_origin">Départ&#160;: %1$s (%2$s)</string>
+  <string name="detail_share_destination">Arrivée&#160;: %1$s (%2$s)</string>
+  <string name="detail_share_transit">%1$s&#160;: %2$s (%3$s) → %4$s (%5$s)</string>
   <string name="detail_share_transit_direction">%1$s direction %2$s</string>
   <string name="detail_share_street">%1$s %2$s → %3$s</string>
 

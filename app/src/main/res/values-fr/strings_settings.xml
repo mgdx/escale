@@ -25,7 +25,7 @@
   <string name="settings_walking_speed_very_fast">Très rapide, environ 6 km/h</string>
 
   <string name="settings_pedestrian_profile_title">Profil piéton</string>
-  <string name="settings_pedestrian_profile_description">Le profil « fauteuil roulant » évite les escaliers, les marches et les cheminements trop pentus ou trop étroits. Il change l\'itinéraire lui-même, pas seulement son affichage.</string>
+  <string name="settings_pedestrian_profile_description">Le profil «&#160;fauteuil roulant&#160;» évite les escaliers, les marches et les cheminements trop pentus ou trop étroits. Il change l\'itinéraire lui-même, pas seulement son affichage.</string>
   <string name="settings_pedestrian_profile_foot">À pied</string>
   <string name="settings_pedestrian_profile_wheelchair">Fauteuil roulant</string>
 
@@ -48,10 +48,11 @@
   <string name="settings_transfer_margin_none">Aucun temps supplémentaire</string>
   <plurals name="settings_transfer_margin_minutes">
     <item quantity="one">%1$d minute de plus</item>
-    <!-- Catégorie CLDR « many » : en français, elle ne concerne que les millions, devant lesquels
-         le nom se construit avec « de ». Inatteignable ici — les choix vont de 0 à 10 minutes —
-         mais lint exige que la forme soit définie. -->
-    <item quantity="many">%1$d de minutes de plus</item>
+    <!-- Catégorie CLDR « many » du français : elle ne vaut que pour les millions (1000000,
+         2000000…), et lint l'exige dès qu'un pluriel porte un nombre. La construction « 2 millions
+         DE X » suppose le nombre écrit en toutes lettres ; avec %d, qui rend « 2000000 », elle
+         serait fautive. La forme reprend donc « other ». -->
+    <item quantity="many">%1$d minutes de plus</item>
     <item quantity="other">%1$d minutes de plus</item>
   </plurals>
 
@@ -61,13 +62,13 @@
   <string name="settings_max_transfers_none">Trajets directs seulement</string>
   <plurals name="settings_max_transfers_count">
     <item quantity="one">%1$d correspondance au plus</item>
-    <!-- Voir la note ci-dessus : forme « many » exigée par lint, hors d'atteinte de ce réglage. -->
-    <item quantity="many">%1$d de correspondances au plus</item>
+    <!-- Voir la note ci-dessus : forme « many » exigée par lint, identique à « other ». -->
+    <item quantity="many">%1$d correspondances au plus</item>
     <item quantity="other">%1$d correspondances au plus</item>
   </plurals>
 
   <string name="settings_require_bike_transport_title">Uniquement les services acceptant les vélos</string>
-  <string name="settings_require_bike_transport_description">Ne retient que les trains, cars et bateaux qui embarquent les vélos.</string>
+  <string name="settings_require_bike_transport_description">Ne retient que les trains, bus et bateaux qui embarquent les vélos.</string>
 
   <string name="settings_rental_form_factors_title">Véhicules en libre-service</string>
   <string name="settings_rental_form_factors_description">Les véhicules partagés qu\'Escale peut proposer, pour un trajet entier comme pour rejoindre ou quitter un arrêt. Un type décoché n\'apparaît nulle part. Au moins un type doit rester coché.</string>
@@ -77,7 +78,7 @@
   <string name="settings_rental_car">Voiture</string>
   <string name="settings_rental_moped">Cyclomoteur</string>
   <string name="settings_rental_scooter_standing">Trottinette</string>
-  <string name="settings_rental_scooter_seated">Scooter assis</string>
+  <string name="settings_rental_scooter_seated">Trottinette assise</string>
   <string name="settings_rental_other">Autre véhicule</string>
 
   <string name="settings_theme_title">Thème</string>
@@ -87,7 +88,7 @@
   <string name="settings_theme_dark">Sombre</string>
 
   <string name="settings_language_title">Langue</string>
-  <string name="settings_language_description">Choisissez la langue d\'affichage d\'Escale, sur l\'écran « Langue de l\'application » d\'Android. Tant que vous n\'y touchez pas, Escale suit la langue de votre appareil.</string>
+  <string name="settings_language_description">Choisissez la langue d\'affichage d\'Escale, sur l\'écran «&#160;Langue de l\'application&#160;» d\'Android. Tant que vous n\'y touchez pas, Escale suit la langue de votre appareil.</string>
   <string name="settings_language_unavailable">Cet appareil ne propose pas d\'écran de langue par application. Vous pouvez tout de même changer la langue de toutes les applications dans les réglages d\'Android.</string>
 
   <string name="settings_clock_format_title">Format de l\'heure</string>
@@ -99,7 +100,7 @@
   <string name="settings_show_stops_title">Afficher les arrêts sur la carte</string>
   <string name="settings_show_stops_description">Gares, stations et arrêts, dès que l\'échelle le permet. Désactivé, ils restent masqués à tous les niveaux de zoom.</string>
   <string name="settings_show_rentals_title">Afficher le libre-service sur la carte</string>
-  <string name="settings_show_rentals_description">Stations et véhicules laissés en libre-service.</string>
+  <string name="settings_show_rentals_description">Stations et véhicules laissés hors station.</string>
   <string name="settings_show_points_of_interest_title">Afficher les points d\'intérêt sur la carte</string>
   <string name="settings_show_points_of_interest_description">Services publics, monuments, parcs et équipements qui aident à se repérer.</string>
 
@@ -136,7 +137,7 @@
   <string name="settings_cleared_history">Recherches récentes effacées.</string>
   <string name="settings_cleared_tile_cache">Cache de la carte vidé.</string>
   <string name="settings_cleared_results_cache">Résultats en mémoire effacés.</string>
-  <string name="settings_cleared_geocode_cache">Lieux en mémoire effacés.</string>
+  <string name="settings_cleared_geocode_cache">Lieux enregistrés effacés.</string>
   <string name="settings_clear_failed">Rien n\'a pu être effacé. Réessayez.</string>
   <string name="settings_reset_done">Réglages rétablis.</string>
   <string name="settings_save_failed">Ce réglage n\'a pas pu être enregistré.</string>
@@ -162,7 +163,7 @@
   <string name="server_settings_step_passed">Réussi</string>
   <string name="server_settings_step_failed">Échec</string>
   <string name="server_settings_step_absent">Non disponible</string>
-  <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable : la carte sera simplement sans fond.</string>
+  <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable&#160;: la carte sera simplement sans fond.</string>
 
   <string name="server_settings_known_title">Serveurs déjà utilisés</string>
   <string name="server_settings_known_empty">Aucun serveur n\'a encore été utilisé.</string>
@@ -174,9 +175,9 @@
   <string name="server_settings_cleartext_message">%1$s est contacté en http://, sans chiffrement. Toute personne présente sur le réseau peut lire ou modifier ce qu\'Escale envoie et reçoit, y compris les lieux que vous recherchez. N\'acceptez que pour un serveur situé sur un réseau de confiance.</string>
   <string name="server_settings_cleartext_accept">Accepter et continuer</string>
 
-  <string name="server_settings_switch_title">Changer de serveur ?</string>
+  <string name="server_settings_switch_title">Changer de serveur&#160;?</string>
   <string name="server_settings_switch_message">Escale utilisera %1$s. Les caches de résultats, de géocodage et de tuiles sont vidés.</string>
-  <string name="server_settings_switch_favorites">Vos favoris et votre historique sont conservés. Un arrêt enregistré en favori peut ne pas être reconnu par le nouveau serveur : il reste alors affiché avec ses coordonnées et un signalement discret, et n\'est jamais supprimé.</string>
+  <string name="server_settings_switch_favorites">Vos favoris et votre historique sont conservés. Un arrêt enregistré en favori peut ne pas être reconnu par le nouveau serveur&#160;: il reste alors affiché avec ses coordonnées et un signalement discret, et n\'est jamais supprimé.</string>
   <string name="server_settings_switch_untested">Ce serveur n\'a pas passé le test de connexion. Les recherches risquent de ne pas fonctionner.</string>
   <string name="server_settings_switch_confirm">Changer de serveur</string>
 

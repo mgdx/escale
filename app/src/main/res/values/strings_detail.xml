@@ -39,7 +39,7 @@
   <string name="detail_leg_collapse">Hide the details of this leg</string>
 
   <!-- Portion en transport en commun. -->
-  <string name="detail_direction">Towards %1$s</string>
+  <string name="detail_direction">To %1$s</string>
   <string name="detail_agency">Operated by %1$s</string>
   <string name="detail_board">Board at %1$s</string>
   <string name="detail_alight">Get off at %1$s</string>
@@ -52,7 +52,7 @@
   </plurals>
   <string name="detail_show_stops">Show the stops served</string>
   <string name="detail_hide_stops">Hide the stops served</string>
-  <string name="detail_stop_cancelled">Stop cancelled</string>
+  <string name="detail_stop_cancelled">Stop skipped</string>
 
   <!-- Accessibilité de la portion (SPEC.md § 9). Le pictogramme est toujours doublé du texte. -->
   <string name="detail_wheelchair_accessible">Wheelchair accessible</string>
@@ -103,7 +103,7 @@
   <string name="detail_rental_return_any_station">Must be returned to a station of the service</string>
   <string name="detail_rental_return_roundtrip">Must be returned to the station it was picked up from</string>
   <string name="detail_rental_return_unknown">The operator does not say where the vehicle must be returned</string>
-  <string name="detail_rental_propulsion_human">Pedal power</string>
+  <string name="detail_rental_propulsion_human">No motor</string>
   <string name="detail_rental_propulsion_electric_assist">Electrically assisted</string>
   <string name="detail_rental_propulsion_electric">Electric</string>
   <string name="detail_rental_propulsion_combustion">Petrol</string>
