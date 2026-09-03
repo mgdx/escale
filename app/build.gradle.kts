@@ -33,6 +33,13 @@ val abiVersionCodeRanks = mapOf(
 
 val abiVersionCodeMultiplier = 1000
 
+/**
+ * Le type de compilation de **mesure** : la publication minifiée, signée avec la clé de débogage.
+ * Il n'est jamais publié ; il n'existe que pour que le § 2 et le § 5.7 de la spec soient vérifiables
+ * sur un appareil. Voir le bloc `buildTypes` et CLAUDE.md, § « Mesurer la publication ».
+ */
+val measurementBuildType = "releaseTest"
+
 android {
   namespace = "io.github.mgdx.escale"
   compileSdk {
@@ -50,6 +57,14 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  // **Aucune clé de signature, aucun mot de passe, aucun fichier de clés dans le dépôt** (SPEC.md
+  // § 2 et § 11) : F-Droid compile depuis les sources et signe lui-même l'APK qu'il publie. Le type
+  // `release` n'a donc **volontairement aucune `signingConfig`** — `assembleRelease` produit des
+  // APK non signés, ce qui est exactement ce que F-Droid attend, et le résultat ne dépend d'aucun
+  // fichier propre à la machine qui compile. C'est la condition de la compilation reproductible.
+  //
+  // Le seul jeu de clés utilisé ici est celui de **débogage**, engendré par le SDK Android dans
+  // `~/.android/debug.keystore`, hors du dépôt, et réservé à la variante de mesure ci-dessous.
   buildTypes {
     release {
       // R8 : minification du code **et** réduction des ressources. En AGP 9, `optimization.enable`
@@ -62,6 +77,35 @@ android {
       optimization {
         enable = true
       }
+    }
+
+    // La publication, **signée avec la clé de débogage**, pour pouvoir être installée et mesurée.
+    //
+    // `assembleRelease` produit des APK non signés : ils sont impossibles à installer, donc
+    // impossibles à mesurer, alors que SPEC.md § 2 et § 5.7 exigent des critères « vérifiés, pas
+    // seulement souhaités ». D'où cette variante, qui reprend **exactement** la configuration R8 de
+    // `release` et n'y ajoute qu'une signature.
+    //
+    // Pourquoi une variante à part plutôt qu'une `signingConfig` posée sur `release` avec repli sur
+    // la clé de débogage : ce repli ferait dépendre l'artefact publié d'un fichier propre à la
+    // machine (`~/.android/debug.keystore`) et laisserait une signature v1 dans le `META-INF` de
+    // l'APK que F-Droid re-signe ensuite. Ici, l'artefact `release` que F-Droid compile n'est
+    // touché par rien de tout cela.
+    create(measurementBuildType) {
+      initWith(getByName("release"))
+      // Reposé explicitement : `initWith` copie les propriétés du type de compilation, et faire
+      // reposer l'égalité des deux variantes sur ce détail rendrait la mesure fausse le jour où
+      // elle changerait.
+      optimization {
+        enable = true
+      }
+      signingConfig = signingConfigs.getByName("debug")
+      // `:data` ne connaît que `debug` et `release` : sans ce repli, la résolution de dépendance
+      // échoue faute de variante `releaseTest` côté bibliothèque.
+      matchingFallbacks += "release"
+      // Traçable par Perfetto et par le profileur sans être `debuggable` : c'est ce qui permet de
+      // mesurer le démarrage sur un binaire identique à celui qui sera publié (SPEC.md § 5.7).
+      isProfileable = true
     }
   }
 
