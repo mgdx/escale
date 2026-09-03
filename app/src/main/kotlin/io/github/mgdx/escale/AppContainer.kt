@@ -48,6 +48,7 @@ import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import io.github.mgdx.escale.ui.session.SearchSession
 import io.github.mgdx.escale.ui.watch.DataStoreWatchSettingsStore
+import io.github.mgdx.escale.ui.watch.WatchOpenRequests
 import io.github.mgdx.escale.ui.watch.WatchSettingsStore
 import io.github.mgdx.escale.work.WatchAlarms
 import io.github.mgdx.escale.work.WatchNotifications
@@ -274,6 +275,14 @@ class AppContainer(context: Context) {
 
   /** Le canal dédié et silencieux des trajets surveillés (SPEC.md § 5.5.1). */
   val watchNotifications: WatchNotifier by lazy { WatchNotifications(appContext) }
+
+  /**
+   * Le trajet surveillé qu'un appui sur une notification demande à ouvrir (SPEC.md § 5.5.1).
+   *
+   * Partagé ici pour que la notification et la navigation n'aient pas à se connaître, comme
+   * [stopDepartureRequests] et [mapSelection] (docs/architecture.md § 11.4).
+   */
+  val watchOpenRequests: WatchOpenRequests by lazy { WatchOpenRequests() }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"

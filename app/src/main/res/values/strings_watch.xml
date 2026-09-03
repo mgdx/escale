@@ -76,6 +76,11 @@
        résultat s'affiche ici à l'ouverture de l'application (SPEC.md § 5.5.1). -->
   <string name="watch_notifications_off">Notifications are turned off. The trip is still checked, and the result appears here.</string>
 
+  <!-- L'appui sur la notification ouvre le détail du trajet rafraîchi (SPEC.md § 5.5.1) : le
+       trajet est redemandé au serveur à ce moment-là, ce qui prend une requête. -->
+  <string name="watch_opening">Loading the updated trip…</string>
+  <string name="watch_open_failed">This trip could not be reloaded</string>
+
   <!-- Le résultat de la dernière vérification, visible sans notification. -->
   <string name="watch_last_check">Checked at %1$s · %2$s</string>
   <string name="watch_last_check_none">Not checked yet.</string>

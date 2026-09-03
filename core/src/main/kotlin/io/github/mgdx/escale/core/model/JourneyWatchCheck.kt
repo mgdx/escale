@@ -61,7 +61,7 @@ class JourneyWatchCheck(private val plans: PlanRepository, private val watched: 
     preferences: SearchPreferences = SearchPreferences(),
   ): WatchCheck {
     if (WatchPlanning.isFresh(watch.lastViewedAt, now)) return WatchCheck.Skipped
-    val outcome = located(watch, favorite, departure, preferences)
+    val outcome = locate(watch, favorite, departure, preferences)
     if (outcome is Outcome.Failure) return WatchCheck.Failed
     val journey = (outcome as Outcome.Success).value
     // L'identifiant d'itinéraire est une optimisation périssable : celui que le serveur vient de
@@ -75,6 +75,11 @@ class JourneyWatchCheck(private val plans: PlanRepository, private val watched: 
   /**
    * Le trajet rafraîchi : `refresh-itinerary` d'abord, la requête `plan` d'origine ensuite.
    *
+   * Publique parce qu'elle sert **deux fois** : à la vérification de fond ci-dessus, et à
+   * l'ouverture du trajet depuis la notification (SPEC.md § 5.5.1, « un appui ouvre le détail du
+   * trajet rafraîchi »). Les deux chemins doivent obtenir le trajet de la même façon, repli
+   * compris : les dupliquer, c'est les laisser diverger.
+   *
    * **Une seule requête par occurrence dans le cas normal** (SPEC.md § 5.5.1) : la seconde ne part
    * que si la première a été refusée, ce que `JourneyRefresh.invalidatesItineraryId` décide — 400
    * et 422 pour un identifiant rejeté, 404 que `HttpFailures` traduit en `ApiVersionTooOld` parce
@@ -84,7 +89,7 @@ class JourneyWatchCheck(private val plans: PlanRepository, private val watched: 
    * Un succès portant `null` n'est pas un échec : c'est « le serveur ne propose plus rien », que la
    * comparaison traduira en « trajet devenu impossible ».
    */
-  private suspend fun located(
+  suspend fun locate(
     watch: WatchedJourney,
     favorite: FavoriteJourney,
     departure: Instant,
