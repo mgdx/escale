@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran des prochains départs à un arrêt (SPEC.md § 5.4), version française.
+  Traduction de values/strings_departures.xml, à tenir à jour dans le même commit.
+-->
+<resources>
+  <string name="departures_stop_unnamed">Arrêt</string>
+  <string name="departures_action_refresh">Rafraîchir</string>
+
+  <plurals name="departures_lines_served">
+    <item quantity="one">%1$d ligne</item>
+    <item quantity="many">%1$d de lignes</item>
+    <item quantity="other">%1$d lignes</item>
+  </plurals>
+  <!-- « 30 lignes · 1, 4, 7 » : le compte, puis les numéros que la place permet. -->
+  <string name="departures_lines_summary">%1$s · %2$s</string>
+
+  <string name="departures_filter_label">Filtrer par mode</string>
+  <string name="departures_filter_all">Tous</string>
+  <string name="departures_filter_train">Train</string>
+  <string name="departures_filter_subway">Métro</string>
+  <string name="departures_filter_tram">Tram</string>
+  <string name="departures_filter_bus">Bus</string>
+  <string name="departures_filter_ferry">Bateau</string>
+  <string name="departures_filter_other">Autre</string>
+
+  <string name="departures_towards">Vers %1$s</string>
+  <string name="departures_track">Quai %1$s</string>
+  <string name="departures_scheduled_time">Prévu à %1$s</string>
+  <string name="departures_open_trip">Voir la desserte complète de cette course</string>
+  <string name="departures_line_description">%1$s, ligne %2$s</string>
+
+  <string name="departures_earlier">Plus tôt</string>
+  <string name="departures_later">Plus tard</string>
+
+  <string name="departures_empty">Aucun départ dans les prochaines heures</string>
+  <string name="departures_empty_hint">Réessayez plus tard, ou élargissez la plage horaire avec « Plus tard ».</string>
+  <string name="departures_empty_filtered">Aucun départ pour ce mode</string>
+  <string name="departures_empty_filtered_hint">Choisissez « Tous » pour voir tous les départs de cet arrêt.</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran « détail de la course » (SPEC.md § 5.3).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+
+  Les libellés de retard, de suppression et de mode ne sont pas repris ici : ils vivent dans
+  strings_results.xml et strings_map.xml, et cet écran les réutilise tels quels — une course
+  supprimée doit se dire pareil partout.
+-->
+<resources>
+  <string name="trip_title">Service details</string>
+  <string name="trip_action_refresh">Refresh</string>
+
+  <!-- En-tête : la ligne, sa direction, son transporteur. -->
+  <string name="trip_towards">To %1$s</string>
+  <string name="trip_agency">Operated by %1$s</string>
+  <string name="trip_line_description">%1$s, line %2$s</string>
+
+  <!-- La desserte. Le compte annonce ce que la liste va montrer, pluriel de la langue compris. -->
+  <plurals name="trip_calls_count">
+    <item quantity="one">%1$d stop</item>
+    <item quantity="other">%1$d stops</item>
+  </plurals>
+  <string name="trip_arrival">Arrival %1$s</string>
+  <string name="trip_departure">Departure %1$s</string>
+  <string name="trip_scheduled_time">Scheduled %1$s</string>
+  <string name="trip_track">Platform %1$s</string>
+  <!-- Un arrêt supprimé de la desserte par une mise à jour temps réel : le barré ne suffit pas,
+       il faut l'écrire (SPEC.md § 9). -->
+  <string name="trip_call_cancelled">Stop skipped</string>
+  <string name="trip_call_unnamed">Unnamed stop</string>
+
+  <!-- États (SPEC.md § 8 : jamais un écran vide muet). -->
+  <string name="trip_loading">Loading every stop of this service…</string>
+  <string name="trip_empty">This service has no published stops</string>
+  <string name="trip_empty_hint">The server knows the service but not where it calls. Try again later.</string>
+</resources>

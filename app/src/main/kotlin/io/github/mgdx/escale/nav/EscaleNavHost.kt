@@ -1,14 +1,20 @@
 package io.github.mgdx.escale.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import io.github.mgdx.escale.appContainer
 import io.github.mgdx.escale.ui.about.AboutRoute
 import io.github.mgdx.escale.ui.about.AboutScreen
 import io.github.mgdx.escale.ui.about.LicenseRoute
 import io.github.mgdx.escale.ui.about.LicenseScreen
+import io.github.mgdx.escale.ui.departures.DeparturesRoute
+import io.github.mgdx.escale.ui.departures.DeparturesScreen
 import io.github.mgdx.escale.ui.detail.DetailRoute
 import io.github.mgdx.escale.ui.detail.DetailScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
@@ -19,6 +25,8 @@ import io.github.mgdx.escale.ui.server.ServerSettingsRoute
 import io.github.mgdx.escale.ui.server.ServerSettingsScreen
 import io.github.mgdx.escale.ui.settings.SettingsRoute
 import io.github.mgdx.escale.ui.settings.SettingsScreen
+import io.github.mgdx.escale.ui.trip.TripRoute
+import io.github.mgdx.escale.ui.trip.TripScreen
 
 /**
  * Le graphe de navigation, en routes typées (docs/architecture.md § 3, règle 4).
@@ -28,6 +36,7 @@ import io.github.mgdx.escale.ui.settings.SettingsScreen
  */
 @Composable
 fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
+  StopDepartureNavigation(navController)
   NavHost(navController = navController, startDestination = HomeRoute) {
     composable<HomeRoute> {
       // Les deux emplacements de l'écran d'accueil (docs/architecture.md § 11.4). Ils sont branchés
@@ -72,7 +81,53 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
     composable<DetailRoute> {
       // Le retour ne touche pas au trajet mis en évidence : il reste tracé et cadré sur la carte,
       // et la carte de résultat correspondante reste distinguée dans la liste (SPEC.md § 5.1).
-      DetailScreen(onBack = navController::popBackStack)
+      DetailScreen(
+        onBack = navController::popBackStack,
+        // Le point d'accroche laissé par le lot « détail » : une portion en transport en commun
+        // mène à la desserte complète de sa course (SPEC.md § 5.3). Il est branché ici, et non
+        // dans `ui/detail`, pour que les deux lots n'aient pas à se connaître.
+        onTripSelected = { tripId ->
+          navController.navigate(TripRoute(tripId)) { launchSingleTop = true }
+        },
+      )
     }
+    composable<DeparturesRoute> {
+      DeparturesScreen(
+        onBack = navController::popBackStack,
+        onOpenTrip = { tripId ->
+          navController.navigate(TripRoute(tripId)) { launchSingleTop = true }
+        },
+      )
+    }
+    composable<TripRoute> {
+      TripScreen(onBack = navController::popBackStack)
+    }
+  }
+}
+
+/**
+ * L'infobulle d'un arrêt de la carte mène aux prochains départs (SPEC.md § 5.7 et § 5.4).
+ *
+ * Le lot « carte » n'a pas à connaître cet écran : il dépose sa demande dans
+ * `AppContainer.stopDepartureRequests`, et c'est la navigation qui la consomme — même dispositif
+ * que `MapSelection` pour l'écran de recherche (docs/architecture.md § 11.4). L'infobulle n'a donc
+ * pas changé d'une ligne.
+ *
+ * La demande porte un jeton qui change à chaque appui : sans lui, redemander deux fois le même
+ * arrêt ne déclencherait rien la seconde fois. `consume()` l'acquitte aussitôt, pour qu'un retour
+ * en arrière ne rouvre pas l'écran tout seul.
+ */
+@Composable
+private fun StopDepartureNavigation(navController: NavHostController) {
+  val requests = appContainer().stopDepartureRequests
+  val request by requests.request.collectAsStateWithLifecycle()
+  LaunchedEffect(request?.token) {
+    val pending = request ?: return@LaunchedEffect
+    // `launchSingleTop` : deux appuis très rapprochés ouvrent un seul écran, jamais deux
+    // exemplaires empilés l'un sur l'autre.
+    navController.navigate(DeparturesRoute(stopId = pending.stopId, stopName = pending.stopName)) {
+      launchSingleTop = true
+    }
+    requests.consume()
   }
 }
