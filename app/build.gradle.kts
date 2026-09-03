@@ -40,6 +40,9 @@ val abiVersionCodeMultiplier = 1000
  */
 val measurementBuildType = "releaseTest"
 
+/** L'objectif de SPEC.md § 2 : « APK visé < 15 Mo **par APK d'architecture** ». */
+val apkSizeBudgetBytes = 15L * 1000 * 1000
+
 android {
   namespace = "io.github.mgdx.escale"
   compileSdk {
@@ -206,4 +209,114 @@ dependencies {
   androidTestImplementation(libs.androidx.junit)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Garde-fous de la publication minifiée.
+//
+// R8 ne tourne **que** sur la variante de publication : aucun test JVM, aucun `lint`, aucun
+// `detekt` ne voit son résultat. Une règle de conservation manquante ne casse donc pas la
+// compilation — elle casse l'application à l'exécution, en publication seulement, et silencieusement.
+// Ces deux tâches sont ce qui rend le défaut détectable sans appareil ; elles finalisent
+// `assembleRelease`, donc elles s'exécutent d'office.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Les classes que **quelque chose d'autre que le bytecode** désigne par leur nom : le code natif de
+ * MapLibre (`FindClass`), `Class.forName` dans Room et WorkManager, le manifeste pour l'application
+ * et l'activité. R8 n'a aucun moyen de le savoir : si la règle qui les protège disparaît, il les
+ * renomme, et l'application se lance puis échoue à l'endroit exact où personne ne regarde.
+ *
+ * Chaque entrée a été établie en lisant `outputs/mapping/release/configuration.txt`, qui liste les
+ * règles réellement reçues par R8, puis vérifiée dans `mapping.txt`.
+ */
+val classesKeptByName = listOf(
+  // Instanciées par le système d'après le nom écrit dans AndroidManifest.xml.
+  "io.github.mgdx.escale.EscaleApplication",
+  "io.github.mgdx.escale.MainActivity",
+  // Room appelle `Class.forName("<base>_Impl")`. Protégée par la règle de `room-runtime`
+  // (`-keep class * extends androidx.room.RoomDatabase { void <init>(); }`).
+  "io.github.mgdx.escale.data.db.EscaleDatabase_Impl",
+  // WorkManager instancie le worker par son nom de classe, enregistré dans sa propre base.
+  // Protégée par `-keepnames class * extends androidx.work.ListenableWorker` de `work-runtime`.
+  // `CoroutineWorker` étend bien `ListenableWorker`, pas `Worker` : la règle historique
+  // `-keep class * extends androidx.work.Worker`, elle, n'aurait pas suffi.
+  "io.github.mgdx.escale.work.JourneyWatchWorker",
+  // Trouvées depuis le moteur natif de MapLibre. Protégées par `@Keep` et le fichier de règles par
+  // défaut d'AGP, pas par le `proguard.txt` de l'AAR — d'où l'intérêt de le vérifier.
+  "org.maplibre.android.maps.NativeMapView",
+  "org.maplibre.android.maps.renderer.MapRenderer",
+  "org.maplibre.android.storage.FileSource",
+  "org.maplibre.android.geometry.LatLng",
+  "org.maplibre.android.geometry.LatLngBounds",
+  "org.maplibre.android.style.layers.Layer",
+  "org.maplibre.android.style.sources.Source",
+)
+
+val releaseMappingFile = layout.buildDirectory.file("outputs/mapping/release/mapping.txt")
+
+val verifyReleaseKeepRules = tasks.register("verifyReleaseKeepRules") {
+  group = "verification"
+  description = "Vérifie que R8 n'a ni supprimé ni renommé les classes désignées par leur nom."
+  val mapping = releaseMappingFile
+  // Recopiées dans des variables locales : une lambda `doLast` qui lit une propriété du script
+  // capture le script lui-même, que le cache de configuration ne sait pas sérialiser.
+  val expected = classesKeptByName
+  doLast {
+    val lines = mapping.get().asFile.readLines()
+    val renamedTo = lines
+      .filter { it.isNotEmpty() && !it.startsWith(" ") && it.contains(" -> ") }
+      .associate { line ->
+        val separator = line.indexOf(" -> ")
+        line.substring(0, separator) to line.substring(separator + 4).removeSuffix(":")
+      }
+    val broken = expected.mapNotNull { name ->
+      when (renamedTo[name]) {
+        null -> "$name : supprimée par R8"
+        name -> null
+        else -> "$name : renommée en ${renamedTo[name]}"
+      }
+    }
+    // Les sérialiseurs engendrés par kotlinx.serialization : R8 les marque `R8$$REMOVED$$CLASS$$n`
+    // quand il les supprime. Un DTO dont le sérialiseur disparaît rend toute réponse de l'API
+    // illisible, et rien d'autre ne le signalerait.
+    val removedSerializers = renamedTo
+      .filterKeys { it.startsWith("io.github.mgdx.escale") && it.endsWith("\$\$serializer") }
+      .filterValues { it.startsWith("R8\$\$REMOVED") }
+      .keys
+      .map { "$it : sérialiseur supprimé par R8" }
+    val failures = broken + removedSerializers
+    if (failures.isNotEmpty()) {
+      error(
+        "Minification cassée : la publication se compilerait sans rien signaler et échouerait sur " +
+          "l'appareil. Ajoute la règle manquante dans app/src/main/keepRules/.\n" +
+          failures.joinToString("\n") { "  - $it" },
+      )
+    }
+  }
+}
+
+val releaseApkDirectory = layout.buildDirectory.dir("outputs/apk/release")
+
+val verifyReleaseApkSize = tasks.register("verifyReleaseApkSize") {
+  group = "verification"
+  description = "Vérifie le budget de SPEC.md § 2 : moins de 15 Mo par APK d'architecture."
+  val apks = releaseApkDirectory
+  val budget = apkSizeBudgetBytes
+  doLast {
+    val files = apks.get().asFile.listFiles { file -> file.name.endsWith(".apk") }.orEmpty().sorted()
+    check(files.isNotEmpty()) { "Aucun APK de publication à mesurer dans ${apks.get().asFile}" }
+    files.forEach { logger.lifecycle("  ${it.name} : ${it.length() / 1_000_000.0} Mo") }
+    val overBudget = files.filter { it.length() > budget }
+    if (overBudget.isNotEmpty()) {
+      error(
+        "Budget de SPEC.md § 2 dépassé (${budget / 1_000_000} Mo par APK d'architecture) :\n" +
+          overBudget.joinToString("\n") { "  - ${it.name} : ${it.length() / 1_000_000.0} Mo" },
+      )
+    }
+  }
+}
+
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+  finalizedBy(verifyReleaseKeepRules, verifyReleaseApkSize)
 }
