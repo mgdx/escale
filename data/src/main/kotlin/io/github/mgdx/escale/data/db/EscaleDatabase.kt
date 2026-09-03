@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * La base locale d'Escale : favoris, historique et trajets surveillés (SPEC.md § 5.5).
@@ -19,9 +21,9 @@ import androidx.room.RoomDatabase
  *    `BuildConfig.DEBUG`. Un journal de requêtes contiendrait ici des adresses.
  * 3. Aucune donnée ne quitte la base par une autre voie que les dépôts de `data.repository`.
  *
- * **`version = 1`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
- * toute seule à la mise à jour est un défaut, pas une simplification : la version 2 devra fournir
- * une `Migration`, et le schéma exporté dans `data/schemas` est ce qui permettra de la vérifier.
+ * **`version = 2`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
+ * toute seule à la mise à jour est un défaut, pas une simplification : la version 2 fournit donc
+ * [MIGRATION_1_2], et les schémas exportés dans `data/schemas` sont ce qui permet de la vérifier.
  */
 @Database(
   entities = [
@@ -32,7 +34,7 @@ import androidx.room.RoomDatabase
     SearchHistoryEntity::class,
     WatchedJourneyEntity::class,
   ],
-  version = 1,
+  version = 2,
   exportSchema = true,
 )
 abstract class EscaleDatabase : RoomDatabase() {
@@ -44,6 +46,22 @@ abstract class EscaleDatabase : RoomDatabase() {
   internal abstract fun watchedJourneysDao(): WatchedJourneysDao
 
   companion object {
+    /**
+     * Version 1 → 2 : l'heure demandée rejoint la recherche enregistrée.
+     *
+     * `search_history` gagne deux colonnes, et rien d'autre ne bouge. Les lignes déjà là gardent
+     * leur départ, leur arrivée et leur horodatage ; leur heure demandée est inconnue, et vaut donc
+     * « maintenant » — c'est ce que dit le `DEFAULT`, aligné sur celui que déclare
+     * `SearchHistoryEntity`. **Aucune donnée n'est effacée** : une mise à jour qui viderait les
+     * favoris ou l'historique serait une perte, pas une migration.
+     */
+    val MIGRATION_1_2 = object : Migration(1, 2) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE search_history ADD COLUMN timeMode TEXT NOT NULL DEFAULT '$TIME_MODE_NOW'")
+        db.execSQL("ALTER TABLE search_history ADD COLUMN timeMillis INTEGER")
+      }
+    }
+
     /** Nom du fichier dans le répertoire privé `databases/` de l'application. */
     const val FILE_NAME = "escale.db"
 
@@ -57,6 +75,7 @@ abstract class EscaleDatabase : RoomDatabase() {
      */
     fun create(context: Context): EscaleDatabase =
       Room.databaseBuilder(context.applicationContext, EscaleDatabase::class.java, FILE_NAME)
+        .addMigrations(MIGRATION_1_2)
         .build()
   }
 }

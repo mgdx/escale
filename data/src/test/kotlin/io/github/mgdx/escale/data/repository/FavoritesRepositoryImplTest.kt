@@ -112,28 +112,39 @@ class FavoritesRepositoryImplTest {
   }
 
   @Test
-  fun `un lieu favori se relit tel qu il a ete enregistre`() = runBlocking {
+  fun `un lieu favori garde le nom que l usager lui a donne`() = runBlocking {
     val lieu = stopLocation("de:06:9999", "Châtelet")
-    assertTrue(repository.addPlace(lieu, label = "Chez Maman") is Outcome.Success)
+    val outcome = repository.addPlace(lieu, label = "Chez Maman")
+    assertTrue(outcome is Outcome.Success)
 
     val releve = repository.places.first().single()
-    // Le libellé de l'usager n'écrase pas le nom du serveur : le repli de SPEC.md § 5.6.1 en dépend.
-    assertEquals(lieu, releve)
-    assertEquals(PlaceKind.STOP, releve.kind)
+    assertEquals((outcome as Outcome.Success).value, releve.id)
+    // SPEC.md § 5.5 parle de « lieux nommés » : le nom de l'usager se relit…
+    assertEquals("Chez Maman", releve.label)
+    assertEquals("Chez Maman", releve.displayName)
+    // …sans écraser le nom du serveur, dont dépend le repli de SPEC.md § 5.6.1.
+    assertEquals(lieu, releve.location)
+    assertEquals(PlaceKind.STOP, releve.location.kind)
+    assertEquals(NOW, releve.createdAt)
   }
 
   @Test
-  fun `un lieu favori se supprime, une adresse comme un arret`() = runBlocking {
-    val adresse = address("12 rue des Lilas")
-    val arret = stopLocation("de:06:9999", "Châtelet")
-    repository.addPlace(adresse, label = null)
-    repository.addPlace(arret, label = null)
+  fun `un lieu sans libelle s affiche sous le nom du serveur`() = runBlocking {
+    repository.addPlace(address("12 rue des Lilas"), label = null)
+    assertEquals("12 rue des Lilas", repository.places.first().single().displayName)
+  }
 
-    assertTrue(repository.removePlace(adresse) is Outcome.Success)
-    assertEquals(listOf(arret), repository.places.first())
+  @Test
+  fun `un lieu favori se supprime par son identifiant, sans emporter son homonyme`() = runBlocking {
+    val lieu = stopLocation("de:06:9999", "Châtelet")
+    val premier = repository.addPlace(lieu, label = "Le café") as Outcome.Success
+    repository.addPlace(lieu, label = "L'appartement au-dessus")
 
-    assertTrue(repository.removePlace(arret) is Outcome.Success)
-    assertTrue(repository.places.first().isEmpty())
+    // Même nom, mêmes coordonnées, même identifiant d'arrêt : seul l'identifiant de la ligne les
+    // distingue, et la première version les effaçait tous les deux d'un coup.
+    assertTrue(repository.removePlace(premier.value) is Outcome.Success)
+
+    assertEquals(listOf("L'appartement au-dessus"), repository.places.first().map { it.label })
   }
 
   @Test

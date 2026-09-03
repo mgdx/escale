@@ -1,8 +1,9 @@
 package io.github.mgdx.escale.data.repository
 
 import android.database.SQLException
+import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.SearchHistoryEntry
-import io.github.mgdx.escale.core.model.SearchQuery
+import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.HistoryRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
 import io.github.mgdx.escale.core.result.EscaleError
@@ -11,6 +12,8 @@ import io.github.mgdx.escale.data.db.EscaleDatabase
 import io.github.mgdx.escale.data.db.SearchHistoryEntity
 import io.github.mgdx.escale.data.db.toColumns
 import io.github.mgdx.escale.data.db.toHistoryEntry
+import io.github.mgdx.escale.data.db.toMillisColumn
+import io.github.mgdx.escale.data.db.toModeColumn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -41,11 +44,13 @@ class HistoryRepositoryImpl(
   override val recentSearches: Flow<List<SearchHistoryEntry>> =
     dao.observeRecent(HistoryRepository.MAX_ENTRIES).map { rows -> rows.map { it.toHistoryEntry() } }
 
-  override suspend fun record(query: SearchQuery): Outcome<Unit> {
+  override suspend fun record(from: Location, to: Location, time: TimeChoice): Outcome<Unit> {
     if (!preferencesRepository.displayPreferences.first().historyEnabled) return Outcome.Success(Unit)
     val entry = SearchHistoryEntity(
-      from = query.from.toColumns(),
-      to = query.to.toColumns(),
+      from = from.toColumns(),
+      to = to.toColumns(),
+      timeMode = time.toModeColumn(),
+      timeMillis = time.toMillisColumn(),
       searchedAt = clock().toEpochMilli(),
     )
     return write { dao.record(entry, HistoryRepository.MAX_ENTRIES) }
