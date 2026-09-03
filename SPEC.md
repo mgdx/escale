@@ -653,6 +653,25 @@ Permissions déclarées, et aucune autre :
   `SecurityException` sans elle. Permission de **niveau normal** : accordée à l'installation, sans
   écran de consentement, elle ne donne accès qu'à l'état « connecté ou non » de l'appareil et ne
   révèle rien sur l'usager ni sur ses déplacements.
+- `WAKE_LOCK`, exigée par `androidx.work` : la bibliothèque tient l'appareil éveillé le temps
+  d'exécuter une tâche, faute de quoi la vérification d'un trajet surveillé (§ 5.5.1) serait
+  interrompue par la mise en veille. Permission de **niveau normal** : accordée à l'installation,
+  sans écran de consentement, elle ne donne accès à aucune donnée et ne révèle rien sur l'usager ni
+  sur ses déplacements — elle empêche seulement l'appareil de se rendormir pendant les quelques
+  secondes que dure la requête.
+
+`androidx.work` déclare **quatre** permissions dans son propre manifeste. `ACCESS_NETWORK_STATE` est
+déjà celle de MapLibre et `WAKE_LOCK` est retenue ci-dessus ; les **deux autres sont explicitement
+retirées** du manifeste fusionné, par `tools:node="remove"`, parce que la phrase qui suit les
+interdit nommément :
+
+- `RECEIVE_BOOT_COMPLETED`, qui est une permission de **démarrage automatique** : elle sert au
+  `RescheduleReceiver` de la bibliothèque, qui reprogramme ses tâches après un redémarrage.
+  Conséquence, spécifiée au § 5.5.1 et annoncée à l'usager : une surveillance ne se replanifie
+  qu'à la prochaine ouverture de l'application.
+- `FOREGROUND_SERVICE`, qui est une permission de **service en arrière-plan** : l'application
+  n'appelle jamais `setForeground`, et le service correspondant de la bibliothèque est désactivé
+  dès la fusion des manifestes.
 
 L'application doit rester entièrement utilisable si la permission de localisation est refusée.
 Aucune permission de stockage, de contacts, de démarrage automatique, de service en arrière-plan,
