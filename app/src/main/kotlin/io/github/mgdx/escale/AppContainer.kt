@@ -11,11 +11,13 @@ import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
+import io.github.mgdx.escale.data.net.RentalsApi
 import io.github.mgdx.escale.data.net.StopsApi
 import io.github.mgdx.escale.data.prefs.PreferencesRepositoryImpl
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
@@ -23,6 +25,7 @@ import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
 import io.github.mgdx.escale.data.repository.MapRepositoryImpl
 import io.github.mgdx.escale.data.repository.PlanCache
 import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
+import io.github.mgdx.escale.data.repository.RentalsRepositoryImpl
 import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
@@ -121,6 +124,17 @@ class AppContainer(context: Context) {
    */
   val stopsRepository: StopsRepository by lazy {
     StopsRepositoryImpl(StopsApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
+  }
+
+  /**
+   * Les stations et véhicules en libre-service (SPEC.md § 5.3 et § 5.7).
+   *
+   * Le dépôt porte le cache de la règle 4 de SPEC.md § 5.7, mais réglé à **soixante secondes** et
+   * non à dix minutes : une disponibilité est une donnée volatile, et l'afficher périmée revient à
+   * envoyer quelqu'un devant une station vide.
+   */
+  val rentalsRepository: RentalsRepository by lazy {
+    RentalsRepositoryImpl(RentalsApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
   }
 
   /** Cadrage initial proposé par le serveur, dernier recours du cadrage de SPEC.md § 5.1. */

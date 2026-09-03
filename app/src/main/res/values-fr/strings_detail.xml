@@ -85,8 +85,54 @@
   <string name="detail_rental_propulsion_hybrid">Hybride</string>
   <string name="detail_rental_propulsion_plug_in_hybrid">Hybride rechargeable</string>
   <string name="detail_rental_propulsion_hydrogen">Pile à hydrogène</string>
+  <string name="detail_rental_availability_loading">Relevé des disponibilités…</string>
+  <string name="detail_rental_availability_error">Disponibilité non obtenue</string>
+  <string name="detail_rental_availability_unknown">Cet exploitant ne publie pas la disponibilité de cette station</string>
+  <string name="detail_rental_retrieved_at">Disponibilité relevée à %1$s</string>
+  <string name="detail_rental_refresh">Actualiser la disponibilité</string>
+  <string name="detail_rental_not_renting">Cette station ne loue plus de véhicule pour le moment</string>
+  <string name="detail_rental_not_returning">La station de retour n\'accepte plus de retour pour le moment</string>
+  <plurals name="detail_rental_available_bikes">
+    <item quantity="one">%d vélo disponible</item>
+    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
+         l\'exige pour que le pluriel soit complet. -->
+    <item quantity="many">%d de vélos disponibles</item>
+    <item quantity="other">%d vélos disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_available_cargo_bikes">
+    <item quantity="one">%d vélo cargo disponible</item>
+    <item quantity="many">%d de vélos cargos disponibles</item>
+    <item quantity="other">%d vélos cargos disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_available_scooters">
+    <item quantity="one">%d trottinette disponible</item>
+    <item quantity="many">%d de trottinettes disponibles</item>
+    <item quantity="other">%d trottinettes disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_available_mopeds">
+    <item quantity="one">%d scooter disponible</item>
+    <item quantity="many">%d de scooters disponibles</item>
+    <item quantity="other">%d scooters disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_available_cars">
+    <item quantity="one">%d voiture disponible</item>
+    <item quantity="many">%d de voitures disponibles</item>
+    <item quantity="other">%d voitures disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_available_vehicles">
+    <item quantity="one">%d véhicule disponible</item>
+    <item quantity="many">%d de véhicules disponibles</item>
+    <item quantity="other">%d véhicules disponibles</item>
+  </plurals>
+  <plurals name="detail_rental_docks_free">
+    <item quantity="one">%d place libre à l\'arrivée</item>
+    <item quantity="many">%d de places libres à l\'arrivée</item>
+    <item quantity="other">%d places libres à l\'arrivée</item>
+  </plurals>
+
   <string name="detail_rental_open_app">Ouvrir l\'application %1$s</string>
   <string name="detail_rental_open_app_generic">Ouvrir l\'application de l\'exploitant</string>
+  <string name="detail_rental_open_app_failed">Aucune application de cet appareil ne peut ouvrir ce lien</string>
 
   <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>
   <string name="detail_share_origin">Départ : %1$s (%2$s)</string>

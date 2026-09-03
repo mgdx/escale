@@ -1,0 +1,422 @@
+{
+  "providerGroups": [
+    {
+      "id": "Hopp Konstanz",
+      "name": "Hopp Konstanz",
+      "providers": [
+        "de-HoppKonstanz"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    },
+    {
+      "id": "Mein konrad",
+      "name": "Mein konrad",
+      "providers": [
+        "de-MeinKonrad"
+      ],
+      "formFactors": [
+        "CARGO_BICYCLE",
+        "BICYCLE"
+      ]
+    },
+    {
+      "id": "Zeus Scooters",
+      "name": "Zeus Scooters",
+      "providers": [
+        "de-ZeusGöppingen",
+        "de-ZeusTübingen",
+        "de-ZeusSchwäbischGmünd",
+        "de-ZeusRenningenMalmsheim",
+        "de-ZeusPforzheim",
+        "de-ZeusKonstanz",
+        "de-ZeusTuttlingen",
+        "de-ZeusHeidelberg",
+        "de-ZeusWürzburg",
+        "de-ZeusFreiburg",
+        "de-ZeusLudwigsburg",
+        "de-ZeusVillingenSchwenningen",
+        "de-ZeusNeustadt"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    },
+    {
+      "id": "Lime",
+      "name": "Lime",
+      "providers": [
+        "de-LimeBW"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING",
+        "BICYCLE"
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "id": "de-HoppKonstanz",
+      "name": "Hopp Konstanz",
+      "groupId": "Hopp Konstanz",
+      "operator": "Hopp Konstanz",
+      "url": "https://hopp.bike/",
+      "purchaseUrl": "",
+      "bbox": [
+        9.136739,
+        47.655645,
+        9.207984,
+        47.692258
+      ],
+      "vehicleTypes": [
+        {
+          "id": "HOP:VehicleType:vtp_120",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-MeinKonrad",
+      "name": "Mein konrad",
+      "groupId": "Mein konrad",
+      "operator": "nextbike by TIER - Karl-Heine-Str. 46 - D-04229 Leipzig",
+      "url": "https://www.stadtwerke-konstanz.de/mobilitaet/fahrradmietsystem/",
+      "purchaseUrl": "",
+      "bbox": [
+        9.11593,
+        47.654916,
+        9.214634,
+        47.745881
+      ],
+      "vehicleTypes": [
+        {
+          "id": "300",
+          "name": "Konrad Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "299",
+          "name": "Konrad Bike",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "305",
+          "name": "Konrad E-Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "301",
+          "name": "Konrad Trike Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "300",
+          "name": "Konrad Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "299",
+          "name": "Konrad Bike",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "305",
+          "name": "Konrad E-Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "301",
+          "name": "Konrad Trike Lastenrad",
+          "formFactor": "CARGO_BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "CARGO_BICYCLE",
+        "BICYCLE"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-ZeusKonstanz",
+      "name": "Zeus Scooters",
+      "groupId": "Zeus Scooters",
+      "operator": "",
+      "url": "https://zeusscooters.com",
+      "purchaseUrl": "",
+      "bbox": [
+        9.142347,
+        47.65754,
+        9.209425,
+        47.691933
+      ],
+      "vehicleTypes": [
+        {
+          "id": "yimi_plus_3",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-LimeBW",
+      "name": "Lime",
+      "groupId": "Lime",
+      "operator": "Lime",
+      "url": "",
+      "purchaseUrl": "",
+      "bbox": [
+        9.088059,
+        47.655894,
+        9.27121,
+        48.851053
+      ],
+      "vehicleTypes": [
+        {
+          "id": "LMG:VehicleType:1",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": false
+        },
+        {
+          "id": "LMG:VehicleType:2",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": false
+        },
+        {
+          "id": "LMG:VehicleType:3",
+          "name": "",
+          "formFactor": "BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": false
+        },
+        {
+          "id": "LMG:VehicleType:4",
+          "name": "",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": false
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING",
+        "BICYCLE"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    }
+  ],
+  "stations": [
+    {
+      "id": "379038003",
+      "providerId": "de-MeinKonrad",
+      "providerGroupId": "Mein konrad",
+      "name": "Stephansplatz (k PLUS Station)",
+      "lat": 47.661659,
+      "lon": 9.173094,
+      "address": "",
+      "crossStreet": "",
+      "rentalUriAndroid": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriIOS": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriWeb": "https://nxtb.it/p/379038003",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 2,
+      "formFactors": [
+        "BICYCLE",
+        "CARGO_BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "299": 1,
+        "300": 1
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        9.173094,
+        47.661659,
+        9.173094,
+        47.661659
+      ]
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "HOP:Vehicle:2580073e-acc4-4166-a44e-b4999d25630c",
+      "providerId": "de-HoppKonstanz",
+      "providerGroupId": "Hopp Konstanz",
+      "typeId": "HOP:VehicleType:vtp_120",
+      "lat": 47.661356,
+      "lon": 9.177149,
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "NONE",
+      "stationId": "",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://app.hopp.bike/launch/2580073e-acc4-4166-a44e-b4999d25630c?direct",
+      "rentalUriIOS": "https://app.hopp.bike/launch/2580073e-acc4-4166-a44e-b4999d25630c?direct",
+      "rentalUriWeb": ""
+    },
+    {
+      "id": "HOP:Vehicle:bef25fc0-f688-4d8b-b499-dedc583e91c7",
+      "providerId": "de-HoppKonstanz",
+      "providerGroupId": "Hopp Konstanz",
+      "typeId": "HOP:VehicleType:vtp_120",
+      "lat": 47.661736,
+      "lon": 9.173738,
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "NONE",
+      "stationId": "",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://app.hopp.bike/launch/bef25fc0-f688-4d8b-b499-dedc583e91c7?direct",
+      "rentalUriIOS": "https://app.hopp.bike/launch/bef25fc0-f688-4d8b-b499-dedc583e91c7?direct",
+      "rentalUriWeb": ""
+    },
+    {
+      "id": "HOP:Vehicle:c8efdefe-8000-494d-a968-6f1f8587070f",
+      "providerId": "de-HoppKonstanz",
+      "providerGroupId": "Hopp Konstanz",
+      "typeId": "HOP:VehicleType:vtp_120",
+      "lat": 47.661553,
+      "lon": 9.177144,
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "NONE",
+      "stationId": "",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://app.hopp.bike/launch/c8efdefe-8000-494d-a968-6f1f8587070f?direct",
+      "rentalUriIOS": "https://app.hopp.bike/launch/c8efdefe-8000-494d-a968-6f1f8587070f?direct",
+      "rentalUriWeb": ""
+    },
+    {
+      "id": "HOP:Vehicle:d5253ed5-7ff7-4214-8a9a-1ee773510fb2",
+      "providerId": "de-HoppKonstanz",
+      "providerGroupId": "Hopp Konstanz",
+      "typeId": "HOP:VehicleType:vtp_120",
+      "lat": 47.662835,
+      "lon": 9.173014,
+      "formFactor": "SCOOTER_STANDING",
+      "propulsionType": "ELECTRIC",
+      "returnConstraint": "NONE",
+      "stationId": "",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://app.hopp.bike/launch/d5253ed5-7ff7-4214-8a9a-1ee773510fb2?direct",
+      "rentalUriIOS": "https://app.hopp.bike/launch/d5253ed5-7ff7-4214-8a9a-1ee773510fb2?direct",
+      "rentalUriWeb": ""
+    },
+    {
+      "id": "4oBdlA0OQgV7k1qT51rroPDVXNMy5pRz",
+      "providerId": "de-MeinKonrad",
+      "providerGroupId": "Mein konrad",
+      "typeId": "299",
+      "lat": 47.661659,
+      "lon": 9.173094,
+      "formFactor": "BICYCLE",
+      "propulsionType": "HUMAN",
+      "returnConstraint": "NONE",
+      "stationId": "379038003",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriIOS": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriWeb": "https://nxtb.it/p/379038003"
+    },
+    {
+      "id": "8WeyKXB25DlmMbNuRAPazanq0lVJ3ZbY",
+      "providerId": "de-MeinKonrad",
+      "providerGroupId": "Mein konrad",
+      "typeId": "300",
+      "lat": 47.661659,
+      "lon": 9.173094,
+      "formFactor": "CARGO_BICYCLE",
+      "propulsionType": "HUMAN",
+      "returnConstraint": "NONE",
+      "stationId": "379038003",
+      "homeStationId": "",
+      "isReserved": false,
+      "isDisabled": false,
+      "rentalUriAndroid": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriIOS": "https://konrad.nextbike.app/station?id=379038003",
+      "rentalUriWeb": "https://nxtb.it/p/379038003"
+    }
+  ],
+  "zones": []
+}

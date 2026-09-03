@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.detail
 
+import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyPage
@@ -7,10 +8,17 @@ import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.Place
 import io.github.mgdx.escale.core.model.PlaceKind
+import io.github.mgdx.escale.core.model.RentalAvailability
+import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalInfo
+import io.github.mgdx.escale.core.model.RentalPropulsionType
+import io.github.mgdx.escale.core.model.RentalReturnConstraint
+import io.github.mgdx.escale.core.model.RentalVehicleKind
 import io.github.mgdx.escale.core.model.SearchQuery
 import io.github.mgdx.escale.core.model.StopVisit
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.repository.PlanRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.session.SearchSession
 import java.time.Duration
@@ -119,3 +127,94 @@ internal fun sessionWithSearch(): SearchSession = SearchSession().apply {
   setFrom(Location(null, "Bercy", null, LatLon(48.84, 2.38), PlaceKind.ADDRESS))
   setTo(Location(null, "Nation", null, LatLon(48.85, 2.39), PlaceKind.ADDRESS))
 }
+
+/**
+ * Un dépôt de libre-service qui note **les points réellement interrogés**.
+ *
+ * C'est la seule façon de prouver les deux règles de sobriété de la portion partagée : aucune
+ * requête tant que la portion n'est pas dépliée, et aucune requête du tout pour un véhicule en
+ * free-floating, qui n'a pas de station dont compter les vélos (SPEC.md § 5.3 et § 7).
+ */
+class RecordingRentalsRepository : RentalsRepository {
+
+  val calls = mutableListOf<LatLon>()
+
+  var answer: Outcome<List<RentalAvailability>> = Outcome.Success(emptyList())
+
+  override suspend fun stationsIn(area: BoundingBox): Outcome<List<RentalAvailability>> = answer
+
+  override suspend fun availabilityNear(point: LatLon, radiusMeters: Int): Outcome<List<RentalAvailability>> {
+    calls += point
+    return answer
+  }
+}
+
+/** Les deux extrémités du trajet à vélo partagé de `plan_rental_direct.json`, à Berlin. */
+internal val PICKUP_POINT = LatLon(lat = 52.52369, lon = 13.37076)
+
+internal val DROPOFF_POINT = LatLon(lat = 52.52025, lon = 13.41348)
+
+internal const val PICKUP_STATION = "Jelbi S+U Hauptbahnhof / Washingtonplatz"
+
+internal const val DROPOFF_STATION = "Jelbi S+U Alexanderplatz / Grunerstraße"
+
+/**
+ * Une portion en véhicule partagé.
+ *
+ * Les deux noms de stations sont réglables parce que c'est eux, et eux seuls, qui distinguent une
+ * portion en station d'un véhicule en free-floating (SPEC.md § 5.3).
+ */
+internal fun rentalLeg(
+  from: Long,
+  to: Long,
+  pickupName: String? = PICKUP_STATION,
+  dropoffName: String? = DROPOFF_STATION,
+) = JourneyLeg.Rental(
+  startTime = at(from),
+  endTime = at(to),
+  scheduledStartTime = at(from),
+  scheduledEndTime = at(to),
+  duration = Duration.ofMinutes(to - from),
+  from = Place(
+    name = pickupName.orEmpty(),
+    coordinates = PICKUP_POINT,
+    stopId = null,
+    track = null,
+    scheduledTime = at(from),
+    time = at(from),
+  ),
+  to = Place(
+    name = dropoffName.orEmpty(),
+    coordinates = DROPOFF_POINT,
+    stopId = null,
+    track = null,
+    scheduledTime = at(to),
+    time = at(to),
+  ),
+  rental = RentalInfo(
+    systemId = "callabike",
+    systemName = "Call a Bike",
+    providerId = "de-CallaBike",
+    color = null,
+    url = "https://www.callabike.de",
+    fromStationName = pickupName,
+    toStationName = dropoffName,
+    rentalUriAndroid = "https://www.callabike.de/app",
+    formFactor = RentalFormFactor.BICYCLE,
+    propulsionType = RentalPropulsionType.HUMAN,
+    returnConstraint = RentalReturnConstraint.ANY_STATION,
+  ),
+)
+
+/** Une station, telle que `/api/v1/rentals` la rend une fois traduite dans le domaine. */
+internal fun availability(name: String, at: LatLon, vehicles: Int, retrievedAt: Instant) = RentalAvailability(
+  stationId = name,
+  name = name,
+  coordinates = at,
+  numVehiclesAvailable = vehicles,
+  vehicleTypesAvailable = mapOf("CAB:VehicleType:885345af" to vehicles),
+  retrievedAt = retrievedAt,
+  vehicleKinds = mapOf(
+    "CAB:VehicleType:885345af" to RentalVehicleKind(RentalFormFactor.BICYCLE, RentalPropulsionType.HUMAN),
+  ),
+)

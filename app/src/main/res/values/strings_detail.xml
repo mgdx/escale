@@ -91,7 +91,7 @@
   <string name="detail_step_uturn_left">Make a U-turn to the left</string>
   <string name="detail_step_uturn_right">Make a U-turn to the right</string>
 
-  <!-- Libre-service (SPEC.md § 5.3). Les disponibilités des stations relèvent du jalon 8. -->
+  <!-- Libre-service (SPEC.md § 5.3). -->
   <string name="detail_rental_pickup">Pick up at %1$s</string>
   <string name="detail_rental_dropoff">Drop off at %1$s</string>
   <string name="detail_rental_free_floating">Free-floating vehicle, not tied to a station</string>
@@ -107,9 +107,47 @@
   <string name="detail_rental_propulsion_hybrid">Hybrid</string>
   <string name="detail_rental_propulsion_plug_in_hybrid">Plug-in hybrid</string>
   <string name="detail_rental_propulsion_hydrogen">Hydrogen fuel cell</string>
+  <!-- Disponibilité d'une station : donnée volatile, toujours datée et rafraîchissable (§ 5.3). -->
+  <string name="detail_rental_availability_loading">Checking availability…</string>
+  <string name="detail_rental_availability_error">Availability could not be retrieved</string>
+  <string name="detail_rental_availability_unknown">This operator does not publish availability for that station</string>
+  <string name="detail_rental_retrieved_at">Availability as of %1$s</string>
+  <string name="detail_rental_refresh">Refresh availability</string>
+  <string name="detail_rental_not_renting">This station is not renting out vehicles right now</string>
+  <string name="detail_rental_not_returning">The return station is not accepting returns right now</string>
+  <plurals name="detail_rental_available_bikes">
+    <item quantity="one">%d bike available</item>
+    <item quantity="other">%d bikes available</item>
+  </plurals>
+  <plurals name="detail_rental_available_cargo_bikes">
+    <item quantity="one">%d cargo bike available</item>
+    <item quantity="other">%d cargo bikes available</item>
+  </plurals>
+  <plurals name="detail_rental_available_scooters">
+    <item quantity="one">%d scooter available</item>
+    <item quantity="other">%d scooters available</item>
+  </plurals>
+  <plurals name="detail_rental_available_mopeds">
+    <item quantity="one">%d moped available</item>
+    <item quantity="other">%d mopeds available</item>
+  </plurals>
+  <plurals name="detail_rental_available_cars">
+    <item quantity="one">%d car available</item>
+    <item quantity="other">%d cars available</item>
+  </plurals>
+  <plurals name="detail_rental_available_vehicles">
+    <item quantity="one">%d vehicle available</item>
+    <item quantity="other">%d vehicles available</item>
+  </plurals>
+  <plurals name="detail_rental_docks_free">
+    <item quantity="one">%d dock free on arrival</item>
+    <item quantity="other">%d docks free on arrival</item>
+  </plurals>
+
   <!-- Ouverture de l'application de l'exploitant : intention externe, jamais de WebView (SPEC.md § 2). -->
   <string name="detail_rental_open_app">Open the %1$s app</string>
   <string name="detail_rental_open_app_generic">Open the operator\'s app</string>
+  <string name="detail_rental_open_app_failed">No app on this device can open that link</string>
 
   <!-- Texte de partage. Chaque ligne est composée ici, jamais concaténée dans le code. -->
   <string name="detail_share_summary">%1$s → %2$s · %3$s · %4$s</string>

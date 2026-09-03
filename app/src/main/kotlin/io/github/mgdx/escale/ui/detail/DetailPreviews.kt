@@ -15,10 +15,12 @@ import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Place
+import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalInfo
 import io.github.mgdx.escale.core.model.RentalPropulsionType
 import io.github.mgdx.escale.core.model.RentalReturnConstraint
+import io.github.mgdx.escale.core.model.RentalVehicleKind
 import io.github.mgdx.escale.core.model.StepDirection
 import io.github.mgdx.escale.core.model.StopVisit
 import io.github.mgdx.escale.core.model.TimeWindow
@@ -146,6 +148,26 @@ private val rentalLeg = JourneyLeg.Rental(
   steps = listOf(step(StepDirection.CONTINUE, "Cours de Vincennes", 900.0, up = 12)),
 )
 
+/**
+ * Une station à deux natures de véhicules : c'est le cas qui fait apparaître la ventilation par
+ * type de SPEC.md § 5.3, sous le total « 7 vélos disponibles ».
+ */
+private val rentalAvailability = RentalLegAvailability(
+  pickup = RentalAvailability(
+    stationId = "station-4201",
+    name = "Nation — Place de la Nation",
+    coordinates = LatLon(48.8484, 2.3958),
+    numVehiclesAvailable = 7,
+    vehicleTypesAvailable = mapOf("mechanical" to 4, "electrical" to 3),
+    formFactors = listOf(RentalFormFactor.BICYCLE),
+    retrievedAt = at(24),
+    vehicleKinds = mapOf(
+      "mechanical" to RentalVehicleKind(RentalFormFactor.BICYCLE, RentalPropulsionType.HUMAN),
+      "electrical" to RentalVehicleKind(RentalFormFactor.BICYCLE, RentalPropulsionType.ELECTRIC_ASSIST),
+    ),
+  ),
+)
+
 private val sampleJourney = Journey(
   id = "trajet-1",
   startTime = walkLeg.startTime,
@@ -159,6 +181,7 @@ private val sampleJourney = Journey(
 
 private val noActions = DetailActions(
   onRefresh = {},
+  onRentalRefresh = {},
   onLegToggled = {},
   onStopsToggled = {},
   onStepsToggled = {},
@@ -197,6 +220,7 @@ private fun DetailExpandedPreview() {
       expandedLegs = setOf(0, 1, 2),
       expandedStops = setOf(1),
       expandedSteps = setOf(0),
+      rentals = mapOf(2 to rentalAvailability),
     ),
   )
 }

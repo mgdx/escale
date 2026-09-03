@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.detail
 
 import android.text.format.DateUtils
 import androidx.annotation.DrawableRes
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -11,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.format.DistanceUnit
 import io.github.mgdx.escale.core.format.FormattedDistance
+import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalPropulsionType
 import io.github.mgdx.escale.core.model.RentalReturnConstraint
 import io.github.mgdx.escale.core.model.StepDirection
@@ -109,6 +111,27 @@ internal fun RentalPropulsionType.labelRes(): Int = when (this) {
   RentalPropulsionType.HYBRID -> R.string.detail_rental_propulsion_hybrid
   RentalPropulsionType.PLUG_IN_HYBRID -> R.string.detail_rental_propulsion_plug_in_hybrid
   RentalPropulsionType.HYDROGEN_FUEL_CELL -> R.string.detail_rental_propulsion_hydrogen
+}
+
+/**
+ * Le pluriel qui nomme les véhicules disponibles d'une station : « 7 vélos disponibles »,
+ * « 3 trottinettes disponibles » (SPEC.md § 5.3).
+ *
+ * Le nom du véhicule est **choisi par le type de la station ou de la portion**, jamais générique par
+ * commodité : annoncer « 7 véhicules » devant une station de trottinettes fait espérer autre chose
+ * que ce qu'on y trouvera. « Véhicule » ne sert que lorsque le type est vraiment inconnu.
+ *
+ * Le vocabulaire est celui de l'onglet Vélo (`strings_results.xml`) : un `MOPED` est un scooter,
+ * un `SCOOTER_STANDING` une trottinette. Les intervertir est l'erreur classique du domaine.
+ */
+@PluralsRes
+internal fun RentalFormFactor?.availablePluralRes(): Int = when (this) {
+  RentalFormFactor.BICYCLE -> R.plurals.detail_rental_available_bikes
+  RentalFormFactor.CARGO_BICYCLE -> R.plurals.detail_rental_available_cargo_bikes
+  RentalFormFactor.SCOOTER_STANDING, RentalFormFactor.SCOOTER_SEATED -> R.plurals.detail_rental_available_scooters
+  RentalFormFactor.MOPED -> R.plurals.detail_rental_available_mopeds
+  RentalFormFactor.CAR -> R.plurals.detail_rental_available_cars
+  RentalFormFactor.OTHER, null -> R.plurals.detail_rental_available_vehicles
 }
 
 /**

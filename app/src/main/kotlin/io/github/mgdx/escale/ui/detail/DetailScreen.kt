@@ -106,6 +106,7 @@ fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 private fun rememberDetailActions(viewModel: DetailViewModel): DetailActions = remember(viewModel) {
   DetailActions(
     onRefresh = viewModel::onRefresh,
+    onRentalRefresh = viewModel::onRentalRefresh,
     onLegToggled = viewModel::onLegToggled,
     onStopsToggled = viewModel::onStopsToggled,
     onStepsToggled = viewModel::onStepsToggled,
@@ -121,6 +122,11 @@ private fun rememberDetailActions(viewModel: DetailViewModel): DetailActions = r
  */
 internal data class DetailActions(
   val onRefresh: () -> Unit,
+  /**
+   * Le bouton de rafraîchissement de la disponibilité d'une portion en libre-service
+   * (SPEC.md § 5.3), désignée par sa position dans le trajet.
+   */
+  val onRentalRefresh: (Int) -> Unit,
   val onLegToggled: (Int) -> Unit,
   val onStopsToggled: (Int) -> Unit,
   val onStepsToggled: (Int) -> Unit,

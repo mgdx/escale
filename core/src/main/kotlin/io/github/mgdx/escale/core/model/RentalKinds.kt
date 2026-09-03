@@ -34,3 +34,30 @@ enum class RentalReturnConstraint {
   /** Le retour doit se faire dans la station de départ. */
   ROUNDTRIP_STATION,
 }
+
+/**
+ * La nature d'un type de véhicule d'un système, décalque des seuls champs utiles du schéma
+ * `RentalVehicleType` de `/api/v1/rentals`.
+ *
+ * Elle existe parce que `RentalAvailability.vehicleTypesAvailable` est indexé par **identifiant de
+ * type**, et que ces identifiants sont opaques : `196`, `dott_scooter`, `NES:VehicleType:...`, voire
+ * la chaîne vide. Affichés tels quels, ils ne disent rien ; traduits en type de véhicule et en
+ * motorisation, ils donnent la ventilation que SPEC.md § 5.3 réclame — « 9 vélos, 1 vélo à
+ * assistance électrique » plutôt que « 431 : 9, 446 : 1 ».
+ */
+data class RentalVehicleKind(val formFactor: RentalFormFactor?, val propulsionType: RentalPropulsionType?)
+
+/**
+ * Ce qu'une station propose pour un type de véhicule donné : le résultat de la ventilation que
+ * `RentalStations.kt` calcule pour l'affichage de SPEC.md § 5.3.
+ *
+ * [kind] est nul quand le système ne décrit pas ses types : le compte reste juste, seule
+ * l'étiquette manque.
+ */
+data class RentalTypeCount(
+  val kind: RentalVehicleKind?,
+  /** Véhicules disponibles à la prise. */
+  val vehicles: Int,
+  /** Places libres au retour. */
+  val docks: Int,
+)
