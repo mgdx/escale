@@ -62,8 +62,11 @@
   <string name="results_alert_severity_severe">Major disruption</string>
   <string name="results_alert_severity_unknown">Service alert</string>
 
-  <!-- Frise des portions : le pictogramme de mode est toujours doublé d'un libellé (SPEC.md § 9). -->
-  <string name="results_timeline_description">Legs: %1$s</string>
+  <!-- Frise des portions : le pictogramme de mode est toujours doublé d'un libellé (SPEC.md § 9).
+       Cette chaîne est l'annonce principale d'une carte de trajet au lecteur d'écran : elle
+       s'ouvre donc sur le mot de l'usager, « trajet », et non sur « portions », qui est le
+       vocabulaire du code et ne dit rien à qui écoute. -->
+  <string name="results_timeline_description">Journey: %1$s</string>
   <string name="results_leg_separator" translatable="false">" › "</string>
   <string name="results_leg_detail">%1$s %2$s</string>
 

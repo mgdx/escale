@@ -76,7 +76,7 @@ class DeparturesViewModel(
     loadStop()
   }
 
-  /** Le bouton « Rafraîchir » de la barre et le bouton « Réessayer » du bandeau d'erreur (§ 8). */
+  /** Le bouton « Actualiser » de la barre et le bouton « Réessayer » du bandeau d'erreur (§ 8). */
   fun onRefresh() = load()
 
   /**

@@ -49,11 +49,11 @@ import java.time.Instant
  *   côté MOTIS et devient invalide après une mise à jour d'horaires : sur un refus (400/422) ou un
  *   404, la requête `plan` d'origine est rejouée et le trajet le plus proche en heure de départ
  *   est retenu. La règle est dans `JourneyRefresh`, testée en JVM.
- * - **Le même chemin sert au bouton « Rafraîchir »** de SPEC.md § 5.3 : rafraîchir, c'est
+ * - **Le même chemin sert au bouton « Actualiser »** de SPEC.md § 5.3 : rafraîchir, c'est
  *   redemander le trajet détaillé. Il n'y a donc qu'un seul code réseau à lire et à vérifier.
  *
  * Aucun polling (SPEC.md § 7.4) : les seuls déclencheurs sont l'ouverture de l'écran, l'appui de
- * l'usager sur « Rafraîchir », et le retour au premier plan sur des horaires de plus de 60
+ * l'usager sur « Actualiser », et le retour au premier plan sur des horaires de plus de 60
  * secondes — la même règle que la feuille de résultats, tenue par le même `RealtimeRefreshPolicy`.
  * Ni minuterie, ni boucle, ni tâche de fond. Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et
  * **ne journalise rien** : il manipule des adresses et des coordonnées (SPEC.md § 11).
@@ -124,7 +124,7 @@ class DetailViewModel(
   }
 
   /**
-   * Le bouton « Rafraîchir » (SPEC.md § 5.3) et le bouton « Réessayer » du bandeau (§ 8).
+   * Le bouton « Actualiser » (SPEC.md § 5.3) et le bouton « Réessayer » du bandeau (§ 8).
    *
    * Il rafraîchit aussi les disponibilités déjà affichées : elles sont plus périssables que les
    * horaires, et les laisser telles quelles pendant que le reste de l'écran se met à jour serait

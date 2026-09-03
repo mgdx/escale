@@ -38,7 +38,7 @@
   <string name="departures_track">Platform %1$s</string>
   <!-- Lu par le lecteur d'écran à la place de l'heure barrée, qui ne se dit pas (SPEC.md § 9). -->
   <string name="departures_scheduled_time">Scheduled %1$s</string>
-  <string name="departures_open_trip">Show every stop of this service</string>
+  <string name="departures_open_trip">Show every stop</string>
   <!-- Le pictogramme de mode est toujours doublé d'un libellé : « Bus, line 18 » (SPEC.md § 9). -->
   <string name="departures_line_description">%1$s, line %2$s</string>
 

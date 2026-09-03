@@ -66,7 +66,7 @@ fun DeparturesScreen(onBack: () -> Unit, onOpenTrip: (tripId: String) -> Unit, m
   val viewModel: DeparturesViewModel = viewModel(factory = DeparturesViewModel.factory(container))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires affichés ont plus de
-  // 60 secondes. Le bouton « Rafraîchir » de la barre, lui, rafraîchit sans condition.
+  // 60 secondes. Le bouton « Actualiser » de la barre, lui, rafraîchit sans condition.
   ForegroundEffect(viewModel::onForeground)
   DeparturesContent(
     state = state,

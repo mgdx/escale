@@ -15,7 +15,7 @@
        compose d'une de ces chaînes et d'une date formatée — jamais de texte concaténé en dur. -->
   <string name="search_time_now">Now</string>
   <string name="search_time_depart_at">Departure %1$s</string>
-  <string name="search_time_arrive_by">Arrive before %1$s</string>
+  <string name="search_time_arrive_by">Arrival before %1$s</string>
   <string name="search_time_change">Change the travel time</string>
 
   <!-- Sélecteur d'heure (SPEC.md § 5.1). -->

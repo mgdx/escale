@@ -107,7 +107,7 @@ change pas sans repasser sur toutes ses occurrences.
 | transfer | correspondance | jamais « change » ni « connection » en anglais |
 | stop | arrêt | vaut aussi pour une gare ou une station de métro |
 | station *(libre-service)* | station | le point d'attache d'un véhicule partagé, jamais « borne » |
-| platform | quai | jamais « voie », y compris pour un train |
+| platform | quai | jamais « voie », y compris pour un train, et jusque dans les commentaires |
 | departure / arrival | départ / arrivée | |
 | operator *(transport)* | transporteur | « Transporteur : X », qui n'a pas de genre |
 | operator *(libre-service)* | exploitant | |
@@ -116,11 +116,31 @@ change pas sans repasser sur toutes ses occurrences.
 | service alert, disruption | perturbation | en anglais toujours « service alert » |
 | cancelled *(course, arrêt)* | supprimé | un arrêt sauté se dit « non desservi » / « stop skipped » |
 | delay | retard | |
+| refresh | actualiser | jamais « rafraîchir » : « Actualiser » est le verbe qu'emploie Android en français |
+| scheduled *(heure)* | prévu à | « Prévu à 8:12 » ; « théorique » reste au code et aux commentaires, jamais à l'écran |
 | metro | métro | jamais « underground » ni « subway » en anglais |
 | regional train | train régional | jamais « TER », qui est une marque SNCF |
 | moped | cyclomoteur | GBFS `moped` ; « scooter » désignerait aussi la trottinette |
 | standing scooter | trottinette | GBFS `scooter_standing` |
-| settings | réglages | choix du projet, constant sur tous les écrans |
+| settings | réglages | Android français dit « Paramètres » ; le projet garde « Réglages », c'est un choix assumé et constant sur les sept écrans concernés, pas un oubli : ne le « corrigez » pas |
+
+### Ce que le lecteur d'écran entend
+
+Les libellés d'accessibilité obéissent aux mêmes règles de vocabulaire que le reste, plus trois qui
+leur sont propres. Elles ont été payées deux fois, ne les redécouvrez pas :
+
+- **Un `onClickLabel` est un verbe et son objet, jamais une phrase.** Le système annonce déjà
+  « Appuyer deux fois pour… » : l'étiquette complète cette phrase-là. « Afficher le détail », pas
+  « Afficher le détail de cette portion ».
+- **Une annonce principale emploie le mot de l'usager, pas celui du code.** La description d'une
+  carte de trajet s'ouvre sur « Trajet&nbsp;: … » ; « Portions&nbsp;: … » est du vocabulaire interne
+  et ne dit rien à qui écoute. Le mot « portion » reste juste dans le code et dans ce glossaire.
+- **Se taire plutôt que se taire longuement.** Une valeur qui n'apprend rien ne s'annonce pas :
+  une perturbation de gravité inconnue n'affiche aucune ligne de gravité, plutôt que
+  « Gravité&nbsp;: perturbation ».
+- **Une phrase qui décrit un geste nomme aussi l'action d'accessibilité** qui en tient lieu, dès
+  qu'il en existe une : un balayage n'est jamais la seule voie d'accès, et l'aide ne doit pas
+  laisser croire le contraire.
 
 **Registre.** L'application vouvoie. Un bouton ou une entrée de liste est à l'**infinitif**
 (« Ajouter un lieu », « Rétablir le serveur par défaut ») ; une phrase adressée à l'usager est à

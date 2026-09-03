@@ -5,7 +5,7 @@
 -->
 <resources>
   <string name="departures_stop_unnamed">Arrêt</string>
-  <string name="departures_action_refresh">Rafraîchir</string>
+  <string name="departures_action_refresh">Actualiser</string>
 
   <plurals name="departures_lines_served">
     <item quantity="one">%1$d ligne</item>
@@ -27,7 +27,7 @@
   <string name="departures_towards">Direction %1$s</string>
   <string name="departures_track">Quai %1$s</string>
   <string name="departures_scheduled_time">Prévu à %1$s</string>
-  <string name="departures_open_trip">Voir la desserte complète de cette course</string>
+  <string name="departures_open_trip">Voir la desserte</string>
   <string name="departures_line_description">%1$s, ligne %2$s</string>
 
   <string name="departures_earlier">Plus tôt</string>
