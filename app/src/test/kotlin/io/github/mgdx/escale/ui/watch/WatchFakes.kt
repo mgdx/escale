@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.watch
 
 import io.github.mgdx.escale.core.model.FavoriteJourney
+import io.github.mgdx.escale.core.model.FavoritePlace
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyWatchLimit
 import io.github.mgdx.escale.core.model.Location
@@ -29,14 +30,14 @@ internal class FakeFavoritesRepository(initial: List<FavoriteJourney> = emptyLis
 
   override val home: Flow<Location?> = MutableStateFlow(null)
   override val work: Flow<Location?> = MutableStateFlow(null)
-  override val places: Flow<List<Location>> = MutableStateFlow(emptyList())
+  override val places: Flow<List<FavoritePlace>> = MutableStateFlow(emptyList())
   override val stops: Flow<List<Stop>> = MutableStateFlow(emptyList())
   override val journeys: Flow<List<FavoriteJourney>> = state.asStateFlow()
 
   override suspend fun setHome(location: Location?): Outcome<Unit> = Outcome.Success(Unit)
   override suspend fun setWork(location: Location?): Outcome<Unit> = Outcome.Success(Unit)
-  override suspend fun addPlace(location: Location, label: String?): Outcome<Unit> = Outcome.Success(Unit)
-  override suspend fun removePlace(location: Location): Outcome<Unit> = Outcome.Success(Unit)
+  override suspend fun addPlace(location: Location, label: String?): Outcome<Long> = Outcome.Success(0)
+  override suspend fun removePlace(id: Long): Outcome<Unit> = Outcome.Success(Unit)
   override suspend fun addStop(stop: Stop): Outcome<Unit> = Outcome.Success(Unit)
   override suspend fun removeStop(stopId: String): Outcome<Unit> = Outcome.Success(Unit)
 
