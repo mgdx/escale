@@ -1,12 +1,54 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
+# Règles de conservation R8 propres à Escale.
 #
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
-
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# AGP 9 réunit tous les fichiers de `src/main/keepRules/` et les passe à R8, en plus du fichier par
+# défaut `proguard-android-optimize.txt` et des règles que chaque bibliothèque embarque dans son
+# AAR ou son JAR (`proguard.txt`, `META-INF/proguard/*.pro`, `META-INF/com.android.tools/r8/*.pro`).
+#
+# **Ce fichier est volontairement vide de règles.** Ce n'est pas un oubli : chaque point sensible du
+# projet a été vérifié un par un, et chacun est déjà couvert. Une règle recopiée « au cas où »
+# n'est pas gratuite — elle conserve du code que R8 aurait supprimé, elle masque la disparition de
+# la règle qu'elle double, et elle survit longtemps après être devenue fausse.
+#
+# La méthode, reproductible : compiler `:app:assembleRelease`, puis lire
+# `app/build/outputs/mapping/release/configuration.txt` — R8 y écrit **l'intégralité** des règles
+# qu'il a reçues, avec le nom de la bibliothèque qui les fournit — et vérifier le résultat dans
+# `mapping.txt` (ce qui a été renommé) et `usage.txt` (ce qui a été supprimé).
+#
+# Ce qui a été vérifié, et par quoi c'est couvert :
+#
+# - **kotlinx.serialization** — `kotlinx-serialization-core-jvm` livre lui-même ses deux fichiers de
+#   règles (`kotlinx-serialization-common.pro` et `kotlinx-serialization-r8.pro`) : conservation des
+#   objets `Companion`, de `serializer()`, du champ `INSTANCE` des objets sérialisables et du champ
+#   `descriptor` des classes `$$serializer`. Ce projet n'a de toute façon aucune résolution
+#   réflexive : tous les appels passent un sérialiseur explicite (`PlanResponseDto.serializer()`),
+#   aucun `SerializersModule`, aucun `@Polymorphic`, aucun `@Contextual`. Les noms de sérialisation
+#   sont des littéraux de chaîne engendrés par le greffon, que R8 ne réécrit pas.
+# - **Room** — `room-runtime` livre `-keep class * extends androidx.room.RoomDatabase { void <init>(); }`,
+#   ce qui protège `EscaleDatabase_Impl`, la seule classe que Room cherche par `Class.forName`.
+#   Les DAO sont atteints depuis cette implémentation : R8 les garde par accessibilité.
+# - **WorkManager** — `work-runtime` livre `-keepnames class * extends androidx.work.ListenableWorker`
+#   et la conservation de ses constructeurs. `JourneyWatchWorker` est un `CoroutineWorker`, donc un
+#   `ListenableWorker` : il est couvert. (La règle historique `-keep class * extends androidx.work.Worker`,
+#   qu'on recopie souvent, ne l'aurait **pas** été.)
+# - **MapLibre** — le `proguard.txt` de l'AAR conserve `TileOperation`, `RenderingStats`,
+#   `NativeMapOptions`, les champs d'énumération et le paquet `org.maplibre.geojson`. Tout le reste
+#   de la frontière JNI est annoté `@Keep` dans la bibliothèque, et le fichier par défaut d'AGP
+#   honore cette annotation. Vérifié : `NativeMapView`, `MapRenderer`, `FileSource`, `LatLng`,
+#   `LatLngBounds`, `Layer` et `Source` gardent leur nom dans `mapping.txt`. **Ne pas ignorer les
+#   règles de cet AAR** (`optimization.keepRules.ignoreFrom`) : les quatre premières classes
+#   ci-dessus ne sont pas annotées et ne tiennent que par ce fichier.
+# - **Ktor et son moteur OkHttp** — `ktor-utils-jvm` livre `ktor.pro` (champs `volatile` d'AtomicFU,
+#   moteurs chargés par `ServiceLoader`), `okhttp-android` livre les `-dontwarn` de Conscrypt et de
+#   Bouncy Castle. Le moteur est de toute façon désigné explicitement dans le code, jamais découvert.
+# - **Routes de navigation typées** — ce sont des classes `@Serializable` ordinaires, couvertes par
+#   les règles de kotlinx.serialization ci-dessus. Aucune ne porte d'argument de type énumération,
+#   qui est le seul cas où Navigation résout une classe par `Class.forName` sur le nom de
+#   sérialisation. Si une route venait à en porter un, il faudrait conserver l'énumération ici.
+#
+# Rien de tout cela n'est acquis pour toujours : une montée de version de bibliothèque peut retirer
+# un fichier de règles sans prévenir. C'est pourquoi `assembleRelease` est finalisée par
+# `verifyReleaseKeepRules` (voir `app/build.gradle.kts`), qui relit `mapping.txt` et échoue si une
+# de ces classes a été supprimée ou renommée.
+#
+# Si une règle devient nécessaire, elle s'écrit ici, avec le commentaire qui dit **ce qui la rend
+# nécessaire** et comment on l'a constaté.

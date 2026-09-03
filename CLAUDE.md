@@ -16,6 +16,7 @@ propose l'amendement de la spec dans le même commit que le code.
 
 ```bash
 ./gradlew assembleDebug            # compiler
+./gradlew assembleRelease          # compiler la publication minifiée (R8), non signée
 ./gradlew test                     # tests JVM (:core, :data)
 ./gradlew connectedAndroidTest     # tests instrumentés (appareil branché requis)
 ./gradlew ktlintCheck detekt lint  # qualité
@@ -53,6 +54,59 @@ agrandi, état vide, état d'erreur.
 
 Ne modifie jamais les réglages du téléphone au-delà de ce que l'application demande, ne désinstalle
 pas d'autres applications, et n'utilise pas l'appareil pour autre chose que ce projet.
+
+## Mesurer la publication
+
+Les objectifs de SPEC.md § 2 (moins de 15 Mo par APK) et § 5.7 (démarrage à froid sous 1,5 s)
+**ne se mesurent que sur la publication minifiée**. L'APK de débogage n'est ni minifié ni optimisé
+et embarque l'outillage Compose : il pèse le double et démarre plusieurs fois plus lentement.
+Une mesure faite dessus ne dit rien.
+
+`assembleRelease` produit des APK **non signés** — c'est voulu, F-Droid signe lui-même et aucune
+clé n'entre dans le dépôt. Pour disposer quand même d'une publication installable, il existe un
+type de compilation `releaseTest` : **même configuration R8 que `release`**, signé avec la clé de
+débogage du SDK (`~/.android/debug.keystore`, hors du dépôt) et `profileable`. Il ne se publie
+jamais.
+
+```bash
+# Compiler et installer la publication minifiée sur l'appareil branché (choisit la bonne ABI).
+./gradlew :app:installReleaseTest
+
+# Ou installer un fichier précis :
+adb install -r app/build/outputs/apk/releaseTest/app-arm64-v8a-releaseTest.apk
+
+# Démarrage à froid, trois essais. `-S` tue le processus avant de le relancer : sans lui, on mesure
+# un démarrage tiède. `TotalTime` est le délai jusqu'à la première image de **l'activité**.
+adb shell am force-stop io.github.mgdx.escale
+for i in 1 2 3; do
+  adb shell am start -W -S -n io.github.mgdx.escale/.MainActivity | grep TotalTime
+  sleep 3
+done
+```
+
+**`TotalTime` n'est pas ce que mesure le § 5.7.** La spec vise le délai « jusqu'à la première image
+de carte », et MapLibre s'initialise après la première image de l'activité. Le délai que la spec
+demande est celui que le système journalise sous le nom de *fully drawn*, à condition que
+l'application appelle `reportFullyDrawn()` au bon moment — c'est-à-dire quand MapLibre a rendu sa
+première image, pas avant :
+
+```bash
+adb logcat -c
+adb shell am force-stop io.github.mgdx.escale
+adb shell am start -W -S -n io.github.mgdx.escale/.MainActivity
+adb logcat -d | grep -i "Fully drawn"      # « Fully drawn io.github.mgdx.escale/.MainActivity: +1s042ms »
+```
+
+Le premier chiffre à comparer aux 1,5 s de la spec est celui-là. Mesurer toujours **appareil
+déverrouillé, application déjà lancée une première fois** (le profil ART embarqué n'est installé
+qu'après le premier lancement) et sur trois essais au moins.
+
+Vérifier la taille, qui est contrôlée automatiquement à chaque `assembleRelease` :
+
+```bash
+./gradlew :app:assembleRelease     # échoue si un APK dépasse 15 Mo, ou si R8 a renommé une classe
+ls -l app/build/outputs/apk/release/   # sur laquelle une bibliothèque compte par son nom
+```
 
 ## Skills à utiliser
 
