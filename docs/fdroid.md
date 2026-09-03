@@ -12,18 +12,21 @@ vérifié, **comment**, et il dit aussi ce qui ne l'a pas été.
 |---|---|
 | Licence, dépendances, permissions, vie privée | **Conformes.** Rien à corriger. |
 | Anti-features à déclarer | **Aucun**, selon la lettre de la politique et le précédent Bimba (§ 5). À défendre dans la *merge request*. |
-| Recette de compilation `fdroiddata` | **Un point bloquant, à traiter avant la demande** — voir ci-dessous. |
+| Recette de compilation `fdroiddata` | **Réglée.** Les quatre blocs `Builds:`, prêts à copier, sont au § 6. |
 | Captures d'écran | À produire (§ 7). |
 | Icônes de repli `mipmap-*` | À remplacer (§ 7). |
 
-> ### Le point bloquant : quatre APK, un seul attendu
+> ### Le point qui bloquait, et comment il a été levé
 >
 > `fdroid build` **échoue si `assembleRelease` laisse plus d'un APK** dans
 > `build/outputs/apk/release/` : `fdroidserver/build.py` lève alors
 > `BuildException('More than one resulting apks found in …')`. Or `app/build.gradle.kts` active
-> `splits { abi { … } }` et en produit **quatre**. Ce n'est pas un défaut du projet — F-Droid
-> encourage explicitement le découpage par ABI — mais **sa recette de compilation ne se déduit pas
-> de la configuration Gradle actuelle**, et le sujet est traité au § 6.
+> `splits { abi { … } }` et en produisait **quatre** d'un coup.
+>
+> `app/build.gradle.kts` accepte désormais la propriété Gradle **`-Pabi=<abi>`**, qui restreint le
+> découpage à cette seule architecture. Sans elle, rien ne change et les quatre APK sont produits ;
+> avec elle, il n'en reste qu'un, et son `versionCode` est **le même** que dans l'autre mode. La
+> recette, ses quatre blocs `Builds:` et la preuve par les fichiers produits sont au § 6.
 
 ## Ce qui a été vérifié, et ce qui ne l'a pas été
 
@@ -210,7 +213,7 @@ contient **aucun `<uses-feature>`**.
 Ne sont demandées, et ne doivent jamais l'être : aucune permission de stockage, de contacts,
 d'appareil photo, de journal d'appels, ni `SCHEDULE_EXACT_ALARM`.
 
-### Une septième entrée, qui n'est pas une permission Android
+### Une septième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
 
 Le manifeste de publication déclare aussi :
 
@@ -226,6 +229,11 @@ détenir, c'est-à-dire aucune autre. Elle sert à `ContextCompat.registerReceiv
 donne lieu à aucun écran de consentement. Elle est signalée ici parce qu'un relecteur qui compte les
 lignes du manifeste en trouvera sept et non six, et qu'il vaut mieux que l'explication soit écrite
 d'avance qu'improvisée.
+
+Le § 11 de la spec disait « permissions déclarées, et aucune autre » sans la mentionner : **il a été
+amendé pour la nommer**, dans la même forme que les puces `ACCESS_NETWORK_STATE` et `WAKE_LOCK`.
+`PRIVACY.md` la décrit également, en termes destinés à l'usager. Le manifeste et les trois documents
+disent donc désormais la même chose, ce qu'un relecteur peut vérifier ligne à ligne.
 
 ### Composants exportés
 
@@ -397,45 +405,138 @@ pas l'inclusion.
 | Dépôts de dépendances | `mavenCentral()` et `google()` seuls, tous deux dans la liste autorisée en dur par le scanner. |
 | Wrapper Gradle versionné | Sans conséquence : le scanner de `fdroidserver` **supprime lui-même** `gradlew`, `gradlew.bat`, `gradle-wrapper.jar` et `gradle-daemon-jvm.properties`, sans compter d'erreur, puis lance son propre `gradlew-fdroid`. Rien à déclarer, aucun `scanignore:`. |
 
-### Le point bloquant : `assembleRelease` produit quatre APK
+### Les quatre APK : réglé par `-Pabi`
 
 `fdroid build` cherche **un** APK par bloc `Builds:` et lève
 `BuildException('More than one resulting apks found in …')` s'il en trouve plusieurs. Or le
-découpage par ABI de `app/build.gradle.kts` en produit quatre d'un seul coup. En l'état, **la
-recette échouerait**.
+découpage par ABI de `app/build.gradle.kts` en produit quatre d'un seul coup.
 
-Ce n'est pas un reproche fait au projet : F-Droid encourage explicitement le découpage par ABI,
-et la convention de `versionCode` du projet est **déjà celle que F-Droid demande** — chiffres
-d'ABI aux poids faibles, ordre `armeabi-v7a < arm64-v8a < x86 < x86_64`, ce que le commentaire de
-`app/build.gradle.kts` justifie exactement dans les mêmes termes. Ce qui manque est le moyen de
-**demander une seule ABI à la fois**.
+Des deux voies décrites ici auparavant — une propriété Gradle côté projet, ou un `prebuild: sed`
+côté recette — **la première a été retenue et appliquée** : elle est lisible, elle vit dans le
+dépôt et non dans *fdroiddata*, elle se teste, et elle ne dépend pas d'un motif de texte qu'un
+futur commit casserait sans prévenir. C'est aussi ce que fait `com.graphhopper.maps`, l'application
+de `fdroiddata` la plus proche d'Escale (Gradle, Kotlin, MapLibre).
 
-Deux voies, à trancher par le mainteneur :
+**Ce que la propriété fait, et ce qu'elle ne fait pas :**
 
-1. **La propre, côté projet** — ajouter à `app/build.gradle.kts` une propriété Gradle qui restreint
-   le découpage à une ABI, puis quatre blocs `Builds:` portant `gradleprops: [abi=arm64-v8a]`, etc.
-   C'est ce que fait `com.graphhopper.maps`, l'application de `fdroiddata` la plus proche d'Escale
-   (Gradle, Kotlin, MapLibre, deux ABI) :
+- `./gradlew :app:assembleRelease` **sans propriété** : inchangé, quatre APK, comme avant. La CI et
+  les commandes de `CLAUDE.md` restent valables telles quelles.
+- `./gradlew :app:assembleRelease -Pabi=arm64-v8a` : un seul APK, celui de cette architecture.
+- `-Pabi=<valeur inconnue>` : la configuration **échoue** en nommant les quatre valeurs acceptées,
+  plutôt que de rendre silencieusement zéro APK.
+- **La convention de `versionCode` est intouchée** : elle reste `rang de l'ABI × 1000 +
+  baseVersionCode`, calculée par ABI sur la sortie, donc identique dans les deux modes. C'est le
+  point à ne jamais casser : un `versionCode` qui dépendrait du mode de compilation serait un
+  incident de publication.
 
-   ```yaml
-   VercodeOperation:
-     - 1000 * %c + 1     # armeabi-v7a
-     - 1000 * %c + 2     # arm64-v8a
-     - 1000 * %c + 3     # x86
-     - 1000 * %c + 4     # x86_64
-   ```
+**La preuve, relevée sur les fichiers produits.** `app/build/outputs/apk/release/` après chacune
+des deux compilations, le répertoire ayant été effacé entre les deux :
 
-   Cette voie **modifie un fichier de compilation** et sort du périmètre du présent document ;
-   elle est signalée, pas appliquée.
+```
+$ ./gradlew :app:assembleRelease                    $ ./gradlew :app:assembleRelease -Pabi=arm64-v8a
+app-armeabi-v7a-release-unsigned.apk                app-arm64-v8a-release-unsigned.apk
+app-arm64-v8a-release-unsigned.apk                  output-metadata.json
+app-x86-release-unsigned.apk
+app-x86_64-release-unsigned.apk
+output-metadata.json
+```
 
-2. **La contournante, côté recette** — quatre blocs `Builds:` dont le `prebuild:` remplace par
-   `sed` la liste `include(...)` du bloc `splits`, comme le fait `org.videolan.vlc`. Rien à changer
-   dans le projet, mais la recette devient sensible à la mise en forme du fichier Gradle : une
-   reformulation du bloc `splits` casserait silencieusement la recette.
+Et les `versionCode`, lus dans `output-metadata.json` qu'AGP écrit à côté des APK :
 
-La première voie est plus solide. Elle demande une décision, car la convention de `versionCode`
-est **figée** une fois l'application publiée : la changer casserait le chemin de mise à jour de
-tous les appareils installés.
+| ABI | Sans `-Pabi` | Avec `-Pabi=<cette ABI>` |
+|---|---|---|
+| `armeabi-v7a` | 1001 | 1001 |
+| `arm64-v8a` | 2001 | 2001 |
+| `x86` | 3001 | 3001 |
+| `x86_64` | 4001 | 4001 |
+
+Ce n'est pas une vérification faite une fois : la tâche **`verifyReleaseVersionCodes`** finalise
+`assembleRelease` au même titre que `verifyReleaseKeepRules` et `verifyReleaseApkSize`. Elle relit
+`output-metadata.json` et échoue si un `versionCode` s'écarte de la convention, ou si la liste des
+APK produits n'est pas exactement celle demandée. Une compilation `-Pabi` qui rendrait deux APK
+échouerait donc **ici**, dans le dépôt, et non chez F-Droid.
+
+### La recette `Builds:`, prête à copier
+
+Quatre blocs, un par ABI, qui ne diffèrent que par leur `versionCode`, leur `gradleprops:` et leur
+`output:`. À copier dans `metadata/io.github.mgdx.escale.yml` de *fdroiddata* :
+
+```yaml
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1001
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+    gradleprops:
+      - abi=armeabi-v7a
+    output: build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
+
+  - versionName: 1.0.0
+    versionCode: 2001
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+    gradleprops:
+      - abi=arm64-v8a
+    output: build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
+
+  - versionName: 1.0.0
+    versionCode: 3001
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+    gradleprops:
+      - abi=x86
+    output: build/outputs/apk/release/app-x86-release-unsigned.apk
+
+  - versionName: 1.0.0
+    versionCode: 4001
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+    gradleprops:
+      - abi=x86_64
+    output: build/outputs/apk/release/app-x86_64-release-unsigned.apk
+```
+
+**Et le `VercodeOperation` qui va avec.** Il sert à `fdroid checkupdates` pour engendrer les quatre
+blocs de la version suivante à partir du seul `%c` relevé dans les sources — ici le
+`baseVersionCode` de `app/build.gradle.kts`. Notre convention étant `rang × 1000 + baseVersionCode`,
+elle s'écrit :
+
+```yaml
+VercodeOperation:
+  - 1000 * 1 + %c     # armeabi-v7a → 1001
+  - 1000 * 2 + %c     # arm64-v8a   → 2001
+  - 1000 * 3 + %c     # x86         → 3001
+  - 1000 * 4 + %c     # x86_64      → 4001
+```
+
+Attention à ne pas recopier telle quelle la forme `1000 * %c + n` de `com.graphhopper.maps` : elle
+multiplie le **numéro de version** au lieu de multiplier le rang de l'ABI. Les deux donnent le même
+ordre entre architectures, mais la nôtre est celle qui sera figée dans les APK publiés.
+
+Cinq points de forme vérifiés plutôt que supposés :
+
+- **`subdir: app`** : `fdroid build` lance Gradle avec `cwd` = racine du dépôt + `subdir`. Depuis
+  `app/`, Gradle remonte jusqu'à `settings.gradle.kts` et exécute `:app:assembleRelease`.
+- **`output:` est relatif à ce même `subdir`**, pas à la racine du dépôt : `fdroidserver/build.py`
+  fait `glob.glob(os.path.join(root_dir, output))` avec `root_dir` = racine + `subdir`. D'où
+  `build/outputs/apk/release/…` et non `app/build/outputs/apk/release/…`. Les chemins ci-dessus
+  sont ceux que Gradle a réellement écrits, relevés dans `output-metadata.json`.
+- **`output:` prime sur la recherche automatique** : `Build.output_method()` regarde `output` avant
+  `gradle`. La règle « un seul APK par répertoire » ne s'applique donc même plus, et un APK
+  supplémentaire qui apparaîtrait un jour ne rendrait pas la recette ambiguë.
+- **`gradleprops: [abi=…]`** devient `-Pabi=…` sur la ligne de commande
+  (`cmd += ['-P' + kv for kv in build.gradleprops]`), c'est-à-dire exactement ce que la propriété
+  du projet attend.
+- `commit: v1.0.0` suppose le tag posé (§ 8, point 6). **La recette compile `release`, jamais
+  `releaseTest`** : `gradle: [yes]` demande bien `assembleRelease`.
 
 ### Deux autres réserves
 
@@ -476,10 +577,10 @@ courant et le plus simple. **Mais on ne pourra plus changer d'avis.**
 Les quatre APK produits, tous sous le budget de 15 Mo de SPEC.md § 2 :
 
 ```
-app-armeabi-v7a-release-unsigned.apk   11,13 Mo
-app-arm64-v8a-release-unsigned.apk     14,06 Mo
-app-x86-release-unsigned.apk           14,21 Mo
-app-x86_64-release-unsigned.apk        14,42 Mo
+app-armeabi-v7a-release-unsigned.apk   11,10 Mo
+app-arm64-v8a-release-unsigned.apk     14,03 Mo
+app-x86-release-unsigned.apk           14,18 Mo
+app-x86_64-release-unsigned.apk        14,39 Mo
 ```
 
 Le type de compilation `releaseTest`, signé avec la clé de débogage, n'existe que pour mesurer la
@@ -511,7 +612,7 @@ Studio dans un APK publié est le genre de détail qu'un relecteur relève.
 
 ## 8. Ce qui reste à faire par le mainteneur humain
 
-Par ordre. Le premier n'est pas négociable, le deuxième est bloquant.
+Par ordre. Le premier n'est pas négociable ; le deuxième, qui bloquait la recette, est réglé.
 
 1. **Prendre contact avec l'équipe Transitous avant publication.** SPEC.md § 4.2 le prescrit :
    l'instance publique `api.transitous.org` est tenue par des bénévoles, à leurs frais, avec une
@@ -522,9 +623,10 @@ Par ordre. Le premier n'est pas négociable, le deuxième est bloquant.
    qui permettra de l'identifier dans leurs journaux :
    `Escale/1.0.0 (+https://github.com/mgdx/escale)`.
 
-2. **Régler la question des quatre APK** (§ 6). C'est le seul point qui empêche aujourd'hui la
-   recette de compiler. Décider entre la propriété Gradle et le `prebuild: sed`, et figer la
-   convention de `versionCode` — elle ne pourra plus changer ensuite.
+2. ~~**Régler la question des quatre APK**~~ — **fait** (§ 6). La propriété Gradle `-Pabi` a été
+   retenue, la convention de `versionCode` est inchangée et désormais vérifiée à chaque
+   `assembleRelease`, et les quatre blocs `Builds:` sont écrits. Il reste à **figer** cette
+   convention : elle ne pourra plus changer une fois l'application publiée.
 
 3. **Trancher la reproductibilité** (§ 6). Oui ou non, mais avant la première publication.
 

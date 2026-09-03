@@ -7,11 +7,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
-import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.result.Outcome
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,6 +47,9 @@ class ServerSettingsViewModel(
   /** Les hôtes en clair déjà acceptés. Suivis à part : ce n'est pas une information d'écran. */
   private var consentedHosts: Set<String> = emptySet()
 
+  /** Le test en cours, s'il y en a un : retoucher l'URL l'interrompt au lieu de l'ignorer. */
+  private var connectionTestJob: Job? = null
+
   /**
    * La saisie de l'usager, telle quelle, conservée par le système jusqu'à la mort du processus.
    *
@@ -77,6 +80,9 @@ class ServerSettingsViewModel(
   fun onInputChange(raw: String) {
     savedInput = raw
     val normalized = ServerUrl.normalize(raw)
+    // Un test ne vaut que pour l'URL testée : une retouche interrompt celui qui court, sans quoi
+    // ses étapes suivantes viendraient repeindre les lignes d'une adresse qui n'est plus la bonne.
+    if (normalized != _uiState.value.normalizedInput) connectionTestJob?.cancel()
     _uiState.update { state ->
       state.copy(
         input = raw,
@@ -261,20 +267,21 @@ class ServerSettingsViewModel(
     }
   }
 
+  /**
+   * Lance le test et **reporte chaque étape au fur et à mesure** (SPEC.md § 5.6.1).
+   *
+   * L'écran ne reçoit donc plus les trois verdicts d'un bloc : la ligne qui travaille est celle qui
+   * tourne, et celle qui a répondu affiche son résultat sans attendre les autres. Le drapeau
+   * `running` n'est baissé qu'à la fin du flux, y compris quand le dépôt a sauté des étapes.
+   */
   private fun runConnectionTest(baseUrl: String) {
-    _uiState.update { it.copy(connectionTest = RUNNING_TEST) }
-    viewModelScope.launch {
-      val test = when (val outcome = serverRepository.test(baseUrl)) {
-        is Outcome.Success -> outcome.value.toConnectionTest()
-
-        is Outcome.Failure -> ConnectionTest(
-          reachable = CheckStepState.FAILED,
-          apiVersion = CheckStepState.FAILED,
-          tiles = CheckStepState.FAILED,
-          error = outcome.error,
-        )
+    connectionTestJob?.cancel()
+    _uiState.update { it.copy(connectionTest = ConnectionTest(running = true)) }
+    connectionTestJob = viewModelScope.launch {
+      serverRepository.test(baseUrl).collect { progress ->
+        _uiState.update { it.copy(connectionTest = it.connectionTest.after(progress)) }
       }
-      _uiState.update { it.copy(connectionTest = test) }
+      _uiState.update { it.copy(connectionTest = it.connectionTest.copy(running = false)) }
     }
   }
 
@@ -298,19 +305,6 @@ class ServerSettingsViewModel(
   companion object {
     /** Clé de la saisie dans l'état sauvegardé. */
     private const val SAVED_INPUT = "input"
-
-    private val RUNNING_TEST = ConnectionTest(
-      reachable = CheckStepState.RUNNING,
-      apiVersion = CheckStepState.RUNNING,
-      tiles = CheckStepState.RUNNING,
-    )
-
-    private fun ServerCheck.toConnectionTest() = ConnectionTest(
-      reachable = if (reachable) CheckStepState.PASSED else CheckStepState.FAILED,
-      apiVersion = if (apiCompatible) CheckStepState.PASSED else CheckStepState.FAILED,
-      // Un serveur sans tuiles reste utilisable : ce n'est pas un échec (SPEC.md § 5.7).
-      tiles = if (tilesAvailable) CheckStepState.PASSED else CheckStepState.ABSENT,
-    )
 
     /** Fabrique propre à ce ViewModel (docs/architecture.md § 3, règle 3). */
     fun factory(container: AppContainer) = viewModelFactory {

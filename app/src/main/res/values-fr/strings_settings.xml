@@ -163,6 +163,7 @@
   <string name="server_settings_step_passed">Réussi</string>
   <string name="server_settings_step_failed">Échec</string>
   <string name="server_settings_step_absent">Non disponible</string>
+  <string name="server_settings_step_skipped">Sans objet — le serveur n’a pas répondu</string>
   <string name="server_settings_tiles_absent_notice">Ce serveur ne sert pas de tuiles de carte. Escale reste utilisable&#160;: la carte sera simplement sans fond.</string>
 
   <string name="server_settings_known_title">Serveurs déjà utilisés</string>

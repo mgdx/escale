@@ -128,9 +128,12 @@ introduire `kotlinx-datetime`, ne pas mélanger avec `kotlin.time.Duration`.
 
 Déclarées dans `:core` (donc sans type Android), implémentées dans `:data.repository`. Toutes les
 fonctions sont `suspend` et rendent un `Outcome<T>` ; celles qui observent un état rendent un `Flow`.
+**Une opération dont l'écran doit suivre l'avancement rend elle aussi un `Flow`**, froid et non
+`suspend` : c'est le cas de `ServerRepository.test`, dont les trois étapes du §5.6.1 s'affichent au
+fur et à mesure au lieu d'arriver toutes ensemble à la fin.
 
 ```
-ServerRepository      serveur courant (Flow), enregistrer, tester (3 étapes du §5.6.1), serveurs connus
+ServerRepository      serveur courant (Flow), enregistrer, tester (Flow d'avancement, 3 étapes du §5.6.1), serveurs connus
 GeocodeRepository     autocomplétion, géocodage inverse
 PlanRepository        recherche d'itinéraire par catégorie, pagination par curseur, rafraîchissement
 TripRepository        détail d'une course, prochains départs à un arrêt

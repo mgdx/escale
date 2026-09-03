@@ -2,7 +2,6 @@ package io.github.mgdx.escale.ui.server
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
-import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.result.EscaleError
@@ -65,9 +64,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `un test concluant ouvre l enregistrement`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
-    )
+    repository.programTest()
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -83,9 +80,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `un serveur sans tuiles reste utilisable`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = false),
-    )
+    repository.programTest(tilesAvailable = false)
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -98,9 +93,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `une version d API trop ancienne ferme l enregistrement direct`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = false, tilesAvailable = false),
-    )
+    repository.programTest(apiCompatible = false, tilesAvailable = false)
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -114,7 +107,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `un serveur injoignable expose son erreur`() = runTest {
-    repository.testOutcome = Outcome.Failure(EscaleError.NoNetwork)
+    repository.programUnreachable(EscaleError.NoNetwork)
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -123,14 +116,67 @@ class ServerSettingsViewModelTest {
     val state = viewModel.uiState.value
     assertEquals(CheckStepState.FAILED, state.connectionTest.reachable)
     assertEquals(EscaleError.NoNetwork, state.connectionTest.error)
+    // Les deux étapes suivantes n'ont pas été menées : ni « réussi », ni « échec », sans objet.
+    assertEquals(CheckStepState.SKIPPED, state.connectionTest.apiVersion)
+    assertEquals(CheckStepState.SKIPPED, state.connectionTest.tiles)
+    assertFalse(state.connectionTest.running)
     assertFalse(state.canSave)
+    assertTrue(state.canForce)
+  }
+
+  /**
+   * L'anomalie A2 : les trois lignes passaient en « en cours » ensemble et recevaient leur verdict
+   * ensemble. SPEC.md § 5.6.1 demande trois résultats distincts ; ils le sont maintenant aussi dans
+   * le temps.
+   */
+  @Test
+  fun `une etape rend son verdict sans attendre les suivantes`() = runTest {
+    repository.programTest()
+    // Après l'annonce et le verdict de la première étape, avant l'annonce de la deuxième.
+    repository.pauseAfter = 2
+    val viewModel = viewModel()
+
+    viewModel.onInputChange("https://motis.exemple.org")
+    viewModel.onTestConnection()
+
+    val midway = viewModel.uiState.value
+    assertEquals(CheckStepState.PASSED, midway.connectionTest.reachable)
+    assertEquals(CheckStepState.IDLE, midway.connectionTest.apiVersion)
+    assertTrue(midway.connectionTest.running)
+    // Un test en cours n'ouvre ni l'enregistrement ni le « Utiliser quand même ».
+    assertFalse(midway.canSave)
+    assertFalse(midway.canForce)
+
+    repository.resumeTest()
+
+    val end = viewModel.uiState.value
+    assertEquals(CheckStepState.PASSED, end.connectionTest.apiVersion)
+    assertEquals(CheckStepState.PASSED, end.connectionTest.tiles)
+    assertFalse(end.connectionTest.running)
+    assertTrue(end.canSave)
+  }
+
+  @Test
+  fun `retoucher l URL interrompt le test en cours`() = runTest {
+    repository.programTest()
+    repository.pauseAfter = 2
+    val viewModel = viewModel()
+
+    viewModel.onInputChange("https://motis.exemple.org")
+    viewModel.onTestConnection()
+    viewModel.onInputChange("https://autre.exemple.org")
+    // Le flux repart, mais son abonné a été abandonné : plus rien ne doit toucher à l'écran.
+    repository.resumeTest()
+
+    val state = viewModel.uiState.value
+    assertEquals(CheckStepState.IDLE, state.connectionTest.reachable)
+    assertEquals(CheckStepState.IDLE, state.connectionTest.apiVersion)
+    assertFalse(state.connectionTest.running)
   }
 
   @Test
   fun `retoucher l URL rend le test caduc`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
-    )
+    repository.programTest()
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -143,9 +189,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `rien n est enregistre avant l annonce des effets du changement`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
-    )
+    repository.programTest()
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -195,9 +239,7 @@ class ServerSettingsViewModelTest {
 
   @Test
   fun `le consentement accepte relance l action et n est demande qu une fois par hote`() = runTest {
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = false),
-    )
+    repository.programTest(tilesAvailable = false)
     val viewModel = viewModel()
 
     viewModel.onInputChange("http://192.168.1.10:8080")
@@ -219,9 +261,7 @@ class ServerSettingsViewModelTest {
   @Test
   fun `un consentement deja memorise n interrompt plus rien`() = runTest {
     val store = FakeCleartextConsentStore(initial = setOf("192.168.1.10"))
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = false),
-    )
+    repository.programTest(tilesAvailable = false)
     val viewModel = ServerSettingsViewModel(repository, store, cacheReset.reset, savedState)
 
     viewModel.onInputChange("http://192.168.1.10:8080")
@@ -304,9 +344,7 @@ class ServerSettingsViewModelTest {
   fun `un changement de serveur vide les trois caches`() = runTest {
     // SPEC.md § 5.6.1 : la boîte de confirmation annonce à l'usager que « les caches de résultats,
     // de géocodage et de tuiles sont vidés ». Elle l'annonçait sans que rien ne le fasse.
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
-    )
+    repository.programTest()
     val viewModel = viewModel()
 
     viewModel.onInputChange("https://motis.exemple.org")
@@ -344,9 +382,7 @@ class ServerSettingsViewModelTest {
     assertEquals(Triple(3, 3, 3), cacheReset.counts())
 
     // 4. « Enregistrer » après un test concluant.
-    repository.testOutcome = Outcome.Success(
-      ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true),
-    )
+    repository.programTest()
     viewModel.onInputChange("https://teste.exemple.org")
     viewModel.onTestConnection()
     viewModel.onSave()

@@ -4,6 +4,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.ServerTestProgress
+import io.github.mgdx.escale.core.model.ServerTestStep
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.data.net.MotisClient
@@ -18,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -122,12 +125,69 @@ class ServerRepositoryImplTest {
         else -> respondError(HttpStatusCode.NotFound)
       }
     }
-    val check = repository(engine).test("motis.exemple.org")
-    val value = (check as Outcome.Success).value
-    assertTrue(value.reachable)
-    assertEquals(false, value.apiCompatible)
-    assertEquals(false, value.tilesAvailable)
-    assertEquals(true, value.health?.realtime)
+    val progress = repository(engine).test("motis.exemple.org").toList()
+
+    assertEquals(true, verdictOf(progress, ServerTestStep.REACHABLE)?.passed)
+    assertEquals(false, verdictOf(progress, ServerTestStep.API_VERSION)?.passed)
+    assertEquals(false, verdictOf(progress, ServerTestStep.TILES)?.passed)
+    assertEquals(true, verdictOf(progress, ServerTestStep.REACHABLE)?.health?.realtime)
+  }
+
+  /**
+   * SPEC.md § 5.6.1 : « trois résultats distincts affichés ». L'ordre des émissions est ce qui
+   * permet à l'écran de faire progresser ses trois lignes séparément — chaque étape s'annonce
+   * **avant** que son appel ne parte, et rend son verdict avant que la suivante ne s'annonce.
+   */
+  @Test
+  fun `chaque etape s annonce avant de rendre son verdict`() = runBlocking {
+    val engine = MockEngine { request ->
+      when {
+        request.url.encodedPath.endsWith("/api/v1/health") ->
+          respond(
+            "{\"rt\":true,\"gbfs\":true}",
+            HttpStatusCode.OK,
+            headersOf(HttpHeaders.ContentType, "application/json"),
+          )
+
+        else -> respond("", HttpStatusCode.OK)
+      }
+    }
+    val progress = repository(engine).test("motis.exemple.org").toList()
+
+    assertEquals(
+      listOf(
+        ServerTestStep.REACHABLE to false,
+        ServerTestStep.REACHABLE to true,
+        ServerTestStep.API_VERSION to false,
+        ServerTestStep.API_VERSION to true,
+        ServerTestStep.TILES to false,
+        ServerTestStep.TILES to true,
+      ),
+      progress.map { it.step to (it is ServerTestProgress.Finished) },
+    )
+  }
+
+  /**
+   * Un serveur injoignable rend les deux étapes suivantes sans objet : elles ne sont pas menées —
+   * l'usager attendrait deux expirations de plus pour rien — et elles ne sont pas non plus
+   * déclarées en échec, ce qui affirmerait quelque chose qui n'a pas été mesuré.
+   */
+  @Test
+  fun `un serveur injoignable saute les deux etapes suivantes`() = runBlocking {
+    val paths = mutableListOf<String>()
+    val engine = MockEngine { request ->
+      paths += request.url.encodedPath
+      respondError(HttpStatusCode.ServiceUnavailable)
+    }
+    val progress = repository(engine).test("motis.exemple.org").toList()
+
+    // Seule la première étape a été tentée : ni l'emprise de la deuxième, ni la tuile de la
+    // troisième n'ont été demandées. (Le client réessaie ; ce qui compte est ce qu'il interroge.)
+    assertTrue(paths.all { it.endsWith("/api/v1/health") })
+    assertEquals(false, verdictOf(progress, ServerTestStep.REACHABLE)?.passed)
+    assertTrue(verdictOf(progress, ServerTestStep.REACHABLE)?.error != null)
+    assertTrue(progress.any { it == ServerTestProgress.Skipped(ServerTestStep.API_VERSION) })
+    assertTrue(progress.any { it == ServerTestProgress.Skipped(ServerTestStep.TILES) })
   }
 
   @Test
@@ -137,7 +197,13 @@ class ServerRepositoryImplTest {
       calls++
       respondError(HttpStatusCode.NotFound)
     }
-    assertTrue(repository(engine).test("ftp://exemple.org") is Outcome.Failure)
+    val progress = repository(engine).test("ftp://exemple.org").toList()
+
     assertEquals(0, calls)
+    assertEquals(false, verdictOf(progress, ServerTestStep.REACHABLE)?.passed)
+    assertTrue(progress.any { it == ServerTestProgress.Skipped(ServerTestStep.TILES) })
   }
+
+  private fun verdictOf(progress: List<ServerTestProgress>, step: ServerTestStep) =
+    progress.filterIsInstance<ServerTestProgress.Finished>().singleOrNull { it.step == step }
 }

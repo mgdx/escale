@@ -16,7 +16,8 @@ propose l'amendement de la spec dans le même commit que le code.
 
 ```bash
 ./gradlew assembleDebug            # compiler
-./gradlew assembleRelease          # compiler la publication minifiée (R8), non signée
+./gradlew assembleRelease          # compiler la publication minifiée (R8), non signée : quatre APK
+./gradlew :app:assembleRelease -Pabi=arm64-v8a   # la même, mais une seule architecture (docs/fdroid.md § 6)
 ./gradlew test                     # tests JVM (:core, :data)
 ./gradlew connectedAndroidTest     # tests instrumentés (appareil branché requis)
 ./gradlew ktlintCheck detekt lint  # qualité
@@ -106,6 +107,18 @@ Vérifier la taille, qui est contrôlée automatiquement à chaque `assembleRele
 ```bash
 ./gradlew :app:assembleRelease     # échoue si un APK dépasse 15 Mo, ou si R8 a renommé une classe
 ls -l app/build/outputs/apk/release/   # sur laquelle une bibliothèque compte par son nom
+```
+
+**La propriété `-Pabi`** restreint la compilation à **une seule** architecture, et n'existe que
+pour la recette de compilation de F-Droid, qui refuse de trouver plus d'un APK à la fois
+(docs/fdroid.md § 6). Sans elle, rien ne change : les quatre APK sont produits comme avant, et
+toutes les commandes ci-dessus restent valables telles quelles. Elle ne touche jamais au
+`versionCode`, qui reste celui du rang de l'ABI dans les deux modes — c'est ce que vérifie la tâche
+`verifyReleaseVersionCodes`, qui finalise `assembleRelease`. Une valeur inconnue échoue en nommant
+les quatre valeurs acceptées.
+
+```bash
+./gradlew :app:assembleRelease -Pabi=arm64-v8a   # armeabi-v7a, arm64-v8a, x86 ou x86_64
 ```
 
 ## Skills à utiliser

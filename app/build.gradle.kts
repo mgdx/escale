@@ -33,6 +33,36 @@ val abiVersionCodeRanks = mapOf(
 
 val abiVersionCodeMultiplier = 1000
 
+// La propriété qui restreint la compilation à **une seule** ABI : `./gradlew :app:assembleRelease
+// -Pabi=arm64-v8a`. Elle existe pour la recette de compilation de F-Droid (docs/fdroid.md § 6).
+//
+// `fdroid build` cherche **un** APK par bloc `Builds:` et échoue s'il en trouve plusieurs
+// (`BuildException('More than one resulting apks found in …')`). Le découpage par ABI ci-dessous
+// en produit quatre d'un coup : la recette demande donc chaque architecture séparément, par quatre
+// blocs `Builds:` qui ne diffèrent que par leur `gradleprops:` et leur `versionCode`.
+//
+// **Sans la propriété, rien ne change** : les quatre APK sont produits comme avant, et la CI comme
+// les commandes de CLAUDE.md restent valables. La propriété ne touche qu'à la *liste des ABI
+// produites* ; elle ne touche **jamais** au `versionCode`, qui reste celui du rang de l'ABI, à
+// l'identique dans les deux modes. Un `versionCode` qui dépendrait du mode de compilation serait
+// un incident de publication.
+val requestedAbi = providers.gradleProperty("abi").orNull?.trim()?.takeIf { it.isNotEmpty() }
+
+val includedAbis: List<String> = when (requestedAbi) {
+  null -> abiVersionCodeRanks.keys.toList()
+
+  in abiVersionCodeRanks.keys -> listOf(requestedAbi)
+
+  // Une valeur inconnue échoue tout de suite, et nommément : sans cela, `include()` ne retiendrait
+  // aucune ABI et la compilation rendrait zéro APK sans rien dire, ce qu'une recette F-Droid
+  // signalerait beaucoup plus loin et beaucoup moins clairement.
+  else -> error(
+    "Propriété -Pabi inconnue : « $requestedAbi ». " +
+      "Valeurs acceptées : ${abiVersionCodeRanks.keys.joinToString(", ")}. " +
+      "Sans -Pabi, les quatre APK d'architecture sont produits.",
+  )
+}
+
 /**
  * Le type de compilation de **mesure** : la publication minifiée, signée avec la clé de débogage.
  * Il n'est jamais publié ; il n'existe que pour que le § 2 et le § 5.7 de la spec soient vérifiables
@@ -120,7 +150,14 @@ android {
     abi {
       isEnable = true
       reset()
-      include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+      // La liste complète, ou la seule ABI demandée par `-Pabi` (voir plus haut). Les quatre noms
+      // sont écrits en toutes lettres dans la branche par défaut : c'est là que lint les lit pour
+      // sa vérification `ChromeOsAbiSupport`, qui exige un binaire x86 ou x86_64.
+      if (requestedAbi == null) {
+        include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+      } else {
+        include(requestedAbi)
+      }
       // Pas d'APK universel : il annulerait tout le gain, et personne ne l'installerait.
       isUniversalApk = false
     }
@@ -317,6 +354,61 @@ val verifyReleaseApkSize = tasks.register("verifyReleaseApkSize") {
   }
 }
 
+/**
+ * Le garde-fou de la convention de `versionCode` et du découpage par ABI.
+ *
+ * Deux choses se cassent en silence et ne se voient qu'à la publication : un `versionCode` qui
+ * cesserait de valoir `rang × 1000 + baseVersionCode`, et une compilation `-Pabi` qui rendrait
+ * autre chose que l'unique APK demandé — ce que `fdroid build` refuse. Les deux se lisent dans
+ * `output-metadata.json`, qu'AGP écrit à côté des APK ; cette tâche les vérifie sur le fichier
+ * produit, pas sur l'intention.
+ */
+val verifyReleaseVersionCodes = tasks.register("verifyReleaseVersionCodes") {
+  group = "verification"
+  description = "Vérifie le versionCode par ABI et la liste des APK produits (docs/fdroid.md § 6)."
+  val metadata = releaseApkDirectory.map { it.file("output-metadata.json") }
+  val ranks = abiVersionCodeRanks
+  val multiplier = abiVersionCodeMultiplier
+  val base = baseVersionCode
+  val expectedAbis = includedAbis.toSet()
+  doLast {
+    // Projections étoilées plutôt que types génériques : `JsonSlurper` rend des `Any?`, et un
+    // transtypage générique ne serait pas vérifiable — donc un avertissement, que CLAUDE.md
+    // n'accepte pas.
+    val parsed = groovy.json.JsonSlurper().parse(metadata.get().asFile) as Map<*, *>
+    val elements = (parsed["elements"] as List<*>).filterIsInstance<Map<*, *>>()
+    val produced = elements.associate { element ->
+      val filters = (element["filters"] as List<*>).filterIsInstance<Map<*, *>>()
+      val abi = filters.single { it["filterType"] == "ABI" }["value"] as String
+      abi to (element["versionCode"] as Number).toInt()
+    }
+    val failures = buildList {
+      if (produced.keys != expectedAbis) {
+        add(
+          "APK produits : ${produced.keys.sorted()} ; attendus : ${expectedAbis.sorted()}. " +
+            "Avec -Pabi, un seul APK doit rester dans le répertoire de sortie.",
+        )
+      }
+      produced.forEach { (abi, versionCode) ->
+        val expected = (ranks[abi] ?: 0) * multiplier + base
+        if (versionCode != expected) {
+          add("$abi : versionCode $versionCode, attendu $expected (rang × $multiplier + $base).")
+        }
+      }
+    }
+    if (failures.isNotEmpty()) {
+      error(
+        "Convention de publication rompue — elle est figée une fois l'application publiée " +
+          "(app/build.gradle.kts, docs/fdroid.md § 6) :\n" +
+          failures.joinToString("\n") { "  - $it" },
+      )
+    }
+    produced.toSortedMap().forEach { (abi, versionCode) ->
+      logger.lifecycle("  $abi : versionCode $versionCode")
+    }
+  }
+}
+
 tasks.matching { it.name == "assembleRelease" }.configureEach {
-  finalizedBy(verifyReleaseKeepRules, verifyReleaseApkSize)
+  finalizedBy(verifyReleaseKeepRules, verifyReleaseApkSize, verifyReleaseVersionCodes)
 }

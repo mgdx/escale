@@ -1,6 +1,8 @@
 package io.github.mgdx.escale.ui.server
 
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.ServerTestProgress
+import io.github.mgdx.escale.core.model.ServerTestStep
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.result.EscaleError
 
@@ -28,14 +30,26 @@ enum class CheckStepState {
    * C'est le cas des tuiles : un serveur qui n'en sert pas reste utilisable (SPEC.md § 5.7).
    */
   ABSENT,
+
+  /**
+   * Étape non menée, parce qu'une précédente l'a rendue sans objet : un serveur qui n'a pas
+   * répondu n'a ni version d'API ni tuiles à montrer. Ce n'est pas un échec, c'est une absence
+   * de mesure, et l'écran le dit en toutes lettres.
+   */
+  SKIPPED,
 }
 
 /**
- * Le résultat des trois étapes du test de connexion, affichées séparément (SPEC.md § 5.6.1).
+ * L'avancement des trois étapes du test de connexion, affichées séparément (SPEC.md § 5.6.1).
  *
- * Les trois étapes sont menées par `ServerRepository.test()`, qui les enchaîne en un seul appel :
- * elles passent donc toutes en [CheckStepState.RUNNING] ensemble, puis reçoivent leur résultat
- * ensemble. L'usager voit néanmoins trois lignes distinctes, chacune avec son propre état.
+ * `ServerRepository.test()` rend un flux : chaque étape passe en [CheckStepState.RUNNING] quand son
+ * appel part, et reçoit son verdict dès qu'il revient. Les trois lignes progressent donc l'une
+ * après l'autre, et sur un serveur injoignable la première annonce son échec sans attendre les
+ * deux expirations suivantes.
+ *
+ * [running] est porté par un champ plutôt que déduit des trois états : entre le verdict d'une étape
+ * et le départ de la suivante, aucune n'est en cours, et le déduire ferait clignoter le bouton
+ * « Utiliser quand même » au milieu du test.
  */
 data class ConnectionTest(
   val reachable: CheckStepState = CheckStepState.IDLE,
@@ -43,16 +57,54 @@ data class ConnectionTest(
   val tiles: CheckStepState = CheckStepState.IDLE,
   /** L'échec de la première étape, seul cas où le test s'arrête en erreur. */
   val error: EscaleError? = null,
+  /** Vrai du lancement du test jusqu'à sa dernière étape. */
+  val running: Boolean = false,
 ) {
-  val running: Boolean get() = reachable == CheckStepState.RUNNING
 
-  /** Le test est-il concluant ? Les tuiles n'entrent pas en compte : elles sont facultatives. */
+  /**
+   * Le test est-il **mené jusqu'au bout** et concluant ? Les tuiles n'entrent pas en compte :
+   * elles sont facultatives (SPEC.md § 5.7).
+   *
+   * L'exigence d'un test terminé n'est pas cosmétique : SPEC.md § 5.6.1 conditionne
+   * l'enregistrement au résultat complet, pas aux deux premières étapes vertes. Enregistrer avant
+   * la fin perdrait au passage le verdict des tuiles.
+   */
   val passed: Boolean
-    get() = reachable == CheckStepState.PASSED && apiVersion == CheckStepState.PASSED
+    get() = finished && reachable == CheckStepState.PASSED && apiVersion == CheckStepState.PASSED
 
   /** Le test a-t-il été mené jusqu'au bout, quel qu'en soit le verdict ? */
   val finished: Boolean
     get() = !running && reachable != CheckStepState.IDLE
+
+  /**
+   * L'avancement rendu par le dépôt, reporté sur la ligne de l'étape concernée.
+   *
+   * C'est le seul chemin par lequel un test progresse, et il est pur : c'est ce qui permet de
+   * l'éprouver sans réseau ni `ViewModel`.
+   */
+  fun after(progress: ServerTestProgress): ConnectionTest {
+    val state = when (progress) {
+      is ServerTestProgress.Started -> CheckStepState.RUNNING
+
+      is ServerTestProgress.Skipped -> CheckStepState.SKIPPED
+
+      is ServerTestProgress.Finished -> when {
+        progress.passed -> CheckStepState.PASSED
+
+        // Un serveur sans tuiles reste utilisable : ce n'est pas un échec (SPEC.md § 5.7).
+        progress.step == ServerTestStep.TILES -> CheckStepState.ABSENT
+
+        else -> CheckStepState.FAILED
+      }
+    }
+    // Seule la première étape porte une erreur, et elle ne s'efface pas au passage des suivantes.
+    val reported = (progress as? ServerTestProgress.Finished)?.error ?: error
+    return when (progress.step) {
+      ServerTestStep.REACHABLE -> copy(reachable = state, error = reported)
+      ServerTestStep.API_VERSION -> copy(apiVersion = state, error = reported)
+      ServerTestStep.TILES -> copy(tiles = state, error = reported)
+    }
+  }
 }
 
 /**
