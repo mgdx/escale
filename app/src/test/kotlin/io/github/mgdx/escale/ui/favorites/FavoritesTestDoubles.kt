@@ -12,6 +12,7 @@ import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.StopTimePage
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
+import io.github.mgdx.escale.core.model.matching
 import io.github.mgdx.escale.core.repository.FavoritesRepository
 import io.github.mgdx.escale.core.repository.HistoryRepository
 import io.github.mgdx.escale.core.repository.TripRepository
@@ -25,8 +26,9 @@ import java.time.Instant
  * Les favoris, entièrement en mémoire et pilotés par le cas d'essai.
  *
  * Il tient les mêmes promesses que l'implémentation Room, celles dont les écrans dépendent :
- * l'identifiant est attribué à l'insertion, un lieu se supprime par cet identifiant, et « non
- * renseigné » se lit à l'absence de valeur.
+ * l'identifiant est attribué à l'insertion, un lieu se supprime par cet identifiant, « non
+ * renseigné » se lit à l'absence de valeur, et **un trajet déjà en favori n'est pas enregistré une
+ * seconde fois** — un double qui passerait ici ne prouverait rien de la vraie base, qui le refuse.
  */
 class FakeFavoritesRepository : FavoritesRepository {
   private val homeState = MutableStateFlow<Location?>(null)
@@ -76,6 +78,7 @@ class FakeFavoritesRepository : FavoritesRepository {
     label: String?,
   ): Outcome<Long> {
     if (failing) return failure()
+    journeysState.value.matching(from, to, category)?.let { return Outcome.Success(it.id) }
     val id = nextId++
     journeysState.value += FavoriteJourney(
       id = id,

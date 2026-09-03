@@ -3,28 +3,29 @@ package io.github.mgdx.escale.data.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 /** Accès aux favoris : domicile, travail, lieux, arrêts et trajets (SPEC.md § 5.5). */
 @Dao
-internal interface FavoritesDao {
+internal abstract class FavoritesDao {
 
   /** Rend `null` quand l'emplacement n'est pas renseigné : c'est l'absence de ligne qui le dit. */
   @Query("SELECT * FROM named_locations WHERE slot = :slot")
-  fun observeNamedLocation(slot: String): Flow<NamedLocationEntity?>
+  abstract fun observeNamedLocation(slot: String): Flow<NamedLocationEntity?>
 
   @Upsert
-  suspend fun upsertNamedLocation(entity: NamedLocationEntity)
+  abstract suspend fun upsertNamedLocation(entity: NamedLocationEntity)
 
   @Query("DELETE FROM named_locations WHERE slot = :slot")
-  suspend fun deleteNamedLocation(slot: String)
+  abstract suspend fun deleteNamedLocation(slot: String)
 
   @Query("SELECT * FROM favorite_places ORDER BY createdAt DESC, id DESC")
-  fun observePlaces(): Flow<List<FavoritePlaceEntity>>
+  abstract fun observePlaces(): Flow<List<FavoritePlaceEntity>>
 
   @Insert
-  suspend fun insertPlace(entity: FavoritePlaceEntity): Long
+  abstract suspend fun insertPlace(entity: FavoritePlaceEntity): Long
 
   /**
    * Supprime un lieu favori **par l'identifiant que l'insertion a rendu**.
@@ -33,24 +34,70 @@ internal interface FavoritesDao {
    * d'un coup deux favoris homonymes au même point : le café et l'appartement au-dessus.
    */
   @Query("DELETE FROM favorite_places WHERE id = :id")
-  suspend fun deletePlace(id: Long)
+  abstract suspend fun deletePlace(id: Long)
 
   @Query("SELECT * FROM favorite_stops ORDER BY createdAt DESC, stopId DESC")
-  fun observeStops(): Flow<List<FavoriteStopEntity>>
+  abstract fun observeStops(): Flow<List<FavoriteStopEntity>>
 
   @Upsert
-  suspend fun upsertStop(entity: FavoriteStopEntity)
+  abstract suspend fun upsertStop(entity: FavoriteStopEntity)
 
   @Query("DELETE FROM favorite_stops WHERE stopId = :stopId")
-  suspend fun deleteStop(stopId: String)
+  abstract suspend fun deleteStop(stopId: String)
 
   @Query("SELECT * FROM favorite_journeys ORDER BY createdAt DESC, id DESC")
-  fun observeJourneys(): Flow<List<FavoriteJourneyEntity>>
+  abstract fun observeJourneys(): Flow<List<FavoriteJourneyEntity>>
 
   @Insert
-  suspend fun insertJourney(entity: FavoriteJourneyEntity): Long
+  abstract suspend fun insertJourney(entity: FavoriteJourneyEntity): Long
+
+  /**
+   * L'identifiant du favori qui désigne déjà ce trajet, ou `null`.
+   *
+   * Les colonnes comparées sont **exactement celles de l'index unique** : le nom et les
+   * coordonnées des deux points, et la catégorie. Le `stopId` n'en fait pas partie — nul pour une
+   * adresse, et deux `NULL` ne sont jamais égaux en SQL.
+   */
+  @Query(
+    """
+    SELECT id FROM favorite_journeys
+    WHERE from_name = :fromName AND from_lat = :fromLat AND from_lon = :fromLon
+      AND to_name = :toName AND to_lat = :toLat AND to_lon = :toLon
+      AND category = :category
+    LIMIT 1
+    """,
+  )
+  abstract suspend fun findJourney(
+    fromName: String,
+    fromLat: Double,
+    fromLon: Double,
+    toName: String,
+    toLat: Double,
+    toLon: Double,
+    category: String,
+  ): Long?
+
+  /**
+   * Enregistre un trajet favori **au plus une fois**, et rend l'identifiant dans les deux cas.
+   *
+   * La recherche et l'insertion sont dans la même transaction : deux appuis très rapprochés sur
+   * l'étoile ne peuvent pas passer tous les deux entre la question et la réponse. L'index unique
+   * de l'entité reste la garantie de dernier ressort — celle qui vaut aussi pour un futur appelant
+   * qui aurait oublié cette fonction —, mais c'est ici que le second appui obtient une réponse
+   * utile plutôt qu'une erreur de contrainte.
+   */
+  @Transaction
+  open suspend fun insertJourneyOnce(entity: FavoriteJourneyEntity): Long = findJourney(
+    fromName = entity.from.name,
+    fromLat = entity.from.lat,
+    fromLon = entity.from.lon,
+    toName = entity.to.name,
+    toLat = entity.to.lat,
+    toLon = entity.to.lon,
+    category = entity.category,
+  ) ?: insertJourney(entity)
 
   /** La clé étrangère de `watched_journeys` est en `CASCADE` : la surveillance part avec le favori. */
   @Query("DELETE FROM favorite_journeys WHERE id = :id")
-  suspend fun deleteJourney(id: Long)
+  abstract suspend fun deleteJourney(id: Long)
 }

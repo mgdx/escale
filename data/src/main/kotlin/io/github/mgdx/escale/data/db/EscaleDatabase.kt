@@ -21,9 +21,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *    `BuildConfig.DEBUG`. Un journal de requêtes contiendrait ici des adresses.
  * 3. Aucune donnée ne quitte la base par une autre voie que les dépôts de `data.repository`.
  *
- * **`version = 2`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
- * toute seule à la mise à jour est un défaut, pas une simplification : la version 2 fournit donc
- * [MIGRATION_1_2], et les schémas exportés dans `data/schemas` sont ce qui permet de la vérifier.
+ * **`version = 3`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
+ * toute seule à la mise à jour est un défaut, pas une simplification : chaque version fournit donc
+ * sa `Migration`, et les schémas exportés dans `data/schemas` sont ce qui permet de les vérifier.
  */
 @Database(
   entities = [
@@ -34,7 +34,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     SearchHistoryEntity::class,
     WatchedJourneyEntity::class,
   ],
-  version = 2,
+  version = 3,
   exportSchema = true,
 )
 abstract class EscaleDatabase : RoomDatabase() {
@@ -55,12 +55,62 @@ abstract class EscaleDatabase : RoomDatabase() {
      * `SearchHistoryEntity`. **Aucune donnée n'est effacée** : une mise à jour qui viderait les
      * favoris ou l'historique serait une perte, pas une migration.
      */
-    val MIGRATION_1_2 = object : Migration(1, 2) {
+    val MIGRATION_1_2 = object : Migration(startVersion = 1, endVersion = 2) {
       override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE search_history ADD COLUMN timeMode TEXT NOT NULL DEFAULT '$TIME_MODE_NOW'")
         db.execSQL("ALTER TABLE search_history ADD COLUMN timeMillis INTEGER")
       }
     }
+
+    /**
+     * Version 2 → 3 : un même trajet ne peut plus être mis en favori deux fois.
+     *
+     * **Une base déjà polluée est le cas normal, pas le cas limite** : la version 2 laissait
+     * l'écran de détail insérer autant de lignes qu'il y avait d'appuis sur l'étoile. Créer l'index
+     * unique sur une telle base échouerait — et une migration qui échoue laisse l'application
+     * incapable d'ouvrir sa base, donc morte. Les doublons sont donc **fusionnés d'abord**, dans la
+     * même transaction que la création de l'index : soit les deux réussissent, soit rien n'a lieu.
+     *
+     * La ligne conservée par groupe n'est pas prise au hasard : c'est **celle qui porte une
+     * surveillance** s'il y en a une (SPEC.md § 5.5.1 — la bascule « me prévenir avant le départ »
+     * s'était attachée à l'un des doublons, et la perdre en silence serait une régression visible),
+     * et à défaut la plus ancienne, celle que l'usager a créée délibérément. Les autres partent
+     * avec leur éventuelle surveillance, par la cascade de la clé étrangère.
+     */
+    val MIGRATION_2_3 = object : Migration(startVersion = 2, endVersion = 3) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+          """
+          DELETE FROM favorite_journeys WHERE id NOT IN (
+            SELECT (
+              SELECT keep.id FROM favorite_journeys AS keep
+              WHERE keep.from_name = f.from_name AND keep.from_lat = f.from_lat
+                AND keep.from_lon = f.from_lon AND keep.to_name = f.to_name
+                AND keep.to_lat = f.to_lat AND keep.to_lon = f.to_lon
+                AND keep.category = f.category
+              ORDER BY
+                (SELECT COUNT(*) FROM watched_journeys AS w WHERE w.journeyId = keep.id) DESC,
+                keep.id ASC
+              LIMIT 1
+            )
+            FROM favorite_journeys AS f
+          )
+          """.trimIndent(),
+        )
+        db.execSQL(UNIQUE_JOURNEY_INDEX)
+      }
+    }
+
+    /**
+     * L'index unique de `favorite_journeys`, **recopié tel que Room le décrit** dans
+     * `schemas/…/3.json`. Room compare cette définition à celle de la base ouverte, au caractère
+     * près : la recopier ici est ce qui garantit qu'une base migrée et une base créée de zéro sont
+     * indiscernables.
+     */
+    private const val UNIQUE_JOURNEY_INDEX =
+      "CREATE UNIQUE INDEX IF NOT EXISTS " +
+        "`index_favorite_journeys_from_name_from_lat_from_lon_to_name_to_lat_to_lon_category` " +
+        "ON `favorite_journeys` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`, `category`)"
 
     /** Nom du fichier dans le répertoire privé `databases/` de l'application. */
     const val FILE_NAME = "escale.db"
@@ -75,7 +125,7 @@ abstract class EscaleDatabase : RoomDatabase() {
      */
     fun create(context: Context): EscaleDatabase =
       Room.databaseBuilder(context.applicationContext, EscaleDatabase::class.java, FILE_NAME)
-        .addMigrations(MIGRATION_1_2)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
         .build()
   }
 }

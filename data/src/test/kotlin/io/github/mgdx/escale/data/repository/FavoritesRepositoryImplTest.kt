@@ -9,6 +9,7 @@ import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.data.db.EscaleDatabase
 import io.github.mgdx.escale.data.db.address
 import io.github.mgdx.escale.data.db.inMemoryDatabase
+import io.github.mgdx.escale.data.db.rowCount
 import io.github.mgdx.escale.data.db.stopLocation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -173,5 +174,47 @@ class FavoritesRepositoryImplTest {
 
   private companion object {
     val NOW: Instant = Instant.parse("2026-03-01T08:10:00Z")
+  }
+
+  @Test
+  fun `le meme trajet mis deux fois en favori ne fait qu une ligne`() = runBlocking {
+    val depart = address("12 rue des Lilas")
+    val arrivee = stopLocation("de:06:9999", "Châtelet")
+
+    val premier = repository.addJourney(depart, arrivee, JourneyCategory.TRANSIT, label = "Boulot")
+    val second = repository.addJourney(depart, arrivee, JourneyCategory.TRANSIT, label = null)
+
+    // Le second appel rend l'identifiant du premier : l'appel est idempotent, pas en échec.
+    assertTrue(second is Outcome.Success)
+    assertEquals((premier as Outcome.Success).value, (second as Outcome.Success).value)
+    assertEquals(1, database.rowCount("favorite_journeys"))
+    // Le libellé du premier n'est pas écrasé par le second, qui n'apportait rien.
+    assertEquals("Boulot", repository.journeys.first().single().label)
+  }
+
+  @Test
+  fun `deux categories du meme couple restent deux favoris distincts`() = runBlocking {
+    val depart = address("12 rue des Lilas")
+    val arrivee = stopLocation("de:06:9999", "Châtelet")
+
+    repository.addJourney(depart, arrivee, JourneyCategory.TRANSIT, label = null)
+    repository.addJourney(depart, arrivee, JourneyCategory.BIKE, label = null)
+
+    // La catégorie fait partie de la clé : « à vélo » et « en transports » ne sont pas le même trajet.
+    assertEquals(2, database.rowCount("favorite_journeys"))
+  }
+
+  @Test
+  fun `deux adresses homonymes a des points differents ne se confondent pas`() = runBlocking {
+    val depart = address("Mairie", lat = 48.85, lon = 2.35)
+    val autreDepart = address("Mairie", lat = 45.75, lon = 4.85)
+    val arrivee = address("Gare")
+
+    repository.addJourney(depart, arrivee, JourneyCategory.TRANSIT, label = null)
+    repository.addJourney(autreDepart, arrivee, JourneyCategory.TRANSIT, label = null)
+
+    // Aucun `stopId` de part et d'autre : c'est le nom **et** les coordonnées qui départagent, là
+    // où un index incluant le `stopId` nul aurait laissé passer les deux.
+    assertEquals(2, database.rowCount("favorite_journeys"))
   }
 }

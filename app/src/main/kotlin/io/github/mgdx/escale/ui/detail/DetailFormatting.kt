@@ -204,5 +204,6 @@ internal fun dateTimeText(instant: Instant): String {
 @StringRes
 internal fun DetailMessage.textRes(): Int = when (this) {
   DetailMessage.FAVORITE_ADDED -> R.string.detail_favorite_added
+  DetailMessage.FAVORITE_REMOVED -> R.string.detail_favorite_removed
   DetailMessage.FAVORITE_FAILED -> R.string.detail_favorite_failed
 }

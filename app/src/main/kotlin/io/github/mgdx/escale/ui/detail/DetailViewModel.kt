@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
+import io.github.mgdx.escale.core.model.FavoriteJourney
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyRefresh
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.SearchPreferences
+import io.github.mgdx.escale.core.model.matching
 import io.github.mgdx.escale.core.model.stationFor
 import io.github.mgdx.escale.core.model.withEndpointNames
 import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
@@ -76,8 +78,49 @@ class DetailViewModel(
   /** Au plus une requête de disponibilité en vol **par portion**, pour la même raison. */
   private val rentalWork = mutableMapOf<Int, Job>()
 
+  /** Les trajets favoris, tels que le dépôt les a émis en dernier. */
+  private var knownFavorites: List<FavoriteJourney> = emptyList()
+
   init {
     if (!state.value.closed) load()
+    observeFavorites()
+  }
+
+  /**
+   * L'état de l'étoile, tenu par les favoris eux-mêmes (SPEC.md § 5.5).
+   *
+   * Il est **observé**, et non calculé une fois à l'ouverture : mettre le même trajet en favori
+   * depuis l'écran des favoris, ou l'y retirer, doit changer l'étoile ici aussi. La comparaison est
+   * celle de `:core` — nom, coordonnées, catégorie —, la même que celle de l'index unique de la
+   * base : l'écran ne peut donc pas croire absent ce que le stockage refuserait d'insérer.
+   */
+  private fun observeFavorites() {
+    viewModelScope.launch {
+      favoritesRepository.journeys.collect { favorites ->
+        knownFavorites = favorites
+        refreshFavoriteState()
+      }
+    }
+  }
+
+  /**
+   * Recalcule l'état de l'étoile.
+   *
+   * Appelé des deux côtés, parce que les deux comptent : quand les favoris changent, et quand le
+   * trajet affiché change — le repli de SPEC.md § 5.5.1 peut rendre un trajet recomposé, dont la
+   * catégorie relue n'est plus la même, et l'étoile doit alors désigner l'autre favori, ou aucun.
+   */
+  private fun refreshFavoriteState() {
+    val draft = session.draft.value
+    val from = draft.from
+    val to = draft.to
+    val journey = state.value.journey
+    val matched = if (from == null || to == null || journey == null) {
+      null
+    } else {
+      knownFavorites.matching(from, to, JourneyRefresh.categoryOf(journey))
+    }
+    state.update { it.copy(favoriteId = matched?.id) }
   }
 
   /**
@@ -93,7 +136,11 @@ class DetailViewModel(
   }
 
   /**
-   * « Ajouter aux favoris » (SPEC.md § 5.3 et § 5.5).
+   * L'étoile de la barre supérieure : **elle bascule** (SPEC.md § 5.3 et § 5.5).
+   *
+   * Trajet déjà en favori, l'appui le retire ; absent, il l'ajoute. C'est ce que tout le monde
+   * attend d'une étoile, et c'est aussi ce qui rend la duplication impossible par l'interface —
+   * l'unicité, elle, est garantie par le stockage, qui ne dépend d'aucun écran.
    *
    * Un trajet favori est un **couple départ / arrivée**, pas un itinéraire figé : ce sont les deux
    * points de la recherche en cours qui sont enregistrés, avec leur identifiant d'arrêt quand ils
@@ -105,7 +152,15 @@ class DetailViewModel(
    * vers une gare est un trajet en transport en commun, pas un trajet à vélo — et c'est la trace
    * des « préférences de modes » que SPEC.md § 5.5 autorise à joindre au favori.
    */
-  fun onAddToFavorites() {
+  fun onToggleFavorite() {
+    val existing = state.value.favoriteId
+    if (existing != null) {
+      viewModelScope.launch {
+        val outcome = favoritesRepository.removeJourney(existing)
+        show(if (outcome is Outcome.Success) DetailMessage.FAVORITE_REMOVED else DetailMessage.FAVORITE_FAILED)
+      }
+      return
+    }
     val draft = session.draft.value
     val from = draft.from
     val to = draft.to
@@ -318,6 +373,7 @@ class DetailViewModel(
     // Le trajet détaillé porte la géométrie des portions, que le trajet sommaire n'avait pas : le
     // publier ici permet au lot « tracé » de dessiner le vrai tracé sans rien demander à cet écran.
     selection.select(journey)
+    refreshFavoriteState()
   }
 
   private fun onFailure(error: EscaleError) {

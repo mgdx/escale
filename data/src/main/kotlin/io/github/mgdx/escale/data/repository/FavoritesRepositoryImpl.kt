@@ -70,13 +70,20 @@ class FavoritesRepositoryImpl(database: EscaleDatabase, private val clock: () ->
 
   override suspend fun removeStop(stopId: String): Outcome<Unit> = write { dao.deleteStop(stopId) }
 
+  /**
+   * Enregistre un trajet favori, ou rend celui qui existe déjà : **l'appel est idempotent**.
+   *
+   * L'unicité n'est pas laissée à l'écran (SPEC.md § 5.5) : le couple départ / arrivée et la
+   * catégorie forment une clé, tenue par l'index unique de `favorite_journeys` et par la
+   * transaction de `insertJourneyOnce`.
+   */
   override suspend fun addJourney(
     from: Location,
     to: Location,
     category: JourneyCategory,
     label: String?,
   ): Outcome<Long> = writeValue {
-    dao.insertJourney(
+    dao.insertJourneyOnce(
       FavoriteJourneyEntity(
         label = label,
         from = from.toColumns(),
