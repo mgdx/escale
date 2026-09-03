@@ -3,6 +3,7 @@ package io.github.mgdx.escale.core.geo
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalPointKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -52,33 +53,52 @@ class RentalMarkerTest {
   // --- Station ou véhicule isolé ---------------------------------------------------------------
 
   @Test
-  fun `un point nomme et borne est une station`() {
-    val marker = rentalMarkers(listOf(availability(name = "Hôtel de Ville", docks = mapOf("velo" to 6)))).single()
+  fun `une station se dessine en station et apparait au zoom treize`() {
+    val marker = rentalMarkers(
+      listOf(availability(name = "Hôtel de Ville", docks = mapOf("velo" to 6), kind = RentalPointKind.STATION)),
+    ).single()
     assertEquals(RentalMarkerKind.STATION, marker.kind)
     assertEquals(ZoomTier.ALL_STOPS, marker.tier)
     assertEquals(6, marker.docksAvailable)
   }
 
   @Test
-  fun `un point sans nom ni borne est un vehicule isole`() {
-    val marker = rentalMarkers(listOf(availability(name = "", docks = emptyMap(), vehicles = 1))).single()
+  fun `un vehicule isole se dessine en vehicule et n'apparait qu'au zoom quinze`() {
+    val marker = rentalMarkers(
+      listOf(availability(name = "", docks = emptyMap(), vehicles = 1, kind = RentalPointKind.FREE_FLOATING)),
+    ).single()
     assertEquals(RentalMarkerKind.VEHICLE, marker.kind)
     assertEquals(ZoomTier.POINTS_OF_INTEREST, marker.tier)
     assertEquals(0, marker.docksAvailable)
   }
 
   @Test
-  fun `une station sans borne garde son nom, donc son palier`() {
-    // Il existe des stations GBFS sans borne physique : les compter comme des véhicules isolés les
-    // ferait disparaître entre les zooms 13 et 15.
-    val marker = rentalMarkers(listOf(availability(name = "Place Bellecour", docks = emptyMap()))).single()
+  fun `une station sans nom ni borne reste une station`() {
+    // Le cas qui a fait tomber l'heuristique précédente, et il n'a rien de théorique : la fixture
+    // `rentals_brussels_closed_station.json` contient une station Villo sans nom, vide et hors
+    // service, et **aucun** flux relevé ne publie de bornes. Elle cochait donc les deux conditions
+    // de la devinette d'alors, et se serait dessinée en véhicule en libre accès, au zoom 15 au
+    // lieu du zoom 13, avec la mauvaise forme et le mauvais libellé.
+    val marker = rentalMarkers(
+      listOf(availability(name = "", docks = emptyMap(), vehicles = 0, kind = RentalPointKind.STATION)),
+    ).single()
     assertEquals(RentalMarkerKind.STATION, marker.kind)
+    assertEquals(ZoomTier.ALL_STOPS, marker.tier)
   }
 
   @Test
-  fun `un point sans nom mais avec des bornes reste une station`() {
-    val marker = rentalMarkers(listOf(availability(name = " ", docks = mapOf("velo" to 2)))).single()
-    assertEquals(RentalMarkerKind.STATION, marker.kind)
+  fun `un vehicule isole reste un vehicule, meme si le flux lui donne un nom`() {
+    // Symétrique du précédent : c'est la nature qui tranche, jamais un signal réinterprété.
+    val marker = rentalMarkers(
+      listOf(availability(name = "Vélo 12", docks = emptyMap(), kind = RentalPointKind.FREE_FLOATING)),
+    ).single()
+    assertEquals(RentalMarkerKind.VEHICLE, marker.kind)
+  }
+
+  @Test
+  fun `chaque nature de point a sa famille de marqueur, et une seule`() {
+    assertEquals(RentalMarkerKind.STATION, RentalMarkerKind.of(RentalPointKind.STATION))
+    assertEquals(RentalMarkerKind.VEHICLE, RentalMarkerKind.of(RentalPointKind.FREE_FLOATING))
   }
 
   // --- Ce que le marqueur retient de la réponse ------------------------------------------------
@@ -163,6 +183,7 @@ class RentalMarkerTest {
     renting: Boolean = true,
     returning: Boolean = true,
     formFactors: List<RentalFormFactor> = emptyList(),
+    kind: RentalPointKind = RentalPointKind.STATION,
   ) = RentalAvailability(
     stationId = id,
     name = name,
@@ -174,5 +195,6 @@ class RentalMarkerTest {
     formFactors = formFactors,
     rentalUriAndroid = uri,
     retrievedAt = retrieved,
+    kind = kind,
   )
 }

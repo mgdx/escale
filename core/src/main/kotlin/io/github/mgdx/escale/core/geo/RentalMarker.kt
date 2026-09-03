@@ -3,6 +3,7 @@ package io.github.mgdx.escale.core.geo
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalPointKind
 
 /**
  * Les deux familles de marqueurs de libre-service, et le palier de zoom de chacune.
@@ -18,6 +19,23 @@ enum class RentalMarkerKind(val tier: ZoomTier) {
 
   /** « ≥ 15 : véhicules en libre-service isolés (free-floating) ». */
   VEHICLE(ZoomTier.POINTS_OF_INTEREST),
+  ;
+
+  companion object {
+    /**
+     * La famille de marqueur d'un point, **lue sur sa nature** et non devinée.
+     *
+     * [RentalPointKind] vient du schéma d'API dont le point provient, `RentalStation` ou
+     * `RentalVehicle` ; c'est la seule source qui ne mente pas. Les deux énumérations restent
+     * distinctes parce qu'elles ne disent pas la même chose : l'une est une provenance de donnée,
+     * que l'écran de détail lit aussi, l'autre un choix de dessin et de palier de zoom qui ne
+     * regarde que la carte.
+     */
+    fun of(kind: RentalPointKind): RentalMarkerKind = when (kind) {
+      RentalPointKind.STATION -> STATION
+      RentalPointKind.FREE_FLOATING -> VEHICLE
+    }
+  }
 }
 
 /**
@@ -66,7 +84,7 @@ fun rentalMarkers(availabilities: List<RentalAvailability>): List<RentalMarker> 
     id = availability.stationId,
     name = availability.name,
     point = availability.coordinates,
-    kind = rentalMarkerKind(availability),
+    kind = RentalMarkerKind.of(availability.kind),
     formFactor = principalFormFactor(availability.formFactors),
     vehiclesAvailable = availability.numVehiclesAvailable,
     docksAvailable = availability.vehicleDocksAvailable.values.sum(),
@@ -75,28 +93,6 @@ fun rentalMarkers(availabilities: List<RentalAvailability>): List<RentalMarker> 
     rentalUriAndroid = availability.rentalUriAndroid?.takeIf(String::isNotBlank),
   )
 }
-
-/**
- * Station ou véhicule isolé ?
- *
- * `/api/v1/rentals` rend deux schémas distincts, `RentalStation` et `RentalVehicle`, que le domaine
- * réunit dans un seul `RentalAvailability`. La distinction se relit donc sur deux signaux, tous
- * deux tirés de `docs/motis-openapi.yaml`, qui fait foi :
- *
- * 1. `name` est **obligatoire** sur `RentalStation` et **absent** de `RentalVehicle` : un point
- *    sans nom ne peut pas être une station ;
- * 2. `vehicleDocksAvailable` n'existe que sur `RentalStation`, et la documentation de
- *    [RentalAvailability] le dit vide en free-floating.
- *
- * Il faut que les deux signaux concordent pour conclure au véhicule isolé : une station dépourvue
- * de bornes — il en existe en GBFS — garde son nom, et reste donc une station.
- */
-fun rentalMarkerKind(availability: RentalAvailability): RentalMarkerKind =
-  if (availability.name.isBlank() && availability.vehicleDocksAvailable.isEmpty()) {
-    RentalMarkerKind.VEHICLE
-  } else {
-    RentalMarkerKind.STATION
-  }
 
 /**
  * Le type de véhicule qui donne son dessin au marqueur, quand la station en accepte plusieurs.

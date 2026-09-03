@@ -10,6 +10,7 @@ import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalPointKind
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
@@ -433,7 +434,10 @@ class MapRentalsViewModelTest {
     retrievedAt = RETRIEVED_AT,
   )
 
-  /** Un véhicule isolé : sans nom et sans borne, comme un `RentalVehicle` de l'OpenAPI. */
+  /**
+   * Un véhicule isolé, tel que le mapping le rend d'un `RentalVehicle` : c'est [RentalPointKind]
+   * qui le dit, et non son absence de nom ou de borne — une station peut n'avoir ni l'un ni l'autre.
+   */
   private fun freeFloating(id: String) = RentalAvailability(
     stationId = id,
     name = "",
@@ -441,6 +445,7 @@ class MapRentalsViewModelTest {
     numVehiclesAvailable = 1,
     formFactors = listOf(RentalFormFactor.SCOOTER_STANDING),
     retrievedAt = RETRIEVED_AT,
+    kind = RentalPointKind.FREE_FLOATING,
   )
 
   private fun manyStations(count: Int) = List(count) { index ->
