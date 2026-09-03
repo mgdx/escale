@@ -65,11 +65,18 @@ jobs:
       # `compileSdk`/`targetSdk` valent 37 (app/build.gradle.kts). L'image du serveur ne l'a pas
       # forcément déjà : on l'installe explicitement plutôt que de laisser AGP le télécharger de
       # lui-même, pour que la panne éventuelle soit lisible ici et pas au milieu d'une compilation.
+      #
+      # Le paquet s'appelle `platforms;android-37.0`, avec sa mineure, et NON `platforms;android-37` :
+      # depuis Android 16 les plateformes sont versionnées majeure.mineure (`android-36.1`,
+      # `android-37.0`). Déduire le nom du `compileSdk` fait échouer sdkmanager sur
+      # « Failed to find package », ce qui s'est produit à la première exécution de ce workflow.
+      # `sdkmanager --list | grep platforms` donne la liste exacte.
       - name: Installer la plateforme Android 37
         run: |
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$sdkmanager" --licenses > /dev/null
-          "$sdkmanager" 'platforms;android-37' 'build-tools;37.0.0'
+          "$sdkmanager" 'platforms;android-37.0' 'build-tools;37.0.0'
+          "$sdkmanager" --list_installed | grep -E 'platforms;android-37\.0|build-tools;37\.0\.0'
 
       # Le cache ne porte que le **dépôt de dépendances** de Gradle (`~/.gradle/caches`), c'est-à-dire
       # des artefacts Maven immuables : il fait gagner du téléchargement, il ne réutilise aucun
