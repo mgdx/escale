@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -166,7 +167,7 @@ private fun SuggestionList(state: SearchUiState, actions: SearchActions) {
       is AutocompleteState.Suggestions -> if (suggestions.locations.isEmpty()) {
         item { MessageRow(text = stringResource(R.string.search_no_results)) }
       } else {
-        items(items = suggestions.locations, key = ::suggestionKey) { location ->
+        itemsIndexed(items = suggestions.locations, key = ::suggestionKey) { _, location ->
           SuggestionRow(location = location, onClick = { actions.onSuggestionSelected(location) })
         }
       }
@@ -251,13 +252,17 @@ private fun MessageRow(text: String) {
 }
 
 /**
- * Une clé stable par suggestion.
+ * Une clé stable par suggestion, **et unique quoi que rende le serveur**.
  *
- * L'identifiant d'arrêt quand il existe, les coordonnées sinon : deux adresses homonymes de deux
- * villes différentes ne doivent pas se confondre dans la liste.
+ * L'identifiant d'arrêt quand il existe, le nom et les coordonnées sinon : deux adresses homonymes
+ * de deux villes différentes ne se confondent pas. Le rang y est joint parce que la liste vient
+ * d'ailleurs : rien ne garantit qu'un serveur de géocodage ne rendra pas deux fois le même arrêt,
+ * ni deux adresses de même nom au même point — deux clés égales ne dégraderaient pas la liste,
+ * elles la feraient lever (`IllegalArgumentException`). Le rang ne coûte rien ici : la liste est
+ * remplacée en entier à chaque réponse, aucune identité n'a à lui survivre.
  */
-private fun suggestionKey(location: Location): String =
-  location.id ?: (location.name + "@" + location.coordinates.lat + "," + location.coordinates.lon)
+internal fun suggestionKey(index: Int, location: Location): String = index.toString() + "-" +
+  (location.id ?: (location.name + "@" + location.coordinates.lat + "," + location.coordinates.lon))
 
 private val MinTouchTarget: Dp = 48.dp
 private val BarPadding: Dp = 12.dp

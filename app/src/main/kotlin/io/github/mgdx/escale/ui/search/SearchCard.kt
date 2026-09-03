@@ -303,9 +303,17 @@ private fun chipLabel(chip: QuickChip): String = when (chip) {
 private fun List<QuickChip>.savedLocation(kind: SavedPlaceKind): Location? =
   filterIsInstance<QuickChip.Saved>().firstOrNull { it.kind == kind }?.location
 
-/** Une clé stable par puce, pour que le défilement ne recompose pas tout à chaque frappe. */
-private fun chipKey(chip: QuickChip): String = when (chip) {
+/**
+ * Une clé stable par puce, pour que le défilement ne recompose pas tout à chaque frappe.
+ *
+ * **Elle doit être unique dans le pire cas, pas dans le cas courant** : une liste paresseuse dont
+ * deux entrées partagent une clé ne se dégrade pas, elle lève `IllegalArgumentException` et emporte
+ * l'écran d'accueil. `internal` plutôt que privée pour que ce soit vérifiable en JVM, ce qu'aucun
+ * test ne faisait quand la clé était construite sur les noms.
+ */
+internal fun chipKey(chip: QuickChip): String = when (chip) {
   is QuickChip.Saved -> chip.kind.name
+
   // L'identifiant, jamais les noms : la même paire cherchée à deux heures différentes donne
   // deux puces, et deux clés identiques font planter la liste paresseuse.
   is QuickChip.Recent -> "recent-" + chip.search.id

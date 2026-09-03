@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -54,6 +54,7 @@ import io.github.mgdx.escale.ui.common.ErrorMessage
 import io.github.mgdx.escale.ui.search.iconRes
 import io.github.mgdx.escale.ui.search.labelRes
 import io.github.mgdx.escale.ui.search.servedModesLabel
+import io.github.mgdx.escale.ui.search.suggestionKey
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 
 /**
@@ -156,7 +157,7 @@ private fun PickerSuggestions(picker: PlacePickerUi, actions: FavoritesActions) 
       is AutocompleteState.Suggestions -> if (suggestions.locations.isEmpty()) {
         item { MessageRow(text = stringResource(R.string.search_no_results)) }
       } else {
-        items(items = suggestions.locations, key = ::suggestionKey) { location ->
+        itemsIndexed(items = suggestions.locations, key = ::suggestionKey) { _, location ->
           SuggestionRow(location = location, onClick = { actions.onPickerSelected(location) })
         }
       }
@@ -234,10 +235,6 @@ private fun MessageRow(text: String) {
     color = MaterialTheme.colorScheme.onSurfaceVariant,
   )
 }
-
-/** L'identifiant d'arrêt quand il existe, les coordonnées sinon : deux homonymes ne se confondent pas. */
-private fun suggestionKey(location: Location): String =
-  location.id ?: (location.name + "@" + location.coordinates.lat + "," + location.coordinates.lon)
 
 private val MinTouchTarget: Dp = 48.dp
 private val BarPadding: Dp = 12.dp

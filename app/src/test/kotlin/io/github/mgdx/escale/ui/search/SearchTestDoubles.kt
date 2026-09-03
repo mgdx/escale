@@ -60,7 +60,9 @@ class FakeSavedPlacesSource(home: Location? = null, work: Location? = null) : Sa
  * L'historique, pilotable sans base de données.
  *
  * [recorded] est ce qui prouve qu'une recherche a été enregistrée **une fois**, et [enabled] joue
- * le rôle de la bascule des réglages, que le dépôt réel applique de son côté (SPEC.md § 5.6).
+ * le rôle de la bascule des réglages, que le dépôt réel applique de son côté (SPEC.md § 5.6). La
+ * déduplication sur le couple départ / arrivée, elle aussi, appartient au dépôt : cet écran ne la
+ * connaît pas et n'a pas à la simuler.
  */
 class FakeRecentSearchesSource(searches: List<RecentSearch> = emptyList()) : RecentSearchesSource {
   override val recentSearches: Flow<List<RecentSearch>> = MutableStateFlow(searches)

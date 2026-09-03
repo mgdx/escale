@@ -472,12 +472,17 @@ private fun TripLine(
 }
 
 /**
- * Une clé de liste stable pour un arrêt.
+ * Une clé de liste stable pour un arrêt de la desserte.
  *
- * L'identifiant du serveur fait foi ; à défaut, le nom et l'heure suffisent, une course ne
- * desservant pas deux fois le même arrêt à la même seconde.
+ * L'identifiant du serveur désigne l'arrêt, **jamais le passage** : une ligne circulaire, une
+ * navette qui fait demi-tour ou un train qui rebrousse repasse au même arrêt dans la même course,
+ * et l'identifiant seul donnait alors deux clés égales — de quoi faire lever la liste paresseuse
+ * plutôt que d'afficher la desserte. L'horaire théorique du passage les départage : il est toujours
+ * renseigné, il ne bouge pas d'un rafraîchissement à l'autre — contrairement à l'heure réelle, qui
+ * ferait perdre la position de défilement à chaque retard — et une course ne dessert pas deux fois
+ * le même arrêt à la même seconde.
  */
-private fun StopVisit.key(): String = place.stopId ?: "${place.name}|${arrival ?: departure ?: place.scheduledTime}"
+internal fun StopVisit.key(): String = (place.stopId ?: place.name) + "|" + place.scheduledTime
 
 private const val HEADER_KEY = "trip.header"
 private const val ALERTS_KEY = "trip.alerts"
