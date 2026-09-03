@@ -86,4 +86,19 @@
   <string name="map_rental_not_returning">Retour temporairement suspendu</string>
   <string name="map_rental_open_app">Ouvrir l\'application de l\'exploitant</string>
   <string name="map_rental_close">Fermer le détail du libre-service</string>
+
+  <string name="map_browse_stops">Parcourir les arrêts affichés</string>
+  <string name="map_browse_stops_title">Arrêts affichés</string>
+  <string name="map_browse_stops_empty">Aucun arrêt n\'est affiché à cette échelle. Rapprochez-vous ou déplacez la carte.</string>
+  <plurals name="map_browse_stops_truncated">
+    <item quantity="one">Seul %d arrêt, le plus proche, est listé. Rapprochez-vous pour resserrer la liste.</item>
+    <item quantity="many">Seuls les %d d\'arrêts les plus proches sont listés. Rapprochez-vous pour resserrer la liste.</item>
+    <item quantity="other">Seuls les %d arrêts les plus proches sont listés. Rapprochez-vous pour resserrer la liste.</item>
+  </plurals>
+  <plurals name="map_browse_stops_count">
+    <item quantity="one">%d arrêt affiché</item>
+    <item quantity="many">%d d\'arrêts affichés</item>
+    <item quantity="other">%d arrêts affichés</item>
+  </plurals>
+  <string name="map_browse_stops_open">Afficher cet arrêt</string>
 </resources>

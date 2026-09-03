@@ -172,6 +172,7 @@ private fun ExternalLink(titleRes: Int, subtitleRes: Int, urlRes: Int) {
   )
 }
 
+@Preview(showBackground = true, name = "À propos, texte à 200 %", fontScale = 2f, heightDp = 1200)
 @Preview(showBackground = true, name = "À propos, thème clair")
 @Preview(
   showBackground = true,

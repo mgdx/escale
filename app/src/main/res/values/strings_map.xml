@@ -91,4 +91,20 @@
   <string name="map_rental_not_returning">Temporarily closed for returns</string>
   <string name="map_rental_open_app">Open the operator app</string>
   <string name="map_rental_close">Close rental details</string>
+
+  <!-- Parcours des arrêts affichés, la voie d'accès des lecteurs d'écran à la carte (SPEC.md § 9).
+       MapLibre rend la carte comme une vue unique : ses marqueurs ne sont pas atteignables un à un.
+       Cette liste reprend exactement ce que la carte montre, à l'échelle où elle le montre. -->
+  <string name="map_browse_stops">Browse the stops on screen</string>
+  <string name="map_browse_stops_title">Stops on screen</string>
+  <string name="map_browse_stops_empty">No stop is shown at this zoom level. Zoom in or move the map.</string>
+  <plurals name="map_browse_stops_truncated">
+    <item quantity="one">Only %d stop, the nearest one, is listed. Zoom in to narrow the list.</item>
+    <item quantity="other">Only the %d nearest stops are listed. Zoom in to narrow the list.</item>
+  </plurals>
+  <plurals name="map_browse_stops_count">
+    <item quantity="one">%d stop on screen</item>
+    <item quantity="other">%d stops on screen</item>
+  </plurals>
+  <string name="map_browse_stops_open">Show this stop</string>
 </resources>

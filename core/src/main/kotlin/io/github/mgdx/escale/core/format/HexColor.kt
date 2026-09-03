@@ -26,8 +26,30 @@ object HexColor {
   private const val WHITE = "#FFFFFF"
   private const val BLACK = "#000000"
 
-  /** Seuil de luminance au-delà duquel la couleur est claire et réclame un texte sombre. */
-  private const val LIGHT_THRESHOLD = 0.5
+  /** Le rapport de contraste minimal du texte courant au niveau AA (WCAG 2.1, § 1.4.3). */
+  const val AA_TEXT = 4.5
+
+  /**
+   * Le rapport minimal du grand texte et des éléments graphiques porteurs d'information
+   * (WCAG 2.1, § 1.4.3 et § 1.4.11).
+   */
+  const val AA_LARGE = 3.0
+
+  /** La constante d'ambiance de la formule de contraste de WCAG 2.1. */
+  private const val CONTRAST_OFFSET = 0.05
+
+  /**
+   * Seuil de luminance au-delà duquel la couleur est claire et réclame un texte sombre.
+   *
+   * Ce n'est **pas** 0,5. Le point de bascule est celui où le noir et le blanc contrastent autant
+   * avec le fond, et la formule de contraste de WCAG 2.1 le place bien plus bas :
+   * `(L + 0,05) / 0,05 = 1,05 / (L + 0,05)`, donc `L = √(1,05 × 0,05) − 0,05 ≈ 0,179`.
+   *
+   * Prendre 0,5 revient à poser du blanc sur toute la plage 0,179 → 0,5, où le noir se lit
+   * pourtant mieux : sur un bleu de métro moyen, le blanc tombe à 3:1, sous le 4,5:1 qu'exige
+   * SPEC.md § 9, alors que le noir y atteint 7:1.
+   */
+  private const val LIGHT_THRESHOLD = 0.1791
 
   // Coefficients de luminance relative, recommandation UIT-R BT.709, reprise par WCAG 2.1.
   private const val RED_WEIGHT = 0.2126
@@ -73,6 +95,40 @@ object HexColor {
    * Rend `null` si [color] n'est pas une couleur.
    */
   fun readableTextOn(color: String?): String? = parse(color)?.let { if (needsLightText(it)) WHITE else BLACK }
+
+  /**
+   * La couleur de texte à poser sur [background] : [preferred] quand le réseau la publie **et
+   * qu'elle atteint le niveau AA**, sinon le noir ou le blanc, celui des deux qui se lit.
+   *
+   * Le détour par le contraste n'est pas de la méfiance gratuite. `route_text_color` est un champ
+   * GTFS facultatif que beaucoup de producteurs laissent à sa valeur par défaut, le noir, y compris
+   * sur des lignes au fond très sombre : le prendre au mot rend la pastille illisible. SPEC.md § 9
+   * exige un contraste conforme, pas un contraste annoncé.
+   *
+   * Rend `null` quand [background] n'est pas une couleur : sans fond du réseau, c'est la palette du
+   * thème qui s'applique, et c'est à l'appelant de choisir le `on…` qui va avec.
+   */
+  fun textOn(background: String?, preferred: String? = null, minimumRatio: Double = AA_TEXT): String? {
+    val backgroundArgb = parse(background) ?: return null
+    val preferredArgb = parse(preferred)
+    if (preferredArgb != null && contrastRatio(preferredArgb, backgroundArgb) >= minimumRatio) {
+      return normalize(preferred)
+    }
+    return if (needsLightText(backgroundArgb)) WHITE else BLACK
+  }
+
+  /**
+   * Le rapport de contraste entre [first] et [second], de 1 (identiques) à 21 (noir sur blanc).
+   *
+   * Formule de WCAG 2.1, § 1.4.3. Les deux couleurs sont supposées opaques, ce que garantit [parse].
+   */
+  fun contrastRatio(first: Long, second: Long): Double {
+    val one = luminance(first)
+    val other = luminance(second)
+    val lighter = maxOf(one, other)
+    val darker = minOf(one, other)
+    return (lighter + CONTRAST_OFFSET) / (darker + CONTRAST_OFFSET)
+  }
 
   /**
    * Vrai si un texte clair est lisible sur [argb].

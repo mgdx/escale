@@ -35,6 +35,60 @@ class HexColorTest {
   }
 
   @Test
+  fun `un fond de teinte moyenne reclame un texte sombre, pas un texte clair`() {
+    // Le piège du seuil à 0,5 : ces deux teintes passent pour « sombres » — leur luminance vaut
+    // 0,38 et 0,33 — et un seuil à 0,5 y poserait du blanc. Le blanc n'y atteint pourtant que
+    // 2,4:1 et 2,8:1, sous le 4,5:1 qu'exige SPEC.md § 9, là où le noir dépasse 7:1.
+    val black = HexColor.parse("#000000")!!
+    val white = HexColor.parse("#FFFFFF")!!
+    for (value in listOf("#4DBD38", "#EE7C0E")) {
+      val background = HexColor.parse(value)!!
+      assertFalse(HexColor.needsLightText(background))
+      assertTrue(HexColor.contrastRatio(black, background) >= HexColor.AA_TEXT)
+      assertFalse(HexColor.contrastRatio(white, background) >= HexColor.AA_TEXT)
+    }
+  }
+
+  @Test
+  fun `le rapport de contraste va de un a vingt-et-un`() {
+    val black = HexColor.parse("#000000")!!
+    val white = HexColor.parse("#FFFFFF")!!
+    assertEquals(21.0, HexColor.contrastRatio(black, white), 1e-6)
+    assertEquals(21.0, HexColor.contrastRatio(white, black), 1e-6)
+    assertEquals(1.0, HexColor.contrastRatio(white, white), 1e-6)
+  }
+
+  @Test
+  fun `une couleur de texte publiee par le reseau n'est retenue que si elle se lit`() {
+    // `route_text_color` est facultatif en GTFS et souvent laissé au noir : sur un fond de métro
+    // bleu nuit, le prendre au mot rend la pastille illisible (SPEC.md § 9).
+    assertEquals("#FFFFFF", HexColor.textOn(background = "#00205B", preferred = "#000000"))
+    // Publiée et lisible, elle est conservée telle quelle, sous sa forme canonique.
+    assertEquals("#FFCD00", HexColor.textOn(background = "#00205B", preferred = "ffcd00"))
+  }
+
+  @Test
+  fun `sans couleur de texte publiee, le noir ou le blanc est calcule`() {
+    assertEquals("#FFFFFF", HexColor.textOn(background = "#00205B"))
+    assertEquals("#000000", HexColor.textOn(background = "#FFCD00"))
+  }
+
+  @Test
+  fun `sans fond du reseau, aucune couleur de texte n'est imposee`() {
+    // C'est alors la palette du thème qui s'applique : l'appelant sait quel `on…` va avec, pas nous.
+    assertNull(HexColor.textOn(background = null, preferred = "#FFFFFF"))
+    assertNull(HexColor.textOn(background = "bleu", preferred = "#FFFFFF"))
+  }
+
+  @Test
+  fun `le seuil du grand texte est plus permissif que celui du texte courant`() {
+    // Un gris moyen sur blanc : 3,5:1. Refusé pour du texte courant, accepté pour un titre.
+    val grey = "#949494"
+    assertEquals("#000000", HexColor.textOn(background = "#FFFFFF", preferred = grey))
+    assertEquals(grey, HexColor.textOn(background = "#FFFFFF", preferred = grey, minimumRatio = HexColor.AA_LARGE))
+  }
+
+  @Test
   fun `la luminance va du noir au blanc`() {
     assertEquals(0.0, HexColor.luminance(0xFF000000L), 1e-6)
     assertEquals(1.0, HexColor.luminance(0xFFFFFFFFL), 1e-6)

@@ -1,25 +1,31 @@
 package io.github.mgdx.escale.ui.watch
 
 import android.Manifest
+import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,14 +40,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.WatchAlertSettings
 import io.github.mgdx.escale.ui.settings.uses24HourClock
+import io.github.mgdx.escale.ui.theme.EscaleTheme
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -62,33 +74,50 @@ import java.time.LocalTime
 internal fun WatchSheet(state: WatchUiState, actions: WatchActions, onDismiss: () -> Unit) {
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-    Column(
-      modifier = Modifier
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = SheetPadding)
-        .padding(bottom = SheetPadding),
-      verticalArrangement = Arrangement.spacedBy(SectionSpacing),
-    ) {
-      Text(text = stringResource(R.string.watch_sheet_title), style = MaterialTheme.typography.titleLarge)
-      Text(
-        text = stringResource(R.string.watch_privacy_notice),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-      // La seconde chose que l'usager doit savoir avant d'activer : après un redémarrage du
-      // téléphone, une occurrence peut être manquée (SPEC.md § 5.5.1 et § 11). Le taire ferait de
-      // la surveillance une fonction qui échoue sans le dire.
-      Text(
-        text = stringResource(R.string.watch_restart_notice),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-      WatchTimeSection(state = state, onTimeChanged = actions.onTimeChanged)
-      WatchDaysSection(state = state, onDayToggled = actions.onDayToggled)
-      WatchAlertSection(state = state, actions = actions)
-      WatchStatusSection(state = state)
-      WatchButtons(state = state, actions = actions, onDismiss = onDismiss)
-    }
+    WatchSheetContent(state = state, actions = actions, onDismiss = onDismiss)
+  }
+}
+
+/**
+ * Le contenu de la feuille, séparé de la modale qui le porte.
+ *
+ * La séparation n'est pas décorative : un `ModalBottomSheet` ne se rend pas dans l'outil d'aperçu,
+ * si bien qu'aucune de ces sections n'avait jamais été vue à 200 % d'agrandissement (SPEC.md § 9).
+ * Extraite, elle s'y voit.
+ */
+@Composable
+internal fun WatchSheetContent(
+  state: WatchUiState,
+  actions: WatchActions,
+  onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Column(
+    modifier = modifier
+      .verticalScroll(rememberScrollState())
+      .padding(horizontal = SheetPadding)
+      .padding(bottom = SheetPadding),
+    verticalArrangement = Arrangement.spacedBy(SectionSpacing),
+  ) {
+    Text(text = stringResource(R.string.watch_sheet_title), style = MaterialTheme.typography.titleLarge)
+    Text(
+      text = stringResource(R.string.watch_privacy_notice),
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    // La seconde chose que l'usager doit savoir avant d'activer : après un redémarrage du
+    // téléphone, une occurrence peut être manquée (SPEC.md § 5.5.1 et § 11). Le taire ferait de
+    // la surveillance une fonction qui échoue sans le dire.
+    Text(
+      text = stringResource(R.string.watch_restart_notice),
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    WatchTimeSection(state = state, onTimeChanged = actions.onTimeChanged)
+    WatchDaysSection(state = state, onDayToggled = actions.onDayToggled)
+    WatchAlertSection(state = state, actions = actions)
+    WatchStatusSection(state = state)
+    WatchButtons(state = state, actions = actions, onDismiss = onDismiss)
   }
 }
 
@@ -99,13 +128,20 @@ private fun WatchTimeSection(state: WatchUiState, onTimeChanged: (LocalTime) -> 
   Column(verticalArrangement = Arrangement.spacedBy(RowSpacing)) {
     Text(text = stringResource(R.string.watch_time_label), style = MaterialTheme.typography.titleSmall)
     val description = stringResource(R.string.watch_time_action)
+    val chosen = timeLabel(state.time)
     OutlinedButton(
       onClick = { picking = true },
       modifier = Modifier
         .sizeIn(minHeight = TouchTarget)
-        .semantics { contentDescription = description },
+        // Le `contentDescription` remplace le texte du bouton : posé seul, il faisait disparaître
+        // l'heure choisie de l'annonce, et le bouton disait la même chose à 7 h 30 qu'à 18 h 05.
+        // C'est exactement ce que `stateDescription` existe pour dire (SPEC.md § 9).
+        .semantics {
+          contentDescription = description
+          stateDescription = chosen
+        },
     ) {
-      Text(text = timeLabel(state.time))
+      Text(text = chosen)
     }
   }
   if (picking) {
@@ -206,18 +242,18 @@ private fun WatchAlertSection(state: WatchUiState, actions: WatchActions) {
 private fun WatchStatusSection(state: WatchUiState) {
   Column(verticalArrangement = Arrangement.spacedBy(RowSpacing)) {
     if (state.limitReached || state.limitBlocking) {
-      Text(
+      WatchStatusLine(
+        icon = R.drawable.ic_warning,
         text = limitMessage(state.watchedCount),
-        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.error,
       )
     }
     // Refus de POST_NOTIFICATIONS, ou canal éteint depuis les réglages système : la surveillance
     // reste proposée, sans notification (SPEC.md § 5.5.1).
     if (state.watched && !state.notificationsAllowed) {
-      Text(
+      WatchStatusLine(
+        icon = R.drawable.ic_warning,
         text = stringResource(R.string.watch_notifications_off),
-        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
@@ -228,6 +264,29 @@ private fun WatchStatusSection(state: WatchUiState) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
+  }
+}
+
+/**
+ * Une ligne d'état : un pictogramme, un texte, une couleur — dans cet ordre d'importance.
+ *
+ * Sans le pictogramme, un avertissement ne se distinguait d'une information neutre que par sa
+ * couleur, ce que SPEC.md § 9 interdit. L'icône est muette : le texte à côté dit la même chose.
+ */
+@Composable
+private fun WatchStatusLine(@DrawableRes icon: Int, text: String, color: Color) {
+  Row(
+    modifier = Modifier.semantics(mergeDescendants = true) { },
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(RowSpacing),
+  ) {
+    Icon(
+      painter = painterResource(icon),
+      contentDescription = null,
+      modifier = Modifier.size(StatusIconSize),
+      tint = color,
+    )
+    Text(text = text, style = MaterialTheme.typography.bodyMedium, color = color)
   }
 }
 
@@ -253,10 +312,14 @@ private fun WatchButtons(state: WatchUiState, actions: WatchActions, onDismiss: 
       }
     }
   }
-  Row(
+  // « Fermer » et « Arrêter la surveillance » côte à côte ne tiennent pas sur une ligne d'écran
+  // étroit à 200 % : la `FlowRow` les fait passer l'un sous l'autre plutôt que de les comprimer
+  // (SPEC.md § 9).
+  FlowRow(
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(RowSpacing, Alignment.End),
-    verticalAlignment = Alignment.CenterVertically,
+    verticalArrangement = Arrangement.spacedBy(RowSpacing),
+    itemVerticalAlignment = Alignment.CenterVertically,
   ) {
     TextButton(onClick = onDismiss, modifier = Modifier.sizeIn(minHeight = TouchTarget)) {
       Text(text = stringResource(R.string.watch_close))
@@ -273,23 +336,69 @@ private fun WatchButtons(state: WatchUiState, actions: WatchActions, onDismiss: 
   }
 }
 
+/**
+ * Une ligne à interrupteur, sur le modèle des réglages.
+ *
+ * **Toute la ligne** est la cible, et c'est elle qui porte le rôle : le libellé n'est alors énoncé
+ * qu'une fois, l'état vient du rôle, et la zone sensible fait la largeur de la feuille au lieu des
+ * 48 dp de l'interrupteur (SPEC.md § 9). L'interrupteur reçoit `onCheckedChange = null`, sans quoi
+ * il resterait une seconde cible annonçant la même chose.
+ */
 @Composable
 private fun WatchSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   Row(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = Modifier
+      .fillMaxWidth()
+      .sizeIn(minHeight = TouchTarget)
+      .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(RowSpacing),
   ) {
     Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-    Switch(
-      checked = checked,
-      onCheckedChange = onCheckedChange,
-      modifier = Modifier
-        .sizeIn(minWidth = TouchTarget, minHeight = TouchTarget)
-        .semantics { contentDescription = label },
-    )
+    Switch(checked = checked, onCheckedChange = null)
   }
 }
+
+@Preview(showBackground = true, name = "Surveillance, thème clair", heightDp = 900)
+@Preview(
+  showBackground = true,
+  name = "Surveillance, thème sombre",
+  heightDp = 900,
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Preview(showBackground = true, name = "Surveillance, texte à 200 %", heightDp = 1800, fontScale = 2f)
+@Composable
+private fun WatchSheetPreview() = PreviewSheet(
+  WatchUiState(
+    favoriteId = 1,
+    watched = true,
+    days = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+    notificationsAllowed = false,
+  ),
+)
+
+/** La limite atteinte : le pire cas de mise en page, deux avertissements et deux boutons. */
+@Preview(showBackground = true, name = "Surveillance, limite atteinte à 200 %", heightDp = 1800, fontScale = 2f)
+@Composable
+private fun WatchSheetLimitPreview() = PreviewSheet(WatchUiState(favoriteId = 1, watchedCount = 5))
+
+@Composable
+private fun PreviewSheet(state: WatchUiState) {
+  EscaleTheme(dynamicColor = false) {
+    Surface {
+      WatchSheetContent(state = state, actions = PREVIEW_ACTIONS, onDismiss = {})
+    }
+  }
+}
+
+private val PREVIEW_ACTIONS = WatchActions(
+  onWatchedChanged = {},
+  onTimeChanged = {},
+  onDayToggled = {},
+  onThresholdChanged = {},
+  onNotifyAlwaysChanged = {},
+  onNotificationPermissionResult = {},
+)
 
 /** Cible tactile minimale de SPEC.md § 9. */
 private val TouchTarget = 48.dp
@@ -297,3 +406,4 @@ private val SheetPadding = 16.dp
 private val SectionSpacing = 20.dp
 private val RowSpacing = 12.dp
 private val ChipSpacing = 8.dp
+private val StatusIconSize = 18.dp

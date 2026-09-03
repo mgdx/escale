@@ -33,6 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +43,10 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -318,10 +322,31 @@ private fun KnownServers(uiState: ServerSettingsUiState, actions: ServerSettings
   }
 }
 
-/** Suppression par balayage, telle que demandée par SPEC.md § 5.6.1. */
+/**
+ * Suppression par balayage, telle que demandée par SPEC.md § 5.6.1.
+ *
+ * Le balayage est un geste, et un geste n'est atteignable ni au lecteur d'écran, ni à la commande
+ * par contacteur : la même suppression est donc exposée comme **action d'accessibilité** sur la
+ * ligne. Sans elle, retirer un serveur serait tout simplement impossible à qui n'a pas l'usage de
+ * l'écran tactile (SPEC.md § 9).
+ */
 @Composable
 private fun KnownServerRow(server: ServerConfig, inUse: Boolean, onSelect: () -> Unit, onForget: () -> Unit) {
   val dismissState = rememberSwipeToDismissBoxState()
+  val forgetLabel = stringResource(R.string.server_settings_forget)
+  val forgetActions = remember(inUse, forgetLabel, onForget) {
+    // Le serveur en service ne se supprime pas, pas plus par l'action que par le balayage.
+    if (inUse) {
+      emptyList()
+    } else {
+      listOf(
+        CustomAccessibilityAction(forgetLabel) {
+          onForget()
+          true
+        },
+      )
+    }
+  }
   SwipeToDismissBox(
     state = dismissState,
     backgroundContent = { ForgetBackground() },
@@ -347,11 +372,13 @@ private fun KnownServerRow(server: ServerConfig, inUse: Boolean, onSelect: () ->
           contentDescription = null,
         )
       },
-      modifier = Modifier.clickable(
-        enabled = !inUse,
-        role = Role.Button,
-        onClick = onSelect,
-      ),
+      modifier = Modifier
+        .semantics { customActions = forgetActions }
+        .clickable(
+          enabled = !inUse,
+          role = Role.Button,
+          onClick = onSelect,
+        ),
     )
   }
 }
@@ -451,10 +478,23 @@ private fun SwitchEffectsText(dialog: ServerDialog.SwitchEffects) {
     Text(text = stringResource(R.string.server_settings_switch_message, dialog.baseUrl))
     Text(text = stringResource(R.string.server_settings_switch_favorites))
     if (dialog.untested) {
-      Text(
-        text = stringResource(R.string.server_settings_switch_untested),
-        color = MaterialTheme.colorScheme.error,
-      )
+      // Un avertissement se distingue d'une explication par son pictogramme, jamais par sa seule
+      // couleur (SPEC.md § 9). L'icône est muette, le texte à côté dit tout.
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        Icon(
+          painter = painterResource(R.drawable.ic_warning),
+          contentDescription = null,
+          modifier = Modifier.size(18.dp),
+          tint = MaterialTheme.colorScheme.error,
+        )
+        Text(
+          text = stringResource(R.string.server_settings_switch_untested),
+          color = MaterialTheme.colorScheme.error,
+        )
+      }
     }
   }
 }
@@ -495,6 +535,7 @@ private fun CheckStepState.tint(): Color = when (this) {
   else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
+@Preview(showBackground = true, name = "Serveur MOTIS, texte à 200 %", fontScale = 2f, heightDp = 1400)
 @Preview(showBackground = true, name = "Serveur MOTIS, thème clair")
 @Preview(
   showBackground = true,

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapDataRequest
 import io.github.mgdx.escale.core.geo.RentalMarkerKind
+import io.github.mgdx.escale.core.geo.StopMarker
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.StopLine
@@ -169,6 +170,21 @@ data class MapUiState(
   /** Les mêmes véhicules, sur leur source regroupante (règle 6). */
   val clusteredRentalVehiclesGeoJson: String = MapGeoJson.EMPTY,
 
+  /**
+   * Les arrêts que la carte montre, à parcourir en liste (SPEC.md § 9).
+   *
+   * MapLibre dessine ses marqueurs dans une vue unique : ils ne sont pas atteignables un à un au
+   * lecteur d'écran, et la règle 6 du § 5.7 interdit d'en faire des vues Android. Cette liste est
+   * la voie d'accès de remplacement, et elle mène à la **même** infobulle qu'un appui sur la carte.
+   *
+   * Elle est calculée par `:core` — palier, emprise visible, proximité au centre, plafond — et
+   * remise à jour au seul arrêt de la caméra, comme les marqueurs eux-mêmes (règle 1).
+   */
+  val browsableStops: List<SelectedStop> = emptyList(),
+
+  /** Vrai quand la carte montre plus d'arrêts que la liste n'en énonce (`MAX_BROWSABLE_STOPS`). */
+  val browsableStopsTruncated: Boolean = false,
+
   /** L'infobulle ouverte sur un arrêt, ou `null` si aucune ne l'est (SPEC.md § 5.7). */
   val selectedStop: SelectedStop? = null,
 
@@ -225,6 +241,15 @@ data class SelectedStop(
   /** Les lignes n'ont pas pu être lues : l'infobulle le dit, elle ne fait pas semblant. */
   val linesFailed: Boolean = false,
 )
+
+/**
+ * L'arrêt à ouvrir depuis le parcours en liste (SPEC.md § 9).
+ *
+ * Le marqueur porte déjà tout ce qu'une infobulle affiche d'emblée — l'identifiant, le nom, le mode
+ * qui lui a donné son dessin. Passer par [SelectedStop] fait que la liste et l'appui sur la carte
+ * mènent **exactement** au même endroit, avec le même appel de lignes derrière.
+ */
+internal fun StopMarker.toSelectedStop(): SelectedStop = SelectedStop(id = id, name = name, mode = mode)
 
 /**
  * Les rappels d'interaction sur les points de libre-service (SPEC.md § 5.7).

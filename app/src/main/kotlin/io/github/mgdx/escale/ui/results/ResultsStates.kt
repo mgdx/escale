@@ -170,10 +170,25 @@ internal fun BikeFilterRow(selected: BikeFilter, onSelected: (BikeFilter) -> Uni
     verticalAlignment = Alignment.CenterVertically,
   ) {
     BikeFilter.entries.forEach { filter ->
+      val isSelected = filter == selected
       FilterChip(
-        selected = filter == selected,
+        selected = isSelected,
         onClick = { onSelected(filter) },
         label = { Text(stringResource(filter.labelRes())) },
+        // Material ne pose pas de coche tout seul : sans elle, la puce active ne se distinguait
+        // que par sa couleur de fond, ce que SPEC.md § 9 interdit. Le pictogramme est muet, l'état
+        // « sélectionné » étant déjà annoncé par le rôle de la puce.
+        leadingIcon = if (isSelected) {
+          {
+            Icon(
+              painter = painterResource(R.drawable.ic_check_circle),
+              contentDescription = null,
+              modifier = Modifier.size(FilterIconSize),
+            )
+          }
+        } else {
+          null
+        },
         modifier = Modifier.heightIn(min = MinTouchTarget),
       )
     }
@@ -186,6 +201,7 @@ private fun BikeFilter.labelRes(): Int = when (this) {
   BikeFilter.SHARED -> R.string.results_filter_shared
 }
 
+private val FilterIconSize: Dp = 18.dp
 private val StatePadding: Dp = 24.dp
 private val StateSpacing: Dp = 8.dp
 private val EmptyIconSize: Dp = 48.dp

@@ -139,9 +139,10 @@ private fun segmentOf(leg: JourneyLeg): TraceSegment? {
       else -> TraceStroke.SOLID
     },
     color = color,
-    // `routeTextColor` quand le réseau le publie ; sinon le noir ou le blanc, celui qui se lit sur
-    // la couleur de ligne. Un libellé illisible vaut un libellé absent (SPEC.md § 9).
-    textColor = color?.let { HexColor.normalize(leg.lineTextColor()) ?: HexColor.readableTextOn(it) },
+    // `routeTextColor` quand le réseau le publie **et qu'elle se lit** sur la couleur de ligne ;
+    // sinon le noir ou le blanc, celui des deux qui contraste. Un libellé illisible vaut un libellé
+    // absent (SPEC.md § 9). Le libellé du tracé est écrit petit : c'est le seuil du texte courant.
+    textColor = HexColor.textOn(background = color, preferred = leg.lineTextColor()),
     label = leg.lineLabel(),
   )
 }

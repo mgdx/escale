@@ -25,12 +25,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -96,6 +98,9 @@ internal fun TripContent(
     topBar = {
       TopAppBar(
         title = { TripTitle(state) },
+        // La barre grandit avec les polices : figée à 64 dp, elle coupe le nom de la ligne et sa
+        // direction, qui sont tout ce qui distingue deux courses (SPEC.md § 9).
+        expandedHeight = TopAppBarDefaults.TopAppBarExpandedHeight * titleScale(),
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(
@@ -118,20 +123,36 @@ internal fun TripContent(
     Column(modifier = Modifier.padding(innerPadding)) {
       // Le rafraîchissement laisse la desserte en place : SPEC.md § 8 interdit de remplacer une
       // information déjà lue par une page blanche.
-      if (state.refreshing) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+      if (state.refreshing) {
+        val loading = stringResource(R.string.action_loading)
+        LinearProgressIndicator(
+          // Sans nom, la barre n'est qu'une animation : le lecteur d'écran passe devant sans rien
+          // dire, et la liste change sous le doigt (SPEC.md § 9).
+          modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = loading },
+        )
+      }
       state.error?.let { ErrorMessage(error = it, onRetry = onRefresh) }
       TripBody(state)
     }
   }
 }
 
-/** La ligne, puis sa direction en sous-titre : ce que l'usager lit sur le véhicule. */
+/**
+ * La ligne, puis sa direction en sous-titre : ce que l'usager lit sur le véhicule.
+ *
+ * Chacune gagne une ligne quand les polices sont agrandies, et la barre gagne la hauteur qui va
+ * avec (SPEC.md § 9). « TER Nouvelle-Aquitaine » ne tient pas sur une ligne à 200 %, et c'est
+ * précisément le genre de nom qu'il faut lire en entier.
+ */
 @Composable
 private fun TripTitle(state: TripUiState) {
+  val enlarged = titleScale() > 1f
   Column {
     Text(
       text = state.lineName.ifBlank { stringResource(R.string.trip_title) },
-      maxLines = 1,
+      maxLines = if (enlarged) TITLE_LINES_ENLARGED else 1,
       overflow = TextOverflow.Ellipsis,
       style = MaterialTheme.typography.titleLarge,
     )
@@ -139,12 +160,16 @@ private fun TripTitle(state: TripUiState) {
       Text(
         text = stringResource(R.string.trip_towards, state.headsign),
         style = MaterialTheme.typography.bodySmall,
-        maxLines = 1,
+        maxLines = if (enlarged) TITLE_LINES_ENLARGED else 1,
         overflow = TextOverflow.Ellipsis,
       )
     }
   }
 }
+
+/** L'agrandissement des polices, plafonné aux 200 % que SPEC.md § 9 demande de tenir. */
+@Composable
+private fun titleScale(): Float = LocalDensity.current.fontScale.coerceIn(1f, MAX_FONT_SCALE)
 
 @Composable
 private fun TripBody(state: TripUiState) {
@@ -323,6 +348,11 @@ private fun CallRow(call: StopVisit, realTime: Boolean, alerts: List<Disruption>
   Column(
     modifier = Modifier
       .fillMaxWidth()
+      // Un arrêt s'annonce **d'un bloc** : son nom, ses heures, son quai et son état forment une
+      // seule phrase. Sans cette fusion, une desserte de trente arrêts demande deux cents
+      // balayages pour être parcourue (SPEC.md § 9). La ligne n'étant pas cliquable, aucun
+      // `clickable` ne fusionne à notre place.
+      .semantics(mergeDescendants = true) { }
       // Cible tactile d'au moins 48 dp, même sans appui : la liste reste lisible à 200 % (§ 9).
       .defaultMinSize(minHeight = RowMinHeight)
       .padding(horizontal = ScreenPadding, vertical = RowSpacing),
@@ -424,11 +454,23 @@ private fun CallTimes(call: StopVisit, realTime: Boolean) {
  *
  * Rien n'est affiché sans donnée temps réel : `Delay.between` rend alors `null`, et l'horaire
  * théorique reste tu puisqu'il est égal, par construction, à l'heure déjà affichée (SPEC.md § 5.2).
- * À l'heure, l'écart ne mérite pas non plus une ligne : c'est le cas normal.
+ *
+ * **« À l'heure » s'écrit, lui aussi.** Les heures juste au-dessus sont teintes en vert par
+ * `delayColor` : sans cette ligne, le seul signe qu'un passage est à l'heure serait une couleur, ce
+ * que SPEC.md § 9 interdit. Les deux autres écrans qui affichent un écart l'écrivent déjà.
  */
 @Composable
 private fun DelayLines(delay: Delay?, scheduled: Instant) {
-  if (delay == null || delay.quality == DelayQuality.ON_TIME) return
+  if (delay == null) return
+  if (delay.quality == DelayQuality.ON_TIME) {
+    TripLine(
+      icon = R.drawable.ic_check_circle,
+      text = stringResource(R.string.results_delay_on_time),
+      color = delayColor(delay.quality),
+      style = MaterialTheme.typography.bodySmall,
+    )
+    return
+  }
   val formatTime = rememberTimeFormatter()
   val amount = durationText(delay.formatted)
   TripLine(
@@ -491,6 +533,10 @@ private const val COUNT_KEY = "trip.count"
 private val ScreenPadding: Dp = 16.dp
 private val RowSpacing: Dp = 8.dp
 private val RowMinHeight: Dp = 48.dp
+
+/** SPEC.md § 9 demande la lisibilité jusqu'à 200 % : au-delà, la barre de titre cesse de grandir. */
+private const val MAX_FONT_SCALE = 2f
+private const val TITLE_LINES_ENLARGED = 2
 private val ModeIconSize: Dp = 24.dp
 private val LineIconSize: Dp = 18.dp
 private val EmptyIconSize: Dp = 48.dp

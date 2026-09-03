@@ -49,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -178,12 +179,23 @@ private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
   val label = stringResource(
     if (expanded) R.string.results_sheet_collapse else R.string.results_sheet_expand,
   )
+  // Un `onClickLabel` seul ne nomme pas le nœud : le lecteur d'écran annonçait « appuyez deux fois
+  // pour agrandir les résultats » sans jamais dire de quoi il s'agissait, ni où en était la
+  // feuille. Le nom et l'état viennent donc en plus du libellé d'action (SPEC.md § 9).
+  val handle = stringResource(R.string.results_sheet_handle)
+  val state = stringResource(
+    if (expanded) R.string.results_sheet_state_expanded else R.string.results_sheet_state_collapsed,
+  )
   var travel by remember { mutableFloatStateOf(0f) }
   val threshold = with(LocalDensity.current) { DragThreshold.toPx() }
   Box(
     modifier = Modifier
       .fillMaxWidth()
       .height(HandleTouchTarget)
+      .semantics {
+        contentDescription = handle
+        stateDescription = state
+      }
       .clickable(onClickLabel = label, onClick = onToggle)
       .draggable(
         orientation = Orientation.Vertical,

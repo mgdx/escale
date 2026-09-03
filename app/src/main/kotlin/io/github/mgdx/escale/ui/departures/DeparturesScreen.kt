@@ -25,10 +25,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -93,6 +95,10 @@ internal fun DeparturesContent(
     topBar = {
       TopAppBar(
         title = { DeparturesTitle(state) },
+        // La barre grandit avec les polices. Sa hauteur est figée à 64 dp par Material, ce qui
+        // coupe le nom de l'arrêt dès 150 % : c'est le seul endroit qui dit où l'on est
+        // (SPEC.md § 9).
+        expandedHeight = TopAppBarDefaults.TopAppBarExpandedHeight * titleScale(),
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(
@@ -116,7 +122,14 @@ internal fun DeparturesContent(
       // Le rafraîchissement laisse la liste en place : SPEC.md § 8 interdit de remplacer des
       // horaires déjà lus par une page blanche.
       if (state.refreshing || state.paging != null) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        val loading = stringResource(R.string.action_loading)
+        LinearProgressIndicator(
+          // Sans nom, la barre n'est qu'une animation : le lecteur d'écran passe devant sans rien
+          // dire, alors que la liste change sous le doigt (SPEC.md § 9).
+          modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = loading },
+        )
       }
       ModeFilters(state = state, onFilterSelected = onFilterSelected)
       state.error?.let { ErrorMessage(error = it, onRetry = onRefresh) }
@@ -125,13 +138,21 @@ internal fun DeparturesContent(
   }
 }
 
-/** Le nom de l'arrêt, et le nombre de lignes qui le desservent quand il est connu. */
+/**
+ * Le nom de l'arrêt, et le nombre de lignes qui le desservent quand il est connu.
+ *
+ * Le nom gagne une ligne quand les polices sont agrandies, et la barre gagne la hauteur
+ * correspondante : à 200 %, deux lignes tronquées valaient mieux qu'une, trois valent mieux que
+ * deux (SPEC.md § 9). La coupure reste le dernier recours d'un nom démesuré, jamais le cas normal.
+ */
 @Composable
 private fun DeparturesTitle(state: DeparturesUiState) {
+  val name = state.stopName.ifBlank { stringResource(R.string.departures_stop_unnamed) }
+  val enlarged = titleScale() > 1f
   Column {
     Text(
-      text = state.stopName.ifBlank { stringResource(R.string.departures_stop_unnamed) },
-      maxLines = 2,
+      text = name,
+      maxLines = if (enlarged) TITLE_LINES_ENLARGED else TITLE_LINES,
       overflow = TextOverflow.Ellipsis,
       style = MaterialTheme.typography.titleLarge,
     )
@@ -139,12 +160,21 @@ private fun DeparturesTitle(state: DeparturesUiState) {
       Text(
         text = linesSummary(state.lines),
         style = MaterialTheme.typography.bodySmall,
-        maxLines = 1,
+        maxLines = if (enlarged) TITLE_LINES else 1,
         overflow = TextOverflow.Ellipsis,
       )
     }
   }
 }
+
+/**
+ * L'agrandissement des polices, plafonné à 200 % — le maximum que SPEC.md § 9 demande de tenir.
+ *
+ * Au-delà, la barre cesserait de grandir plutôt que de manger l'écran : la liste des départs, elle,
+ * a plus besoin de place que le titre.
+ */
+@Composable
+private fun titleScale(): Float = LocalDensity.current.fontScale.coerceIn(1f, MAX_FONT_SCALE)
 
 /**
  * « 30 lignes · 1, 4, 7, 11, 14 » : le compte d'abord, puis autant de numéros que la place permet.
@@ -215,6 +245,20 @@ private fun ModeChip(label: String, icon: Int?, selected: Boolean, onClick: () -
           modifier = Modifier.size(ChipIconSize),
         )
       }
+    },
+    // La coche que Material pose d'ordinaire à l'état sélectionné a cédé sa place au pictogramme
+    // de mode : sans elle, la puce active ne se distinguait plus que par sa couleur de fond, ce
+    // que SPEC.md § 9 interdit. Elle revient à droite, où elle ne prend la place de rien.
+    trailingIcon = if (selected) {
+      {
+        Icon(
+          painter = painterResource(R.drawable.ic_check_circle),
+          contentDescription = null,
+          modifier = Modifier.size(ChipIconSize),
+        )
+      }
+    } else {
+      null
     },
   )
 }
@@ -341,4 +385,9 @@ private const val LATER_KEY = "departures.later"
 private val ScreenPadding: Dp = 16.dp
 private val ChipSpacing: Dp = 8.dp
 private val ChipIconSize: Dp = 18.dp
+
+/** SPEC.md § 9 demande la lisibilité jusqu'à 200 % : au-delà, la barre cesse de grandir. */
+private const val MAX_FONT_SCALE = 2f
+private const val TITLE_LINES = 2
+private const val TITLE_LINES_ENLARGED = 3
 private val EmptyIconSize: Dp = 48.dp

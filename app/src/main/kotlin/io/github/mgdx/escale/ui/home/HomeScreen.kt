@@ -29,7 +29,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +51,8 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
 import io.github.mgdx.escale.ui.map.AttributionBar
 import io.github.mgdx.escale.ui.map.AttributionDialog
+import io.github.mgdx.escale.ui.map.BrowseStopsButton
+import io.github.mgdx.escale.ui.map.BrowseStopsSheet
 import io.github.mgdx.escale.ui.map.LOCATE_BUTTON_SIZE
 import io.github.mgdx.escale.ui.map.LocateButton
 import io.github.mgdx.escale.ui.map.LocateState
@@ -134,8 +138,8 @@ fun HomeScreen(
       )
     }
 
-    MapControls(
-      locateState = state.locateState,
+    MapControlsSlot(
+      state = state,
       onLocateClick = viewModel::onLocateClick,
       onOpenSettings = onOpenSettings,
       modifier = Modifier
@@ -235,16 +239,57 @@ private fun FullScreenMap(
 }
 
 /**
+ * Les commandes flottantes, et la liste que l'une d'elles ouvre.
+ *
+ * Le parcours des arrêts affichés est une **fonction de la carte**, et son état d'ouverture ne
+ * regarde que cet écran : le `ViewModel` fournit la liste, l'écran décide si elle est déployée.
+ * Choisir un arrêt referme la liste et ouvre l'infobulle habituelle — la même que sur la carte, au
+ * même endroit, avec le même appel de lignes derrière (SPEC.md § 9).
+ */
+@Composable
+private fun MapControlsSlot(
+  state: MapUiState,
+  onLocateClick: () -> Unit,
+  onOpenSettings: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  var browsing by rememberSaveable { mutableStateOf(false) }
+  MapControls(
+    locateState = state.locateState,
+    onLocateClick = onLocateClick,
+    onOpenSettings = onOpenSettings,
+    browsableStops = state.browsableStops.size,
+    onBrowseStops = { browsing = true },
+    modifier = modifier,
+  )
+  if (browsing) {
+    BrowseStopsSheet(
+      stops = state.browsableStops,
+      truncated = state.browsableStopsTruncated,
+      onStopSelected = { stop ->
+        browsing = false
+        state.stopActions.onStopClick(stop)
+      },
+      onDismiss = { browsing = false },
+    )
+  }
+}
+
+/**
  * Les commandes flottantes du bas de l'écran (SPEC.md § 5.1).
  *
  * Le bouton de position fait 56 dp et se tient au-dessus de la barre de navigation ; l'accès aux
- * réglages se glisse juste au-dessus, à 48 dp, la cible tactile minimale de SPEC.md § 9.
+ * réglages se glisse juste au-dessus, à 48 dp, la cible tactile minimale de SPEC.md § 9. Le
+ * parcours des arrêts affichés vient en tête de pile, et seulement quand il y a des arrêts à
+ * parcourir.
  */
 @Composable
 private fun MapControls(
   locateState: LocateState,
   onLocateClick: () -> Unit,
   onOpenSettings: () -> Unit,
+  browsableStops: Int,
+  onBrowseStops: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   Column(
@@ -252,6 +297,7 @@ private fun MapControls(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(ScreenMargin),
   ) {
+    BrowseStopsButton(count = browsableStops, onClick = onBrowseStops)
     FloatingActionButton(
       onClick = onOpenSettings,
       modifier = Modifier.size(MIN_TOUCH_TARGET),
