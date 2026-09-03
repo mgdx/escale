@@ -144,6 +144,11 @@ serveur ou le réseau, ce que votre usage manuel de l'application ne fait pas. C
 laquelle la surveillance est un choix explicite, annoncé en toutes lettres sur l'écran d'activation
 et révocable à tout moment.
 
+- **Si vous redémarrez votre téléphone**, les surveillances sont reprogrammées à la prochaine
+  ouverture d'Escale, et non au démarrage de l'appareil : se relancer toute seule au démarrage
+  exigerait une permission qu'Escale refuse de demander. Une vérification peut donc être manquée
+  entre les deux, et l'écran d'activation vous le dit.
+
 Ce qui n'a pas lieu : aucun service permanent, aucune tâche périodique, aucune synchronisation,
 aucun relevé de votre position, et rien qui parte ailleurs que vers le serveur que vous avez choisi.
 Si vous refusez la permission de notification, la surveillance reste utilisable : le résultat de la

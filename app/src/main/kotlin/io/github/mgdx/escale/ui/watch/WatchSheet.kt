@@ -75,6 +75,14 @@ internal fun WatchSheet(state: WatchUiState, actions: WatchActions, onDismiss: (
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
+      // La seconde chose que l'usager doit savoir avant d'activer : après un redémarrage du
+      // téléphone, une occurrence peut être manquée (SPEC.md § 5.5.1 et § 11). Le taire ferait de
+      // la surveillance une fonction qui échoue sans le dire.
+      Text(
+        text = stringResource(R.string.watch_restart_notice),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
       WatchTimeSection(state = state, onTimeChanged = actions.onTimeChanged)
       WatchDaysSection(state = state, onDayToggled = actions.onDayToggled)
       WatchAlertSection(state = state, actions = actions)

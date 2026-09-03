@@ -48,6 +48,11 @@
   <string name="watch_summary_format">%1$s · %2$s</string>
   <string name="watch_value_separator">", "</string>
 
+  <!-- SPEC.md § 5.5.1 : le redémarrage de l'appareil ne doit pas faire échouer la surveillance en
+       silence. `RECEIVE_BOOT_COMPLETED` étant refusée (SPEC.md § 11), la phrase dit ce qui se passe
+       et pourquoi, sans dramatiser. -->
+  <string name="watch_restart_notice">If you restart your phone, watched trips are rescheduled the next time you open Escale rather than at start-up: the app asks for no permission to launch itself.</string>
+
   <string name="watch_time_label">Usual departure time</string>
   <string name="watch_time_action">Change the departure time</string>
   <string name="watch_time_confirm">Set time</string>

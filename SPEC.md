@@ -390,6 +390,12 @@ changé. C'est le seul travail de fond de l'application.
   tentative en boucle : en cas d'échec, une seule reprise après 5 minutes, puis abandon silencieux.
 - La surveillance ne s'exécute pas si le trajet a déjà été consulté dans l'application dans les
   30 dernières minutes : la donnée est déjà fraîche.
+- **Après un redémarrage de l'appareil, les surveillances sont replanifiées à la prochaine
+  ouverture de l'application**, et non au démarrage du téléphone : reprogrammer une tâche au
+  démarrage exige `RECEIVE_BOOT_COMPLETED`, permission de démarrage automatique que le § 11
+  interdit. Une occurrence peut donc être manquée, et **cela ne doit pas être silencieux** : une
+  fonction qui échoue sans le dire est pire qu'une fonction absente. L'écran d'activation
+  l'annonce en une phrase, au même titre que l'avertissement sur les habitudes de déplacement.
 
 **La requête**
 
