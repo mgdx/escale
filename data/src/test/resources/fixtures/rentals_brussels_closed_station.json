@@ -1,0 +1,252 @@
+{
+  "providerGroups": [
+    {
+      "id": "Villo!",
+      "name": "Villo!",
+      "providers": [
+        "be-villo-brussels"
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ]
+    },
+    {
+      "id": "Zeus Scooters",
+      "name": "Zeus Scooters",
+      "providers": [
+        "de-ZeusTübingen",
+        "de-ZeusSchwäbischGmünd",
+        "de-ZeusGöppingen",
+        "de-ZeusRenningenMalmsheim",
+        "de-ZeusPforzheim",
+        "de-ZeusKonstanz",
+        "de-ZeusTuttlingen",
+        "de-ZeusHeidelberg",
+        "de-ZeusWürzburg",
+        "de-ZeusFreiburg",
+        "de-ZeusLudwigsburg",
+        "de-ZeusVillingenSchwenningen",
+        "de-ZeusNeustadt"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    },
+    {
+      "id": "Hopp Konstanz",
+      "name": "Hopp Konstanz",
+      "providers": [
+        "de-HoppKonstanz"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "id": "be-villo-brussels",
+      "name": "Villo!",
+      "groupId": "Villo!",
+      "operator": "",
+      "url": "https://www.villo.be/",
+      "purchaseUrl": "https://www.villo.be/en/offers/groups",
+      "bbox": [
+        4.26542850805528,
+        50.791568,
+        4.465632,
+        50.897522
+      ],
+      "vehicleTypes": [
+        {
+          "id": "mechanical",
+          "name": "Villo!",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": false
+        },
+        {
+          "id": "electrical",
+          "name": "Villo!",
+          "formFactor": "BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": false
+        }
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-ZeusKonstanz",
+      "name": "Zeus Scooters",
+      "groupId": "Zeus Scooters",
+      "operator": "",
+      "url": "https://zeusscooters.com",
+      "purchaseUrl": "",
+      "bbox": [
+        9.142347,
+        47.65754,
+        9.209425,
+        47.691933
+      ],
+      "vehicleTypes": [
+        {
+          "id": "yimi_plus_3",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-HoppKonstanz",
+      "name": "Hopp Konstanz",
+      "groupId": "Hopp Konstanz",
+      "operator": "Hopp Konstanz",
+      "url": "https://hopp.bike/",
+      "purchaseUrl": "",
+      "bbox": [
+        9.136739,
+        47.655645,
+        9.249858,
+        47.692258
+      ],
+      "vehicleTypes": [
+        {
+          "id": "HOP:VehicleType:vtp_120",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    }
+  ],
+  "stations": [
+    {
+      "id": "225",
+      "providerId": "be-villo-brussels",
+      "providerGroupId": "Villo!",
+      "name": "",
+      "lat": 50.846755,
+      "lon": 4.352001,
+      "address": "",
+      "crossStreet": "",
+      "rentalUriAndroid": "",
+      "rentalUriIOS": "",
+      "rentalUriWeb": "",
+      "isRenting": false,
+      "isReturning": false,
+      "numVehiclesAvailable": 0,
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "electrical": 0,
+        "mechanical": 0
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        4.352001,
+        50.846755,
+        4.352001,
+        50.846755
+      ]
+    },
+    {
+      "id": "23",
+      "providerId": "be-villo-brussels",
+      "providerGroupId": "Villo!",
+      "name": "AGORA",
+      "lat": 50.846331,
+      "lon": 4.355193,
+      "address": "AGORA - Place Agora / Agoraplein 120",
+      "crossStreet": "",
+      "rentalUriAndroid": "",
+      "rentalUriIOS": "",
+      "rentalUriWeb": "",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 5,
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "electrical": 2,
+        "mechanical": 3
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        4.355193,
+        50.846331,
+        4.355193,
+        50.846331
+      ]
+    },
+    {
+      "id": "36",
+      "providerId": "be-villo-brussels",
+      "providerGroupId": "Villo!",
+      "name": "PLACE SAINT-JEAN / SINT-JANSPLEIN",
+      "lat": 50.845224,
+      "lon": 4.351484,
+      "address": "Rue du Lombard 42 / Lombardstraat 42",
+      "crossStreet": "",
+      "rentalUriAndroid": "",
+      "rentalUriIOS": "",
+      "rentalUriWeb": "",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 5,
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "electrical": 2,
+        "mechanical": 3
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        4.351484,
+        50.845224,
+        4.351484,
+        50.845224
+      ]
+    }
+  ],
+  "vehicles": [],
+  "zones": []
+}

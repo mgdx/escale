@@ -1,0 +1,379 @@
+{
+  "providerGroups": [
+    {
+      "id": "Call a Bike",
+      "name": "Call a Bike",
+      "providers": [
+        "de-CallaBike"
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ]
+    },
+    {
+      "id": "nextbike Berlin",
+      "name": "nextbike Berlin",
+      "providers": [
+        "de-NextbikeBerlin"
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ]
+    },
+    {
+      "id": "Dott berlin",
+      "name": "Dott berlin",
+      "providers": [
+        "de-DottBerlin"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    },
+    {
+      "id": "Hopp Konstanz",
+      "name": "Hopp Konstanz",
+      "providers": [
+        "de-HoppKonstanz"
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "id": "de-CallaBike",
+      "name": "Call a Bike",
+      "groupId": "Call a Bike",
+      "operator": "Deutsche Bahn Connect GmbH",
+      "url": "https://www.callabike.de",
+      "purchaseUrl": "",
+      "bbox": [
+        6.797468185424805,
+        48.08138656616211,
+        14.546022415161133,
+        53.54236602783203
+      ],
+      "vehicleTypes": [
+        {
+          "id": "CAB:VehicleType:885345af-ce68-30c4-b66d-10861790c4d6",
+          "name": "bike",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": false
+        }
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-NextbikeBerlin",
+      "name": "nextbike Berlin",
+      "groupId": "nextbike Berlin",
+      "operator": "nextbike GmbH, Karl-Heine-Str. 46, 04229 Leipzig",
+      "url": "https://www.nextbike.de/berlin/",
+      "purchaseUrl": "",
+      "bbox": [
+        12.993459,
+        51.581916,
+        14.561379,
+        52.634142
+      ],
+      "vehicleTypes": [
+        {
+          "id": "196",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "345",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "431",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "446",
+          "name": "E-Bike",
+          "formFactor": "BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "150",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "346",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "196",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "345",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "431",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "446",
+          "name": "E-Bike",
+          "formFactor": "BICYCLE",
+          "propulsionType": "ELECTRIC_ASSIST",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "150",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "346",
+          "name": "Fahrrad",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "0",
+          "name": "Unknown",
+          "formFactor": "BICYCLE",
+          "propulsionType": "HUMAN",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-DottBerlin",
+      "name": "Dott berlin",
+      "groupId": "Dott berlin",
+      "operator": "",
+      "url": "",
+      "purchaseUrl": "",
+      "bbox": [
+        13.134314,
+        52.404459,
+        13.626612,
+        52.63634
+      ],
+      "vehicleTypes": [
+        {
+          "id": "dott_scooter",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "ANY_STATION",
+          "returnConstraintGuessed": true
+        },
+        {
+          "id": "dott_scooter",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    },
+    {
+      "id": "de-HoppKonstanz",
+      "name": "Hopp Konstanz",
+      "groupId": "Hopp Konstanz",
+      "operator": "Hopp Konstanz",
+      "url": "https://hopp.bike/",
+      "purchaseUrl": "",
+      "bbox": [
+        9.136739,
+        47.655645,
+        9.249858,
+        47.692258
+      ],
+      "vehicleTypes": [
+        {
+          "id": "HOP:VehicleType:vtp_120",
+          "name": "",
+          "formFactor": "SCOOTER_STANDING",
+          "propulsionType": "ELECTRIC",
+          "returnConstraint": "NONE",
+          "returnConstraintGuessed": true
+        }
+      ],
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "defaultRestrictions": {
+        "vehicleTypeIdxs": [],
+        "rideStartAllowed": true,
+        "rideEndAllowed": true,
+        "rideThroughAllowed": true
+      },
+      "globalGeofencingRules": []
+    }
+  ],
+  "stations": [
+    {
+      "id": "CAB:Station:d05a8e6d-d0c7-39c9-9861-117bd71ba71e",
+      "providerId": "de-CallaBike",
+      "providerGroupId": "Call a Bike",
+      "name": "Jelbi S+U Hauptbahnhof / Washingtonplatz",
+      "lat": 52.52368927001953,
+      "lon": 13.370759963989258,
+      "address": "",
+      "crossStreet": "",
+      "rentalUriAndroid": "https://www.callabike.de/app",
+      "rentalUriIOS": "https://www.callabike.de/app",
+      "rentalUriWeb": "",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 13,
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "CAB:VehicleType:885345af-ce68-30c4-b66d-10861790c4d6": 13
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        13.370759963989258,
+        52.52368927001953,
+        13.370759963989258,
+        52.52368927001953
+      ]
+    },
+    {
+      "id": "171667497",
+      "providerId": "de-NextbikeBerlin",
+      "providerGroupId": "nextbike Berlin",
+      "name": "Jelbi S+U Hauptbahnhof/Washingtonplatz (MOA/HW)",
+      "lat": 52.52369,
+      "lon": 13.37076,
+      "address": "",
+      "crossStreet": "",
+      "rentalUriAndroid": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriIOS": "https://app.nextbike.net/station?id=171667497",
+      "rentalUriWeb": "https://nxtb.it/p/171667497",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 12,
+      "formFactors": [
+        "BICYCLE"
+      ],
+      "vehicleTypesAvailable": {
+        "196": 2,
+        "431": 9,
+        "446": 1
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        13.37076,
+        52.52369,
+        13.37076,
+        52.52369
+      ]
+    },
+    {
+      "id": "c844fdbe-c7e4-48ac-9f83-7a7ba3d30948",
+      "providerId": "de-DottBerlin",
+      "providerGroupId": "Dott berlin",
+      "name": "MOA/HW Jelbi-Punkt S+U Hauptbahnhof/Washingtonplatz",
+      "lat": 52.523773,
+      "lon": 13.370795,
+      "address": "",
+      "crossStreet": "",
+      "rentalUriAndroid": "",
+      "rentalUriIOS": "",
+      "rentalUriWeb": "",
+      "isRenting": true,
+      "isReturning": true,
+      "numVehiclesAvailable": 5,
+      "formFactors": [
+        "SCOOTER_STANDING"
+      ],
+      "vehicleTypesAvailable": {
+        "dott_scooter": 5
+      },
+      "vehicleDocksAvailable": {},
+      "bbox": [
+        13.370795,
+        52.523773,
+        13.370795,
+        52.523773
+      ]
+    }
+  ],
+  "vehicles": [],
+  "zones": []
+}
