@@ -2,7 +2,9 @@ package io.github.mgdx.escale.ui.detail
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyPage
+import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
@@ -21,6 +23,8 @@ class DetailViewModelTest {
   val mainDispatcherRule = MainDispatcherRule()
 
   private val repository = RecordingPlanRepository()
+
+  private val rentals = RecordingRentalsRepository()
 
   private val selection = SelectedJourneyStore()
 
@@ -253,10 +257,137 @@ class DetailViewModelTest {
     assertEquals(2, repository.refreshCalls.size)
   }
 
+  // --- Libre-service (SPEC.md § 5.3) -------------------------------------------------------------
+
+  @Test
+  fun `tant que la portion partagee n'est pas depliee, aucune disponibilite n'est demandee`() {
+    openRentalJourney()
+
+    assertTrue("SPEC.md § 7 : pas de requête dont on n'affiche pas encore la réponse", rentals.calls.isEmpty())
+  }
+
+  @Test
+  fun `deplier une portion partagee interroge la station de prise et celle de retour`() {
+    val viewModel = openRentalJourney()
+
+    viewModel.onLegToggled(0)
+
+    // Deux stations, deux questions : « combien de véhicules » d'un côté, « combien de places
+    // libres » de l'autre. Les confondre annoncerait les vélos de la station d'arrivée.
+    assertEquals(listOf(PICKUP_POINT, DROPOFF_POINT), rentals.calls)
+  }
+
+  @Test
+  fun `la station retenue est celle que la portion nomme, pas la plus proche`() {
+    val viewModel = openRentalJourney(
+      stations = listOf(
+        availability("nextbike Hauptbahnhof", PICKUP_POINT, vehicles = 3, retrievedAt = fixedNow),
+        availability(PICKUP_STATION, PICKUP_POINT, vehicles = 13, retrievedAt = fixedNow),
+      ),
+    )
+
+    viewModel.onLegToggled(0)
+
+    assertEquals(13, viewModel.uiState.value.rentals[0]?.pickup?.numVehiclesAvailable)
+  }
+
+  @Test
+  fun `un vehicule en free-floating n'emet aucune requete`() {
+    val leg = rentalLeg(0, 12, pickupName = null, dropoffName = null)
+    val viewModel = openRentalJourney(leg = leg)
+
+    viewModel.onLegToggled(0)
+
+    assertTrue("sans station, il n'y a pas de disponibilité à demander", rentals.calls.isEmpty())
+    assertNull(viewModel.uiState.value.rentals[0])
+  }
+
+  @Test
+  fun `replier une portion ne redemande rien`() {
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    val afterOpening = rentals.calls.size
+
+    viewModel.onLegToggled(0)
+
+    assertEquals(afterOpening, rentals.calls.size)
+  }
+
+  @Test
+  fun `le bouton de rafraichissement de la portion redemande la disponibilite`() {
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    val afterOpening = rentals.calls.size
+
+    viewModel.onRentalRefresh(0)
+
+    assertEquals(afterOpening * 2, rentals.calls.size)
+  }
+
+  @Test
+  fun `rafraichir le trajet rafraichit aussi les disponibilites affichees`() {
+    // Elles sont plus périssables que les horaires : les laisser telles quelles pendant que le
+    // reste de l'écran se met à jour serait exactement le mensonge que l'heure de relevé évite.
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    val afterOpening = rentals.calls.size
+
+    viewModel.onRefresh()
+
+    assertEquals(afterOpening * 2, rentals.calls.size)
+  }
+
+  @Test
+  fun `un echec laisse en place la derniere disponibilite connue`() {
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    assertEquals(13, viewModel.uiState.value.rentals[0]?.pickup?.numVehiclesAvailable)
+
+    rentals.answer = Outcome.Failure(EscaleError.NoNetwork)
+    viewModel.onRentalRefresh(0)
+
+    val state = checkNotNull(viewModel.uiState.value.rentals[0])
+    assertEquals(EscaleError.NoNetwork, state.error)
+    assertEquals(13, state.pickup?.numVehiclesAvailable)
+    assertFalse(state.loading)
+  }
+
+  @Test
+  fun `une portion en transport en commun n'interroge jamais le libre-service`() {
+    selection.select(journeyOf("id-1"))
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1"))
+    val viewModel = viewModel()
+
+    viewModel.onLegToggled(1)
+
+    assertTrue(rentals.calls.isEmpty())
+  }
+
+  /**
+   * Un écran de détail ouvert sur un trajet fait d'une seule portion en libre-service.
+   *
+   * La réponse du rafraîchissement porte le **même** trajet : un trajet de forme différente
+   * remettrait à zéro les dépliages comme les disponibilités, et le test ne prouverait plus rien.
+   */
+  private fun openRentalJourney(
+    leg: JourneyLeg = rentalLeg(0, 12),
+    stations: List<RentalAvailability> = listOf(
+      availability(PICKUP_STATION, PICKUP_POINT, vehicles = 13, retrievedAt = fixedNow),
+      availability(DROPOFF_STATION, DROPOFF_POINT, vehicles = 4, retrievedAt = fixedNow),
+    ),
+  ): DetailViewModel {
+    val journey = journeyOf("id-1", legs = listOf(leg))
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    rentals.answer = Outcome.Success(stations)
+    return viewModel()
+  }
+
   private fun viewModel(session: SearchSession = sessionWithSearch()) = DetailViewModel(
     selection = selection,
     session = session,
     planRepository = repository,
+    rentalsRepository = rentals,
     savedState = savedState,
     now = { clock },
   )

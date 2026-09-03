@@ -8,11 +8,16 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
 import io.github.mgdx.escale.core.model.Journey
+import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyRefresh
+import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.SearchPreferences
+import io.github.mgdx.escale.core.model.stationFor
 import io.github.mgdx.escale.core.model.withEndpointNames
 import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
 import io.github.mgdx.escale.core.repository.PlanRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
@@ -54,6 +59,7 @@ class DetailViewModel(
   private val selection: SelectedJourneyStore,
   private val session: SearchSession,
   private val planRepository: PlanRepository,
+  private val rentalsRepository: RentalsRepository,
   private val savedState: SavedStateHandle,
   private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -65,12 +71,27 @@ class DetailViewModel(
   /** Au plus une requête détaillée en vol : un second appui remplace le premier (SPEC.md § 7.2). */
   private var work: Job? = null
 
+  /** Au plus une requête de disponibilité en vol **par portion**, pour la même raison. */
+  private val rentalWork = mutableMapOf<Int, Job>()
+
   init {
     if (!state.value.closed) load()
   }
 
-  /** Le bouton « Rafraîchir » (SPEC.md § 5.3) et le bouton « Réessayer » du bandeau (§ 8). */
-  fun onRefresh() = load()
+  /**
+   * Le bouton « Rafraîchir » (SPEC.md § 5.3) et le bouton « Réessayer » du bandeau (§ 8).
+   *
+   * Il rafraîchit aussi les disponibilités déjà affichées : elles sont plus périssables que les
+   * horaires, et les laisser telles quelles pendant que le reste de l'écran se met à jour serait
+   * exactement le mensonge que l'heure de relevé sert à éviter.
+   */
+  fun onRefresh() {
+    load()
+    state.value.rentals.keys.toList().forEach(::loadRental)
+  }
+
+  /** Le bouton de rafraîchissement propre à une portion en libre-service (SPEC.md § 5.3). */
+  fun onRentalRefresh(index: Int) = loadRental(index)
 
   /**
    * Le retour au premier plan (SPEC.md § 7.4).
@@ -87,6 +108,11 @@ class DetailViewModel(
   fun onLegToggled(index: Int) {
     state.update { it.copy(expandedLegs = it.expandedLegs.toggled(index)) }
     remember(KEY_LEGS, state.value.expandedLegs)
+    // La disponibilité n'est demandée qu'au dépliage : c'est le moment où elle s'affiche, et
+    // SPEC.md § 7 interdit d'émettre une requête dont on ne montre pas encore la réponse. Un trajet
+    // en transport en commun avec deux rabattements partagés n'en émet donc aucune tant que
+    // l'usager n'ouvre pas la portion concernée.
+    if (index in state.value.expandedLegs) loadRental(index)
   }
 
   fun onStopsToggled(index: Int) {
@@ -150,6 +176,70 @@ class DetailViewModel(
     }
   }
 
+  /**
+   * La disponibilité des stations d'une portion en libre-service (SPEC.md § 5.3).
+   *
+   * **Deux stations, deux questions distinctes** : celle de prise répond « combien de véhicules »,
+   * celle de retour « combien de places libres ». Elles sont donc interrogées séparément, chacune
+   * autour de ses propres coordonnées. Quand les deux extrémités désignent la même station, la
+   * seconde requête n'atteint pas le réseau : le cache de soixante secondes du dépôt reconnaît la
+   * demande identique et rend la réponse déjà obtenue.
+   *
+   * **Un véhicule en free-floating n'émet aucune requête** : il n'a pas de station dont compter les
+   * vélos, et interroger le point où il se trouve ne rendrait que le véhicule lui-même.
+   */
+  private fun loadRental(index: Int) {
+    val leg = state.value.journey?.legs?.getOrNull(index) as? JourneyLeg.Rental ?: return
+    val rental = leg.rental ?: return
+    if (rental.fromStationName == null && rental.toStationName == null) return
+    rentalWork[index]?.cancel()
+    rentalWork[index] = viewModelScope.launch {
+      updateRental(index) { it.copy(loading = true, error = null) }
+      val pickup = station(leg.from.coordinates, rental.fromStationName)
+      val dropoff = station(leg.to.coordinates, rental.toStationName)
+      val failure = listOfNotNull(pickup, dropoff).filterIsInstance<Outcome.Failure>().firstOrNull()
+      updateRental(index) {
+        it.copy(
+          loading = false,
+          pickup = pickup.valueOr(it.pickup),
+          dropoff = dropoff.valueOr(it.dropoff),
+          error = failure?.error,
+        )
+      }
+    }
+  }
+
+  /**
+   * La station que la portion désigne, parmi celles rendues autour du point.
+   *
+   * Le tri est dans `:core` : plusieurs exploitants partagent le même parvis, et c'est le nom porté
+   * par la portion qui les départage, la distance ne servant qu'ensuite.
+   *
+   * @return `null` quand la portion n'a pas de station de ce côté — il n'y a alors rien à demander.
+   */
+  private suspend fun station(point: LatLon, name: String?): Outcome<RentalAvailability?>? {
+    if (name == null) return null
+    return when (val outcome = rentalsRepository.availabilityNear(point)) {
+      is Outcome.Failure -> outcome
+      is Outcome.Success -> Outcome.Success(outcome.value.stationFor(point, name))
+    }
+  }
+
+  /**
+   * Une réponse obtenue remplace la précédente, même vide : « le serveur ne connaît plus cette
+   * station » est une information, pas une raison de continuer à afficher l'ancienne. Un échec, en
+   * revanche, laisse en place ce qui était affiché (SPEC.md § 8).
+   */
+  private fun Outcome<RentalAvailability?>?.valueOr(previous: RentalAvailability?): RentalAvailability? =
+    if (this is Outcome.Success) value else previous
+
+  private fun updateRental(index: Int, transform: (RentalLegAvailability) -> RentalLegAvailability) {
+    state.update { current ->
+      val existing = current.rentals[index] ?: RentalLegAvailability()
+      current.copy(rentals = current.rentals + (index to transform(existing)))
+    }
+  }
+
   private fun onDetailed(detailed: Journey) {
     val journey = named(detailed)
     val previous = state.value.journey
@@ -157,6 +247,10 @@ class DetailViewModel(
     // les mêmes portions, et un dépliage restitué au mauvais endroit serait pire que pas de
     // dépliage du tout.
     val sameShape = previous != null && previous.legs.size == journey.legs.size
+    if (!sameShape) {
+      rentalWork.values.forEach(Job::cancel)
+      rentalWork.clear()
+    }
     state.update {
       it.copy(
         journey = journey,
@@ -167,6 +261,7 @@ class DetailViewModel(
         expandedLegs = if (sameShape) it.expandedLegs else emptySet(),
         expandedStops = if (sameShape) it.expandedStops else emptySet(),
         expandedSteps = if (sameShape) it.expandedSteps else emptySet(),
+        rentals = if (sameShape) it.rentals else emptyMap(),
       )
     }
     // Le trajet détaillé porte la géométrie des portions, que le trajet sommaire n'avait pas : le
@@ -242,6 +337,7 @@ class DetailViewModel(
           selection = container.selectedJourneyStore,
           session = container.searchSession,
           planRepository = container.planRepository,
+          rentalsRepository = container.rentalsRepository,
           savedState = createSavedStateHandle(),
         )
       }
