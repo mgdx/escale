@@ -90,7 +90,7 @@ Noms et emplacements figés. Les champs sont dérivés de `docs/motis-openapi.ya
 | `TransitMode` | `enum` | reprend `Mode` de l'OpenAPI, **sans** les `DEBUG_*` ni les valeurs dépréciées (`AREAL_LIFT`, `METRO`, `CABLE_CAR`, `REGIONAL_FAST_RAIL`) |
 | `PlaceKind` | `enum ADDRESS, PLACE, STOP` | `LocationType` de l'API |
 | `Location` | point de départ / d'arrivée saisi | `id: String?` (stopId), `name`, `description: String?`, `coordinates`, `kind`, `servedModes: List<TransitMode>` |
-| `Place` | point d'une portion de trajet | `name`, `coordinates`, `stopId: String?`, `track: String?`, `scheduledTime: Instant`, `time: Instant`, `level: Double?` |
+| `Place` | point d'une portion de trajet | `name`, `coordinates`, `stopId: String?`, `track: String?`, `scheduledTime: Instant`, `time: Instant`, `level: Double?`, `alerts: List<Disruption> = emptyList()` |
 | `TimeChoice` | `sealed interface` | `Now`, `DepartAt(Instant)`, `ArriveBy(Instant)` |
 | `JourneyCategory` | `enum TRANSIT, CAR, BIKE, WALK` | un onglet de résultats = une valeur |
 | `SearchPreferences` | réglages de recherche (§5.6 de la spec) | vitesses, profil piéton, dénivelé, correspondances, types de véhicules partagés |
@@ -109,6 +109,11 @@ Noms et emplacements figés. Les champs sont dérivés de `docs/motis-openapi.ya
 `startTime`, `endTime`, `scheduledStartTime`, `scheduledEndTime`, `from: Place`, `to: Place`,
 `distanceMeters: Double?`, `geometry: List<LatLon>`, `realTime: Boolean`, `cancelled: Boolean`,
 `alerts: List<Disruption>`.
+
+**Les perturbations existent à deux niveaux et ne se confondent pas** : celles de la portion
+(`JourneyLeg.alerts`) concernent la course entière, celles d'un point (`Place.alerts`) ne concernent
+que cet arrêt-là. Un écran qui affiche les deux doit retirer des secondes ce que les premières
+annoncent déjà — `Disruptions.excluding` est là pour ça.
 
 **Le temps se manipule en `java.time`** — `Instant`, `Duration`, `ZoneId`, `LocalDate`, `LocalTime`.
 Disponible dès l'API 26, qui est notre `minSdk` : aucune dépendance, aucun desugaring. Ne pas
