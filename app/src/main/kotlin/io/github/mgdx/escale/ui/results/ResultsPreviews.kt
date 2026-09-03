@@ -58,6 +58,16 @@ private fun walkLeg(from: Long, to: Long) = JourneyLeg.Walk(
   to = place("Gare de Lyon", at(to)),
 )
 
+private fun bikeLeg(from: Long, to: Long) = JourneyLeg.Bike(
+  startTime = at(from),
+  endTime = at(to),
+  scheduledStartTime = at(from),
+  scheduledEndTime = at(to),
+  duration = Duration.ofMinutes(to - from),
+  from = place("Rue de Bercy", at(from)),
+  to = place("Nation", at(to)),
+)
+
 private fun transitLeg(
   from: Long,
   to: Long,
@@ -137,6 +147,9 @@ private val transitJourney = sampleJourney(
 
 private val rentalJourney = sampleJourney(id = "rental", legs = listOf(walkLeg(0, 3), rentalLeg(3, 27)))
 
+/** Un trajet à vélo personnel : c'est lui qui donne son sens au filtre de l'onglet Vélo. */
+private val bikeJourney = sampleJourney(id = "bike", legs = listOf(bikeLeg(0, 24)))
+
 private val previewState = ResultsUiState(
   open = true,
   category = JourneyCategory.TRANSIT,
@@ -185,7 +198,31 @@ private fun ResultsListPreview() = PreviewSheet(previewState)
 @Composable
 private fun ResultsLargeTextPreview() = PreviewSheet(previewState)
 
+/**
+ * L'onglet Vélo et son filtre, que rien ne rendait jusqu'ici.
+ *
+ * C'est le seul endroit de la feuille où une puce dit un état : sans aperçu, sa coche de sélection
+ * n'était vérifiable nulle part (SPEC.md § 9).
+ */
+@Preview(name = "Onglet vélo et son filtre", heightDp = 600, showBackground = true)
+@Preview(name = "Onglet vélo et son filtre, texte à 200 %", heightDp = 900, fontScale = 2f, showBackground = true)
+@Composable
+private fun ResultsBikeFilterPreview() = PreviewSheet(
+  previewState.copy(
+    category = JourneyCategory.BIKE,
+    // Le filtre ne s'affiche que si les deux familles cohabitent : il faut donc un trajet qui
+    // emprunte un véhicule partagé et un qui n'en emprunte pas.
+    tabs = mapOf(
+      JourneyCategory.BIKE to TabResults(
+        feed = JourneyFeed(journeys = listOf(bikeJourney, rentalJourney)),
+        loadedAt = ORIGIN,
+      ),
+    ),
+  ),
+)
+
 @Preview(name = "Onglet à pied sans résultat", heightDp = 500, showBackground = true)
+@Preview(name = "Onglet à pied sans résultat, texte à 200 %", heightDp = 900, fontScale = 2f, showBackground = true)
 @Composable
 private fun ResultsEmptyPreview() = PreviewSheet(
   previewState.copy(
@@ -195,6 +232,7 @@ private fun ResultsEmptyPreview() = PreviewSheet(
 )
 
 @Preview(name = "Serveur injoignable", heightDp = 400, showBackground = true)
+@Preview(name = "Serveur injoignable, texte à 200 %", heightDp = 800, fontScale = 2f, showBackground = true)
 @Composable
 private fun ResultsErrorPreview() = PreviewSheet(
   previewState.copy(
@@ -203,6 +241,7 @@ private fun ResultsErrorPreview() = PreviewSheet(
 )
 
 @Preview(name = "Recherche en cours", heightDp = 400, showBackground = true)
+@Preview(name = "Recherche en cours, texte à 200 %", heightDp = 700, fontScale = 2f, showBackground = true)
 @Composable
 private fun ResultsLoadingPreview() = PreviewSheet(
   previewState.copy(tabs = mapOf(JourneyCategory.TRANSIT to TabResults(loading = true))),

@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.watch
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,11 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
+import io.github.mgdx.escale.ui.theme.EscaleTheme
+import java.time.DayOfWeek
 
 /**
  * La bascule « Me prévenir avant le départ » de l'écran de détail (SPEC.md § 5.5.1).
@@ -104,6 +109,41 @@ private fun watchSummary(state: WatchUiState): String = when {
   state.watched -> watchedSummary(state)
   state.limitBlocking -> limitMessage(state.watchedCount)
   else -> stringResource(R.string.watch_summary_off)
+}
+
+@Preview(showBackground = true, name = "Surveillance éteinte, thème clair")
+@Preview(
+  showBackground = true,
+  name = "Surveillance éteinte, thème sombre",
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Preview(showBackground = true, name = "Surveillance éteinte, texte à 200 %", fontScale = 2f)
+@Composable
+private fun WatchRowOffPreview() = PreviewRow(WatchUiState(favoriteId = 1))
+
+@Preview(showBackground = true, name = "Surveillance active, thème clair")
+@Preview(showBackground = true, name = "Surveillance active, texte à 200 %", fontScale = 2f)
+@Composable
+private fun WatchRowOnPreview() = PreviewRow(
+  WatchUiState(
+    favoriteId = 1,
+    watched = true,
+    days = setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
+  ),
+)
+
+/** Cinq trajets déjà surveillés : le résumé devient une phrase longue, et c'est le pire cas. */
+@Preview(showBackground = true, name = "Limite atteinte, texte à 200 %", fontScale = 2f)
+@Composable
+private fun WatchRowLimitPreview() = PreviewRow(WatchUiState(favoriteId = 1, watchedCount = 5))
+
+@Composable
+private fun PreviewRow(state: WatchUiState) {
+  EscaleTheme(dynamicColor = false) {
+    Surface {
+      WatchRow(state = state, onConfigure = {}, onDisable = {}, modifier = Modifier.padding(12.dp))
+    }
+  }
 }
 
 /** Cible tactile minimale de SPEC.md § 9. */

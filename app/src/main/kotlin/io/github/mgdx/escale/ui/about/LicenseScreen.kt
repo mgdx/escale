@@ -153,6 +153,7 @@ private val TextMargin: Dp = 24.dp
 /** Écart entre deux paragraphes, repris en marge haute et basse de la liste. */
 private val TextGap: Dp = 12.dp
 
+@Preview(showBackground = true, name = "Licence, texte à 200 %", fontScale = 2f, heightDp = 1200)
 @Preview(showBackground = true, name = "Licence, thème clair")
 @Preview(
   showBackground = true,

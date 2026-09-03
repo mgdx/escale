@@ -561,6 +561,7 @@ private fun FavoritesPreview() {
   }
 }
 
+@Preview(showBackground = true, name = "Favoris vides, texte à 200 %", fontScale = 2f)
 @Preview(showBackground = true, name = "Favoris vides, thème clair")
 @Preview(showBackground = true, name = "Favoris vides, thème sombre", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable

@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -97,6 +98,9 @@ internal fun TripContent(
     topBar = {
       TopAppBar(
         title = { TripTitle(state) },
+        // La barre grandit avec les polices : figée à 64 dp, elle coupe le nom de la ligne et sa
+        // direction, qui sont tout ce qui distingue deux courses (SPEC.md § 9).
+        expandedHeight = TopAppBarDefaults.TopAppBarExpandedHeight * titleScale(),
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(
@@ -135,13 +139,20 @@ internal fun TripContent(
   }
 }
 
-/** La ligne, puis sa direction en sous-titre : ce que l'usager lit sur le véhicule. */
+/**
+ * La ligne, puis sa direction en sous-titre : ce que l'usager lit sur le véhicule.
+ *
+ * Chacune gagne une ligne quand les polices sont agrandies, et la barre gagne la hauteur qui va
+ * avec (SPEC.md § 9). « TER Nouvelle-Aquitaine » ne tient pas sur une ligne à 200 %, et c'est
+ * précisément le genre de nom qu'il faut lire en entier.
+ */
 @Composable
 private fun TripTitle(state: TripUiState) {
+  val enlarged = titleScale() > 1f
   Column {
     Text(
       text = state.lineName.ifBlank { stringResource(R.string.trip_title) },
-      maxLines = 1,
+      maxLines = if (enlarged) TITLE_LINES_ENLARGED else 1,
       overflow = TextOverflow.Ellipsis,
       style = MaterialTheme.typography.titleLarge,
     )
@@ -149,12 +160,16 @@ private fun TripTitle(state: TripUiState) {
       Text(
         text = stringResource(R.string.trip_towards, state.headsign),
         style = MaterialTheme.typography.bodySmall,
-        maxLines = 1,
+        maxLines = if (enlarged) TITLE_LINES_ENLARGED else 1,
         overflow = TextOverflow.Ellipsis,
       )
     }
   }
 }
+
+/** L'agrandissement des polices, plafonné aux 200 % que SPEC.md § 9 demande de tenir. */
+@Composable
+private fun titleScale(): Float = LocalDensity.current.fontScale.coerceIn(1f, MAX_FONT_SCALE)
 
 @Composable
 private fun TripBody(state: TripUiState) {
@@ -518,6 +533,10 @@ private const val COUNT_KEY = "trip.count"
 private val ScreenPadding: Dp = 16.dp
 private val RowSpacing: Dp = 8.dp
 private val RowMinHeight: Dp = 48.dp
+
+/** SPEC.md § 9 demande la lisibilité jusqu'à 200 % : au-delà, la barre de titre cesse de grandir. */
+private const val MAX_FONT_SCALE = 2f
+private const val TITLE_LINES_ENLARGED = 2
 private val ModeIconSize: Dp = 24.dp
 private val LineIconSize: Dp = 18.dp
 private val EmptyIconSize: Dp = 48.dp

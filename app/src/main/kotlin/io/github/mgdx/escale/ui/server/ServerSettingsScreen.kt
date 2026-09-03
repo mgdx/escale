@@ -526,6 +526,7 @@ private fun CheckStepState.tint(): Color = when (this) {
   else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
+@Preview(showBackground = true, name = "Serveur MOTIS, texte à 200 %", fontScale = 2f, heightDp = 1400)
 @Preview(showBackground = true, name = "Serveur MOTIS, thème clair")
 @Preview(
   showBackground = true,

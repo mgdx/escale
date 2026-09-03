@@ -92,6 +92,7 @@ fun ErrorMessage(error: EscaleError, modifier: Modifier = Modifier, onRetry: (()
   }
 }
 
+@Preview(showBackground = true, name = "Erreur, texte à 200 %", fontScale = 2f)
 @Preview(showBackground = true, name = "Erreur, thème clair")
 @Preview(
   showBackground = true,
