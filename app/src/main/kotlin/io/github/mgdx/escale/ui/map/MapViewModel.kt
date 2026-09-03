@@ -8,10 +8,15 @@ import io.github.mgdx.escale.AppContainer
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapDataRequest
 import io.github.mgdx.escale.core.geo.MapViewport
+import io.github.mgdx.escale.core.geo.RentalMarker
+import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.geo.center
 import io.github.mgdx.escale.core.geo.isPointLike
 import io.github.mgdx.escale.core.geo.journeyTrace
 import io.github.mgdx.escale.core.geo.mapDataRequests
+import io.github.mgdx.escale.core.geo.rentalMarkers
+import io.github.mgdx.escale.core.geo.requestsRentals
+import io.github.mgdx.escale.core.geo.shouldClusterRentals
 import io.github.mgdx.escale.core.geo.shouldClusterStops
 import io.github.mgdx.escale.core.geo.stopMarkers
 import io.github.mgdx.escale.core.model.BoundingBox
@@ -22,6 +27,7 @@ import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.result.Outcome
@@ -38,6 +44,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -67,6 +74,7 @@ class MapViewModel(
   private val mapRepository: MapRepository,
   private val geocodeRepository: GeocodeRepository,
   private val stopsRepository: StopsRepository,
+  private val rentalsRepository: RentalsRepository,
   private val preferencesRepository: PreferencesRepository,
   private val styles: MapStyleSource,
   private val cameraStore: MapCameraMemory,
@@ -88,7 +96,13 @@ class MapViewModel(
     onDepartures = ::onStopDepartures,
   )
 
-  private val state = MutableStateFlow(MapUiState(stopActions = stopActions))
+  /** Les mêmes rappels pour le libre-service, construits une fois et jamais recomposés. */
+  private val rentalActions = MapRentalActions(
+    onRentalClick = ::onRentalClick,
+    onDismissRental = ::onDismissRental,
+  )
+
+  private val state = MutableStateFlow(MapUiState(stopActions = stopActions, rentalActions = rentalActions))
   val uiState: StateFlow<MapUiState> = state.asStateFlow()
 
   /** Le thème du système, poussé par le composable : il décide de la palette de la feuille. */
@@ -113,6 +127,7 @@ class MapViewModel(
   init {
     observeStyle()
     observeStops()
+    observeRentals()
     observePointsOfInterest()
     observeSelectedJourney()
     applyInitialCamera()
@@ -331,6 +346,93 @@ class MapViewModel(
   }
 
   /**
+   * Branche les arrêts de caméra sur `RentalsRepository` (SPEC.md § 5.7).
+   *
+   * Le flux est celui des arrêts, à un filtre près, et c'est tout l'intérêt : `mapDataRequests`
+   * porte déjà l'anti-rebond de 300 ms (règle 1), l'emprise élargie de 30 % (règle 3) et le refus
+   * de réémettre en redescendant d'un palier (règle 5). Le `collectLatest` porte l'annulation de la
+   * requête en vol (règle 2), et la conversion en GeoJSON se fait sur [computeDispatcher] pour être
+   * posée en une seule modification d'état (règles 6 et 7).
+   *
+   * **Le filtre est la seule chose propre au libre-service** : `requestsRentals` est faux sous le
+   * zoom 13, là où `requestsStops` est déjà vrai à partir du zoom 11. Un arrêt de caméra au zoom 12
+   * charge donc des arrêts et **aucune** station, exactement comme le veut le tableau de § 5.7.
+   * Le filtre est posé **après** `mapDataRequests`, et non avant : le flux garde ainsi la mémoire du
+   * palier déjà chargé, ce qui fait que remonter au zoom 14 puis redescendre n'émet rien de plus.
+   *
+   * Le réglage « stations en libre-service » de SPEC.md § 5.6 coupe le flux entier, indépendamment
+   * du zoom : décoché, il n'émet plus la moindre requête. Recoché, la collecte reprend sur la
+   * position courante de la caméra, que [cameraIdles] a retenue.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun observeRentals() {
+    viewModelScope.launch {
+      preferencesRepository.displayPreferences
+        .map { it.showRentals }
+        .distinctUntilChanged()
+        .onEach { visible -> if (!visible) clearRentals() }
+        .flatMapLatest { visible ->
+          if (visible) {
+            mapDataRequests(cameraIdles.filterNotNull()).filter { it.tier.requestsRentals }
+          } else {
+            emptyFlow()
+          }
+        }
+        .collectLatest { request -> loadRentals(request) }
+    }
+  }
+
+  private suspend fun loadRentals(request: MapDataRequest) {
+    val availabilities = rentalsRepository
+      .stationsIn(request.area)
+      .getOrNull()
+      // Comme pour les arrêts : une emprise sans réponse laisse les marqueurs précédents en place
+      // plutôt que de vider la carte parce que le réseau a hoqueté (SPEC.md § 8).
+      ?: return
+    val drawing = withContext(computeDispatcher) { rentalsDrawing(rentalMarkers(availabilities)) }
+    state.update {
+      it.copy(
+        rentalStationsGeoJson = drawing.stations.plain,
+        clusteredRentalStationsGeoJson = drawing.stations.clustered,
+        rentalVehiclesGeoJson = drawing.vehicles.plain,
+        clusteredRentalVehiclesGeoJson = drawing.vehicles.clustered,
+      )
+    }
+  }
+
+  private fun clearRentals() {
+    state.update {
+      it.copy(
+        rentalStationsGeoJson = MapGeoJson.EMPTY,
+        clusteredRentalStationsGeoJson = MapGeoJson.EMPTY,
+        rentalVehiclesGeoJson = MapGeoJson.EMPTY,
+        clusteredRentalVehiclesGeoJson = MapGeoJson.EMPTY,
+        selectedRental = null,
+      )
+    }
+  }
+
+  /**
+   * Appui sur une station ou un véhicule en libre-service (SPEC.md § 5.7).
+   *
+   * « Nom, véhicules disponibles, places libres, lien vers l'exploitant » : tout est déjà dans
+   * l'entité touchée, l'infobulle s'ouvre donc sans le moindre appel réseau. Elle referme celle d'un
+   * arrêt : deux fiches superposées au bas de l'écran seraient illisibles à 200 % d'agrandissement.
+   *
+   * Privée, comme sa jumelle [onDismissRental] : rien ne l'appelle hors de cette classe. Le canevas
+   * passe par [MapRentalActions], que l'état transporte, et les cas d'essai empruntent le même
+   * chemin — celui que le doigt de l'usager prend réellement.
+   */
+  private fun onRentalClick(rental: SelectedRental) {
+    stopDetailJob?.cancel()
+    state.update { it.copy(selectedRental = rental, selectedStop = null) }
+  }
+
+  private fun onDismissRental() {
+    state.update { it.copy(selectedRental = null) }
+  }
+
+  /**
    * Le réglage « points d'intérêt » de SPEC.md § 5.6, indépendant du zoom.
    *
    * Aucune requête n'est en jeu : les points d'intérêt sont déjà dans les tuiles vectorielles, et
@@ -354,7 +456,7 @@ class MapViewModel(
    * prend, et l'usager doit voir immédiatement qu'il a touché le bon arrêt.
    */
   fun onStopClick(stop: SelectedStop) {
-    state.update { it.copy(selectedStop = stop.copy(linesLoading = true, linesFailed = false)) }
+    state.update { it.copy(selectedStop = stop.copy(linesLoading = true, linesFailed = false), selectedRental = null) }
     stopDetailJob?.cancel()
     stopDetailJob = viewModelScope.launch {
       val outcome = stopsRepository.stop(stop.id)
@@ -396,7 +498,11 @@ class MapViewModel(
     val zoom = (cameraIdles.value?.zoom ?: NEARBY_ZOOM) + CLUSTER_ZOOM_STEP
     state.update {
       val goal = CameraGoal.Center(MapCamera(point, zoom))
-      it.copy(cameraTarget = CameraTarget(goal, animated = true, token = nextToken()), selectedStop = null)
+      it.copy(
+        cameraTarget = CameraTarget(goal, animated = true, token = nextToken()),
+        selectedStop = null,
+        selectedRental = null,
+      )
     }
   }
 
@@ -540,6 +646,7 @@ class MapViewModel(
           mapRepository = container.mapRepository,
           geocodeRepository = container.geocodeRepository,
           stopsRepository = container.stopsRepository,
+          rentalsRepository = container.rentalsRepository,
           preferencesRepository = container.preferencesRepository,
           styles = container.mapStyles,
           cameraStore = container.mapCameraStore,
@@ -563,4 +670,41 @@ class MapViewModel(
 private fun SelectedStop.withLines(outcome: Outcome<Stop>): SelectedStop = when (outcome) {
   is Outcome.Success -> copy(lines = outcome.value.lines, linesLoading = false, linesFailed = false)
   is Outcome.Failure -> copy(linesLoading = false, linesFailed = true)
+}
+
+/** Une famille de libre-service prête à poser : la source ordinaire et la source regroupante. */
+private data class SourcePair(val plain: String, val clustered: String)
+
+/** Les deux familles de libre-service, chacune sur son couple de sources. */
+private data class RentalsDrawing(val stations: SourcePair, val vehicles: SourcePair)
+
+/**
+ * Les points de libre-service mis en GeoJSON, une paire de sources par famille.
+ *
+ * Fonction pure, hors de la classe comme `withLines` : elle ne lit rien de l'état et s'exécute sur
+ * le répartiteur de calcul (SPEC.md § 5.7, règle 7).
+ *
+ * Le seuil de regroupement de la règle 6 s'applique **par famille** : stations et véhicules ne se
+ * voient pas au même palier, et les mélanger dans une même source regroupante ferait apparaître au
+ * zoom 13 des pastilles comptant des véhicules encore invisibles.
+ *
+ * Une famille absente de la réponse reçoit deux collections vides, ce qui l'efface sans démonter la
+ * moindre couche (règle 8).
+ */
+private fun rentalsDrawing(markers: List<RentalMarker>): RentalsDrawing {
+  val byKind = markers.groupBy { it.kind }
+  return RentalsDrawing(
+    stations = familyDrawing(byKind[RentalMarkerKind.STATION].orEmpty()),
+    vehicles = familyDrawing(byKind[RentalMarkerKind.VEHICLE].orEmpty()),
+  )
+}
+
+/** Une famille sur l'une de ses deux sources, jamais sur les deux : l'autre reçoit du vide. */
+private fun familyDrawing(markers: List<RentalMarker>): SourcePair {
+  val geoJson = MapGeoJson.rentals(markers)
+  return if (shouldClusterRentals(markers.size)) {
+    SourcePair(plain = MapGeoJson.EMPTY, clustered = geoJson)
+  } else {
+    SourcePair(plain = geoJson, clustered = MapGeoJson.EMPTY)
+  }
 }

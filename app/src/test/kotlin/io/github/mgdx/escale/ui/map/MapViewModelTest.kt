@@ -47,6 +47,7 @@ class MapViewModelTest {
   private val selection = MapSelection()
   private val journeys = SelectedJourneyStore()
   private val stops = FakeStopsRepository()
+  private val rentals = FakeRentalsRepository()
   private val preferences = FakePreferencesRepository()
   private val departures = StopDepartureRequests()
 
@@ -55,6 +56,7 @@ class MapViewModelTest {
     mapRepository = maps,
     geocodeRepository = geocode,
     stopsRepository = stops,
+    rentalsRepository = rentals,
     preferencesRepository = preferences,
     styles = styles,
     cameraStore = cameras,
@@ -75,6 +77,7 @@ class MapViewModelTest {
       mapRepository = maps,
       geocodeRepository = geocode,
       stopsRepository = stops,
+      rentalsRepository = rentals,
       preferencesRepository = preferences,
       styles = styles,
       cameraStore = FakeCameraMemory(remembered),
