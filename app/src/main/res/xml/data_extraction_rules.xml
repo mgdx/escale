@@ -1,19 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Escale ne sort **rien** de l'appareil (SPEC.md § 11) : ni sauvegarde dans le nuage, ni transfert
+  d'appareil à appareil.
+
+  `android:allowBackup="false"` au manifeste suffirait presque, mais pas tout à fait : depuis
+  Android 12, il ne gouverne que la sauvegarde automatique vers le nuage, et **le transfert
+  d'appareil à appareil reste actif** tant qu'il n'est pas exclu ici. Ce fichier ferme donc la
+  seconde porte, explicitement, domaine par domaine.
+
+  La base Room contient le domicile, le lieu de travail, les arrêts favoris et l'historique complet
+  des recherches ; le DataStore contient le serveur configuré et les préférences. Rien de tout cela
+  n'a à transiter par un service tiers, fût-il celui du constructeur.
+
+  Conséquence assumée et annoncée dans PRIVACY.md : changer de téléphone fait perdre ces données,
+  sans recours, puisqu'aucun export n'existe dans l'application.
 -->
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
-    </cloud-backup>
-    <!--
-    <device-transfer>
-        <include .../>
-        <exclude .../>
-    </device-transfer>
-    -->
+  <cloud-backup>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+  </device-transfer>
 </data-extraction-rules>

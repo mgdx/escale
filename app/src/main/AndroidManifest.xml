@@ -46,10 +46,27 @@
     La seule alternative serait `androidx.appcompat`, écartée (SPEC.md § 5.6). La suppression est
     limitée à ce contrôle, elle ne masque aucun appel d'API trop récent.
   -->
+  <!--
+    **Aucune sauvegarde, sur aucune version d'Android.** `allowBackup="false"` coupe la sauvegarde
+    automatique de Google, et `data_extraction_rules.xml` coupe en plus le transfert d'appareil à
+    appareil, qu'Android 12 laisse actif malgré cet attribut. La base Room porte le domicile, le
+    lieu de travail et l'historique des recherches : SPEC.md § 11 interdit qu'ils quittent
+    l'appareil, et un fichier de sauvegarde chez un tiers est exactement cela.
+
+    Les deux fichiers XML sont conservés, et rendus explicitement vides de tout contenu
+    sauvegardable : `backup_rules.xml` pour les versions antérieures à Android 12,
+    `data_extraction_rules.xml` pour les suivantes. Le second ne va pas sans le premier tant que
+    `minSdk` vaut 26 — lint le refuse (contrôle `DataExtractionRules`) — et deux fichiers qui
+    disent « exclude » se relisent mieux que deux gabarits entièrement commentés.
+
+    Conséquence assumée, annoncée dans PRIVACY.md : changer de téléphone fait perdre favoris,
+    domicile, travail, historique et serveurs enregistrés, sans recours — l'application n'offre
+    aucun export.
+  -->
   <application
       android:name=".EscaleApplication"
       tools:ignore="UnusedAttribute"
-      android:allowBackup="true"
+      android:allowBackup="false"
       android:dataExtractionRules="@xml/data_extraction_rules"
       android:fullBackupContent="@xml/backup_rules"
       android:icon="@mipmap/ic_launcher"

@@ -68,6 +68,21 @@ et qu'aucune autre application ne peut lire. Rien n'en sort.
 Les résultats gardés en mémoire sont classés par le serveur qui les a produits : changer d'instance
 dans les réglages n'en fait jamais ressortir un obtenu ailleurs.
 
+### Aucune sauvegarde automatique — et ce que cela vous coûte
+
+Escale **désactive la sauvegarde automatique d'Android**, celle qui copie d'ordinaire les données
+d'une application vers le compte Google de l'appareil. Elle désactive également le transfert
+d'appareil à appareil. Rien de ce qui précède ne part donc chez Google, chez le constructeur de
+votre téléphone, ni chez qui que ce soit : votre domicile, votre lieu de travail et vos recherches
+n'ont rien à faire dans un fichier de sauvegarde que vous ne contrôlez pas.
+
+**Cela a un prix, et il est comptant : si vous changez de téléphone, si vous réinitialisez le
+vôtre, ou si vous désinstallez Escale, tout est perdu** — domicile, travail, lieux et arrêts
+favoris, trajets favoris, historique de recherche, serveurs enregistrés et préférences. Il n'existe
+aujourd'hui **aucune fonction d'exportation** dans l'application, donc aucun moyen de les
+rattraper. C'est un choix assumé : la seule sauvegarde possible aurait été une copie hors de votre
+appareil, ce que ce document promet précisément de ne jamais faire.
+
 ## Permissions
 
 Escale déclare **quatre** permissions, et aucune autre :
