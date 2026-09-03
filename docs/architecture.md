@@ -55,7 +55,8 @@ Plusieurs agents écrivent en parallèle. Ces règles existent pour qu'ils ne se
 2. **Les chaînes sont éclatées par écran.** Jamais un unique `strings.xml` géant :
    `strings.xml` (commun : nom de l'appli, actions génériques, erreurs générales),
    puis `strings_map.xml`, `strings_search.xml`, `strings_results.xml`, `strings_detail.xml`,
-   `strings_departures.xml`, `strings_settings.xml`, `strings_favorites.xml`, `strings_alerts.xml`.
+   `strings_departures.xml`, `strings_trip.xml`, `strings_settings.xml`, `strings_favorites.xml`,
+   `strings_watch.xml`, `strings_about.xml`.
    Android fusionne tous les `res/values/*.xml` : un lot n'écrit que dans le fichier de son écran,
    et dans son équivalent `values-fr/`. **Toute chaîne ajoutée en anglais l'est aussi en français,
    dans le même commit.**
