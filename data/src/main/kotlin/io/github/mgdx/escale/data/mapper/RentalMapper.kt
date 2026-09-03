@@ -2,6 +2,7 @@ package io.github.mgdx.escale.data.mapper
 
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
+import io.github.mgdx.escale.core.model.RentalPointKind
 import io.github.mgdx.escale.core.model.RentalVehicleKind
 import io.github.mgdx.escale.data.dto.RentalProviderDto
 import io.github.mgdx.escale.data.dto.RentalStationDto
@@ -15,6 +16,10 @@ import java.time.Instant
  * Deux choses valent d'être sues avant de relire ce fichier, l'une et l'autre constatées sur
  * `api.transitous.org` :
  *
+ * - **la nature du point vient du schéma qu'on est en train de lire, et de nulle part ailleurs.**
+ *   Ce fichier est le seul du projet à savoir s'il traduit un `RentalStation` ou un
+ *   `RentalVehicle` ; s'il ne le consigne pas dans [RentalPointKind], l'information est perdue pour
+ *   tout le monde et la carte n'a plus que des devinettes à sa disposition ;
  * - **les identifiants de types de véhicules sont opaques, et parfois vides.** `196`, `dott_scooter`,
  *   `NES:VehicleType:mg5reichweite350km`, ou `""` chez Vélib'. Seule la table `vehicleTypes` de
  *   l'exploitant leur donne un sens ; c'est elle que ce mapping résout, faute de quoi la ventilation
@@ -87,6 +92,7 @@ private fun RentalStationDto.toAvailability(
     rentalUriAndroid = rentalUriAndroid.orNullIfBlank(),
     retrievedAt = retrievedAt,
     vehicleKinds = kinds.filterKeys { it in cited },
+    kind = RentalPointKind.STATION,
   )
 }
 
@@ -104,7 +110,7 @@ private fun RentalStationDto.toAvailability(
  */
 private fun RentalVehicleDto.toAvailability(retrievedAt: Instant): RentalAvailability {
   val available = !isReserved && !isDisabled
-  val kind = RentalVehicleKind(
+  val vehicleKind = RentalVehicleKind(
     formFactor = rentalFormFactorOf(formFactor),
     propulsionType = rentalPropulsionTypeOf(propulsionType),
   )
@@ -115,10 +121,11 @@ private fun RentalVehicleDto.toAvailability(retrievedAt: Instant): RentalAvailab
     numVehiclesAvailable = if (available) 1 else 0,
     vehicleTypesAvailable = mapOf(typeId to if (available) 1 else 0),
     isRenting = available,
-    formFactors = listOfNotNull(kind.formFactor),
+    formFactors = listOfNotNull(vehicleKind.formFactor),
     rentalUriAndroid = rentalUriAndroid.orNullIfBlank(),
     retrievedAt = retrievedAt,
-    vehicleKinds = mapOf(typeId to kind),
+    vehicleKinds = mapOf(typeId to vehicleKind),
+    kind = RentalPointKind.FREE_FLOATING,
   )
 }
 

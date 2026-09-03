@@ -11,6 +11,30 @@ enum class RentalFormFactor {
   OTHER,
 }
 
+/**
+ * Ce qu'un point de libre-service **est** : une station, ou un véhicule laissé libre.
+ *
+ * `/api/v1/rentals` rend deux schémas distincts et non interchangeables, `RentalStation` et
+ * `RentalVehicle`. Le domaine les réunit dans un seul [RentalAvailability] parce qu'ils répondent à
+ * la même question — « qu'est-ce qui est disponible ici, maintenant » — mais leur nature, elle, ne
+ * se dilue pas : elle décide du palier de zoom auquel le point apparaît, de la forme de son
+ * marqueur et de son libellé.
+ *
+ * **Cette valeur est fixée par le schéma d'API d'origine, et par lui seul.** Personne ne doit la
+ * redériver du nom, des bornes, du nombre de véhicules ou de quoi que ce soit d'autre : ces
+ * signaux mentent. Une station peut n'avoir aucun nom et aucune borne publiée — la fixture
+ * `rentals_brussels_closed_station.json` en contient une, hors service ce jour-là — et une
+ * heuristique la prendrait pour un véhicule en libre accès. L'information existe dans la réponse ;
+ * il suffit de ne pas la perdre en la lisant.
+ */
+enum class RentalPointKind {
+  /** Décrit par le schéma `RentalStation` : un emplacement fixe, nommé par l'exploitant. */
+  STATION,
+
+  /** Décrit par le schéma `RentalVehicle` : un véhicule posé quelque part, sans station. */
+  FREE_FLOATING,
+}
+
 /** Motorisation, décalque du schéma `RentalPropulsionType` de l'OpenAPI MOTIS. */
 enum class RentalPropulsionType {
   HUMAN,

@@ -39,4 +39,12 @@ data class RentalAvailability(
    * le système ne décrit pas ses types — l'affichage se rabat alors sur [numVehiclesAvailable].
    */
   val vehicleKinds: Map<String, RentalVehicleKind> = emptyMap(),
+  /**
+   * Station ou véhicule laissé libre, **d'après le schéma d'API dont ce point provient**.
+   *
+   * Voir [RentalPointKind] : cette valeur ne se devine pas, elle se transporte. La valeur par
+   * défaut n'existe que pour la compatibilité de source des appelants qui construisent un
+   * [RentalAvailability] à la main ; le mapping de `:data`, lui, la renseigne toujours.
+   */
+  val kind: RentalPointKind = RentalPointKind.STATION,
 )
