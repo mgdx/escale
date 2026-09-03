@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran « détail de la course » (SPEC.md § 5.3), version française.
+  Traduction de values/strings_trip.xml, à tenir à jour dans le même commit.
+-->
+<resources>
+  <string name="trip_title">Détail de la course</string>
+  <string name="trip_action_refresh">Rafraîchir</string>
+
+  <string name="trip_towards">Vers %1$s</string>
+  <string name="trip_agency">Exploitée par %1$s</string>
+  <string name="trip_line_description">%1$s, ligne %2$s</string>
+
+  <plurals name="trip_calls_count">
+    <item quantity="one">%1$d arrêt</item>
+    <item quantity="many">%1$d d\'arrêts</item>
+    <item quantity="other">%1$d arrêts</item>
+  </plurals>
+  <string name="trip_arrival">Arrivée à %1$s</string>
+  <string name="trip_departure">Départ à %1$s</string>
+  <string name="trip_scheduled_time">Prévu à %1$s</string>
+  <string name="trip_track">Quai %1$s</string>
+  <string name="trip_call_cancelled">Arrêt non desservi</string>
+  <string name="trip_call_unnamed">Arrêt sans nom</string>
+
+  <string name="trip_loading">Chargement de la desserte complète…</string>
+  <string name="trip_empty">Cette course n\'a aucun arrêt publié</string>
+  <string name="trip_empty_hint">Le serveur connaît la course mais pas sa desserte. Réessayez plus tard.</string>
+</resources>
