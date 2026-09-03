@@ -66,19 +66,23 @@ data class MapStopColors(
  * Une **forme** par famille, jamais une teinte seule : SPEC.md § 9 interdit qu'une information
  * tienne à la couleur, et le nom de l'arrêt reste écrit à côté du pictogramme. Les icônes sont
  * celles que le projet possède déjà (docs/architecture.md § 11.2) ; aucune n'est redessinée.
+ *
+ * Les mots viennent de `strings_results.xml`, comme tous les libellés de mode du projet : un métro
+ * s'appelle pareil dans l'infobulle de la carte, dans un résultat et sur un tableau de départs
+ * (CONTRIBUTING.md, « Où sont les chaînes »).
  */
 enum class StopIcon(@get:DrawableRes val drawable: Int, @get:StringRes val label: Int) {
-  RAIL(R.drawable.ic_train, R.string.map_stop_mode_rail),
-  REGIONAL_RAIL(R.drawable.ic_directions_railway, R.string.map_stop_mode_regional_rail),
-  SUBWAY(R.drawable.ic_subway, R.string.map_stop_mode_subway),
-  TRAM(R.drawable.ic_tram, R.string.map_stop_mode_tram),
-  BUS(R.drawable.ic_directions_bus, R.string.map_stop_mode_bus),
-  COACH(R.drawable.ic_airport_shuttle, R.string.map_stop_mode_coach),
-  FERRY(R.drawable.ic_directions_boat, R.string.map_stop_mode_ferry),
-  AERIAL_LIFT(R.drawable.ic_cable_car, R.string.map_stop_mode_aerial_lift),
-  FUNICULAR(R.drawable.ic_funicular, R.string.map_stop_mode_funicular),
-  AIRPLANE(R.drawable.ic_flight, R.string.map_stop_mode_airplane),
-  TRANSIT(R.drawable.ic_directions_transit, R.string.map_stop_mode_transit),
+  RAIL(R.drawable.ic_train, R.string.results_mode_rail),
+  REGIONAL_RAIL(R.drawable.ic_directions_railway, R.string.results_mode_regional_rail),
+  SUBWAY(R.drawable.ic_subway, R.string.results_mode_subway),
+  TRAM(R.drawable.ic_tram, R.string.results_mode_tram),
+  BUS(R.drawable.ic_directions_bus, R.string.results_mode_bus),
+  COACH(R.drawable.ic_airport_shuttle, R.string.results_mode_coach),
+  FERRY(R.drawable.ic_directions_boat, R.string.results_mode_ferry),
+  AERIAL_LIFT(R.drawable.ic_cable_car, R.string.results_mode_aerial_lift),
+  FUNICULAR(R.drawable.ic_funicular, R.string.results_mode_funicular),
+  AIRPLANE(R.drawable.ic_flight, R.string.results_mode_airplane),
+  TRANSIT(R.drawable.ic_directions_transit, R.string.results_mode_transit),
   ;
 
   /** L'identifiant sous lequel le dessin est posé sur la feuille de style. */

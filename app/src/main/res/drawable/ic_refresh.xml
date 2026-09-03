@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Rafraîchir un trajet avec le temps réel du moment (SPEC.md § 5.3).
+  Actualiser un trajet avec le temps réel du moment (SPEC.md § 5.3).
   Tracé repris du jeu officiel Material Symbols Outlined (Apache 2.0), graisse 400
   (docs/architecture.md § 11.2). Aucune bibliothèque d'icônes n'est ajoutée au projet.
 -->

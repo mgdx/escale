@@ -5,7 +5,7 @@
 -->
 <resources>
   <string name="trip_title">Détail de la course</string>
-  <string name="trip_action_refresh">Rafraîchir</string>
+  <string name="trip_action_refresh">Actualiser</string>
 
   <string name="trip_towards">Direction %1$s</string>
   <string name="trip_agency">Transporteur&#160;: %1$s</string>

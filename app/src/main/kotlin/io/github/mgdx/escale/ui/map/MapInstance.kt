@@ -44,6 +44,16 @@ class MapInstance(context: Context) {
   /** La carte, dès que le moteur natif l'a rendue prête. Nulle avant la première image. */
   val map: StateFlow<MapLibreMap?> = mapState.asStateFlow()
 
+  private val firstFrame = FirstFrameSignal()
+
+  /**
+   * Vrai dès que la carte a rendu sa première image, et pour toujours ensuite.
+   *
+   * **Mesure, pas fonctionnalité** : ce témoin ne sert qu'à `MainActivity`, qui en tire le
+   * `reportFullyDrawn()` de l'objectif « moins de 1,5 s » de SPEC.md § 5.7. Voir [FirstFrameSignal].
+   */
+  val firstFrameRendered: StateFlow<Boolean> = firstFrame.rendered
+
   private var mapView: MapView? = null
   private var memoryCallbacks: ComponentCallbacks2? = null
 
@@ -113,10 +123,34 @@ class MapInstance(context: Context) {
 
     val created = MapView(appContext, options)
     created.onCreate(null)
+    probeFirstFrame(created)
     created.getMapAsync { ready -> mapState.value = ready }
     limitTileCache()
     registerMemoryCallbacks()
     return created
+  }
+
+  /**
+   * Pose le seul instrument de mesure de la classe : l'heure de la première image (SPEC.md § 5.7).
+   *
+   * L'écouteur se **retire lui-même** dès qu'il a servi. MapLibre l'appellerait à chaque image, et
+   * la règle 6 du § 5.7 protège la fluidité : une mesure ne se paie pas en travail par image. Le
+   * coût restant est d'un booléen comparé une fois, sur la seule première image.
+   *
+   * Le drapeau `fully` de MapLibre — « toutes les tuiles du cadre sont chargées » — est
+   * délibérément ignoré : la spec mesure la **première image de carte**, pas la fin du chargement
+   * réseau des tuiles, et l'attendre rendrait la mesure impossible hors ligne.
+   *
+   * La liste d'écouteurs de MapLibre est une `CopyOnWriteArrayList` : se retirer depuis son propre
+   * rappel est sans danger.
+   */
+  private fun probeFirstFrame(view: MapView) {
+    // L'écouteur a besoin de sa propre référence pour se retirer : d'où la déclaration en deux temps.
+    lateinit var probe: MapView.OnDidFinishRenderingFrameListener
+    probe = MapView.OnDidFinishRenderingFrameListener { _, _, _ ->
+      if (firstFrame.markRendered()) view.removeOnDidFinishRenderingFrameListener(probe)
+    }
+    view.addOnDidFinishRenderingFrameListener(probe)
   }
 
   /** SPEC.md § 7.10 : « plafond de 100 Mo, purgeable depuis les réglages ». */

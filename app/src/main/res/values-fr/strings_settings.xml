@@ -100,7 +100,7 @@
   <string name="settings_show_stops_title">Afficher les arrêts sur la carte</string>
   <string name="settings_show_stops_description">Gares, stations et arrêts, dès que l\'échelle le permet. Désactivé, ils restent masqués à tous les niveaux de zoom.</string>
   <string name="settings_show_rentals_title">Afficher le libre-service sur la carte</string>
-  <string name="settings_show_rentals_description">Stations et véhicules laissés hors station.</string>
+  <string name="settings_show_rentals_description">Stations et véhicules sans station.</string>
   <string name="settings_show_points_of_interest_title">Afficher les points d\'intérêt sur la carte</string>
   <string name="settings_show_points_of_interest_description">Services publics, monuments, parcs et équipements qui aident à se repérer.</string>
 
@@ -168,7 +168,7 @@
   <string name="server_settings_known_title">Serveurs déjà utilisés</string>
   <string name="server_settings_known_empty">Aucun serveur n\'a encore été utilisé.</string>
   <string name="server_settings_known_in_use">En service</string>
-  <string name="server_settings_known_swipe_hint">Balayez un serveur sur le côté pour le retirer de la liste. Touchez-le pour basculer dessus.</string>
+  <string name="server_settings_known_swipe_hint">Touchez un serveur pour basculer dessus. Pour le retirer, balayez-le sur le côté ou employez son action «&#160;Retirer&#160;».</string>
   <string name="server_settings_forget">Retirer</string>
 
   <string name="server_settings_cleartext_title">Connexion en clair</string>

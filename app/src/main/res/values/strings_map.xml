@@ -37,20 +37,10 @@
   <!-- Serveur sans tuiles : un message discret, aucun repli sur un tiers (SPEC.md § 5.7). -->
   <string name="map_tiles_unavailable">This server provides no map background.</string>
 
-  <!-- Arrêts sur la carte (SPEC.md § 5.7). Le mode est écrit en toutes lettres pour les lecteurs
-       d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins (SPEC.md § 9). -->
-  <string name="map_stop_mode_rail">Train</string>
-  <string name="map_stop_mode_regional_rail">Regional train</string>
-  <string name="map_stop_mode_subway">Metro</string>
-  <string name="map_stop_mode_tram">Tram</string>
-  <string name="map_stop_mode_bus">Bus</string>
-  <string name="map_stop_mode_coach">Coach</string>
-  <string name="map_stop_mode_ferry">Ferry</string>
-  <string name="map_stop_mode_aerial_lift">Cable car</string>
-  <string name="map_stop_mode_funicular">Funicular</string>
-  <string name="map_stop_mode_airplane">Plane</string>
-  <string name="map_stop_mode_transit">Public transport</string>
-
+  <!-- Les libellés de mode des marqueurs d'arrêt ne sont pas ici : ils vivent dans
+       strings_results.xml et la carte les réutilise tels quels. Le mode est toujours écrit en
+       toutes lettres pour les lecteurs d'écran — le pictogramme seul ne dirait rien, et la couleur
+       encore moins (SPEC.md § 9). -->
   <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
   <plurals name="map_stop_lines_served">
     <item quantity="one">%d line served</item>

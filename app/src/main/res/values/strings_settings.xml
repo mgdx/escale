@@ -182,11 +182,13 @@
   <string name="server_settings_step_absent">Not available</string>
   <string name="server_settings_tiles_absent_notice">This server serves no map tiles. Escale remains usable: the map simply has no background.</string>
 
-  <!-- Serveurs déjà utilisés, avec suppression par balayage. -->
+  <!-- Serveurs déjà utilisés. La suppression se fait au balayage ou par l'action d'accessibilité
+       « Retirer » posée sur la ligne (SPEC.md § 9) : la phrase d'aide nomme les deux, sans quoi
+       elle décrirait un geste inatteignable comme la seule voie d'accès. -->
   <string name="server_settings_known_title">Servers already used</string>
   <string name="server_settings_known_empty">No server has been used yet.</string>
   <string name="server_settings_known_in_use">In use</string>
-  <string name="server_settings_known_swipe_hint">Swipe a server sideways to remove it from the list. Tap it to switch to it.</string>
+  <string name="server_settings_known_swipe_hint">Tap a server to switch to it. To remove it, swipe it sideways or use its “Remove” action.</string>
   <string name="server_settings_forget">Remove</string>
 
   <!-- Avertissement sur le trafic en clair (docs/architecture.md § 11.1). -->

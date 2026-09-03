@@ -56,7 +56,7 @@
   <string name="results_alert_severity_severe">Perturbation majeure</string>
   <string name="results_alert_severity_unknown">Perturbation</string>
 
-  <string name="results_timeline_description">Portions&#160;: %1$s</string>
+  <string name="results_timeline_description">Trajet&#160;: %1$s</string>
   <string name="results_leg_detail">%1$s %2$s</string>
 
   <string name="results_mode_walk">Marche</string>

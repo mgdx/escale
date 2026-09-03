@@ -100,7 +100,7 @@ internal fun JourneyCard(
         text = legend,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        // Le lecteur d'écran annonce « Portions : … » : la frise juste au-dessus, elle, est muette,
+        // Le lecteur d'écran annonce « Trajet : … » : la frise juste au-dessus, elle, est muette,
         // pour ne pas dire deux fois la même chose.
         modifier = Modifier.semantics { contentDescription = legendDescription },
       )

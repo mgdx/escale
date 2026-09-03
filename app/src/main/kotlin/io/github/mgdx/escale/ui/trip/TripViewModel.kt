@@ -36,7 +36,7 @@ import java.time.Instant
  *   c'est refaire la même requête. Il n'y a donc qu'un seul code réseau à lire et à vérifier.
  *
  * Aucun polling (SPEC.md § 7.4) : les seuls déclencheurs sont l'ouverture de l'écran, l'appui de
- * l'usager sur « Rafraîchir », et le retour au premier plan sur des horaires de plus de 60
+ * l'usager sur « Actualiser », et le retour au premier plan sur des horaires de plus de 60
  * secondes — la même règle que partout ailleurs, tenue par le même `RealtimeRefreshPolicy`.
  *
  * Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et **ne journalise rien** :
@@ -61,7 +61,7 @@ class TripViewModel(
     load()
   }
 
-  /** Le bouton « Rafraîchir » de la barre et le bouton « Réessayer » du bandeau d'erreur (§ 8). */
+  /** Le bouton « Actualiser » de la barre et le bouton « Réessayer » du bandeau d'erreur (§ 8). */
   fun onRefresh() = load()
 
   /** Le retour au premier plan (SPEC.md § 7.4), jugé par `RealtimeRefreshPolicy` comme ailleurs. */

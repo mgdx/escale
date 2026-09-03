@@ -80,7 +80,7 @@ fun TripScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   val viewModel: TripViewModel = viewModel(factory = TripViewModel.factory(container))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires ont plus de 60
-  // secondes. Le bouton « Rafraîchir » de la barre, lui, rafraîchit sans condition.
+  // secondes. Le bouton « Actualiser » de la barre, lui, rafraîchit sans condition.
   ForegroundEffect(viewModel::onForeground)
   TripContent(state = state, onBack = onBack, onRefresh = viewModel::onRefresh, modifier = modifier)
 }

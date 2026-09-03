@@ -77,7 +77,9 @@ private fun InEffectLines(inEffect: List<Disruption>) {
     icon = R.drawable.ic_warning,
     text = pluralStringResource(R.plurals.results_disruptions_in_effect, inEffect.size, inEffect.size),
   )
-  if (severity != null) {
+  // Une gravité inconnue n'a pas de mot à elle : la dire donnerait « Gravité : perturbation »,
+  // qui occupe une ligne pour ne rien apprendre. Mieux vaut se taire que de se taire longuement.
+  if (severity != null && severity != DisruptionSeverity.UNKNOWN_SEVERITY) {
     Text(
       text = stringResource(R.string.results_alert_severity, stringResource(severity.labelRes())),
       style = MaterialTheme.typography.bodyMedium,

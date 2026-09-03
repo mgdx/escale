@@ -75,22 +75,26 @@ fun TransitMode.labelRes(): Int = modeLabels[this] ?: R.string.search_mode_other
  * Une table plutôt qu'un `when` de vingt-quatre branches : les modes de rue et les valeurs agrégées
  * ne décrivent pas un arrêt et n'ont pas à y être nommés un par un — ils retombent tous sur
  * « Autre ».
+ *
+ * Les mots viennent de `strings_results.xml` : les libellés de mode y vivent tous, et les autres
+ * écrans les réutilisent tels quels (CONTRIBUTING.md, « Où sont les chaînes »). Seul « Autre »,
+ * qui n'est pas un mode mais l'absence de mode connu, appartient à cet écran.
  */
 private val modeLabels: Map<TransitMode, Int> = mapOf(
-  TransitMode.TRAM to R.string.search_mode_tram,
-  TransitMode.SUBWAY to R.string.search_mode_subway,
-  TransitMode.FERRY to R.string.search_mode_ferry,
-  TransitMode.AIRPLANE to R.string.search_mode_airplane,
-  TransitMode.BUS to R.string.search_mode_bus,
-  TransitMode.COACH to R.string.search_mode_coach,
-  TransitMode.RAIL to R.string.search_mode_rail,
-  TransitMode.HIGHSPEED_RAIL to R.string.search_mode_highspeed_rail,
-  TransitMode.LONG_DISTANCE to R.string.search_mode_long_distance,
-  TransitMode.NIGHT_RAIL to R.string.search_mode_night_rail,
-  TransitMode.REGIONAL_RAIL to R.string.search_mode_regional_rail,
-  TransitMode.SUBURBAN to R.string.search_mode_suburban,
-  TransitMode.FUNICULAR to R.string.search_mode_funicular,
-  TransitMode.AERIAL_LIFT to R.string.search_mode_aerial_lift,
+  TransitMode.TRAM to R.string.results_mode_tram,
+  TransitMode.SUBWAY to R.string.results_mode_subway,
+  TransitMode.FERRY to R.string.results_mode_ferry,
+  TransitMode.AIRPLANE to R.string.results_mode_airplane,
+  TransitMode.BUS to R.string.results_mode_bus,
+  TransitMode.COACH to R.string.results_mode_coach,
+  TransitMode.RAIL to R.string.results_mode_rail,
+  TransitMode.HIGHSPEED_RAIL to R.string.results_mode_highspeed_rail,
+  TransitMode.LONG_DISTANCE to R.string.results_mode_long_distance,
+  TransitMode.NIGHT_RAIL to R.string.results_mode_night_rail,
+  TransitMode.REGIONAL_RAIL to R.string.results_mode_regional_rail,
+  TransitMode.SUBURBAN to R.string.results_mode_suburban,
+  TransitMode.FUNICULAR to R.string.results_mode_funicular,
+  TransitMode.AERIAL_LIFT to R.string.results_mode_aerial_lift,
 )
 
 /** « Desservi par Bus · Tram », ou une chaîne vide quand l'arrêt n'annonce aucun mode. */

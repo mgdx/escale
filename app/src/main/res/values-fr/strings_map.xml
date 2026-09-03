@@ -24,20 +24,10 @@
 
   <string name="map_tiles_unavailable">Ce serveur ne fournit pas de fond de carte.</string>
 
-  <!-- Arrêts sur la carte (SPEC.md § 5.7). Le mode est écrit en toutes lettres pour les lecteurs
-       d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins (SPEC.md § 9). -->
-  <string name="map_stop_mode_rail">Train</string>
-  <string name="map_stop_mode_regional_rail">Train régional</string>
-  <string name="map_stop_mode_subway">Métro</string>
-  <string name="map_stop_mode_tram">Tram</string>
-  <string name="map_stop_mode_bus">Bus</string>
-  <string name="map_stop_mode_coach">Autocar</string>
-  <string name="map_stop_mode_ferry">Bateau</string>
-  <string name="map_stop_mode_aerial_lift">Téléphérique</string>
-  <string name="map_stop_mode_funicular">Funiculaire</string>
-  <string name="map_stop_mode_airplane">Avion</string>
-  <string name="map_stop_mode_transit">Transport en commun</string>
-
+  <!-- Les libellés de mode des marqueurs d'arrêt ne sont pas ici : ils vivent dans
+       strings_results.xml et la carte les réutilise tels quels. Le mode est toujours écrit en
+       toutes lettres pour les lecteurs d'écran — le pictogramme seul ne dirait rien, et la couleur
+       encore moins (SPEC.md § 9). -->
   <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
   <plurals name="map_stop_lines_served">
     <item quantity="one">%d ligne desservie</item>
@@ -92,12 +82,12 @@
   <string name="map_browse_stops_empty">Aucun arrêt n\'est affiché à cette échelle. Rapprochez-vous ou déplacez la carte.</string>
   <plurals name="map_browse_stops_truncated">
     <item quantity="one">Seul %d arrêt, le plus proche, est listé. Rapprochez-vous pour resserrer la liste.</item>
-    <item quantity="many">Seuls les %d d\'arrêts les plus proches sont listés. Rapprochez-vous pour resserrer la liste.</item>
+    <item quantity="many">Seuls les %d arrêts les plus proches sont listés. Rapprochez-vous pour resserrer la liste.</item>
     <item quantity="other">Seuls les %d arrêts les plus proches sont listés. Rapprochez-vous pour resserrer la liste.</item>
   </plurals>
   <plurals name="map_browse_stops_count">
     <item quantity="one">%d arrêt affiché</item>
-    <item quantity="many">%d d\'arrêts affichés</item>
+    <item quantity="many">%d arrêts affichés</item>
     <item quantity="other">%d arrêts affichés</item>
   </plurals>
   <string name="map_browse_stops_open">Afficher cet arrêt</string>

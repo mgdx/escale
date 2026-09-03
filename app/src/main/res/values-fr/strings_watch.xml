@@ -6,7 +6,7 @@
 
   <string name="watch_notification_delayed_line">%1$s a du retard</string>
   <string name="watch_notification_delayed">Votre trajet a du retard</string>
-  <string name="watch_notification_cancelled_line">%1$s est supprimé</string>
+  <string name="watch_notification_cancelled_line">Suppression sur %1$s</string>
   <string name="watch_notification_cancelled">Une course de votre trajet est supprimée</string>
   <string name="watch_notification_cancelled_body">Cette course ne circulera pas.</string>
   <string name="watch_notification_disrupted_line">Perturbation sur %1$s</string>

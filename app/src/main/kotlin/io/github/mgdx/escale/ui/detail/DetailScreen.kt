@@ -98,7 +98,7 @@ fun DetailScreen(
   // le trajet choisi.
   BackHandler(onBack = onBack)
   // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires affichés ont plus de
-  // 60 secondes. Le bouton « Rafraîchir » de la barre, lui, rafraîchit sans condition.
+  // 60 secondes. Le bouton « Actualiser » de la barre, lui, rafraîchit sans condition.
   ForegroundEffect(viewModel::onForeground)
   // Plus rien à montrer — typiquement au retour après la mort du processus, où le magasin en
   // mémoire est vide : l'écran se referme au lieu d'afficher une page blanche.

@@ -3,7 +3,7 @@
   <string name="detail_title">Détail du trajet</string>
 
   <string name="detail_action_share">Partager ce trajet</string>
-  <string name="detail_action_refresh">Rafraîchir</string>
+  <string name="detail_action_refresh">Actualiser</string>
   <!-- L'étoile de la barre : son libellé dit ce que l'appui va faire, et change donc avec
        l'état du trajet. Sans cela, un lecteur d'écran annonce la même chose dans les deux
        cas (SPEC.md § 9). -->
@@ -13,13 +13,13 @@
   <string name="detail_loading_details">Chargement du détail…</string>
   <string name="detail_refreshed_at">Temps réel relevé à %1$s</string>
 
-  <string name="detail_timeline_description">Portions&#160;: %1$s</string>
+  <string name="detail_timeline_description">Trajet&#160;: %1$s</string>
   <string name="detail_origin">Départ</string>
   <string name="detail_destination">Arrivée</string>
   <string name="detail_place_unnamed">Lieu sans nom</string>
 
-  <string name="detail_leg_expand">Afficher le détail de cette portion</string>
-  <string name="detail_leg_collapse">Masquer le détail de cette portion</string>
+  <string name="detail_leg_expand">Afficher le détail</string>
+  <string name="detail_leg_collapse">Masquer le détail</string>
 
   <string name="detail_direction">Direction %1$s</string>
   <string name="detail_agency">Transporteur&#160;: %1$s</string>
@@ -46,7 +46,7 @@
   <string name="detail_bikes_allowed">Vélos admis à bord</string>
   <string name="detail_bikes_not_allowed">Vélos non admis à bord</string>
 
-  <string name="detail_trip_action">Voir la desserte complète de cette course</string>
+  <string name="detail_trip_action">Voir la desserte</string>
 
   <string name="detail_alert_period">Du %1$s au %2$s</string>
   <string name="detail_alert_period_from">À partir du %1$s</string>

@@ -26,7 +26,7 @@
   <string name="detail_refreshed_at">Real-time data as of %1$s</string>
 
   <!-- Résumé du trajet. -->
-  <string name="detail_timeline_description">Legs: %1$s</string>
+  <string name="detail_timeline_description">Journey: %1$s</string>
   <string name="detail_origin">Departure</string>
   <string name="detail_destination">Arrival</string>
   <!-- Dernier recours quand ni le serveur ni la saisie de l'usager ne nomment un point : MOTIS
@@ -34,9 +34,11 @@
        jamais s'afficher (docs/architecture.md § 1). -->
   <string name="detail_place_unnamed">Unnamed place</string>
 
-  <!-- Une portion se déplie d'un appui (SPEC.md § 5.3). -->
-  <string name="detail_leg_expand">Show the details of this leg</string>
-  <string name="detail_leg_collapse">Hide the details of this leg</string>
+  <!-- Une portion se déplie d'un appui (SPEC.md § 5.3). Ces deux libellés servent d'`onClickLabel` :
+       le système annonce déjà « Appuyer deux fois pour… », l'étiquette n'est donc qu'un verbe et
+       son objet, jamais une phrase entière. -->
+  <string name="detail_leg_expand">Show the details</string>
+  <string name="detail_leg_collapse">Hide the details</string>
 
   <!-- Portion en transport en commun. -->
   <string name="detail_direction">To %1$s</string>
@@ -60,8 +62,9 @@
   <string name="detail_bikes_allowed">Bikes allowed on board</string>
   <string name="detail_bikes_not_allowed">Bikes not allowed on board</string>
 
-  <!-- Jalon 9 : l'écran « détail de la course ». La commande n'apparaît que branchée. -->
-  <string name="detail_trip_action">Show every stop of this service</string>
+  <!-- Jalon 9 : l'écran « détail de la course ». La commande n'apparaît que branchée. Le libellé
+       est à la fois le texte de la ligne et son `onClickLabel` : verbe et objet, rien de plus. -->
+  <string name="detail_trip_action">Show every stop</string>
 
   <!-- Perturbations (SPEC.md § 5.3) : titre, description, gravité, période, lien. Les mots de la
        gravité sont dans strings_results.xml : le bandeau de la liste les emploie aussi. -->
