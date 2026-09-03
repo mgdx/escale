@@ -18,13 +18,12 @@ fun interface TileCacheCleaner {
 }
 
 /**
- * **Point d'accroche du jalon 10 : l'effacement de l'historique de recherche.**
+ * L'effacement en bloc de l'historique de recherche (SPEC.md § 5.5 et § 5.6).
  *
- * L'historique n'existe pas encore (SPEC.md § 5.5, jalon 10). Le jour où `AppContainer` exposera un
- * `historyRepository`, il suffira de passer `HistoryCleaner { container.historyRepository.clear() }`
- * à [SettingsMaintenance] : l'entrée « Effacer l'historique » apparaîtra d'elle-même dans la
- * rubrique « Données », confirmation et message compris. Tant que rien n'est branché, l'entrée
- * n'est pas affichée — plutôt qu'affichée sans effet.
+ * Déclarée ici, et non prise directement sur `HistoryRepository`, pour la même raison que
+ * [TileCacheCleaner] : l'écran de réglages n'a pas à connaître les dépôts qu'il ne fait que vider.
+ * Elle reste facultative — `null` masque l'entrée plutôt que de l'afficher sans effet —, ce qui
+ * permet aux aperçus et aux tests de composer l'écran sans base de données.
  */
 fun interface HistoryCleaner {
   suspend fun clearHistory(): Outcome<Unit>
@@ -43,7 +42,7 @@ class SettingsMaintenance(
   private val historyCleaner: HistoryCleaner? = null,
 ) {
 
-  /** Vrai quand l'historique peut réellement être effacé, donc quand l'entrée doit s'afficher. */
+  /** Vrai quand l'historique peut réellement être effacé, donc quand l'entrée s'affiche. */
   val canClearHistory: Boolean = historyCleaner != null
 
   /** Rend `false` quand l'effacement a échoué : l'écran le dit, sans détailler la cause. */

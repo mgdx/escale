@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Traduction française des chaînes de l'écran des favoris et de l'historique (SPEC.md § 5.5).
+-->
+<resources>
+  <string name="favorites_title">Favoris</string>
+
+  <string name="favorites_section_named">Domicile et travail</string>
+  <string name="favorites_section_places">Lieux</string>
+  <string name="favorites_section_stops">Arrêts</string>
+  <string name="favorites_section_journeys">Trajets</string>
+  <string name="favorites_section_history">Recherches récentes</string>
+
+  <string name="favorites_set_home">Définir votre domicile</string>
+  <string name="favorites_set_work">Définir votre lieu de travail</string>
+
+  <string name="favorites_action_add_place">Ajouter un lieu</string>
+  <string name="favorites_action_add_stop">Ajouter un arrêt</string>
+  <string name="favorites_action_cancel">Annuler</string>
+  <string name="favorites_action_clear_history">Tout effacer</string>
+
+  <string name="favorites_edit_named">Modifier %1$s</string>
+  <string name="favorites_delete_named">Supprimer %1$s</string>
+  <string name="favorites_journey_summary">%1$s → %2$s</string>
+
+  <string name="favorites_stop_unknown">Inconnu du serveur actuel. Conservé avec ses coordonnées.</string>
+  <string name="favorites_stop_coordinates">%1$.5f / %2$.5f</string>
+
+  <string name="favorites_history_disabled">L\'enregistrement des recherches récentes est désactivé dans les réglages.</string>
+  <string name="favorites_clear_history_title">Effacer les recherches récentes</string>
+  <string name="favorites_clear_history_message">La liste des lieux que vous avez cherchés sera supprimée de cet appareil. Vos favoris sont conservés.</string>
+
+  <string name="favorites_empty_title">Aucun favori pour l\'instant</string>
+  <string name="favorites_empty_description">Ajoutez un lieu ou un arrêt depuis cet écran, et un trajet depuis son écran de détail.</string>
+
+  <string name="favorites_picker_home">Choisir votre domicile</string>
+  <string name="favorites_picker_work">Choisir votre lieu de travail</string>
+  <string name="favorites_picker_place">Ajouter un lieu</string>
+  <string name="favorites_picker_stop">Ajouter un arrêt</string>
+  <string name="favorites_picker_hint">Adresse, arrêt ou lieu</string>
+  <string name="favorites_picker_stop_hint">Nom de l\'arrêt</string>
+  <string name="favorites_picker_label">Nom de ce lieu (facultatif)</string>
+  <string name="favorites_picker_stops_only">Seuls les arrêts peuvent être ajoutés ici.</string>
+
+  <string name="favorites_saved">Enregistré.</string>
+  <string name="favorites_deleted">Supprimé.</string>
+  <string name="favorites_history_cleared">Recherches récentes effacées.</string>
+  <string name="favorites_failed">Rien n\'a pu être enregistré. Réessayez.</string>
+</resources>

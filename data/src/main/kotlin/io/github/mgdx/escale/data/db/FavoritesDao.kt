@@ -27,19 +27,13 @@ internal interface FavoritesDao {
   suspend fun insertPlace(entity: FavoritePlaceEntity): Long
 
   /**
-   * Supprime un lieu favori désigné par le lieu lui-même, faute d'identifiant local dans le
-   * contrat de `FavoritesRepository` : par son `stopId` quand il en a un, par son nom et ses
-   * coordonnées sinon. Les coordonnées comparées sont celles qui ont été enregistrées, à l'octet
-   * près, puisqu'elles proviennent du même aller-retour.
+   * Supprime un lieu favori **par l'identifiant que l'insertion a rendu**.
+   *
+   * Le désigner par son nom et ses coordonnées, comme le faisait la première version, effaçait
+   * d'un coup deux favoris homonymes au même point : le café et l'appartement au-dessus.
    */
-  @Query(
-    """
-    DELETE FROM favorite_places
-    WHERE (:stopId IS NOT NULL AND stopId = :stopId)
-       OR (:stopId IS NULL AND stopId IS NULL AND name = :name AND lat = :lat AND lon = :lon)
-    """,
-  )
-  suspend fun deletePlace(stopId: String?, name: String, lat: Double, lon: Double)
+  @Query("DELETE FROM favorite_places WHERE id = :id")
+  suspend fun deletePlace(id: Long)
 
   @Query("SELECT * FROM favorite_stops ORDER BY createdAt DESC, stopId DESC")
   fun observeStops(): Flow<List<FavoriteStopEntity>>

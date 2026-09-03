@@ -3,6 +3,7 @@ package io.github.mgdx.escale.data.db
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.Stop
+import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.model.WatchSchedule
 import io.github.mgdx.escale.core.model.WatchedJourney
@@ -60,6 +61,43 @@ class EntityMappingTest {
   @Test
   fun `un lieu sans mode desservi se relit avec une liste vide`() {
     assertTrue(address("12 rue des Lilas").toColumns().toLocation().servedModes.isEmpty())
+  }
+
+  @Test
+  fun `les trois formes d heure demandee font l aller-retour`() {
+    val instant = Instant.parse("2026-03-02T09:00:00Z")
+    listOf(TimeChoice.Now, TimeChoice.DepartAt(instant), TimeChoice.ArriveBy(instant)).forEach { time ->
+      assertEquals(time, decodeTime(time.toModeColumn(), time.toMillisColumn()))
+    }
+  }
+
+  @Test
+  fun `une heure demandee illisible retombe sur maintenant plutot que d echouer`() {
+    // Ligne écrite par une version future, ou colonne effacée à la main : la recherche reste
+    // rejouable, à l'heure qu'il est.
+    assertEquals(TimeChoice.Now, decodeTime("SOMETIME", millis = null))
+    assertEquals(TimeChoice.Now, decodeTime("DEPART_AT", millis = null))
+    assertEquals(TimeChoice.Now, decodeTime("QUAND_ON_VEUT", millis = 1_772_352_000_000L))
+  }
+
+  @Test
+  fun `un lieu favori relit son libelle, son identifiant et sa date`() {
+    val lieu = stopLocation("de:06:9999", "Châtelet")
+    val entite = FavoritePlaceEntity(
+      id = 7,
+      label = "Chez Maman",
+      location = lieu.toColumns(),
+      createdAt = 1_740_816_600_000L,
+    )
+
+    val favori = entite.toFavoritePlace()
+
+    assertEquals(7L, favori.id)
+    assertEquals("Chez Maman", favori.label)
+    assertEquals("Chez Maman", favori.displayName)
+    // Le libellé de l'usager n'écrase pas le nom du serveur (SPEC.md § 5.6.1).
+    assertEquals(lieu, favori.location)
+    assertEquals(Instant.ofEpochMilli(1_740_816_600_000L), favori.createdAt)
   }
 
   @Test

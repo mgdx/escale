@@ -58,6 +58,7 @@ import io.github.mgdx.escale.ui.theme.EscaleTheme
 fun SettingsScreen(
   onBack: () -> Unit,
   onOpenServerSettings: () -> Unit,
+  onOpenFavorites: () -> Unit,
   onOpenAbout: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(appContainer())),
@@ -68,6 +69,7 @@ fun SettingsScreen(
     actions = SettingsActions(
       onBack = onBack,
       onOpenServerSettings = onOpenServerSettings,
+      onOpenFavorites = onOpenFavorites,
       onOpenAbout = onOpenAbout,
       onOpenDialog = viewModel::openDialog,
       onLanguageSettingsUnavailable = viewModel::languageSettingsUnavailable,
@@ -91,6 +93,8 @@ fun SettingsScreen(
 internal data class SettingsActions(
   val onBack: () -> Unit,
   val onOpenServerSettings: () -> Unit,
+  /** L'écran des favoris et de l'historique : SPEC.md § 5.5 les veut gérables depuis les réglages. */
+  val onOpenFavorites: () -> Unit,
   val onOpenAbout: () -> Unit,
   val onOpenDialog: (SettingsDialog) -> Unit,
   val onLanguageSettingsUnavailable: () -> Unit,
@@ -137,17 +141,7 @@ internal fun SettingsContent(uiState: SettingsUiState, actions: SettingsActions,
         .padding(innerPadding)
         .verticalScroll(rememberScrollState()),
     ) {
-      ListItem(
-        headlineContent = { Text(text = stringResource(R.string.settings_server_title)) },
-        supportingContent = {
-          // Le sous-titre reste absent tant que le dépôt n'a rien émis, plutôt qu'affiché vide.
-          if (uiState.serverUrl.isNotEmpty()) {
-            Text(text = uiState.serverUrl)
-          }
-        },
-        modifier = Modifier.clickable(role = Role.Button, onClick = actions.onOpenServerSettings),
-      )
-      HorizontalDivider()
+      TopEntries(uiState, actions)
       SearchSection(uiState.search, actions)
       HorizontalDivider()
       DisplaySection(uiState.display, actions)
@@ -163,6 +157,34 @@ internal fun SettingsContent(uiState: SettingsUiState, actions: SettingsActions,
     }
   }
   SettingsDialogHost(uiState, actions)
+}
+
+/**
+ * Les deux entrées de tête : le serveur MOTIS, puis les favoris et l'historique.
+ *
+ * Le serveur vient « avant toutes les autres » (SPEC.md § 5.6) ; les favoris le suivent parce que
+ * SPEC.md § 5.5 veut que domicile et travail se créent, se modifient et se suppriment « depuis les
+ * réglages ».
+ */
+@Composable
+private fun TopEntries(uiState: SettingsUiState, actions: SettingsActions) {
+  ListItem(
+    headlineContent = { Text(text = stringResource(R.string.settings_server_title)) },
+    supportingContent = {
+      // Le sous-titre reste absent tant que le dépôt n'a rien émis, plutôt qu'affiché vide.
+      if (uiState.serverUrl.isNotEmpty()) {
+        Text(text = uiState.serverUrl)
+      }
+    },
+    modifier = Modifier.clickable(role = Role.Button, onClick = actions.onOpenServerSettings),
+  )
+  HorizontalDivider()
+  ListItem(
+    headlineContent = { Text(text = stringResource(R.string.settings_favorites_title)) },
+    supportingContent = { Text(text = stringResource(R.string.settings_favorites_description)) },
+    modifier = Modifier.clickable(role = Role.Button, onClick = actions.onOpenFavorites),
+  )
+  HorizontalDivider()
 }
 
 /** Préférences de recherche : tout ce qui part avec la requête `plan` (SPEC.md § 5.6). */
@@ -299,7 +321,7 @@ private fun DataSection(uiState: SettingsUiState, actions: SettingsActions) {
     checked = uiState.display.historyEnabled,
     onCheckedChange = { actions.onDisplayChanged(uiState.display.copy(historyEnabled = it)) },
   )
-  // L'entrée n'apparaît que lorsque le jalon 10 aura branché un HistoryCleaner.
+  // L'entrée n'apparaît que lorsqu'un `HistoryCleaner` est branché (SettingsMaintenance).
   if (uiState.canClearHistory) {
     ClearItem(ClearTarget.HISTORY, R.string.settings_clear_history_description, actions)
   }
@@ -325,6 +347,7 @@ private fun ClearItem(target: ClearTarget, @StringRes descriptionRes: Int, actio
 private val previewActions = SettingsActions(
   onBack = {},
   onOpenServerSettings = {},
+  onOpenFavorites = {},
   onOpenAbout = {},
   onOpenDialog = {},
   onLanguageSettingsUnavailable = {},

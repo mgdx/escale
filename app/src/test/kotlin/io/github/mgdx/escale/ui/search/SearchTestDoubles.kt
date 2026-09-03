@@ -3,6 +3,7 @@ package io.github.mgdx.escale.ui.search
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
+import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.result.Outcome
@@ -38,18 +39,40 @@ class FakeSearchGeocodeRepository(
   override suspend fun clearGeocodeCache(): Outcome<Unit> = Outcome.Success(Unit)
 }
 
-/** Domicile et travail, pilotables — ce que le jalon 10 branchera sur `FavoritesRepository`. */
+/** Domicile et travail, pilotables sans base de données. */
 class FakeSavedPlacesSource(home: Location? = null, work: Location? = null) : SavedPlacesSource {
   private val homeState = MutableStateFlow(home)
   private val workState = MutableStateFlow(work)
 
   override val home: Flow<Location?> = homeState
   override val work: Flow<Location?> = workState
+
+  override suspend fun clear(kind: SavedPlaceKind): Outcome<Unit> {
+    when (kind) {
+      SavedPlaceKind.HOME -> homeState.value = null
+      SavedPlaceKind.WORK -> workState.value = null
+    }
+    return Outcome.Success(Unit)
+  }
 }
 
-/** L'historique, pilotable — ce que le jalon 10 branchera sur `HistoryRepository`. */
+/**
+ * L'historique, pilotable sans base de données.
+ *
+ * [recorded] est ce qui prouve qu'une recherche a été enregistrée **une fois**, et [enabled] joue
+ * le rôle de la bascule des réglages, que le dépôt réel applique de son côté (SPEC.md § 5.6).
+ */
 class FakeRecentSearchesSource(searches: List<RecentSearch> = emptyList()) : RecentSearchesSource {
   override val recentSearches: Flow<List<RecentSearch>> = MutableStateFlow(searches)
+
+  var enabled: Boolean = true
+
+  val recorded: MutableList<RecentSearch> = mutableListOf()
+
+  override suspend fun record(from: Location, to: Location, time: TimeChoice): Outcome<Unit> {
+    if (enabled) recorded += RecentSearch(id = recorded.size + 1L, from = from, to = to, time = time)
+    return Outcome.Success(Unit)
+  }
 }
 
 /** Un arrêt tel que l'autocomplétion le rend : avec son `stopId`, son type et ses modes. */

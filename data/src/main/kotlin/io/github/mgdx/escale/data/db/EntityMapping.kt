@@ -1,12 +1,14 @@
 package io.github.mgdx.escale.data.db
 
 import io.github.mgdx.escale.core.model.FavoriteJourney
+import io.github.mgdx.escale.core.model.FavoritePlace
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.SearchHistoryEntry
 import io.github.mgdx.escale.core.model.Stop
+import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.model.WatchSchedule
 import io.github.mgdx.escale.core.model.WatchedJourney
@@ -49,7 +51,12 @@ internal fun Location.toColumns(): LocationColumns = LocationColumns(
   servedModes = encodeModes(servedModes),
 )
 
-internal fun FavoritePlaceEntity.toLocation(): Location = location.toLocation()
+internal fun FavoritePlaceEntity.toFavoritePlace(): FavoritePlace = FavoritePlace(
+  id = id,
+  label = label,
+  location = location.toLocation(),
+  createdAt = Instant.ofEpochMilli(createdAt),
+)
 
 internal fun FavoriteStopEntity.toStop(): Stop = Stop(
   id = stopId,
@@ -83,8 +90,37 @@ internal fun SearchHistoryEntity.toHistoryEntry(): SearchHistoryEntry = SearchHi
   id = id,
   from = from.toLocation(),
   to = to.toLocation(),
+  time = decodeTime(timeMode, timeMillis),
   searchedAt = Instant.ofEpochMilli(searchedAt),
 )
+
+/**
+ * L'heure demandée, en deux colonnes.
+ *
+ * Une forme datée dont l'instant manque — ligne écrite par une version future, ou colonne effacée à
+ * la main — retombe sur « maintenant » : rejouer la recherche à l'heure qu'il est vaut mieux que ne
+ * pas pouvoir la rejouer du tout.
+ */
+internal fun decodeTime(mode: String, millis: Long?): TimeChoice {
+  val instant = millis?.let(Instant::ofEpochMilli) ?: return TimeChoice.Now
+  return when (mode) {
+    TIME_MODE_DEPART_AT -> TimeChoice.DepartAt(instant)
+    TIME_MODE_ARRIVE_BY -> TimeChoice.ArriveBy(instant)
+    else -> TimeChoice.Now
+  }
+}
+
+internal fun TimeChoice.toModeColumn(): String = when (this) {
+  TimeChoice.Now -> TIME_MODE_NOW
+  is TimeChoice.DepartAt -> TIME_MODE_DEPART_AT
+  is TimeChoice.ArriveBy -> TIME_MODE_ARRIVE_BY
+}
+
+internal fun TimeChoice.toMillisColumn(): Long? = when (this) {
+  TimeChoice.Now -> null
+  is TimeChoice.DepartAt -> instant.toEpochMilli()
+  is TimeChoice.ArriveBy -> instant.toEpochMilli()
+}
 
 internal fun WatchedJourneyEntity.toWatchedJourney(): WatchedJourney = WatchedJourney(
   journeyId = journeyId,

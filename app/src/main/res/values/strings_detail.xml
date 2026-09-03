@@ -156,4 +156,8 @@
   <string name="detail_share_transit">%1$s: %2$s (%3$s) → %4$s (%5$s)</string>
   <string name="detail_share_transit_direction">%1$s towards %2$s</string>
   <string name="detail_share_street">%1$s %2$s → %3$s</string>
+
+  <!-- Retour de « Ajouter aux favoris » (SPEC.md § 5.5). -->
+  <string name="detail_favorite_added">Journey added to your favourites.</string>
+  <string name="detail_favorite_failed">The journey could not be saved. Try again.</string>
 </resources>

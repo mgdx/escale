@@ -19,12 +19,14 @@ import io.github.mgdx.escale.appContainer
  *
  * @param padding les encarts système transmis par `HomeScreen`. La carte se place elle-même sous
  *   la barre d'état, à 12 dp des bords.
+ * @param onOpenFavorites ouvre l'écran des favoris, seul endroit où l'on choisit un lieu à
+ *   enregistrer : l'appui long sur une puce y mène pour « Modifier » (SPEC.md § 5.5).
  */
 @Composable
-fun SearchCardSlot(padding: PaddingValues, modifier: Modifier = Modifier) {
+fun SearchCardSlot(padding: PaddingValues, onOpenFavorites: () -> Unit, modifier: Modifier = Modifier) {
   val viewModel: SearchViewModel = viewModel(factory = SearchViewModel.factory(appContainer()))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
-  val actions = remember(viewModel) { viewModel.actions() }
+  val actions = remember(viewModel, onOpenFavorites) { viewModel.actions(onOpenFavorites) }
 
   SearchCard(state = state, actions = actions, padding = padding, modifier = modifier)
 
@@ -40,13 +42,22 @@ fun SearchCardSlot(padding: PaddingValues, modifier: Modifier = Modifier) {
 }
 
 /** Les rappels de l'écran, regroupés une fois pour toutes plutôt qu'alloués à chaque recomposition. */
-private fun SearchViewModel.actions() = SearchActions(
+private fun SearchViewModel.actions(onOpenFavorites: () -> Unit) = SearchActions(
   onOpenField = ::onOpenField,
   onCloseField = ::onCloseField,
   onQueryChange = ::onQueryChange,
   onSuggestionSelected = ::onSuggestionSelected,
   onShortcutSelected = ::onShortcutSelected,
   onChipSelected = ::onChipSelected,
+  onChipLongPressed = ::onChipLongPressed,
+  onDismissSavedPlaceMenu = ::onDismissSavedPlaceMenu,
+  // « Modifier » referme le menu et passe la main à l'écran des favoris : le choix d'un lieu y vit
+  // déjà, et le dupliquer ici en ferait une seconde autocomplétion à maintenir.
+  onEditSavedPlace = {
+    onDismissSavedPlaceMenu()
+    onOpenFavorites()
+  },
+  onRemoveSavedPlace = ::onRemoveSavedPlace,
   onClearField = ::onClearField,
   onSwap = ::onSwap,
   onMapPickCancelled = ::onMapPickCancelled,

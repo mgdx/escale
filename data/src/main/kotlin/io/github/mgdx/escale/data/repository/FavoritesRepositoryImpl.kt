@@ -2,6 +2,7 @@ package io.github.mgdx.escale.data.repository
 
 import android.database.SQLException
 import io.github.mgdx.escale.core.model.FavoriteJourney
+import io.github.mgdx.escale.core.model.FavoritePlace
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.Stop
@@ -16,6 +17,7 @@ import io.github.mgdx.escale.data.db.NamedLocationSlot
 import io.github.mgdx.escale.data.db.toColumns
 import io.github.mgdx.escale.data.db.toEntity
 import io.github.mgdx.escale.data.db.toFavoriteJourney
+import io.github.mgdx.escale.data.db.toFavoritePlace
 import io.github.mgdx.escale.data.db.toLocation
 import io.github.mgdx.escale.data.db.toStop
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +46,8 @@ class FavoritesRepositoryImpl(database: EscaleDatabase, private val clock: () ->
 
   override val work: Flow<Location?> = observeNamedLocation(NamedLocationSlot.WORK)
 
-  override val places: Flow<List<Location>> = dao.observePlaces().map { rows -> rows.map { it.toLocation() } }
+  override val places: Flow<List<FavoritePlace>> =
+    dao.observePlaces().map { rows -> rows.map { it.toFavoritePlace() } }
 
   override val stops: Flow<List<Stop>> = dao.observeStops().map { rows -> rows.map { it.toStop() } }
 
@@ -55,20 +58,13 @@ class FavoritesRepositoryImpl(database: EscaleDatabase, private val clock: () ->
 
   override suspend fun setWork(location: Location?): Outcome<Unit> = setNamedLocation(NamedLocationSlot.WORK, location)
 
-  override suspend fun addPlace(location: Location, label: String?): Outcome<Unit> = write {
+  override suspend fun addPlace(location: Location, label: String?): Outcome<Long> = writeValue {
     dao.insertPlace(
       FavoritePlaceEntity(label = label, location = location.toColumns(), createdAt = clock().toEpochMilli()),
     )
   }
 
-  override suspend fun removePlace(location: Location): Outcome<Unit> = write {
-    dao.deletePlace(
-      stopId = location.id,
-      name = location.name,
-      lat = location.coordinates.lat,
-      lon = location.coordinates.lon,
-    )
-  }
+  override suspend fun removePlace(id: Long): Outcome<Unit> = write { dao.deletePlace(id) }
 
   override suspend fun addStop(stop: Stop): Outcome<Unit> = write { dao.upsertStop(stop.toEntity(clock())) }
 
@@ -112,12 +108,7 @@ class FavoritesRepositoryImpl(database: EscaleDatabase, private val clock: () ->
     }
   }
 
-  /**
-   * Exécute une écriture sans valeur de retour ; ce que le DAO rend est délibérément ignoré.
-   *
-   * `FavoritesRepository.addPlace` ne rend pas l'identifiant attribué, là où `addJourney` le rend :
-   * l'écart vient du contrat de `:core`, pas d'ici.
-   */
+  /** Exécute une écriture sans valeur de retour ; ce que le DAO rend est délibérément ignoré. */
   private inline fun write(block: () -> Unit): Outcome<Unit> = writeValue(block)
 
   /**

@@ -103,6 +103,10 @@
   <string name="settings_show_points_of_interest_title">Afficher les points d\'intérêt sur la carte</string>
   <string name="settings_show_points_of_interest_description">Services publics, monuments, parcs et équipements qui aident à se repérer.</string>
 
+  <!-- Entrée vers l'écran des favoris et de l'historique (SPEC.md § 5.5). -->
+  <string name="settings_favorites_title">Favoris et historique</string>
+  <string name="settings_favorites_description">Domicile, travail, lieux enregistrés, arrêts, trajets et recherches récentes.</string>
+
   <string name="settings_history_enabled_title">Conserver les recherches récentes</string>
   <string name="settings_history_enabled_description">Vos recherches récentes restent sur cet appareil et ne sont envoyées nulle part.</string>
 

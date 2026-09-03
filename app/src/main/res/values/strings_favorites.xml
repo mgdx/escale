@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran des favoris et de l'historique (SPEC.md § 5.5).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+-->
+<resources>
+  <string name="favorites_title">Favourites</string>
+
+  <!-- Sections de l'écran. Domicile et travail sont distincts des autres favoris (SPEC.md § 5.5). -->
+  <string name="favorites_section_named">Home and work</string>
+  <string name="favorites_section_places">Places</string>
+  <string name="favorites_section_stops">Stops</string>
+  <string name="favorites_section_journeys">Journeys</string>
+  <string name="favorites_section_history">Recent searches</string>
+
+  <!-- Ces deux entrées n'existent que sur cet écran, ouvert exprès par l'usager. L'application ne
+       réclame jamais d'elle-même un domicile ou un lieu de travail, et surtout pas sur l'écran
+       d'accueil (SPEC.md § 5.5). -->
+  <string name="favorites_set_home">Set your home</string>
+  <string name="favorites_set_work">Set your workplace</string>
+
+  <string name="favorites_action_add_place">Add a place</string>
+  <string name="favorites_action_add_stop">Add a stop</string>
+  <string name="favorites_action_cancel">Cancel</string>
+  <string name="favorites_action_clear_history">Clear all</string>
+
+  <!-- Libellés composés. Le nom vient des favoris, jamais d'un texte codé en dur. -->
+  <string name="favorites_edit_named">Change %1$s</string>
+  <string name="favorites_delete_named">Remove %1$s</string>
+  <string name="favorites_journey_summary">%1$s → %2$s</string>
+
+  <!-- Un identifiant d'arrêt peut ne plus être reconnu après un changement de serveur : le favori
+       reste affiché avec ses coordonnées, et n'est jamais supprimé tout seul (SPEC.md § 5.6.1). -->
+  <string name="favorites_stop_unknown">Unknown to the current server. Kept with its coordinates.</string>
+  <string name="favorites_stop_coordinates">%1$.5f / %2$.5f</string>
+
+  <string name="favorites_history_disabled">Recent searches are turned off in the settings.</string>
+  <string name="favorites_clear_history_title">Clear recent searches</string>
+  <string name="favorites_clear_history_message">The list of places you have searched for will be deleted from this device. Your favourites are kept.</string>
+
+  <!-- L'écran vide : il dit quoi faire, sans rien réclamer. -->
+  <string name="favorites_empty_title">Nothing saved yet</string>
+  <string name="favorites_empty_description">Add a place or a stop from here, and a journey from its detail screen.</string>
+
+  <!-- Le choix d'un lieu, par la même autocomplétion que la carte de recherche. -->
+  <string name="favorites_picker_home">Choose your home</string>
+  <string name="favorites_picker_work">Choose your workplace</string>
+  <string name="favorites_picker_place">Add a place</string>
+  <string name="favorites_picker_stop">Add a stop</string>
+  <string name="favorites_picker_hint">Address, stop or place</string>
+  <string name="favorites_picker_stop_hint">Stop name</string>
+  <string name="favorites_picker_label">Name for this place (optional)</string>
+  <string name="favorites_picker_stops_only">Only stops can be added here.</string>
+
+  <!-- Retours affichés une fois, puis oubliés. -->
+  <string name="favorites_saved">Saved.</string>
+  <string name="favorites_deleted">Removed.</string>
+  <string name="favorites_history_cleared">Recent searches deleted.</string>
+  <string name="favorites_failed">Nothing could be saved. Try again.</string>
+</resources>

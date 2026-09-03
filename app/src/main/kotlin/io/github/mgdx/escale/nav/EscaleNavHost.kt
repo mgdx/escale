@@ -17,6 +17,8 @@ import io.github.mgdx.escale.ui.departures.DeparturesRoute
 import io.github.mgdx.escale.ui.departures.DeparturesScreen
 import io.github.mgdx.escale.ui.detail.DetailRoute
 import io.github.mgdx.escale.ui.detail.DetailScreen
+import io.github.mgdx.escale.ui.favorites.FavoritesRoute
+import io.github.mgdx.escale.ui.favorites.FavoritesScreen
 import io.github.mgdx.escale.ui.home.HomeRoute
 import io.github.mgdx.escale.ui.home.HomeScreen
 import io.github.mgdx.escale.ui.results.ResultsSheetSlot
@@ -45,7 +47,12 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
       // `HomeScreen`. C'est ce qui leur évite de se marcher dessus.
       HomeScreen(
         onOpenSettings = { navController.navigate(SettingsRoute) },
-        searchCard = { padding -> SearchCardSlot(padding = padding) },
+        searchCard = { padding ->
+          // L'appui long sur une puce Domicile ou Travail propose de la modifier : le choix d'un
+          // lieu vit sur l'écran des favoris, et c'est ici que les deux lots se rejoignent
+          // (SPEC.md § 5.5).
+          SearchCardSlot(padding = padding, onOpenFavorites = { navController.navigate(FavoritesRoute) })
+        },
         resultsSheet = { padding ->
           // La feuille demande l'ouverture du détail par un événement à consommation unique, et
           // non par l'observation du trajet mis en évidence : celui-ci dure, et doit durer, pour
@@ -63,9 +70,11 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
       SettingsScreen(
         onBack = navController::popBackStack,
         onOpenServerSettings = { navController.navigate(ServerSettingsRoute) },
+        onOpenFavorites = { navController.navigate(FavoritesRoute) },
         onOpenAbout = { navController.navigate(AboutRoute) },
       )
     }
+    composable<FavoritesRoute> { FavoritesDestination(navController) }
     composable<ServerSettingsRoute> {
       ServerSettingsScreen(onBack = navController::popBackStack)
     }
@@ -103,6 +112,30 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
       TripScreen(onBack = navController::popBackStack)
     }
   }
+}
+
+/**
+ * L'écran des favoris et de l'historique (SPEC.md § 5.5), et ses deux issues.
+ *
+ * Il est écrit ici, hors de [EscaleNavHost], pour ne pas allonger la seule fonction que tous les
+ * lots se partagent (docs/architecture.md § 3, règle 4).
+ */
+@Composable
+private fun FavoritesDestination(navController: NavHostController) {
+  FavoritesScreen(
+    onBack = navController::popBackStack,
+    // Un favori rejoué remplit la recherche partagée ; il ne reste qu'à revenir à la carte, où la
+    // feuille de résultats a déjà commencé à chercher (SPEC.md § 5.1). `inclusive = false` : c'est
+    // l'accueil qu'on retrouve, et tout ce qui a été empilé par-dessus qui s'en va — l'écran des
+    // réglages compris, d'où l'usager a pu venir.
+    onSearchStarted = { navController.popBackStack(HomeRoute, inclusive = false) },
+    onOpenStop = { stopId, stopName ->
+      // `launchSingleTop` : deux appuis très rapprochés ouvrent un seul écran de départs.
+      navController.navigate(DeparturesRoute(stopId = stopId, stopName = stopName)) {
+        launchSingleTop = true
+      }
+    },
+  )
 }
 
 /**

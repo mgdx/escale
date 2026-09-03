@@ -1,7 +1,5 @@
 package io.github.mgdx.escale.data.repository
 
-import io.github.mgdx.escale.core.model.JourneyCategory
-import io.github.mgdx.escale.core.model.SearchQuery
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.HistoryRepository
 import io.github.mgdx.escale.core.result.Outcome
@@ -42,19 +40,16 @@ class HistoryRepositoryImplTest {
 
   private fun repository() = HistoryRepositoryImpl(database, preferences) { now }
 
-  private fun query(to: String) = SearchQuery(
-    from = address("12 rue des Lilas"),
-    to = stopLocation("de:06:$to", to),
-    time = TimeChoice.Now,
-    category = JourneyCategory.TRANSIT,
-  )
+  /** Une recherche : un départ, une arrivée, une heure — ce que `record` demande, et rien de plus. */
+  private suspend fun HistoryRepositoryImpl.record(to: String, time: TimeChoice = TimeChoice.Now) =
+    record(from = address("12 rue des Lilas"), to = stopLocation("de:06:$to", to), time = time)
 
   @Test
   fun `une recherche enregistree se relit, la plus recente d abord`() = runBlocking {
     val repository = repository()
-    assertTrue(repository.record(query("Nation")) is Outcome.Success)
+    assertTrue(repository.record("Nation") is Outcome.Success)
     now = now.plusSeconds(60)
-    repository.record(query("Bastille"))
+    repository.record("Bastille")
 
     assertEquals(listOf("Bastille", "Nation"), repository.recentSearches.first().map { it.to.name })
     val premiere = repository.recentSearches.first().first()
@@ -67,7 +62,7 @@ class HistoryRepositoryImplTest {
     val repository = repository()
     repeat(60) { rang ->
       now = START.plusSeconds(rang.toLong())
-      repository.record(query("Arrêt $rang"))
+      repository.record("Arrêt $rang")
     }
 
     // La table elle-même ne contient que cinquante lignes : la purge a lieu à l'insertion, et non
@@ -88,7 +83,7 @@ class HistoryRepositoryImplTest {
     val repository = repository()
 
     // Un succès, pas un échec : l'usager a demandé qu'on ne garde rien, ce n'est pas une anomalie.
-    assertTrue(repository.record(query("Nation")) is Outcome.Success)
+    assertTrue(repository.record("Nation") is Outcome.Success)
 
     assertEquals(0, database.rowCount("search_history"))
     assertTrue(repository.recentSearches.first().isEmpty())
@@ -97,9 +92,9 @@ class HistoryRepositoryImplTest {
   @Test
   fun `la bascule ne vaut que pour l avenir, les entrees deja la restent`() = runBlocking {
     val repository = repository()
-    repository.record(query("Nation"))
+    repository.record("Nation")
     preferences.setHistoryEnabled(false)
-    repository.record(query("Bastille"))
+    repository.record("Bastille")
 
     // Désactiver l'historique n'efface pas : c'est le bouton « Tout effacer » qui le fait.
     assertEquals(listOf("Nation"), repository.recentSearches.first().map { it.to.name })
@@ -108,9 +103,9 @@ class HistoryRepositoryImplTest {
   @Test
   fun `une entree s efface toute seule`() = runBlocking {
     val repository = repository()
-    repository.record(query("Nation"))
+    repository.record("Nation")
     now = now.plusSeconds(60)
-    repository.record(query("Bastille"))
+    repository.record("Bastille")
 
     val aEffacer = repository.recentSearches.first().first { it.to.name == "Nation" }
     assertTrue(repository.delete(aEffacer.id) is Outcome.Success)
@@ -119,11 +114,28 @@ class HistoryRepositoryImplTest {
   }
 
   @Test
+  fun `l heure demandee est enregistree avec la recherche, et relue telle quelle`() = runBlocking {
+    val repository = repository()
+    val avant = Instant.parse("2026-03-02T09:00:00Z")
+    repository.record("Nation", TimeChoice.ArriveBy(avant))
+    now = now.plusSeconds(60)
+    repository.record("Bastille", TimeChoice.DepartAt(avant))
+    now = now.plusSeconds(60)
+    repository.record("Opéra")
+
+    val relues = repository.recentSearches.first()
+    // SPEC.md § 5.1 : la puce relance la recherche. Sans l'heure, elle en lancerait une autre.
+    assertEquals(TimeChoice.Now, relues[0].time)
+    assertEquals(TimeChoice.DepartAt(avant), relues[1].time)
+    assertEquals(TimeChoice.ArriveBy(avant), relues[2].time)
+  }
+
+  @Test
   fun `tout effacer ne laisse rien dans la table`() = runBlocking {
     val repository = repository()
     repeat(5) { rang ->
       now = START.plusSeconds(rang.toLong())
-      repository.record(query("Arrêt $rang"))
+      repository.record("Arrêt $rang")
     }
 
     assertTrue(repository.clear() is Outcome.Success)

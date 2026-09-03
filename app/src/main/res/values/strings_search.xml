@@ -51,6 +51,12 @@
   <string name="search_kind_stop">Stop</string>
 
   <!-- Puces d'accès rapide, affichées quand les deux champs sont vides (SPEC.md § 5.1). -->
+  <!-- Appui long sur une puce Domicile ou Travail (SPEC.md § 5.5). `search_saved_place_options`
+       est le libellé de l'appui long : c'est lui que le lecteur d'écran annonce en action. -->
+  <string name="search_saved_place_options">Change or remove</string>
+  <string name="search_saved_place_edit">Change</string>
+  <string name="search_saved_place_delete">Remove</string>
+
   <string name="search_chip_recent">%1$s → %2$s</string>
 
   <!-- Modes desservis par un arrêt (SPEC.md § 5.1). Faute d'icônes de mode, qui appartiennent à

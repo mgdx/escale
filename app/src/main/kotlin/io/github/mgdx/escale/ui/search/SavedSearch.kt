@@ -21,7 +21,7 @@ import java.time.Instant
  * Ce n'est pas de la persistance : rien n'est écrit sur le disque. `SavedStateHandle` garde cet
  * état le temps que le système tue puis relance le processus, et il disparaît avec la tâche. Les
  * lieux cherchés ne survivent donc pas à la fermeture de l'application (SPEC.md § 11) ; leur
- * conservation volontaire, c'est l'historique du jalon 10, et lui seul.
+ * conservation volontaire, c'est l'historique de SPEC.md § 5.5, et lui seul.
  *
  * **L'identifiant d'arrêt et la nature du lieu font partie du voyage** : les perdre reviendrait à
  * relancer, après une rotation, une requête par coordonnées là où docs/architecture.md § 11.3 exige

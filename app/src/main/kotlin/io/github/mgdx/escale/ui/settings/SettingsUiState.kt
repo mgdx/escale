@@ -19,8 +19,8 @@ data class SettingsUiState(
   /** Le message à afficher une fois, puis à oublier. */
   val message: SettingsMessage? = null,
   /**
-   * Faux tant que le jalon 10 n'a pas fourni de dépôt d'historique : l'entrée « Effacer
-   * l'historique » n'est pas affichée plutôt que d'être affichée sans effet.
+   * Faux quand aucun dépôt d'historique n'est branché — le cas des aperçus et des tests : l'entrée
+   * « Effacer les recherches récentes » n'est alors pas affichée, plutôt qu'affichée sans effet.
    */
   val canClearHistory: Boolean = false,
 )

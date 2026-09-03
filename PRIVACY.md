@@ -59,6 +59,8 @@ et qu'aucune autre application ne peut lire. Rien n'en sort.
 
 | Ce qui est gardé | Où, et combien de temps |
 |---|---|
+| Votre domicile, votre lieu de travail, vos lieux, arrêts et trajets favoris | base de données locale (Room), jusqu'à ce que vous les supprimiez. Consultables et effaçables un par un depuis **Réglages → Favoris et historique** |
+| Vos cinquante dernières recherches, horodatées | base de données locale (Room). La cinquante-et-unième chasse la plus ancienne. Effaçables une par une ou en bloc depuis **Réglages → Favoris et historique**, et l'enregistrement se désactive entièrement depuis **Réglages → Données** |
 | Le serveur configuré, les serveurs déjà utilisés, et votre accord éventuel pour un serveur en clair (`http://`) | fichier de préférences (DataStore), jusqu'à ce que vous le changiez |
 | Vos préférences de recherche et d'affichage | fichier de préférences (DataStore) ; le bouton « Rétablir les réglages par défaut » les remet à zéro |
 | La dernière position de la carte | fichier de préférences (DataStore), pour rouvrir la carte là où vous l'aviez laissée. Elle n'est jamais envoyée nulle part |
@@ -70,6 +72,21 @@ et qu'aucune autre application ne peut lire. Rien n'en sort.
 
 Les résultats gardés en mémoire sont classés par le serveur qui les a produits : changer d'instance
 dans les réglages n'en fait jamais ressortir un obtenu ailleurs.
+
+### Aucune sauvegarde automatique — et ce que cela vous coûte
+
+Escale **désactive la sauvegarde automatique d'Android**, celle qui copie d'ordinaire les données
+d'une application vers le compte Google de l'appareil. Elle désactive également le transfert
+d'appareil à appareil. Rien de ce qui précède ne part donc chez Google, chez le constructeur de
+votre téléphone, ni chez qui que ce soit : votre domicile, votre lieu de travail et vos recherches
+n'ont rien à faire dans un fichier de sauvegarde que vous ne contrôlez pas.
+
+**Cela a un prix, et il est comptant : si vous changez de téléphone, si vous réinitialisez le
+vôtre, ou si vous désinstallez Escale, tout est perdu** — domicile, travail, lieux et arrêts
+favoris, trajets favoris, historique de recherche, serveurs enregistrés et préférences. Il n'existe
+aujourd'hui **aucune fonction d'exportation** dans l'application, donc aucun moyen de les
+rattraper. C'est un choix assumé : la seule sauvegarde possible aurait été une copie hors de votre
+appareil, ce que ce document promet précisément de ne jamais faire.
 
 ## Permissions
 
@@ -101,17 +118,26 @@ au démarrage du téléphone.
 vérification peut être décalée de quelques minutes par le système, ce qui est sans conséquence pour
 une requête émise une heure à l'avance, et évite une permission intrusive.
 
-## Favoris et historique — à venir
+## Favoris et historique
 
-Le stockage des favoris — domicile, travail, lieux, arrêts, trajets — et celui de l'historique de
-recherche **ne sont pas encore écrits**. Aucune recherche n'est donc conservée d'une session à
-l'autre, et le réglage « Enregistrer l'historique » que vous voyez dans les réglages n'a pas encore
-d'effet.
+Escale conserve, **sur votre appareil et nulle part ailleurs** :
 
-Quand ils existeront, ils resteront **locaux et uniquement locaux** : rien ne sera envoyé nulle
-part, l'historique sera limité aux cinquante dernières recherches, désactivable et effaçable en un
-appui. Domicile et travail resteront facultatifs et ne vous seront jamais réclamés : tant qu'ils ne
-sont pas renseignés, l'application n'en dit rien du tout.
+- un **domicile** et un **lieu de travail**, tous deux facultatifs. L'application ne vous les
+  réclame jamais : tant que vous ne les avez pas renseignés, elle n'en dit rien du tout, ni à
+  l'ouverture, ni ailleurs. Vous les définissez, les modifiez et les supprimez depuis
+  **Réglages → Favoris et historique**, ou par un appui long sur leur raccourci ;
+- vos **lieux, arrêts et trajets favoris**, avec le nom que vous leur donnez ;
+- vos **cinquante dernières recherches**, horodatées. La cinquante-et-unième efface la plus
+  ancienne : rien ne s'accumule indéfiniment.
+
+Tout cela vit dans le stockage privé de l'application. Rien n'est envoyé au serveur MOTIS, sauf,
+évidemment, le jour où vous relancez une recherche à partir d'un favori — c'est alors une recherche
+comme une autre, décrite plus haut.
+
+L'enregistrement des recherches se désactive d'un interrupteur dans **Réglages → Données**, et
+« Effacer les recherches récentes », au même endroit, vide la liste immédiatement. Désactiver
+l'enregistrement n'efface pas ce qui est déjà là : c'est le bouton qui s'en charge, pour que vous
+sachiez toujours ce qui a été supprimé et quand.
 
 ## Trajets surveillés
 

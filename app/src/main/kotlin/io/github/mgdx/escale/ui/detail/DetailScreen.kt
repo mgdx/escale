@@ -25,6 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -122,6 +124,8 @@ private fun rememberDetailActions(
     onStopsToggled = viewModel::onStopsToggled,
     onStepsToggled = viewModel::onStepsToggled,
     onTripSelected = onTripSelected,
+    onAddToFavorites = viewModel::onAddToFavorites,
+    onMessageShown = viewModel::onMessageShown,
   )
 }
 
@@ -149,12 +153,13 @@ internal data class DetailActions(
    */
   val onTripSelected: ((tripId: String) -> Unit)? = null,
   /**
-   * **Jalon 10** — « Ajouter aux favoris » (SPEC.md § 5.3 et § 5.5). Les favoris n'ont aucune
-   * implémentation à ce stade : `FavoritesRepository` est déclaré dans `:core` et n'a pas
-   * d'implémentation dans `:data`. Le lot des favoris branche ici son action, et la commande
-   * apparaît dans la barre supérieure du même coup.
+   * « Ajouter aux favoris » (SPEC.md § 5.3 et § 5.5) : le couple départ / arrivée de la recherche
+   * en cours rejoint les trajets favoris. Reste facultatif pour que les aperçus composent l'écran
+   * sans dépôt — un bouton qui ne fait rien serait pire que pas de bouton (voir [onTripSelected]).
    */
   val onAddToFavorites: (() -> Unit)? = null,
+  /** Le message affiché après un ajout a été montré : l'écran le dit, pour qu'il soit oublié. */
+  val onMessageShown: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,8 +171,17 @@ internal fun DetailContent(
   modifier: Modifier = Modifier,
 ) {
   val journey = state.journey
+  val snackbarHostState = remember { SnackbarHostState() }
+  val messageText = state.message?.let { stringResource(it.textRes()) }
+  LaunchedEffect(state.message) {
+    if (messageText != null) {
+      snackbarHostState.showSnackbar(messageText)
+      actions.onMessageShown()
+    }
+  }
   Scaffold(
     modifier = modifier.fillMaxSize(),
+    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     topBar = {
       TopAppBar(
         title = { Text(text = stringResource(R.string.detail_title)) },
@@ -188,7 +202,7 @@ internal fun DetailContent(
   }
 }
 
-/** Rafraîchir et partager (SPEC.md § 5.3). Les favoris n'apparaissent que branchés (jalon 10). */
+/** Rafraîchir, partager, mettre en favori (SPEC.md § 5.3). */
 @Composable
 private fun RowScope.DetailBarActions(journey: Journey, actions: DetailActions) {
   val share = rememberShareAction(journey)

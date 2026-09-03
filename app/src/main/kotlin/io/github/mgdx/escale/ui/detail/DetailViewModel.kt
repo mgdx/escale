@@ -16,6 +16,7 @@ import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.stationFor
 import io.github.mgdx.escale.core.model.withEndpointNames
 import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
+import io.github.mgdx.escale.core.repository.FavoritesRepository
 import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.EscaleError
@@ -60,6 +61,7 @@ class DetailViewModel(
   private val session: SearchSession,
   private val planRepository: PlanRepository,
   private val rentalsRepository: RentalsRepository,
+  private val favoritesRepository: FavoritesRepository,
   private val savedState: SavedStateHandle,
   private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -88,6 +90,46 @@ class DetailViewModel(
   fun onRefresh() {
     load()
     state.value.rentals.keys.toList().forEach { loadRental(it, fresh = true) }
+  }
+
+  /**
+   * « Ajouter aux favoris » (SPEC.md § 5.3 et § 5.5).
+   *
+   * Un trajet favori est un **couple départ / arrivée**, pas un itinéraire figé : ce sont les deux
+   * points de la recherche en cours qui sont enregistrés, avec leur identifiant d'arrêt quand ils
+   * en ont un (docs/architecture.md § 11.3), et non les extrémités recalculées du trajet affiché.
+   * Rejouer le favori dans six mois relance donc une recherche, ce qui a un sens, là où rejouer un
+   * itinéraire périmé n'en aurait aucun.
+   *
+   * La catégorie est celle que `JourneyRefresh` relit dans les portions — un rabattement à vélo
+   * vers une gare est un trajet en transport en commun, pas un trajet à vélo — et c'est la trace
+   * des « préférences de modes » que SPEC.md § 5.5 autorise à joindre au favori.
+   */
+  fun onAddToFavorites() {
+    val draft = session.draft.value
+    val from = draft.from
+    val to = draft.to
+    val journey = state.value.journey
+    if (from == null || to == null || journey == null) {
+      show(DetailMessage.FAVORITE_FAILED)
+      return
+    }
+    viewModelScope.launch {
+      val outcome = favoritesRepository.addJourney(
+        from = from,
+        to = to,
+        category = JourneyRefresh.categoryOf(journey),
+        // Aucun nom demandé ici : l'écran de détail n'est pas un formulaire, et un trajet sans
+        // libellé s'affiche « Départ → Arrivée » dans les favoris.
+        label = null,
+      )
+      show(if (outcome is Outcome.Success) DetailMessage.FAVORITE_ADDED else DetailMessage.FAVORITE_FAILED)
+    }
+  }
+
+  /** Le message a été montré : on l'oublie, pour qu'une rotation ne le rejoue pas. */
+  fun onMessageShown() {
+    state.update { it.copy(message = null) }
   }
 
   /** Le bouton de rafraîchissement propre à une portion en libre-service (SPEC.md § 5.3). */
@@ -123,6 +165,10 @@ class DetailViewModel(
   fun onStepsToggled(index: Int) {
     state.update { it.copy(expandedSteps = it.expandedSteps.toggled(index)) }
     remember(KEY_STEPS, state.value.expandedSteps)
+  }
+
+  private fun show(message: DetailMessage) {
+    state.update { it.copy(message = message) }
   }
 
   private fun load() {
@@ -343,6 +389,7 @@ class DetailViewModel(
           session = container.searchSession,
           planRepository = container.planRepository,
           rentalsRepository = container.rentalsRepository,
+          favoritesRepository = container.favoritesRepository,
           savedState = createSavedStateHandle(),
         )
       }

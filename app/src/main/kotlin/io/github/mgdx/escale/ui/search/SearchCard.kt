@@ -1,7 +1,10 @@
 package io.github.mgdx.escale.ui.search
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -96,12 +99,16 @@ fun SearchCard(state: SearchUiState, actions: SearchActions, padding: PaddingVal
     // Les puces ne s'affichent que quand les deux champs sont vides, et une puce absente n'est pas
     // affichée du tout (SPEC.md § 5.1) : `quickChips` a déjà tranché, il n'y a rien à décider ici.
     if (state.chips.isNotEmpty()) {
-      QuickChipRow(chips = state.chips, onChipSelected = actions.onChipSelected)
+      QuickChipRow(chips = state.chips, actions = actions)
     }
 
     if (state.awaitingMapPick) {
       MapPickHint(onCancel = actions.onMapPickCancelled)
     }
+  }
+
+  state.savedPlaceMenu?.let { kind ->
+    SavedPlaceMenu(kind = kind, location = state.chips.savedLocation(kind), actions = actions)
   }
 }
 
@@ -180,24 +187,85 @@ private fun TimeRow(state: SearchUiState, onClick: () -> Unit) {
  * « Domicile » reste entièrement lisible, quitte à ce que la suivante attende un glissement.
  */
 @Composable
-private fun QuickChipRow(chips: List<QuickChip>, onChipSelected: (QuickChip) -> Unit) {
+private fun QuickChipRow(chips: List<QuickChip>, actions: SearchActions) {
   LazyRow(horizontalArrangement = Arrangement.spacedBy(RowSpacing)) {
     items(items = chips, key = ::chipKey) { chip ->
-      AssistChip(
-        onClick = { onChipSelected(chip) },
-        label = { Text(text = chipLabel(chip)) },
-        leadingIcon = {
-          (chip as? QuickChip.Saved)?.let { saved ->
-            Icon(
-              painter = painterResource(saved.kind.iconRes()),
-              contentDescription = null,
-              modifier = Modifier.size(ChipIconSize),
-            )
-          }
-        },
-      )
+      QuickChipItem(chip = chip, actions = actions)
     }
   }
+}
+
+/**
+ * Une puce, **avec son appui long** (SPEC.md § 5.5 : « modifiables et supprimables […] depuis un
+ * appui long sur la puce »).
+ *
+ * Ce n'est pas un `AssistChip` de Material 3, et la raison est technique : `AssistChip` pose son
+ * propre `clickable`, plus proche du contenu que le modificateur qu'on lui passe, si bien qu'il
+ * consomme l'appui long et le rend comme un appui simple. La puce est donc dessinée ici, à
+ * l'identique — surface, contour, coins arrondis du thème — avec un unique `combinedClickable` qui
+ * distingue les deux gestes. `onLongClickLabel` n'est pas décoratif : c'est lui qui expose l'appui
+ * long au lecteur d'écran, sous forme d'action, comme l'exige SPEC.md § 9.
+ *
+ * La hauteur minimale de 48 dp est celle de SPEC.md § 9, et non les 32 dp d'un `AssistChip`.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun QuickChipItem(chip: QuickChip, actions: SearchActions) {
+  val label = chipLabel(chip)
+  val saved = chip as? QuickChip.Saved
+  Surface(
+    shape = MaterialTheme.shapes.small,
+    color = MaterialTheme.colorScheme.surface,
+    contentColor = MaterialTheme.colorScheme.onSurface,
+    border = BorderStroke(ChipBorderWidth, MaterialTheme.colorScheme.outline),
+    modifier = Modifier.heightIn(min = MinTouchTarget).combinedClickable(
+      role = Role.Button,
+      onClickLabel = label,
+      onLongClickLabel = saved?.let { stringResource(R.string.search_saved_place_options) },
+      onLongClick = { actions.onChipLongPressed(chip) },
+      onClick = { actions.onChipSelected(chip) },
+    ),
+  ) {
+    Row(
+      modifier = Modifier.padding(horizontal = RowPadding),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(RowSpacing),
+    ) {
+      saved?.let { place ->
+        Icon(
+          painter = painterResource(place.kind.iconRes()),
+          contentDescription = null,
+          modifier = Modifier.size(ChipIconSize),
+        )
+      }
+      Text(text = label, style = MaterialTheme.typography.labelLarge)
+    }
+  }
+}
+
+/**
+ * Ce que propose l'appui long sur une puce Domicile ou Travail (SPEC.md § 5.5).
+ *
+ * « Modifier » mène à l'écran des favoris, qui porte le choix d'un lieu ; « Supprimer » agit tout
+ * de suite : le lieu redevient non renseigné, et sa puce disparaît d'elle-même.
+ */
+@Composable
+private fun SavedPlaceMenu(kind: SavedPlaceKind, location: Location?, actions: SearchActions) {
+  AlertDialog(
+    onDismissRequest = actions.onDismissSavedPlaceMenu,
+    title = { Text(text = stringResource(kind.labelRes())) },
+    text = { location?.let { Text(text = it.name) } },
+    confirmButton = {
+      TextButton(onClick = { actions.onEditSavedPlace(kind) }) {
+        Text(text = stringResource(R.string.search_saved_place_edit))
+      }
+    },
+    dismissButton = {
+      TextButton(onClick = { actions.onRemoveSavedPlace(kind) }) {
+        Text(text = stringResource(R.string.search_saved_place_delete))
+      }
+    },
+  )
 }
 
 /** Le message qui accompagne « Choisir sur la carte » (SPEC.md § 5.1). */
@@ -231,6 +299,10 @@ private fun chipLabel(chip: QuickChip): String = when (chip) {
   is QuickChip.Recent -> stringResource(R.string.search_chip_recent, chip.search.from.name, chip.search.to.name)
 }
 
+/** Le lieu que porte la puce enregistrée demandée, s'il y en a une. */
+private fun List<QuickChip>.savedLocation(kind: SavedPlaceKind): Location? =
+  filterIsInstance<QuickChip.Saved>().firstOrNull { it.kind == kind }?.location
+
 /** Une clé stable par puce, pour que le défilement ne recompose pas tout à chaque frappe. */
 private fun chipKey(chip: QuickChip): String = when (chip) {
   is QuickChip.Saved -> chip.kind.name
@@ -247,6 +319,7 @@ private val RowPadding: Dp = 12.dp
 private val RowSpacing: Dp = 8.dp
 private val DividerInset: Dp = 48.dp
 private val ChipIconSize: Dp = 18.dp
+private val ChipBorderWidth: Dp = 1.dp
 private val CardTonalElevation: Dp = 3.dp
 private val CardShadowElevation: Dp = 6.dp
 
