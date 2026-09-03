@@ -139,3 +139,32 @@ ressources Android (`values-de`, `values-pt-rBR`). Voir `CONTRIBUTING.md`.
 
 [charlimits]: https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/common.py#L216
 [checkupdates]: https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/checkupdates.py#L547
+
+## État des captures d'écran
+
+Quatre captures par langue sont en place, prises sur un Fairphone 3 sous Android 15, thème clair,
+en basculant la langue de l'application avec `adb shell cmd locale set-app-locales` :
+
+| Rang | en-US | fr-FR | Contenu |
+|---|---|---|---|
+| 01 | `01-search.png` | `01-recherche.png` | Autocomplétion : arrêts distingués des lieux, modes desservis en toutes lettres |
+| 02 | `02-results.png` | `02-resultats.png` | Feuille de résultats, frise à l'échelle, tracé sur la carte |
+| 03 | `03-trip-details.png` | `03-detail.png` | Détail d'un trajet, portions dépliables, surveillance activée |
+| 04 | `04-journey-on-map.png` | `04-trajet-sur-la-carte.png` | Tracé exact de la ligne sur la carte, cadré sous la feuille |
+
+**Quatre captures restent à prendre**, faute d'avoir pu les atteindre de façon fiable en pilotage
+`adb` à l'aveugle. Pour chacune, l'itinéraire à suivre dans l'application :
+
+- **`05-departs`** — carte, appuyer sur un arrêt ferroviaire (Lille Flandres se prête bien :
+  41 lignes desservies), puis « Prochains départs ». Montre les filtres par mode, les retards
+  et les quais.
+- **`06-libre-service`** — chercher un trajet comportant une portion en vélo partagé (Paris,
+  Gare de Lyon → Châtelet, en donne un aux heures creuses), ouvrir le détail, déplier la portion.
+  Montre les disponibilités et l'heure du relevé.
+- **`07-favoris`** — Réglages → « Favoris et historique », après avoir mis un trajet en favori
+  et lancé deux ou trois recherches.
+- **`08-serveur`** — Réglages → « Serveur MOTIS », après « Tester la connexion », pour montrer
+  les trois résultats distincts.
+
+Rappels valables pour toutes : thème clair, aucune donnée personnelle à l'écran, barre d'état
+propre, PNG à la résolution de l'appareil, aucun cadre ni habillage ajouté.
