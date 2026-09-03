@@ -4,6 +4,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -39,6 +40,7 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapLoadRules
 import io.github.mgdx.escale.core.geo.MapViewport
+import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.TransitMode
@@ -102,6 +104,8 @@ fun MapCanvas(
   val markerIcons = rememberTraceMarkerIcons(traceColors)
   val stopColors = mapStopColors()
   val stopIcons = rememberStopIcons(stopColors)
+  val rentalColors = mapRentalColors()
+  val rentalIcons = rememberRentalIcons(rentalColors)
 
   Box(modifier = modifier) {
     AndroidView(
@@ -118,19 +122,7 @@ fun MapCanvas(
       onPick = actions.onPick,
       onDismiss = actions.onDismissPick,
     )
-    // L'infobulle se pose au bas de la carte, au-dessus de ce que le remplissage réserve à la
-    // feuille de résultats et aux encarts système (SPEC.md § 5.7 et § 9).
-    state.selectedStop?.let { stop ->
-      MapStopCard(
-        stop = stop,
-        onDepartures = { state.stopActions.onDepartures(stop) },
-        onDismiss = state.stopActions.onDismissStop,
-        modifier = Modifier
-          .align(Alignment.BottomCenter)
-          .padding(bottom = contentPadding.calculateBottomPadding())
-          .padding(StopCardMargin),
-      )
-    }
+    MapDetailCard(state = state, contentPadding = contentPadding)
   }
 
   BindMapViewLifecycle(mapInstance)
@@ -144,6 +136,7 @@ fun MapCanvas(
       // position de l'usager et le point choisi, qui restent au-dessus de tout.
       style.installJourneyTraceLayers(traceColors, markerIcons)
       style.installStopLayers(stopColors, stopIcons)
+      style.installRentalLayers(rentalColors, rentalIcons)
       style.installOverlayLayers(colors)
       loadedStyle = style
     }
@@ -153,7 +146,35 @@ fun MapCanvas(
 
   ApplyCameraTarget(map, state.cameraTarget, contentPadding, actions.onCameraTargetApplied)
   ApplyCameraPadding(map, contentPadding)
-  BindMapListeners(mapInstance, map, actions, state.stopActions)
+  BindMapListeners(mapInstance, map, actions, state.stopActions, state.rentalActions)
+}
+
+/**
+ * L'infobulle ouverte, s'il y en a une : celle d'un arrêt, ou celle d'un point de libre-service.
+ *
+ * Les deux ne s'affichent **jamais ensemble** — le `ViewModel` ferme l'une en ouvrant l'autre — et
+ * se posent exactement au même endroit : au bas de la carte, au-dessus de ce que le remplissage
+ * réserve à la feuille de résultats et aux encarts système. Une bulle ancrée sur le marqueur
+ * sortirait de l'écran dès qu'on touche un point d'un bord, et davantage encore à 200 %
+ * d'agrandissement (SPEC.md § 5.7 et § 9).
+ */
+@Composable
+private fun BoxScope.MapDetailCard(state: MapUiState, contentPadding: PaddingValues) {
+  val placement = Modifier
+    .align(Alignment.BottomCenter)
+    .padding(bottom = contentPadding.calculateBottomPadding())
+    .padding(StopCardMargin)
+  state.selectedStop?.let { stop ->
+    MapStopCard(
+      stop = stop,
+      onDepartures = { state.stopActions.onDepartures(stop) },
+      onDismiss = state.stopActions.onDismissStop,
+      modifier = placement,
+    )
+  }
+  state.selectedRental?.let { rental ->
+    MapRentalCard(rental = rental, onDismiss = state.rentalActions.onDismissRental, modifier = placement)
+  }
 }
 
 /**
@@ -183,6 +204,24 @@ private fun ApplyMapSources(style: Style?, state: MapUiState) {
   }
   LaunchedEffect(style, state.clusteredStopsGeoJson) {
     style?.getSourceAs<GeoJsonSource>(STOPS_CLUSTERED_SOURCE)?.setGeoJson(state.clusteredStopsGeoJson)
+  }
+  // Le libre-service a deux familles, donc quatre sources : chacune se remplit et se vide seule,
+  // sans jamais qu'une couche soit ajoutée ni retirée (SPEC.md § 5.7, règles 6 et 8).
+  LaunchedEffect(style, state.rentalStationsGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.STATION))
+      ?.setGeoJson(state.rentalStationsGeoJson)
+  }
+  LaunchedEffect(style, state.clusteredRentalStationsGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.STATION))
+      ?.setGeoJson(state.clusteredRentalStationsGeoJson)
+  }
+  LaunchedEffect(style, state.rentalVehiclesGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.VEHICLE))
+      ?.setGeoJson(state.rentalVehiclesGeoJson)
+  }
+  LaunchedEffect(style, state.clusteredRentalVehiclesGeoJson) {
+    style?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.VEHICLE))
+      ?.setGeoJson(state.clusteredRentalVehiclesGeoJson)
   }
   // Les points d'intérêt ne font l'objet d'aucune requête : ils sont déjà dans les tuiles, et la
   // feuille embarquée porte leur couche avec le bon `minzoom` (SPEC.md § 5.7). Le réglage de
@@ -322,8 +361,9 @@ private fun BindMapListeners(
   map: MapLibreMap?,
   actions: MapCanvasActions,
   stopActions: MapStopActions,
+  rentalActions: MapRentalActions,
 ) {
-  DisposableEffect(map, actions, stopActions) {
+  DisposableEffect(map, actions, stopActions, rentalActions) {
     val instance = map
     val view = mapInstance.view()
     if (instance == null) return@DisposableEffect onDispose { }
@@ -345,13 +385,21 @@ private fun BindMapListeners(
       actions.onLongClick(LatLon(point.latitude, point.longitude))
       true
     }
-    // Appui sur un arrêt ou sur un groupe (SPEC.md § 5.7). L'interrogation porte sur les seules
-    // couches d'arrêts : toucher une rue ou un bâtiment ne doit rien ouvrir.
+    // Appui sur un arrêt, un point de libre-service ou un groupe (SPEC.md § 5.7). L'interrogation
+    // porte sur les seules couches que l'application pose : toucher une rue ou un bâtiment ne doit
+    // rien ouvrir.
     val click = MapLibreMap.OnMapClickListener { point ->
       when (val tap = instance.tapAt(instance.projection.toScreenLocation(point))) {
         is MapTap.OnStop -> stopActions.onStopClick(tap.stop)
+
+        is MapTap.OnRental -> rentalActions.onRentalClick(tap.rental)
+
         is MapTap.OnCluster -> stopActions.onClusterClick(tap.point)
-        null -> stopActions.onDismissStop()
+
+        null -> {
+          stopActions.onDismissStop()
+          rentalActions.onDismissRental()
+        }
       }
       // Faux : l'appui reste disponible pour le reste de la carte, qui n'en fait rien aujourd'hui.
       false
@@ -428,30 +476,35 @@ private fun mapTraceColors(): MapTraceColors = MapTraceColors(
 private sealed interface MapTap {
   data class OnStop(val stop: SelectedStop) : MapTap
 
+  data class OnRental(val rental: SelectedRental) : MapTap
+
   data class OnCluster(val point: LatLon) : MapTap
 }
 
 /**
- * Ce que l'appui a atteint, ou `null` s'il n'a touché aucun marqueur d'arrêt.
+ * Ce que l'appui a atteint, ou `null` s'il n'a touché aucun marqueur.
  *
- * L'appui est élargi à un carré de [TAP_SLOP_PX] pixels de côté : un marqueur de 22 dp n'est pas
- * une cible de 48 dp, et SPEC.md § 9 impose que la cible tactile en soit une. Un arrêt gagne
- * toujours sur une pastille de regroupement dessinée sous lui.
+ * L'appui est élargi à un carré de [TAP_SLOP_PX] pixels de côté : un marqueur de 20 à 24 dp n'est
+ * pas une cible de 48 dp, et SPEC.md § 9 impose que la cible tactile en soit une. Un marqueur
+ * détaillé gagne toujours sur une pastille de regroupement dessinée sous lui.
  */
-// La signature de `queryRenderedFeatures` est variadique : cinq identifiants recopiés une fois par
-// appui du doigt, le coût est nul et il n'y a pas d'autre appel possible.
+// La signature de `queryRenderedFeatures` est variadique : une poignée d'identifiants recopiés une
+// fois par appui du doigt, le coût est nul et il n'y a pas d'autre appel possible.
 @Suppress("SpreadOperator")
 private fun MapLibreMap.tapAt(screen: PointF): MapTap? {
-  val features = queryRenderedFeatures(screen.tapArea(), *STOP_TAPPABLE_LAYERS)
-  features.firstOrNull { !it.hasProperty(CLUSTER_COUNT_PROPERTY) }
-    ?.toSelectedStop()
-    ?.let { return MapTap.OnStop(it) }
-  return features.firstOrNull { it.hasProperty(CLUSTER_COUNT_PROPERTY) }
-    ?.let { feature -> feature.geometry() as? Point }
-    ?.let { point -> MapTap.OnCluster(LatLon(lat = point.latitude(), lon = point.longitude())) }
+  val features = queryRenderedFeatures(screen.tapArea(), *TAPPABLE_LAYERS)
+  val marker = features.firstOrNull { !it.hasProperty(CLUSTER_COUNT_PROPERTY) }?.toMarkerTap()
+  return marker ?: features.firstOrNull { it.hasProperty(CLUSTER_COUNT_PROPERTY) }?.toClusterTap()
 }
 
-/** L'entité GeoJSON touchée, relue dans les termes de l'interface. */
+/** L'entité GeoJSON touchée, relue dans les termes de l'interface : un arrêt ou du libre-service. */
+private fun Feature.toMarkerTap(): MapTap? =
+  toSelectedStop()?.let(MapTap::OnStop) ?: toSelectedRental()?.let(MapTap::OnRental)
+
+private fun Feature.toClusterTap(): MapTap? = (geometry() as? Point)
+  ?.let { point -> MapTap.OnCluster(LatLon(lat = point.latitude(), lon = point.longitude())) }
+
+/** L'arrêt touché, ou `null` si l'entité n'en est pas un. */
 private fun Feature.toSelectedStop(): SelectedStop? {
   val id = getStringProperty(MapGeoJson.PROPERTY_STOP_ID) ?: return null
   return SelectedStop(
@@ -460,6 +513,38 @@ private fun Feature.toSelectedStop(): SelectedStop? {
     mode = modeOf(getStringProperty(MapGeoJson.PROPERTY_MODE)),
   )
 }
+
+/**
+ * La station ou le véhicule touché, ou `null` si l'entité n'en est pas un.
+ *
+ * Tout vient de l'entité : l'infobulle du § 5.7 — « nom, véhicules disponibles, places libres, lien
+ * vers l'exploitant » — s'ouvre donc sans le moindre appel réseau.
+ */
+private fun Feature.toSelectedRental(): SelectedRental? {
+  val id = getStringProperty(MapGeoJson.PROPERTY_RENTAL_ID) ?: return null
+  return SelectedRental(
+    id = id,
+    name = getStringProperty(MapGeoJson.PROPERTY_LABEL).orEmpty(),
+    kind = rentalKindOf(getStringProperty(MapGeoJson.PROPERTY_RENTAL_KIND)),
+    icon = rentalIconOf(getStringProperty(MapGeoJson.PROPERTY_RENTAL_FORM)),
+    vehiclesAvailable = countOf(MapGeoJson.PROPERTY_RENTAL_VEHICLES),
+    docksAvailable = countOf(MapGeoJson.PROPERTY_RENTAL_DOCKS),
+    isRenting = getBooleanProperty(MapGeoJson.PROPERTY_RENTAL_RENTING) ?: true,
+    isReturning = getBooleanProperty(MapGeoJson.PROPERTY_RENTAL_RETURNING) ?: true,
+    rentalUriAndroid = getStringProperty(MapGeoJson.PROPERTY_RENTAL_URI),
+  )
+}
+
+/** Un compte porté par l'entité. Absent ou illisible, il vaut zéro plutôt que d'inventer. */
+private fun Feature.countOf(property: String): Int = getNumberProperty(property)?.toInt() ?: 0
+
+/** La famille écrite dans l'entité. Une valeur qu'on ne sait pas relire est un véhicule isolé. */
+private fun rentalKindOf(name: String?): RentalMarkerKind =
+  RentalMarkerKind.entries.firstOrNull { it.name == name } ?: RentalMarkerKind.VEHICLE
+
+/** Le dessin écrit dans l'entité. Une valeur qu'on ne sait pas relire devient [RentalIcon.OTHER]. */
+private fun rentalIconOf(name: String?): RentalIcon =
+  RentalIcon.entries.firstOrNull { it.name == name } ?: RentalIcon.OTHER
 
 /** Le mode écrit dans l'entité. Une valeur qu'on ne sait pas relire devient [TransitMode.OTHER]. */
 private fun modeOf(name: String?): TransitMode =
@@ -484,6 +569,33 @@ private fun mapStopColors(): MapStopColors = MapStopColors(
   cluster = MaterialTheme.colorScheme.primaryContainer,
   onCluster = MaterialTheme.colorScheme.onPrimaryContainer,
 )
+
+/**
+ * Les couleurs du libre-service, prises au thème Material.
+ *
+ * Elles diffèrent de celles des arrêts pour que l'œil sépare les familles d'un coup, mais **rien
+ * n'y est porté par la seule couleur** (SPEC.md § 9) : c'est la forme de la pastille — disque,
+ * carré arrondi, losange — et le pictogramme qui distinguent les trois familles, et la fiche qui
+ * les nomme.
+ */
+@Composable
+private fun mapRentalColors(): MapRentalColors = MapRentalColors(
+  plate = MaterialTheme.colorScheme.surface,
+  onPlate = MaterialTheme.colorScheme.onSurfaceVariant,
+  plateStroke = MaterialTheme.colorScheme.outline,
+  label = MaterialTheme.colorScheme.onSurface,
+  labelHalo = MaterialTheme.colorScheme.surface,
+  cluster = MaterialTheme.colorScheme.tertiaryContainer,
+  onCluster = MaterialTheme.colorScheme.onTertiaryContainer,
+)
+
+/**
+ * Toutes les couches auxquelles un appui peut répondre, arrêts puis libre-service.
+ *
+ * Les pastilles de regroupement des deux lots sont à la fin de leur propre liste : un marqueur
+ * détaillé, où qu'il vienne, gagne donc l'appui sur un groupe dessiné sous lui.
+ */
+private val TAPPABLE_LAYERS: Array<String> = STOP_TAPPABLE_LAYERS + RENTAL_TAPPABLE_LAYERS
 
 /** L'emprise, dans le type de MapLibre. */
 private fun BoundingBox.asLatLngBounds(): LatLngBounds = LatLngBounds.from(

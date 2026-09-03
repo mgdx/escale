@@ -63,4 +63,32 @@
   <string name="map_stop_close">Close stop details</string>
   <!-- Le mode, puis le numéro de ligne : « Underground 14 ». -->
   <string name="map_stop_line_description">%1$s %2$s</string>
+
+  <!-- Libre-service sur la carte (SPEC.md § 5.7). Le type de véhicule est écrit en toutes lettres
+       pour les lecteurs d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins
+       (SPEC.md § 9). -->
+  <string name="map_rental_form_bicycle">Bike</string>
+  <string name="map_rental_form_scooter">Scooter</string>
+  <string name="map_rental_form_moped">Moped</string>
+  <string name="map_rental_form_car">Car</string>
+  <string name="map_rental_form_other">Shared vehicle</string>
+
+  <!-- Les deux familles de marqueurs. Elles se distinguent déjà par la forme de leur pastille sur
+       la carte ; le libellé le dit en toutes lettres dans l'infobulle. -->
+  <string name="map_rental_kind_station">Docking station</string>
+  <string name="map_rental_kind_vehicle">Free-floating vehicle</string>
+
+  <!-- Infobulle d'une station : nom, véhicules disponibles, places libres, lien vers l'exploitant. -->
+  <plurals name="map_rental_vehicles_available">
+    <item quantity="one">%d vehicle available</item>
+    <item quantity="other">%d vehicles available</item>
+  </plurals>
+  <plurals name="map_rental_docks_available">
+    <item quantity="one">%d free dock</item>
+    <item quantity="other">%d free docks</item>
+  </plurals>
+  <string name="map_rental_not_renting">Temporarily closed for hire</string>
+  <string name="map_rental_not_returning">Temporarily closed for returns</string>
+  <string name="map_rental_open_app">Open the operator app</string>
+  <string name="map_rental_close">Close rental details</string>
 </resources>

@@ -3,6 +3,7 @@ package io.github.mgdx.escale.ui.map
 import androidx.compose.runtime.Stable
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapDataRequest
+import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.StopLine
@@ -144,11 +145,41 @@ data class MapUiState(
    */
   val pointsOfInterestVisible: Boolean = true,
 
+  /**
+   * Les stations de libre-service posées sur leur source ordinaire (SPEC.md § 5.7).
+   *
+   * Vaut [MapGeoJson.EMPTY] quand le regroupement est en service, ou quand le réglage « stations en
+   * libre-service » est décoché : poser une collection vide efface les marqueurs sans démonter la
+   * moindre couche (règle 8).
+   */
+  val rentalStationsGeoJson: String = MapGeoJson.EMPTY,
+
+  /** Les mêmes stations, sur leur source regroupante, au-delà de 200 points (règle 6). */
+  val clusteredRentalStationsGeoJson: String = MapGeoJson.EMPTY,
+
+  /**
+   * Les véhicules en libre-service isolés, sur leur source ordinaire (SPEC.md § 5.7).
+   *
+   * Ils ne se voient qu'à partir du zoom 15, ce que porte le `minzoom` de leur couche et non cet
+   * état : la source reste garnie en dézoomant, la couche s'éteint, et **aucune requête ne part**
+   * en remontant (règle 5).
+   */
+  val rentalVehiclesGeoJson: String = MapGeoJson.EMPTY,
+
+  /** Les mêmes véhicules, sur leur source regroupante (règle 6). */
+  val clusteredRentalVehiclesGeoJson: String = MapGeoJson.EMPTY,
+
   /** L'infobulle ouverte sur un arrêt, ou `null` si aucune ne l'est (SPEC.md § 5.7). */
   val selectedStop: SelectedStop? = null,
 
+  /** L'infobulle ouverte sur une station ou un véhicule en libre-service (SPEC.md § 5.7). */
+  val selectedRental: SelectedRental? = null,
+
   /** Ce que la carte doit faire d'un appui sur un arrêt. Voir [MapStopActions]. */
   val stopActions: MapStopActions = MapStopActions.Inert,
+
+  /** Ce que la carte doit faire d'un appui sur un point de libre-service. */
+  val rentalActions: MapRentalActions = MapRentalActions.Inert,
 )
 
 /**
@@ -193,4 +224,47 @@ data class SelectedStop(
   val linesLoading: Boolean = true,
   /** Les lignes n'ont pas pu être lues : l'infobulle le dit, elle ne fait pas semblant. */
   val linesFailed: Boolean = false,
+)
+
+/**
+ * Les rappels d'interaction sur les points de libre-service (SPEC.md § 5.7).
+ *
+ * Même dispositif que [MapStopActions], et pour la même raison : le lot « carte » possède à la fois
+ * le `ViewModel` et le canevas, leur couture n'a pas à passer par l'écran qui les héberge.
+ * L'instance est créée une seule fois et ne change jamais, si bien qu'elle n'entre dans aucune
+ * comparaison d'état.
+ *
+ * L'appui sur une pastille de regroupement n'est pas ici : rapprocher la caméra est un comportement
+ * de la carte et non du libre-service, et [MapStopActions.onClusterClick] le porte déjà pour les
+ * deux familles de sources regroupantes.
+ */
+@Stable
+class MapRentalActions(val onRentalClick: (SelectedRental) -> Unit, val onDismissRental: () -> Unit) {
+  companion object {
+    val Inert = MapRentalActions(onRentalClick = {}, onDismissRental = {})
+  }
+}
+
+/**
+ * La station ou le véhicule sur lequel l'infobulle est ouverte (SPEC.md § 5.7).
+ *
+ * « Appui sur une station de libre-service : nom, véhicules disponibles, places libres, lien vers
+ * l'exploitant. » Tout est déjà porté par l'entité GeoJSON touchée : l'infobulle s'affiche sans le
+ * moindre appel réseau, à la différence de celle d'un arrêt qui doit aller chercher ses lignes.
+ *
+ * [retrievedAt] n'y figure pas : la donnée vient de la réponse qui a peuplé la source, dont la
+ * fraîcheur est garantie par le cache de 60 secondes de `RentalsCache` (règle 4).
+ */
+data class SelectedRental(
+  val id: String,
+  val name: String,
+  val kind: RentalMarkerKind,
+  /** Le type de véhicule dessiné, qui donne aussi son libellé lu à voix haute (SPEC.md § 9). */
+  val icon: RentalIcon,
+  val vehiclesAvailable: Int,
+  val docksAvailable: Int,
+  val isRenting: Boolean,
+  val isReturning: Boolean,
+  /** Lien profond vers l'exploitant, ouvert en intent externe et jamais en WebView (SPEC.md § 2). */
+  val rentalUriAndroid: String? = null,
 )

@@ -5,12 +5,14 @@ import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.MapRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
+import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
@@ -134,6 +136,33 @@ class FakeStopsRepository(
     detailRequests += stopId
     return detail
   }
+}
+
+/**
+ * Stations et véhicules en libre-service, entièrement pilotés par le cas d'essai.
+ *
+ * Le compteur d'appels est ce qui prouve les règles de sobriété de SPEC.md § 5.7 : c'est lui, et
+ * non l'état affiché, qui dit si une requête est partie.
+ */
+class FakeRentalsRepository(var availabilities: List<RentalAvailability> = emptyList()) : RentalsRepository {
+
+  /** Chaque emprise demandée à `/api/v1/rentals`, dans l'ordre. */
+  val requests: MutableList<BoundingBox> = mutableListOf()
+
+  /** Combien de temps la réponse se fait attendre : de quoi éprouver l'annulation. */
+  var delayMillis: Long = 0
+
+  /** Non nulle : la prochaine emprise échoue, comme le ferait un réseau coupé. */
+  var failure: EscaleError? = null
+
+  override suspend fun stationsIn(area: BoundingBox): Outcome<List<RentalAvailability>> {
+    requests += area
+    if (delayMillis > 0) delay(delayMillis)
+    return failure?.let { Outcome.Failure(it) } ?: Outcome.Success(availabilities)
+  }
+
+  override suspend fun availabilityNear(point: LatLon, radiusMeters: Int): Outcome<List<RentalAvailability>> =
+    Outcome.Success(emptyList())
 }
 
 /** Réglages d'affichage en mémoire : les trois bascules de couches de SPEC.md § 5.6. */
