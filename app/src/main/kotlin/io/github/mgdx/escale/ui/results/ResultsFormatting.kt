@@ -190,6 +190,34 @@ internal fun durationText(value: FormattedDuration): String = when {
 }
 
 /**
+ * Ce qu'un onglet affiche sous son libellé : la durée du trajet le plus rapide qu'il propose, un
+ * marqueur d'attente tant que sa réponse n'est pas là, un tiret quand il n'a rien (SPEC.md § 5.2).
+ *
+ * Les deux marqueurs ne sont pas des mots : le lecteur d'écran n'en entendrait rien de sensé, et
+ * c'est [tabDescription] qui les dit en toutes lettres.
+ */
+@Composable
+internal fun headlineText(headline: TabHeadline): String = when (headline) {
+  TabHeadline.Pending -> stringResource(R.string.results_tab_duration_pending)
+  TabHeadline.None -> stringResource(R.string.results_tab_duration_none)
+  is TabHeadline.Fastest -> durationText(headline.duration)
+}
+
+/** L'onglet tel qu'un lecteur d'écran l'annonce : sa catégorie, puis ce qu'elle propose. */
+@Composable
+internal fun tabDescription(category: JourneyCategory, headline: TabHeadline): String {
+  val label = stringResource(category.labelRes())
+  return when (headline) {
+    TabHeadline.Pending -> stringResource(R.string.results_tab_description_pending, label)
+
+    TabHeadline.None -> stringResource(R.string.results_tab_description_none, label)
+
+    is TabHeadline.Fastest ->
+      stringResource(R.string.results_tab_description_fastest, label, durationText(headline.duration))
+  }
+}
+
+/**
  * La couleur d'un écart à l'horaire : vert à l'heure, orange, rouge (SPEC.md § 5.2).
  *
  * **Elle ne porte jamais l'information à elle seule** : l'appelant l'accompagne toujours d'un texte

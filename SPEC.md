@@ -264,10 +264,21 @@ Conséquences à respecter :
 
 Règles de comportement :
 
-- **Une requête par onglet, déclenchée à l'ouverture de l'onglet**, pas quatre requêtes en parallèle
-  au lancement de la recherche. L'onglet « Transport en commun » est chargé d'emblée, les autres à la
-  demande. Résultat mis en cache pour la durée de la recherche.
-- Motif de ce découpage : côté MOTIS, les trajets en transport en commun plus lents que le trajet
+- **Une requête par onglet**, et **les quatre onglets chargés au départ de la recherche, en série** :
+  l'onglet consulté d'abord, les trois autres à sa suite, une requête à la fois. Jamais quatre
+  requêtes lancées ensemble : l'usager attend la réponse de l'onglet qu'il regarde, et trois
+  requêtes parties en même temps que la sienne ne feraient que la retarder. Résultat mis en cache
+  pour la durée de la recherche, et un onglet déjà chargé n'est jamais rechargé.
+- Motif de ce chargement d'emblée : **chaque onglet annonce sous son libellé la durée du trajet le
+  plus rapide de sa catégorie**, ce qui suppose de connaître les quatre. C'est ce qui permet de
+  comparer les modes d'un coup d'œil, sans ouvrir les onglets un par un.
+- Cette durée est celle du trajet **le plus court**, et non celle du premier de la liste, qui est
+  ordonnée par heure de départ. Un onglet dont la réponse n'est pas arrivée l'annonce (« … ») ; un
+  onglet sans trajet, comme un onglet en échec, affiche un tiret. Un trajet dont une portion est
+  supprimée n'est jamais annoncé comme le plus rapide : ce serait une promesse fausse.
+- Le rafraîchissement du temps réel (§ 7.4) ne porte que sur l'onglet consulté : les durées
+  annoncées par les trois autres restent celles de leur chargement.
+- Motif du découpage par onglet : côté MOTIS, les trajets en transport en commun plus lents que le trajet
   direct le plus rapide sont éliminés pendant la recherche. Mélanger transit et modes directs dans
   une seule requête fait donc disparaître des résultats. Les requêtes séparées sont la méthode
   recommandée par l'API elle-même.
@@ -543,7 +554,9 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
 1. Autocomplétion : debounce ≥ 350 ms, minimum 3 caractères, annulation de la requête précédente.
 2. Une seule requête `plan` en vol à la fois pour un onglet donné ; toute nouvelle recherche annule
    les requêtes en cours.
-3. Les onglets non consultés ne déclenchent aucune requête.
+3. Les quatre onglets d'une recherche sont chargés **en série**, l'onglet consulté d'abord (§ 5.2) ;
+   au-delà de ce chargement initial, un onglet non consulté ne déclenche aucune requête — ni
+   pagination, ni rafraîchissement.
 4. **Aucun polling.** Le rafraîchissement du temps réel est déclenché par l'utilisateur
    (« tirer pour rafraîchir »), ou au retour au premier plan si les données ont plus de 60 secondes.
 5. Cache mémoire des réponses `plan` pour la durée de la recherche ; cache disque de 24 h pour les

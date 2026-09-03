@@ -5,6 +5,7 @@ import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.result.EscaleError
+import java.time.Duration
 import java.time.Instant
 
 /** Le sens d'une pagination : « Plus tôt » ou « Plus tard » (SPEC.md § 5.2). */
@@ -21,6 +22,26 @@ enum class BikeFilter {
   ALL,
   OWN,
   SHARED,
+}
+
+/**
+ * Ce qu'un onglet annonce **sous son libellé** : la durée du trajet le plus rapide qu'il propose
+ * (SPEC.md § 5.2).
+ *
+ * Les trois cas sont distincts à l'œil comme au lecteur d'écran : une catégorie dont la réponse
+ * n'est pas encore arrivée ne dit pas la même chose qu'une catégorie qui n'a rien trouvé. Les
+ * confondre ferait passer une attente pour un échec.
+ */
+sealed interface TabHeadline {
+
+  /** La requête de cet onglet est partie, sa réponse n'est pas là. */
+  data object Pending : TabHeadline
+
+  /** L'onglet a répondu et n'a rien à proposer : liste vide, ou requête en échec. */
+  data object None : TabHeadline
+
+  /** La durée du trajet le plus rapide de l'onglet. */
+  data class Fastest(val duration: Duration) : TabHeadline
 }
 
 /**
@@ -50,6 +71,23 @@ data class TabResults(
   /** Vrai quand l'onglet a répondu et n'a rien trouvé. */
   val isEmpty: Boolean
     get() = feed != null && feed.isEmpty
+
+  /**
+   * Ce que l'onglet annonce sous son libellé (SPEC.md § 5.2).
+   *
+   * Un onglet en échec annonce la même chose qu'un onglet vide : de son point de vue, il n'a aucun
+   * trajet à proposer. Le motif de l'échec, lui, s'affiche dans l'onglet ouvert, pas sur sa
+   * languette.
+   */
+  val headline: TabHeadline
+    get() {
+      val fastest = feed?.fastestDuration
+      return when {
+        fastest != null -> TabHeadline.Fastest(fastest)
+        feed != null || error != null -> TabHeadline.None
+        else -> TabHeadline.Pending
+      }
+    }
 }
 
 /**
@@ -66,9 +104,12 @@ data class ResultsUiState(
   /** Clé du trajet choisi, au sens de `Journey.stableKey()`. */
   val selectedKey: String? = null,
 ) {
-  /** L'onglet consulté. Un onglet inconnu de [tabs] est un onglet que personne n'a encore ouvert. */
+  /** L'onglet consulté. Un onglet inconnu de [tabs] est un onglet dont la requête n'est pas partie. */
   val current: TabResults
     get() = tabs[category] ?: TabResults()
+
+  /** Ce qu'annonce l'onglet [category], y compris tant que sa requête n'est pas partie. */
+  fun headlineOf(category: JourneyCategory): TabHeadline = (tabs[category] ?: TabResults()).headline
 
   /** Les trajets à afficher, filtre de l'onglet Vélo compris. */
   val visibleJourneys: List<Journey>

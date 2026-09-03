@@ -50,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -161,7 +162,7 @@ internal fun ResultsSheet(
     ) {
       Column(modifier = Modifier.fillMaxSize()) {
         SheetHandle(expanded = expanded, onToggle = { expanded = !expanded })
-        ResultsTabs(selected = state.category, onSelected = actions.onCategorySelected)
+        ResultsTabs(state = state, onSelected = actions.onCategorySelected)
         ResultsContent(state = state, actions = actions, padding = padding)
       }
     }
@@ -224,24 +225,61 @@ private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
  *
  * Ils défilent horizontalement : « Transport en commun » ne tient pas sur un quart d'écran, et
  * SPEC.md § 9 interdit de le tronquer à 200 % d'agrandissement. Chaque onglet porte son
- * pictogramme **et** son libellé.
+ * pictogramme, son libellé, **et la durée du trajet le plus rapide de sa catégorie**.
  */
 @Composable
-private fun ResultsTabs(selected: JourneyCategory, onSelected: (JourneyCategory) -> Unit) {
+private fun ResultsTabs(state: ResultsUiState, onSelected: (JourneyCategory) -> Unit) {
   val categories = JourneyCategory.entries
   PrimaryScrollableTabRow(
-    selectedTabIndex = categories.indexOf(selected),
+    selectedTabIndex = categories.indexOf(state.category),
     modifier = Modifier.fillMaxWidth(),
     edgePadding = TabEdgePadding,
   ) {
     categories.forEach { category ->
-      Tab(
-        selected = category == selected,
+      CategoryTab(
+        category = category,
+        headline = state.headlineOf(category),
+        selected = category == state.category,
         onClick = { onSelected(category) },
-        text = { Text(text = stringResource(category.labelRes())) },
-        icon = {
-          Icon(painter = painterResource(category.iconRes()), contentDescription = null)
-        },
+      )
+    }
+  }
+}
+
+/**
+ * Un onglet : son pictogramme, son libellé, et la durée annoncée en dessous (SPEC.md § 5.2).
+ *
+ * Le contenu est posé à la main plutôt que par les emplacements `text` et `icon` de Material :
+ * ceux-ci figent la hauteur de l'onglet à 72 dp, et la troisième ligne y serait tronquée dès que
+ * l'usager agrandit le texte — ce que SPEC.md § 9 interdit. Ici, l'onglet prend la hauteur de ce
+ * qu'il contient, et la barre suit.
+ *
+ * Le lecteur d'écran n'entend pas « Vélo » puis « 7 min » comme deux fragments : l'onglet porte
+ * une seule annonce, qui dit la catégorie **et** ce qu'elle propose (SPEC.md § 9).
+ */
+@Composable
+private fun CategoryTab(category: JourneyCategory, headline: TabHeadline, selected: Boolean, onClick: () -> Unit) {
+  val description = tabDescription(category, headline)
+  Tab(
+    selected = selected,
+    onClick = onClick,
+    modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+  ) {
+    Column(
+      modifier = Modifier.padding(horizontal = TabHorizontalPadding, vertical = TabVerticalPadding),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(TabSpacing),
+    ) {
+      Icon(painter = painterResource(category.iconRes()), contentDescription = null)
+      Text(
+        text = stringResource(category.labelRes()),
+        style = MaterialTheme.typography.titleSmall,
+        textAlign = TextAlign.Center,
+      )
+      Text(
+        text = headlineText(headline),
+        style = MaterialTheme.typography.labelMedium,
+        textAlign = TextAlign.Center,
       )
     }
   }
@@ -391,6 +429,9 @@ private val HandleTouchTarget: Dp = 48.dp
 private val HandleWidth: Dp = 32.dp
 private val HandleHeight: Dp = 4.dp
 private val TabEdgePadding: Dp = 8.dp
+private val TabHorizontalPadding: Dp = 16.dp
+private val TabVerticalPadding: Dp = 12.dp
+private val TabSpacing: Dp = 4.dp
 private val ContentPadding: Dp = 16.dp
 private val ListSpacing: Dp = 8.dp
 private val DragThreshold: Dp = 24.dp

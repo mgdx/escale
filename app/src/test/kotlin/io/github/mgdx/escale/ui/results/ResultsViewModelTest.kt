@@ -39,8 +39,9 @@ import java.time.Instant
 /**
  * Les règles de la feuille de résultats qui ne se voient pas à l'écran (SPEC.md § 5.2 et § 7).
  *
- * Deux d'entre elles sont le cœur du lot et ne peuvent être vérifiées qu'ici : **un onglet non
- * consulté n'émet aucune requête**, et **une requête supplantée ne s'affiche jamais**.
+ * Deux d'entre elles sont le cœur du lot et ne peuvent être vérifiées qu'ici : **les quatre
+ * onglets sont chargés en série, l'onglet consulté d'abord**, et **une requête supplantée ne
+ * s'affiche jamais**.
  */
 class ResultsViewModelTest {
 
@@ -50,6 +51,14 @@ class ResultsViewModelTest {
   private val session = SearchSession()
   private val repository = FakePlanRepository()
   private val selection = SelectedJourneyStore()
+
+  /** Les quatre onglets, dans l’ordre où une recherche ouverte sur le transit les charge. */
+  private val allTabs = listOf(
+    JourneyCategory.TRANSIT,
+    JourneyCategory.CAR,
+    JourneyCategory.BIKE,
+    JourneyCategory.WALK,
+  )
 
   /** Les réglages de SPEC.md § 5.6, tels que le dépôt les émettrait. */
   private val preferences = MutableStateFlow(SearchPreferences())
@@ -65,7 +74,7 @@ class ResultsViewModelTest {
     session.setTo(location("arrivee"))
   }
 
-  // --- Une requête par onglet, à l'ouverture de l'onglet ---------------------------------------
+  // --- Les quatre onglets, en série, l'onglet consulté d'abord (SPEC.md § 5.2) -----------------
 
   @Test
   fun `une recherche incomplete n emet aucune requete`() = runTest {
@@ -77,43 +86,34 @@ class ResultsViewModelTest {
   }
 
   @Test
-  fun `une recherche complete n interroge que l onglet transport en commun`() = runTest {
+  fun `une recherche complete charge les quatre onglets, le consulte d abord`() = runTest {
     val model = viewModel()
     completeSearch()
 
-    // SPEC.md § 5.2 et § 7.3 : surtout pas quatre requêtes en parallèle au lancement.
-    assertEquals(listOf(JourneyCategory.TRANSIT), repository.categories())
+    // Chaque onglet annonce la durée de son trajet le plus rapide : les quatre catégories sont
+    // donc demandées. Mais l'une après l'autre, et l'onglet consulté en premier — trois requêtes
+    // lancées en même temps que la sienne ne feraient que retarder sa réponse (SPEC.md § 5.2).
+    assertEquals(allTabs, repository.categories())
     assertTrue(model.uiState.value.open)
   }
 
   @Test
-  fun `un onglet n est interroge qu a son ouverture`() = runTest {
+  fun `un onglet deja charge par la recherche ne relance rien a son ouverture`() = runTest {
     val model = viewModel()
     completeSearch()
 
     model.onCategorySelected(JourneyCategory.BIKE)
+    model.onCategorySelected(JourneyCategory.WALK)
+    model.onCategorySelected(JourneyCategory.BIKE)
 
-    assertEquals(listOf(JourneyCategory.TRANSIT, JourneyCategory.BIKE), repository.categories())
-    assertEquals(2, model.uiState.value.tabs.size)
-    // Les deux onglets jamais ouverts n'ont pas d'état du tout : ni requête, ni chargement.
-    assertNull(model.uiState.value.tabs[JourneyCategory.CAR])
-    assertNull(model.uiState.value.tabs[JourneyCategory.WALK])
+    // SPEC.md § 7.5 : le résultat est mis en cache pour la durée de la recherche. Changer d'onglet
+    // ne fait plus aucune requête, il ne fait que changer ce qui est affiché.
+    assertEquals(allTabs, repository.categories())
+    assertEquals(4, model.uiState.value.tabs.size)
   }
 
   @Test
-  fun `revenir sur un onglet deja charge ne relance rien`() = runTest {
-    val model = viewModel()
-    completeSearch()
-    model.onCategorySelected(JourneyCategory.WALK)
-    model.onCategorySelected(JourneyCategory.TRANSIT)
-    model.onCategorySelected(JourneyCategory.WALK)
-
-    // SPEC.md § 7.5 : le résultat est mis en cache pour la durée de la recherche.
-    assertEquals(listOf(JourneyCategory.TRANSIT, JourneyCategory.WALK), repository.categories())
-  }
-
-  @Test
-  fun `une nouvelle recherche repart de zero sans reveiller les autres onglets`() = runTest {
+  fun `une nouvelle recherche repart de zero et recharge les quatre onglets`() = runTest {
     val model = viewModel()
     completeSearch()
     model.onCategorySelected(JourneyCategory.CAR)
@@ -121,8 +121,10 @@ class ResultsViewModelTest {
 
     session.setTo(location("autre-arrivee"))
 
-    assertEquals(listOf(JourneyCategory.CAR), repository.categories())
-    assertEquals(1, model.uiState.value.tabs.size)
+    // L'onglet consulté est toujours le premier servi, les trois autres suivent.
+    assertEquals(JourneyCategory.CAR, repository.categories().first())
+    assertEquals(allTabs.toSet(), repository.categories().toSet())
+    assertEquals(4, model.uiState.value.tabs.size)
   }
 
   // --- Rafraîchissement du temps réel, SPEC.md § 7.4 --------------------------------------------
@@ -142,7 +144,7 @@ class ResultsViewModelTest {
         FakePlanRepository.Call(JourneyCategory.TRANSIT, cursor = null, fresh = false),
         FakePlanRepository.Call(JourneyCategory.TRANSIT, cursor = null, fresh = true),
       ),
-      repository.calls,
+      repository.calls.filter { it.category == JourneyCategory.TRANSIT },
     )
     assertFalse(model.uiState.value.current.refreshing)
   }
@@ -171,7 +173,7 @@ class ResultsViewModelTest {
       model.onForeground()
     }
 
-    assertEquals(1, repository.calls.size)
+    assertEquals(allTabs, repository.categories())
   }
 
   @Test
@@ -183,7 +185,7 @@ class ResultsViewModelTest {
 
     model.onForeground()
 
-    assertEquals(2, repository.calls.size)
+    assertEquals(2, repository.callsTo(JourneyCategory.TRANSIT))
     assertTrue(repository.calls.last().fresh)
   }
 
@@ -210,7 +212,7 @@ class ResultsViewModelTest {
 
     // Le rafraîchissement remet le compteur de fraîcheur à zéro : les deux retours suivants
     // n'émettent rien. C'est la seule protection nécessaire, puisqu'il n'y a aucune minuterie.
-    assertEquals(2, repository.calls.size)
+    assertEquals(2, repository.callsTo(JourneyCategory.TRANSIT))
   }
 
   // --- Les états de SPEC.md § 8 -----------------------------------------------------------------
@@ -238,7 +240,7 @@ class ResultsViewModelTest {
     model.onRetry()
 
     assertNull(model.uiState.value.current.error)
-    assertEquals(2, repository.calls.size)
+    assertEquals(2, repository.callsTo(JourneyCategory.TRANSIT))
   }
 
   @Test
@@ -249,7 +251,8 @@ class ResultsViewModelTest {
     model.onCategorySelected(JourneyCategory.WALK)
     model.onCategorySelected(JourneyCategory.TRANSIT)
 
-    assertEquals(listOf(JourneyCategory.TRANSIT, JourneyCategory.WALK), repository.categories())
+    // La reprise est un geste explicite : revenir sur l'onglet en panne ne relance rien.
+    assertEquals(allTabs, repository.categories())
   }
 
   @Test
@@ -457,11 +460,45 @@ class ResultsViewModelTest {
     model.onCategorySelected(JourneyCategory.CAR)
 
     // Le processus meurt : seul `SavedStateHandle` est restitué.
+    repository.calls.clear()
     val restored = viewModel(savedState)
 
     assertEquals(JourneyCategory.CAR, restored.uiState.value.category)
-    // Et les résultats, eux, ne sont pas sauvegardés : ils repartent d'une requête (SPEC.md § 11).
-    assertEquals(JourneyCategory.CAR, repository.calls.last().category)
+    // Et les résultats, eux, ne sont pas sauvegardés : ils repartent d'une requête (SPEC.md § 11),
+    // et c'est l'onglet restitué qui est servi le premier.
+    assertEquals(JourneyCategory.CAR, repository.calls.first().category)
+  }
+
+  // --- La durée annoncée sous chaque onglet (SPEC.md § 5.2) ------------------------------------
+
+  @Test
+  fun `chaque onglet annonce la duree de son trajet le plus rapide`() = runTest {
+    // Le trajet le plus court n'est pas le premier de la liste : celle-ci est ordonnée par heure
+    // de départ.
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(
+      JourneyPage(journeys = listOf(journey("lent", 0, minutes = 40), journey("rapide", 10, minutes = 12))),
+    )
+    repository.answers[JourneyCategory.WALK] = Outcome.Failure(EscaleError.NoNetwork)
+    val model = viewModel()
+
+    completeSearch()
+
+    val state = model.uiState.value
+    assertEquals(TabHeadline.Fastest(Duration.ofMinutes(12)), state.headlineOf(JourneyCategory.TRANSIT))
+    // Une catégorie qui n'a rien trouvé, et une catégorie en échec, n'annoncent aucune durée.
+    assertEquals(TabHeadline.None, state.headlineOf(JourneyCategory.CAR))
+    assertEquals(TabHeadline.None, state.headlineOf(JourneyCategory.WALK))
+  }
+
+  @Test
+  fun `un onglet dont la reponse n est pas arrivee annonce qu il cherche`() = runTest {
+    // La requête est supplantée : sa réponse n'arrivera jamais, l'onglet reste en attente.
+    repository.answers[JourneyCategory.BIKE] = Outcome.Failure(EscaleError.Superseded)
+    val model = viewModel()
+
+    completeSearch()
+
+    assertEquals(TabHeadline.Pending, model.uiState.value.headlineOf(JourneyCategory.BIKE))
   }
 
   /**
@@ -497,20 +534,21 @@ class ResultsViewModelTest {
     time = time,
   )
 
-  private fun journey(id: String, afterMinutes: Long): Journey = journeyOf(id, afterMinutes, rental = false)
+  private fun journey(id: String, afterMinutes: Long, minutes: Long = 20): Journey =
+    journeyOf(id, afterMinutes, rental = false, minutes = minutes)
 
   private fun rentalJourney(id: String, afterMinutes: Long): Journey = journeyOf(id, afterMinutes, rental = true)
 
-  private fun journeyOf(id: String, afterMinutes: Long, rental: Boolean): Journey {
+  private fun journeyOf(id: String, afterMinutes: Long, rental: Boolean, minutes: Long = 20): Journey {
     val start = Instant.parse("2026-09-01T08:00:00Z").plusSeconds(afterMinutes * 60)
-    val end = start.plusSeconds(Duration.ofMinutes(20).seconds)
+    val end = start.plusSeconds(Duration.ofMinutes(minutes).seconds)
     val leg = if (rental) {
       JourneyLeg.Rental(
         startTime = start,
         endTime = end,
         scheduledStartTime = start,
         scheduledEndTime = end,
-        duration = Duration.ofMinutes(20),
+        duration = Duration.ofMinutes(minutes),
         from = place(start),
         to = place(end),
         rental = RentalInfo(
@@ -533,7 +571,7 @@ class ResultsViewModelTest {
         endTime = end,
         scheduledStartTime = start,
         scheduledEndTime = end,
-        duration = Duration.ofMinutes(20),
+        duration = Duration.ofMinutes(minutes),
         from = place(start),
         to = place(end),
       )
@@ -544,7 +582,7 @@ class ResultsViewModelTest {
       endTime = end,
       scheduledStartTime = start,
       scheduledEndTime = end,
-      duration = Duration.ofMinutes(20),
+      duration = Duration.ofMinutes(minutes),
       transfers = 0,
       legs = listOf(leg),
     )
@@ -566,18 +604,18 @@ class ResultsViewModelTest {
   }
 
   @Test
-  fun `changer un reglage relance le seul onglet consulte`() = runTest {
+  fun `changer un reglage recharge les quatre onglets`() = runTest {
     val model = viewModel()
     completeSearch()
-    assertEquals(listOf(JourneyCategory.TRANSIT), repository.categories())
+    assertEquals(allTabs, repository.categories())
 
     preferences.value = SearchPreferences(pedestrianProfile = PedestrianProfile.WHEELCHAIR)
 
-    // L'onglet consulté est rechargé avec les nouveaux réglages ; les trois autres, jamais
-    // ouverts, restent muets (SPEC.md § 7.3).
-    assertEquals(listOf(JourneyCategory.TRANSIT, JourneyCategory.TRANSIT), repository.categories())
+    // Les durées annoncées sous les quatre languettes ont été calculées avec les anciens réglages :
+    // elles sont périmées autant que la liste affichée (SPEC.md § 5.6).
+    assertEquals(allTabs + allTabs, repository.categories())
     assertEquals("WHEELCHAIR", PlanQueryBuilder.build(repository.queries.last())["pedestrianProfile"])
-    assertEquals(1, model.uiState.value.tabs.size)
+    assertEquals(4, model.uiState.value.tabs.size)
   }
 
   @Test
@@ -585,17 +623,14 @@ class ResultsViewModelTest {
     val model = viewModel()
     completeSearch()
     model.onCategorySelected(JourneyCategory.BIKE)
-    assertEquals(2, model.uiState.value.tabs.size)
 
     preferences.value = SearchPreferences(allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE))
 
-    // Les trajets de l'onglet Vélo avaient été calculés avec les trottinettes : ils ne peuvent
-    // pas rester affichés. Seul l'onglet consulté est rechargé.
-    assertEquals(setOf(JourneyCategory.BIKE), model.uiState.value.tabs.keys)
-    assertEquals(
-      listOf(JourneyCategory.TRANSIT, JourneyCategory.BIKE, JourneyCategory.BIKE),
-      repository.categories(),
-    )
+    // Les trajets de l'onglet Vélo avaient été calculés avec les trottinettes : ils ne peuvent pas
+    // rester affichés, et c'est l'onglet consulté qui repart le premier.
+    assertEquals(4, model.uiState.value.tabs.size)
+    assertEquals(JourneyCategory.BIKE, repository.calls.last { it.category == JourneyCategory.BIKE }.category)
+    assertEquals(allTabs.size * 2, repository.calls.size)
   }
 
   @Test
@@ -605,7 +640,7 @@ class ResultsViewModelTest {
 
     preferences.value = SearchPreferences()
 
-    assertEquals(listOf(JourneyCategory.TRANSIT), repository.categories())
+    assertEquals(allTabs, repository.categories())
   }
 
   @Test

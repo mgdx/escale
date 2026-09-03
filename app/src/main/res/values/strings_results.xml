@@ -11,6 +11,15 @@
   <string name="results_tab_bike">Bike</string>
   <string name="results_tab_walk">On foot</string>
 
+  <!-- Sous le libellé de chaque onglet, la durée du trajet le plus rapide de la catégorie
+       (SPEC.md § 5.2). Les deux marqueurs ne sont pas des mots : ils ne se traduisent pas, et
+       c'est la description qui les dit en toutes lettres au lecteur d'écran. -->
+  <string name="results_tab_duration_pending" translatable="false">…</string>
+  <string name="results_tab_duration_none" translatable="false">—</string>
+  <string name="results_tab_description_pending">%1$s, searching…</string>
+  <string name="results_tab_description_none">%1$s, no trip</string>
+  <string name="results_tab_description_fastest">%1$s, fastest: %2$s</string>
+
   <!-- La feuille elle-même, qui monte au-dessus de la carte (SPEC.md § 5.1). -->
   <string name="results_sheet_description">Search results</string>
   <string name="results_sheet_expand">Expand the results</string>

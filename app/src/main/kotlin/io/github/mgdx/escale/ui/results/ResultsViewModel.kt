@@ -35,16 +35,17 @@ import java.time.Instant
  *
  * Trois règles de sobriété réseau se jouent ici, et nulle part ailleurs dans l'interface :
  *
- * - **une requête par onglet, à l'ouverture de l'onglet** (§ 5.2, § 7.3). L'onglet consulté est
- *   chargé, les trois autres ne le sont pas. [onCategorySelected] est le seul chemin qui déclenche
- *   une requête en dehors du départ d'une recherche, et il ne le fait que pour l'onglet demandé ;
+ * - **les quatre onglets sont chargés en série, l'onglet consulté d'abord** (§ 5.2, § 7.3). Chaque
+ *   onglet annonce sous son libellé la durée du trajet le plus rapide qu'il propose : les quatre
+ *   catégories doivent donc être connues, et [loadAll] les demande une par une, jamais quatre
+ *   requêtes lancées ensemble ;
  * - **un onglet déjà chargé ne recharge pas** (§ 7.5). Le cache mémoire de `PlanRepository` rendrait
  *   la réponse sans réseau, mais on ne va même pas jusque-là : un onglet qui a déjà sa liste est
- *   affiché tel quel ;
+ *   affiché tel quel, et la chaîne de chargement l'enjambe ;
  * - **une nouvelle recherche annule ce qui court** (§ 7.2). Les travaux en cours sont annulés, les
- *   quatre onglets repartent de zéro, et seul l'onglet consulté est relancé. Un réglage de
- *   recherche modifié (§ 5.6) produit exactement le même effet : les trajets affichés ont été
- *   calculés avec les anciens réglages, ils sont périmés.
+ *   quatre onglets repartent de zéro, et la chaîne recommence. Un réglage de recherche modifié
+ *   (§ 5.6) produit exactement le même effet : les trajets affichés ont été calculés avec les
+ *   anciens réglages, ils sont périmés.
  *
  * `EscaleError.Superseded` n'est jamais montré : il signifie qu'un résultat plus récent est en
  * route, et afficher « une erreur est survenue » à quelqu'un qui vient de relancer sa recherche
@@ -53,7 +54,8 @@ import java.time.Instant
  * **Le temps réel se rafraîchit sur geste, jamais tout seul** (§ 7.4). Il n'y a ici ni minuterie,
  * ni boucle, ni rafraîchissement périodique : [onPullToRefresh] rafraîchit parce que l'usager l'a
  * demandé, [onForeground] parce que l'application revient au premier plan **et** que
- * `RealtimeRefreshPolicy` juge les horaires périmés. Les deux ne touchent que l'onglet consulté.
+ * `RealtimeRefreshPolicy` juge les horaires périmés. Les deux ne touchent que l'onglet consulté :
+ * les durées annoncées par les trois autres restent celles de leur chargement.
  *
  * **La mise en évidence d'un trajet est un état, son ouverture est un événement.** SPEC.md § 5.1
  * veut que la carte « cadre le trajet sélectionné » : dès qu'une liste arrive, son premier trajet
@@ -99,6 +101,9 @@ class ResultsViewModel(
   /** Un travail par onglet, au plus. C'est ce qui permet d'annuler sans toucher aux autres. */
   private val jobs = mutableMapOf<JourneyCategory, Job>()
 
+  /** La chaîne qui charge les quatre onglets l'un après l'autre, annulable d'un bloc. */
+  private var searchJob: Job? = null
+
   /** Les réglages de SPEC.md § 5.6, tels que le dépôt les a émis en dernier. */
   private var preferences = SearchPreferences()
 
@@ -121,8 +126,8 @@ class ResultsViewModel(
    *   recherche. Observer les deux en parallèle ferait partir la première requête avec les valeurs
    *   par défaut, pour la relancer aussitôt : une requête pour rien, que SPEC.md § 7 proscrit ;
    * - **un changement réel** périme ce qui est affiché : ces trajets ont été calculés avec les
-   *   anciens réglages. Les onglets repartent de zéro et **seul l'onglet consulté est rechargé**,
-   *   les autres restant muets tant que l'usager ne les ouvre pas (SPEC.md § 7.3).
+   *   anciens réglages. Les quatre onglets repartent de zéro et sont rechargés en série, l'onglet
+   *   consulté d'abord (SPEC.md § 7.3).
    *
    * Le cache de `PlanRepository` n'a rien à désactiver : sa clé contient la `SearchQuery`, donc les
    * préférences. Une préférence modifiée donne une clé différente, et la réponse précédente n'est
@@ -140,12 +145,16 @@ class ResultsViewModel(
   }
 
   /**
-   * L'usager change d'onglet : c'est **ici**, et seulement ici, qu'un onglet est chargé pour la
-   * première fois (SPEC.md § 5.2).
+   * L'usager change d'onglet.
    *
-   * Un onglet déjà chargé n'émet rien. Un onglet en erreur n'émet rien non plus : la reprise est
-   * un geste explicite ([onRetry]), sans quoi un serveur en panne serait interrogé à chaque
-   * aller-retour entre deux onglets.
+   * Il n'y a normalement **rien à charger** : les quatre onglets ont été demandés au départ de la
+   * recherche, et celui-ci a déjà sa liste, son erreur, ou sa requête en vol. Le trajet mis en
+   * évidence suit la nouvelle liste, et la carte le trace aussitôt ([syncSelection], SPEC.md
+   * § 5.1). Le chargement ne subsiste que pour l'onglet qu'aucune chaîne n'a atteint — une
+   * recherche relancée pendant que l'usager change d'onglet, par exemple.
+   *
+   * Un onglet en erreur n'émet rien : la reprise est un geste explicite ([onRetry]), sans quoi un
+   * serveur en panne serait interrogé à chaque aller-retour entre deux onglets.
    */
   fun onCategorySelected(category: JourneyCategory) {
     if (state.value.category == category) return
@@ -220,18 +229,52 @@ class ResultsViewModel(
   private fun onDraftChanged(draft: SearchDraft) = restart(open = draft.isComplete)
 
   /**
-   * Repart de zéro : tout ce qui court est annulé, les quatre onglets sont oubliés, et le seul
-   * onglet consulté est rechargé — s'il y a une recherche à faire.
+   * Repart de zéro : tout ce qui court est annulé, les quatre onglets sont oubliés, et la chaîne
+   * de chargement recommence — s'il y a une recherche à faire.
    */
   private fun restart(open: Boolean) {
+    searchJob?.cancel()
+    searchJob = null
     jobs.values.forEach(Job::cancel)
     jobs.clear()
     val category = state.value.category
-    state.value = ResultsUiState(open = open, category = category)
+    // Les quatre onglets sont en attente **avant** la première requête : leur languette annonce
+    // qu'une réponse arrive, et non qu'il n'y a rien à proposer (SPEC.md § 5.2).
+    state.value = ResultsUiState(open = open, category = category, tabs = if (open) awaiting() else emptyMap())
     // Plus aucun résultat à montrer : la carte n'a plus rien à tracer, jusqu'à ce que la nouvelle
     // recherche en rende. Le premier trajet du nouveau jeu sera mis en évidence tout seul.
     syncSelection()
-    if (open) load(category)
+    if (open) loadAll()
+  }
+
+  /** Les quatre onglets, en attente de leur réponse. */
+  private fun awaiting(): Map<JourneyCategory, TabResults> =
+    JourneyCategory.entries.associateWith { TabResults(loading = true) }
+
+  /**
+   * Charge les quatre onglets **l'un après l'autre**, l'onglet consulté d'abord (SPEC.md § 5.2).
+   *
+   * En série, et non en parallèle : l'usager attend la catégorie qu'il regarde, et trois requêtes
+   * lancées en même temps qu'elle ne feraient que retarder sa réponse. Les trois autres arrivent
+   * ensuite, et chacune remplit la durée annoncée sous sa languette au fur et à mesure.
+   *
+   * Un onglet qui a déjà sa liste, ou dont l'usager a lui-même relancé la requête, est enjambé :
+   * sa réponse est au moins aussi récente que celle qu'on irait chercher (SPEC.md § 7.5).
+   */
+  private fun loadAll() {
+    searchJob?.cancel()
+    searchJob = viewModelScope.launch {
+      for (category in searchOrder()) {
+        if (state.value.tabs[category]?.feed != null || jobs[category]?.isActive == true) continue
+        runLoad(category)
+      }
+    }
+  }
+
+  /** L'onglet consulté, puis les trois autres dans l'ordre des onglets (SPEC.md § 5.2). */
+  private fun searchOrder(): List<JourneyCategory> {
+    val category = state.value.category
+    return listOf(category) + JourneyCategory.entries.filterNot { it == category }
   }
 
   /**
@@ -259,30 +302,44 @@ class ResultsViewModel(
     load(category, cursor, page)
   }
 
+  /** Une requête déclenchée par un geste : elle a son propre travail, annulable à elle seule. */
   private fun load(
     category: JourneyCategory,
     cursor: String? = null,
     page: ResultsPage? = null,
     refresh: Boolean = false,
   ) {
-    val query = session.toQuery(category, preferences) ?: return
     jobs[category]?.cancel()
-    jobs[category] = viewModelScope.launch {
-      updateTab(category) { tab ->
-        when {
-          page != null -> tab.copy(paging = page, error = null)
+    jobs[category] = viewModelScope.launch { runLoad(category, cursor, page, refresh) }
+  }
 
-          // Un rafraîchissement garde la liste sous les yeux : elle est périmée de quelques
-          // secondes, pas fausse, et la remplacer par un écran d'attente serait un recul.
-          refresh -> tab.copy(refreshing = true, error = null)
+  /**
+   * Une requête, et l'état de l'onglet pendant qu'elle court.
+   *
+   * Suspendue plutôt que lancée : c'est ce qui permet à [loadAll] d'enchaîner les quatre onglets
+   * sans qu'ils se recouvrent, et de tout annuler d'un seul travail.
+   */
+  private suspend fun runLoad(
+    category: JourneyCategory,
+    cursor: String? = null,
+    page: ResultsPage? = null,
+    refresh: Boolean = false,
+  ) {
+    val query = session.toQuery(category, preferences) ?: return
+    updateTab(category) { tab ->
+      when {
+        page != null -> tab.copy(paging = page, error = null)
 
-          else -> TabResults(loading = true)
-        }
+        // Un rafraîchissement garde la liste sous les yeux : elle est périmée de quelques
+        // secondes, pas fausse, et la remplacer par un écran d'attente serait un recul.
+        refresh -> tab.copy(refreshing = true, error = null)
+
+        else -> TabResults(loading = true)
       }
-      when (val outcome = planRepository.plan(query, cursor, fresh = refresh)) {
-        is Outcome.Success -> updateTab(category) { it.extendedWith(outcome.value, page) }
-        is Outcome.Failure -> onFailure(category, outcome.error)
-      }
+    }
+    when (val outcome = planRepository.plan(query, cursor, fresh = refresh)) {
+      is Outcome.Success -> updateTab(category) { it.extendedWith(outcome.value, page) }
+      is Outcome.Failure -> onFailure(category, outcome.error)
     }
   }
 

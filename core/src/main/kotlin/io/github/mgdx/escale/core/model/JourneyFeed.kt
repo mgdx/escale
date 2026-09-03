@@ -1,5 +1,7 @@
 package io.github.mgdx.escale.core.model
 
+import java.time.Duration
+
 /**
  * La liste de résultats d'un onglet, telle qu'elle s'accumule au fil des pages (SPEC.md § 5.2).
  *
@@ -21,6 +23,19 @@ data class JourneyFeed(
 ) {
   val isEmpty: Boolean
     get() = journeys.isEmpty()
+
+  /**
+   * La durée du trajet le plus rapide de la liste, celle que l'onglet annonce sous son libellé
+   * (SPEC.md § 5.2), ou `null` quand la catégorie n'a rien à proposer.
+   *
+   * C'est bien la durée la plus courte, et non celle du premier trajet : la liste est ordonnée par
+   * heure de départ, et le premier départ n'est pas le trajet le plus rapide.
+   *
+   * Les trajets dont une portion est supprimée en sont écartés : annoncer « 12 min » sous un
+   * onglet dont le seul trajet de 12 minutes ne circule pas serait une promesse fausse.
+   */
+  val fastestDuration: Duration?
+    get() = journeys.filterNot { it.hasCancelledLeg }.minOfOrNull { it.duration }
 
   /**
    * « Plus tôt » : les trajets de [page] rejoignent la liste, et c'est le curseur *précédent* qui

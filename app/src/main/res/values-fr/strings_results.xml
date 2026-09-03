@@ -5,6 +5,10 @@
   <string name="results_tab_bike">Vélo</string>
   <string name="results_tab_walk">À pied</string>
 
+  <string name="results_tab_description_pending">%1$s, recherche en cours…</string>
+  <string name="results_tab_description_none">%1$s, aucun trajet</string>
+  <string name="results_tab_description_fastest">%1$s, le plus rapide&#160;: %2$s</string>
+
   <string name="results_sheet_description">Résultats de la recherche</string>
   <string name="results_sheet_expand">Agrandir les résultats</string>
   <string name="results_sheet_collapse">Réduire les résultats</string>

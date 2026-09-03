@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Duration
 
 /**
  * La pagination de SPEC.md § 5.2 : « Plus tôt » et « Plus tard » étendent la liste affichée, ils ne
@@ -81,5 +82,40 @@ class JourneyFeedTest {
   @Test
   fun `une page vide donne une liste vide`() {
     assertTrue(JourneyFeed.of(JourneyPage(journeys = emptyList())).isEmpty)
+  }
+
+  // --- La durée annoncée sous l'onglet (SPEC.md § 5.2) -----------------------------------------
+
+  @Test
+  fun `un onglet annonce la duree du trajet le plus rapide, pas celle du premier depart`() {
+    val quick = journey(id = "rapide", legs = listOf(transit(afterMinutes = 30, minutes = 10)))
+    val feed = JourneyFeed.of(JourneyPage(journeys = listOf(early, quick)))
+
+    // `early` part le premier, il est donc en tête de liste ; c'est bien l'autre qui est le plus
+    // rapide, et c'est lui que l'onglet annonce.
+    assertEquals(early, feed.journeys.first())
+    assertEquals(Duration.ofMinutes(10), feed.fastestDuration)
+  }
+
+  @Test
+  fun `un onglet sans trajet n annonce aucune duree`() {
+    assertNull(JourneyFeed.of(JourneyPage(journeys = emptyList())).fastestDuration)
+  }
+
+  @Test
+  fun `un trajet supprime n est jamais annonce comme le plus rapide`() {
+    val cancelled = journey(id = "supprime", legs = listOf(transit(afterMinutes = 0, minutes = 5, cancelled = true)))
+    val feed = JourneyFeed.of(JourneyPage(journeys = listOf(cancelled, early)))
+
+    // Le trajet supprimé est plus court, mais il ne circule pas : l'annoncer serait une promesse
+    // fausse.
+    assertEquals(Duration.ofMinutes(30), feed.fastestDuration)
+  }
+
+  @Test
+  fun `un onglet dont tous les trajets sont supprimes n annonce aucune duree`() {
+    val cancelled = journey(id = "supprime", legs = listOf(transit(afterMinutes = 0, minutes = 5, cancelled = true)))
+
+    assertNull(JourneyFeed.of(JourneyPage(journeys = listOf(cancelled))).fastestDuration)
   }
 }

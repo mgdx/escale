@@ -46,4 +46,7 @@ class FakePlanRepository : PlanRepository {
 
   /** Les onglets interrogés, dans l'ordre, sans les doublons de pagination. */
   fun categories(): List<JourneyCategory> = calls.map { it.category }
+
+  /** Le nombre de requêtes reçues pour un onglet donné. */
+  fun callsTo(category: JourneyCategory): Int = calls.count { it.category == category }
 }
