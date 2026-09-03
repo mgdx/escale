@@ -8,7 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * La base locale d'Escale : favoris, historique et trajets surveillés (SPEC.md § 5.5).
+ * La base locale d'Escale : favoris et historique (SPEC.md § 5.5).
  *
  * **C'est la donnée la plus sensible de l'application** : les lieux où l'usager vit et travaille,
  * et tout ce qu'il a cherché. Trois règles en découlent, et elles ne se négocient pas (SPEC.md § 11) :
@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *    `BuildConfig.DEBUG`. Un journal de requêtes contiendrait ici des adresses.
  * 3. Aucune donnée ne quitte la base par une autre voie que les dépôts de `data.repository`.
  *
- * **`version = 4`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
+ * **`version = 5`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
  * toute seule à la mise à jour est un défaut, pas une simplification : chaque version fournit donc
  * sa `Migration`, et les schémas exportés dans `data/schemas` sont ce qui permet de les vérifier.
  */
@@ -32,9 +32,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     FavoriteStopEntity::class,
     FavoriteJourneyEntity::class,
     SearchHistoryEntity::class,
-    WatchedJourneyEntity::class,
   ],
-  version = 4,
+  version = 5,
   exportSchema = true,
 )
 abstract class EscaleDatabase : RoomDatabase() {
@@ -42,8 +41,6 @@ abstract class EscaleDatabase : RoomDatabase() {
   internal abstract fun favoritesDao(): FavoritesDao
 
   internal abstract fun historyDao(): HistoryDao
-
-  internal abstract fun watchedJourneysDao(): WatchedJourneysDao
 
   companion object {
     /**
@@ -71,11 +68,12 @@ abstract class EscaleDatabase : RoomDatabase() {
      * incapable d'ouvrir sa base, donc morte. Les doublons sont donc **fusionnés d'abord**, dans la
      * même transaction que la création de l'index : soit les deux réussissent, soit rien n'a lieu.
      *
-     * La ligne conservée par groupe n'est pas prise au hasard : c'est **celle qui porte une
-     * surveillance** s'il y en a une (SPEC.md § 5.5.1 — la bascule « me prévenir avant le départ »
-     * s'était attachée à l'un des doublons, et la perdre en silence serait une régression visible),
-     * et à défaut la plus ancienne, celle que l'usager a créée délibérément. Les autres partent
-     * avec leur éventuelle surveillance, par la cascade de la clé étrangère.
+     * La ligne conservée par groupe n'est pas prise au hasard : c'est **celle qui portait une
+     * surveillance** s'il y en avait une, et à défaut la plus ancienne, celle que l'usager a créée
+     * délibérément. La fonction de surveillance a depuis été retirée et sa table est supprimée par
+     * [MIGRATION_4_5], mais `watched_journeys` existe encore au moment où cette migration-ci
+     * s'exécute, sur une base restée en version 2 : la requête doit continuer de la lire, faute de
+     * quoi la mise à jour échouerait sur `no such table` et laisserait l'application sans base.
      */
     val MIGRATION_2_3 = object : Migration(startVersion = 2, endVersion = 3) {
       override fun migrate(db: SupportSQLiteDatabase) {
@@ -151,6 +149,24 @@ abstract class EscaleDatabase : RoomDatabase() {
         "`index_search_history_from_name_from_lat_from_lon_to_name_to_lat_to_lon` " +
         "ON `search_history` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`)"
 
+    /**
+     * Version 4 → 5 : les trajets surveillés sont retirés, et leur table part avec eux.
+     *
+     * La fonction est supprimée pour ce qu'elle coûtait en confidentialité : une requête au serveur
+     * à heure fixe, avant chaque trajet, dessine des habitudes de déplacement. Ce qu'elle avait
+     * enregistré est de la même nature — l'heure et les jours où l'usager part de chez lui — et le
+     * laisser dans la base reviendrait à retirer la fonction sans retirer la donnée. La table est
+     * donc **supprimée**, pas seulement délaissée.
+     *
+     * `favorite_journeys` n'est pas touchée : les trajets favoris survivent, seule leur éventuelle
+     * surveillance disparaît. `IF EXISTS` couvre le cas d'une base déjà dépourvue de la table.
+     */
+    val MIGRATION_4_5 = object : Migration(startVersion = 4, endVersion = 5) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("DROP TABLE IF EXISTS watched_journeys")
+      }
+    }
+
     /** Nom du fichier dans le répertoire privé `databases/` de l'application. */
     const val FILE_NAME = "escale.db"
 
@@ -159,12 +175,11 @@ abstract class EscaleDatabase : RoomDatabase() {
      *
      * Aucun `fallbackToDestructiveMigration`, aucun `setQueryCallback`, aucun
      * `openHelperFactory` : le constructeur reste nu à dessein, chacune de ces options coûtant
-     * soit les favoris de l'usager, soit sa confidentialité. Room active de lui-même
-     * `PRAGMA foreign_keys`, ce dont dépend la cascade de `watched_journeys`.
+     * soit les favoris de l'usager, soit sa confidentialité.
      */
     fun create(context: Context): EscaleDatabase =
       Room.databaseBuilder(context.applicationContext, EscaleDatabase::class.java, FILE_NAME)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
         .build()
   }
 }

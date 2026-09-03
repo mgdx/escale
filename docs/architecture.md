@@ -56,7 +56,7 @@ Plusieurs agents écrivent en parallèle. Ces règles existent pour qu'ils ne se
    `strings.xml` (commun : nom de l'appli, actions génériques, erreurs générales),
    puis `strings_map.xml`, `strings_search.xml`, `strings_results.xml`, `strings_detail.xml`,
    `strings_departures.xml`, `strings_trip.xml`, `strings_settings.xml`, `strings_favorites.xml`,
-   `strings_watch.xml`, `strings_about.xml`.
+   `strings_about.xml`.
    Android fusionne tous les `res/values/*.xml` : un lot n'écrit que dans le fichier de son écran,
    et dans son équivalent `values-fr/`. **Toute chaîne ajoutée en anglais l'est aussi en français,
    dans le même commit.**
@@ -106,7 +106,6 @@ Noms et emplacements figés. Les champs sont dérivés de `docs/motis-openapi.ya
 | `FavoritePlace` | lieu favori **nommé** | `id: Long`, `label: String?`, `location`, `createdAt`, `displayName` — le libellé n'est pas décoratif, le §5.5 parle de « lieux nommés » |
 | `FavoriteJourney` | trajet favori | `id: Long`, `label`, `from`, `to`, `category` |
 | `SearchHistoryEntry` | une recherche passée | `id: Long`, `from`, `to`, `time: TimeChoice`, `searchedAt` — **pas** de `SearchQuery` : les préférences du §5.6 sont globales et ne se figent pas dans un historique |
-| `WatchedJourney` | trajet surveillé (§5.5.1) | trajet favori, heure de départ habituelle, jours, `itineraryId`, `lastViewedAt` |
 | `ServerConfig` | serveur configuré | `baseUrl`, `label`, `hasTiles: Boolean`, `lastCheckedAt: Instant?` |
 | `Delay` | écart temps réel | calculé dans `:core.format`, jamais dans l'UI |
 
@@ -142,7 +141,6 @@ RentalsRepository     stations et véhicules en libre-service, disponibilités
 PreferencesRepository réglages (Flow), écriture
 FavoritesRepository   domicile, travail, lieux **nommés** (identifiés, pas désignés par leurs coordonnées), arrêts, trajets
 HistoryRepository     dernières recherches, effacement
-WatchedJourneysRepository  trajets surveillés (§5.5.1) : heure, jours, identifiant d'itinéraire
 ```
 
 ## 6. Résultat et erreurs (`:core.result`)

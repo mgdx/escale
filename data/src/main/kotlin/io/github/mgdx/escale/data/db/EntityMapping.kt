@@ -10,12 +10,7 @@ import io.github.mgdx.escale.core.model.SearchHistoryEntry
 import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
-import io.github.mgdx.escale.core.model.WatchSchedule
-import io.github.mgdx.escale.core.model.WatchedJourney
-import java.time.DayOfWeek
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 
 /**
  * Traduction entre les entités de la base et les types de domaine.
@@ -122,34 +117,6 @@ internal fun TimeChoice.toMillisColumn(): Long? = when (this) {
   is TimeChoice.ArriveBy -> instant.toEpochMilli()
 }
 
-internal fun WatchedJourneyEntity.toWatchedJourney(): WatchedJourney = WatchedJourney(
-  journeyId = journeyId,
-  schedule = WatchSchedule(
-    departureTime = LocalTime.MIDNIGHT.plusMinutes(departureMinuteOfDay.toLong()),
-    days = decodeDays(daysOfWeek),
-    date = date?.let(LocalDate::ofEpochDay),
-  ),
-  itineraryId = itineraryId,
-  itineraryCapturedAt = itineraryCapturedAt?.let(Instant::ofEpochMilli),
-  lastViewedAt = lastViewedAt?.let(Instant::ofEpochMilli),
-  createdAt = Instant.ofEpochMilli(createdAt),
-)
-
-internal fun WatchedJourney.toEntity(): WatchedJourneyEntity = WatchedJourneyEntity(
-  journeyId = journeyId,
-  // Les secondes et les nanosecondes d'une heure de départ habituelle n'ont pas de sens : elles
-  // sont tronquées ici plutôt que conservées à moitié.
-  departureMinuteOfDay = schedule.departureTime.hour * MINUTES_PER_HOUR + schedule.departureTime.minute,
-  daysOfWeek = encodeDays(schedule.days),
-  date = schedule.date?.toEpochDay(),
-  itineraryId = itineraryId,
-  itineraryCapturedAt = itineraryCapturedAt?.toEpochMilli(),
-  lastViewedAt = lastViewedAt?.toEpochMilli(),
-  createdAt = createdAt.toEpochMilli(),
-)
-
-private const val MINUTES_PER_HOUR = 60
-
 /**
  * Un genre de lieu illisible se relit d'après l'identifiant plutôt que par une valeur arbitraire.
  *
@@ -165,12 +132,3 @@ private fun encodeModes(modes: List<TransitMode>): String = modes.joinToString(V
 private fun decodeModes(stored: String): List<TransitMode> = stored
   .split(VALUE_SEPARATOR)
   .mapNotNull { name -> TransitMode.entries.firstOrNull { it.name == name } }
-
-private fun encodeDays(days: Set<DayOfWeek>): String = days
-  .sorted()
-  .joinToString(VALUE_SEPARATOR) { it.name }
-
-private fun decodeDays(stored: String): Set<DayOfWeek> = stored
-  .split(VALUE_SEPARATOR)
-  .mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }
-  .toSet()

@@ -17,6 +17,8 @@ encore écrites sont annoncées comme telles.
   les écrive.
 - Rien n'est synchronisé, sauvegardé ni envoyé ailleurs que sur votre appareil et vers le serveur
   que vous avez choisi.
+- **Aucune requête n'est envoyée sans que vous ayez l'application sous les yeux.** Escale n'a ni
+  tâche de fond, ni service, ni notification : fermée, elle ne fait rien du tout.
 
 ## Ce qui est envoyé au serveur MOTIS configuré
 
@@ -33,7 +35,6 @@ Sont transmis, uniquement au moment où vous vous en servez :
 | Vous ouvrez le détail d'un trajet | l'identifiant du trajet consulté |
 | Vous déplacez la carte | l'emprise rectangulaire affichée : une fois pour demander les **tuiles** du fond de carte, une fois pour demander les **arrêts** à y placer. Jamais votre position |
 | Vous testez un serveur dans les réglages | une requête d'état, une petite emprise de carte et une tuile, pour savoir ce que ce serveur sait faire |
-| Une heure avant un trajet que **vous avez mis sous surveillance** | l'identifiant de l'itinéraire enregistré ; et si le serveur le refuse, la même requête de recherche que si vous l'aviez relancée vous-même. C'est **la seule requête qu'Escale envoie sans que vous ayez l'application sous les yeux**, et elle est décrite en détail plus bas |
 | Chaque requête | un en-tête `User-Agent` de la forme `Escale/<version> (+https://github.com/mgdx/escale)`, exigé par la politique d'usage de l'instance publique |
 
 Le serveur voit également l'adresse IP de votre appareil, comme pour toute requête réseau. Escale
@@ -67,8 +68,6 @@ et qu'aucune autre application ne peut lire. Rien n'en sort.
 | Les résultats de recherche déjà obtenus | **en mémoire seulement**, jamais sur disque : ils disparaissent quand l'application se ferme. Effaçables depuis **Réglages → Données** |
 | Les réponses de l'autocomplétion d'adresses | cache disque, **24 heures**, quelques mégaoctets au plus, dans le stockage privé. Effaçable depuis **Réglages → Données** |
 | Les tuiles du fond de carte déjà téléchargées | cache disque **plafonné à 100 Mo**, au-delà duquel les plus anciennes sont évincées. Effaçable depuis **Réglages → Données** |
-| Les trajets que vous surveillez : heure, jours, identifiant d'itinéraire | base locale (Room), jusqu'à ce que vous arrêtiez la surveillance ou supprimiez le favori |
-| Le résultat de la dernière vérification d'un trajet surveillé | fichier de préférences (DataStore), effacé dès que vous arrêtez la surveillance |
 
 Les résultats gardés en mémoire sont classés par le serveur qui les a produits : changer d'instance
 dans les réglages n'en fait jamais ressortir un obtenu ailleurs.
@@ -90,26 +89,20 @@ appareil, ce que ce document promet précisément de ne jamais faire.
 
 ## Permissions
 
-Escale déclare **six** permissions Android, et aucune autre :
+Escale déclare **quatre** permissions Android, et aucune autre :
 
 | Permission | Pourquoi | Quand elle est demandée |
 |---|---|---|
 | `INTERNET` | interroger le serveur MOTIS | à l'installation, obligatoire |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | vous situer sur la carte et partir de votre position | facultatives, au premier appui sur le bouton de localisation |
 | `ACCESS_NETWORK_STATE` | savoir si l'appareil est connecté, pour que la carte cesse de réclamer des tuiles hors ligne | à l'installation, exigée par la bibliothèque de carte |
-| `POST_NOTIFICATIONS` | vous prévenir qu'un trajet surveillé est perturbé | facultative, au moment où vous activez votre **première** surveillance, jamais avant |
-| `WAKE_LOCK` | exigée par la bibliothèque de tâches d'Android (`androidx.work`), qui tient l'appareil éveillé le temps d'une vérification de quelques secondes | à l'installation |
 
 `ACCESS_NETWORK_STATE` est une permission de niveau *normal* : elle ne vous est pas soumise et ne
 donne accès qu'au fait que l'appareil soit connecté ou non — ni le nom du réseau, ni son adresse,
 ni rien qui vous concerne. La bibliothèque de carte réclamait également l'accès à l'état du Wi-Fi ;
 elle ne s'en sert nulle part, et Escale la retire de son manifeste.
 
-`WAKE_LOCK` est également de niveau *normal* : elle ne vous est pas soumise, elle ne donne accès à
-aucune donnée, et elle empêche seulement l'appareil de se rendormir pendant les quelques secondes
-que dure la vérification d'un trajet surveillé.
-
-**Une septième ligne, qui n'est pas une permission Android.** Si vous lisez le manifeste de
+**Une cinquième ligne, qui n'est pas une permission Android.** Si vous lisez le manifeste de
 l'application installée, vous y trouverez aussi
 `io.github.mgdx.escale.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Ce n'est pas une permission de
 la plateforme : c'est une permission qu'Escale **définit pour elle-même**, ajoutée automatiquement
@@ -119,16 +112,13 @@ niveau *signature*, ce qui veut dire que seule une application signée avec la m
 l'obtenir — donc aucune. Elle ne donne accès à rien, ne vous est jamais soumise, et n'existe que
 pour fermer une porte, pas pour en ouvrir une.
 
-Aucune permission de stockage, de contacts, de **démarrage automatique** ni de **service en
-arrière-plan** n'est demandée. Les deux dernières, `RECEIVE_BOOT_COMPLETED` et
-`FOREGROUND_SERVICE`, sont déclarées par la bibliothèque de tâches d'Android : **Escale les retire
-de son manifeste**, une par une et explicitement. Vous pouvez le vérifier vous-même : le manifeste
-d'une application installée est public, et celui d'Escale ne contient que les six permissions du
-tableau ci-dessus, plus la permission de signature décrite juste avant, qui ne donne accès à rien.
-
-**Aucune alarme exacte** (`SCHEDULE_EXACT_ALARM`) n'est demandée non plus. C'est un choix : la
-vérification peut être décalée de quelques minutes par le système, ce qui est sans conséquence pour
-une requête émise une heure à l'avance, et évite une permission intrusive.
+Aucune permission de stockage, de contacts, de **démarrage automatique**, de **service en
+arrière-plan**, de **notification** ni d'**alarme exacte** n'est demandée. Escale n'a aucune tâche
+de fond : la bibliothèque de tâches d'Android (`androidx.work`), qui apportait autrefois quatre de
+ces permissions, n'est plus une dépendance de l'application. Vous pouvez le vérifier vous-même : le
+manifeste d'une application installée est public, et celui d'Escale ne contient que les quatre
+permissions du tableau ci-dessus, plus la permission de signature décrite juste avant, qui ne donne
+accès à rien.
 
 ## Favoris et historique
 
@@ -151,44 +141,28 @@ L'enregistrement des recherches se désactive d'un interrupteur dans **Réglages
 l'enregistrement n'efface pas ce qui est déjà là : c'est le bouton qui s'en charge, pour que vous
 sachiez toujours ce qui a été supprimé et quand.
 
-## Trajets surveillés
+## Ce qu'Escale ne fait pas quand vous ne l'utilisez pas
 
-Un trajet mis en favori peut être **surveillé**. C'est la seule activité réseau d'Escale en dehors
-de votre usage direct, elle est **désactivée par défaut**, elle ne vous est **jamais proposée
-d'elle-même**, et elle s'arrête d'un appui.
+Une version antérieure d'Escale proposait de **surveiller un trajet favori** : une heure avant
+votre départ habituel, l'application interrogeait le serveur pour vous prévenir d'un retard. **Cette
+fonction a été retirée**, et ce document décrit l'application telle qu'elle est aujourd'hui.
 
-Ce qui se passe alors, exactement :
+La raison est celle-ci : ces requêtes partaient à heure fixe, les jours que vous aviez choisis.
+Elles révélaient donc une **habitude de déplacement** — l'heure à laquelle vous partez de chez vous
+et l'endroit où vous allez — à qui observe le serveur ou le réseau, ce que votre usage manuel de
+l'application ne fait pas. Même annoncée en toutes lettres et désactivée par défaut, la fonction
+demandait de consentir à cela pour un service que l'application rend de toute façon en une seconde
+quand vous l'ouvrez.
 
-- Vous choisissez une heure de départ habituelle et, si vous le voulez, des jours de la semaine.
-  Sans jour choisi, la surveillance ne vaut que pour une date et s'éteint ensuite d'elle-même.
-- **Une heure avant** ce départ, l'application envoie **une** requête au serveur MOTIS que vous avez
-  configuré, pour savoir si quelque chose a changé. Une seule : ni vérification intermédiaire, ni
-  boucle. Si elle échoue, elle est retentée **une fois** cinq minutes plus tard, puis abandonnée
-  sans rien afficher. Si le serveur refuse l'identifiant enregistré — il est marqué expérimental et
-  se périme —, la recherche d'origine est rejouée, ce qui fait au plus deux requêtes.
-- Si vous avez consulté ce trajet dans l'application dans la demi-heure, **aucune requête n'est
-  envoyée** : la donnée est déjà fraîche.
-- Vous n'êtes prévenu que s'il y a quelque chose à dire : un retard au-delà du seuil que vous
-  réglez (cinq minutes par défaut), une course supprimée, une perturbation en cours, ou un trajet
-  devenu impossible. Sinon, rien. Un réglage permet de demander une notification même quand tout va
-  bien ; il est désactivé par défaut.
-- **Cinq trajets surveillés au maximum**, soit au plus cinq requêtes par jour où vous voyagez.
+En conséquence, aujourd'hui :
 
-**Ce que cela implique, et qui doit être dit clairement** : ces requêtes partent à heure fixe, les
-jours que vous avez choisis. Elles révèlent donc une **habitude de déplacement** à qui observe le
-serveur ou le réseau, ce que votre usage manuel de l'application ne fait pas. C'est la raison pour
-laquelle la surveillance est un choix explicite, annoncé en toutes lettres sur l'écran d'activation
-et révocable à tout moment.
-
-- **Si vous redémarrez votre téléphone**, les surveillances sont reprogrammées à la prochaine
-  ouverture d'Escale, et non au démarrage de l'appareil : se relancer toute seule au démarrage
-  exigerait une permission qu'Escale refuse de demander. Une vérification peut donc être manquée
-  entre les deux, et l'écran d'activation vous le dit.
-
-Ce qui n'a pas lieu : aucun service permanent, aucune tâche périodique, aucune synchronisation,
-aucun relevé de votre position, et rien qui parte ailleurs que vers le serveur que vous avez choisi.
-Si vous refusez la permission de notification, la surveillance reste utilisable : le résultat de la
-dernière vérification s'affiche sur le trajet, à l'ouverture de l'application.
+- Escale **ne fait rien quand elle n'est pas ouverte** : aucun service, aucune tâche différée ou
+  périodique, aucune synchronisation, aucune notification, aucun relevé de votre position.
+- Elle n'a plus besoin des permissions correspondantes : ni notification, ni démarrage automatique,
+  ni service en arrière-plan, ni alarme exacte, ni maintien de l'appareil éveillé.
+- Ce que la fonction avait enregistré sur votre appareil — l'heure et les jours de vos départs
+  habituels — **est effacé à la mise à jour**, et non simplement laissé de côté. Vos trajets
+  favoris, eux, sont conservés tels quels.
 
 ## Questions
 

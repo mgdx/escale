@@ -5,16 +5,10 @@ import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
-import io.github.mgdx.escale.core.model.WatchSchedule
-import io.github.mgdx.escale.core.model.WatchedJourney
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.DayOfWeek
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 
 /** Le mapping entité → domaine, dans les deux sens, comme pour les DTO du réseau. */
 class EntityMappingTest {
@@ -114,69 +108,5 @@ class EntityMappingTest {
 
     assertEquals(arret, releve)
     assertEquals(instant.toEpochMilli(), arret.toEntity(instant).createdAt)
-  }
-
-  @Test
-  fun `une surveillance recurrente fait l aller-retour`() {
-    val surveillance = WatchedJourney(
-      journeyId = 7,
-      schedule = WatchSchedule(
-        departureTime = LocalTime.of(8, 10),
-        days = setOf(DayOfWeek.FRIDAY, DayOfWeek.MONDAY),
-      ),
-      itineraryId = "itin-42",
-      itineraryCapturedAt = Instant.parse("2026-03-01T07:00:00Z"),
-      lastViewedAt = Instant.parse("2026-03-01T07:30:00Z"),
-      createdAt = Instant.parse("2026-02-01T12:00:00Z"),
-    )
-
-    assertEquals(surveillance, surveillance.toEntity().toWatchedJourney())
-    // Les jours sont rangés dans l'ordre de la semaine : deux ensembles égaux s'écrivent pareil.
-    assertEquals("MONDAY,FRIDAY", surveillance.toEntity().daysOfWeek)
-  }
-
-  @Test
-  fun `une surveillance a date unique fait l aller-retour`() {
-    val surveillance = WatchedJourney(
-      journeyId = 7,
-      schedule = WatchSchedule(departureTime = LocalTime.of(5, 45), date = LocalDate.of(2026, 4, 12)),
-      createdAt = Instant.parse("2026-02-01T12:00:00Z"),
-    )
-
-    val entite = surveillance.toEntity()
-    assertEquals("", entite.daysOfWeek)
-    assertEquals(LocalDate.of(2026, 4, 12).toEpochDay(), entite.date)
-    assertEquals(surveillance, entite.toWatchedJourney())
-  }
-
-  @Test
-  fun `l heure de depart est enregistree a la minute`() {
-    val surveillance = WatchedJourney(
-      journeyId = 7,
-      schedule = WatchSchedule(
-        departureTime = LocalTime.of(8, 10, 30),
-        days = setOf(DayOfWeek.MONDAY),
-      ),
-      createdAt = Instant.parse("2026-02-01T12:00:00Z"),
-    )
-
-    // Les secondes d'une heure de départ habituelle n'ont pas de sens : elles sont tronquées, pas
-    // conservées à moitié.
-    assertEquals(8 * 60 + 10, surveillance.toEntity().departureMinuteOfDay)
-    assertEquals(LocalTime.of(8, 10), surveillance.toEntity().toWatchedJourney().schedule.departureTime)
-  }
-
-  @Test
-  fun `une surveillance sans itineraire retenu se relit sans rien inventer`() {
-    val surveillance = WatchedJourney(
-      journeyId = 7,
-      schedule = WatchSchedule(departureTime = LocalTime.MIDNIGHT, days = setOf(DayOfWeek.SUNDAY)),
-      createdAt = Instant.parse("2026-02-01T12:00:00Z"),
-    )
-
-    val releve = surveillance.toEntity().toWatchedJourney()
-    assertNull(releve.itineraryId)
-    assertNull(releve.itineraryCapturedAt)
-    assertNull(releve.lastViewedAt)
   }
 }

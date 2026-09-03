@@ -39,7 +39,6 @@ lifecycle = "2.11.0"
 navigation = "2.10.0"
 room = "2.8.4"
 datastore = "1.2.1"
-work = "2.11.2"
 composeBom = "2026.02.01"
 
 # --- Tests -----------------------------------------------------------------------------------
@@ -91,9 +90,6 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
-
-# --- Fond (uniquement pour les trajets surveillés, SPEC.md § 5.5.1) --------------------------
-androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
 # --- Tests -----------------------------------------------------------------------------------
 junit = { group = "junit", name = "junit", version.ref = "junit" }

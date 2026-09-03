@@ -88,7 +88,7 @@ dans l'APK publié**. La licence de chaque ligne vient du POM Maven de l'artefac
 
 | Artefact | Origine | Licence |
 |---|---|---|
-| `androidx.*` — activity, annotation, arch.core, autofill, collection, compose.\*, concurrent, core, customview, datastore, documentfile, dynamicanimation, emoji2, fragment, graphics, interpolator, legacy, lifecycle, loader, localbroadcastmanager, navigation, navigationevent, print, profileinstaller, room, savedstate, sqlite, startup, tracing, transition, versionedparcelable, viewpager, window, work | Google Maven | **Apache-2.0** |
+| `androidx.*` — activity, annotation, arch.core, autofill, collection, compose.\*, concurrent, core, customview, datastore, documentfile, dynamicanimation, emoji2, fragment, graphics, interpolator, legacy, lifecycle, loader, localbroadcastmanager, navigation, navigationevent, print, profileinstaller, room, savedstate, sqlite, startup, tracing, transition, versionedparcelable, viewpager, window | Google Maven | **Apache-2.0** |
 | `androidx.datastore:datastore-preferences-external-protobuf` | Google Maven | **BSD-3-Clause** (protobuf-javalite reconditionné) |
 | `org.maplibre.gl:android-sdk-opengl` | Maven Central | **BSD-2-Clause** |
 | `org.maplibre.gl:maplibre-android-gestures` | Maven Central | **BSD-2-Clause** |
@@ -103,7 +103,6 @@ dans l'APK publié**. La licence de chaque ligne vient du POM Maven de l'artefac
 | `org.jetbrains:annotations` | Maven Central | **Apache-2.0** |
 | `org.jspecify:jspecify` | Maven Central | **Apache-2.0** |
 | `com.google.code.gson:gson` — transitive de MapLibre | Maven Central | **Apache-2.0** |
-| `com.google.guava:listenablefuture` — transitive d'`androidx.work` | Maven Central | **Apache-2.0** (son POM ne déclare pas de `<licenses>` ; la licence est celle du projet Guava, dont il est un extrait) |
 | `com.jakewharton.timber:timber` — transitive de MapLibre | Maven Central | **Apache-2.0** |
 | `org.slf4j:slf4j-api` — transitive de Ktor | Maven Central | **MIT** (déclarée dans `slf4j-parent` et `slf4j-bom`, pas dans le POM de l'artefact lui-même) |
 
@@ -178,33 +177,32 @@ Deux précisions utiles :
 
 Le manifeste fusionné de **publication** (`processReleaseManifest`) déclare exactement ceci.
 
-### Les six permissions de plateforme
+### Les quatre permissions de plateforme
 
 | Permission | Niveau | Origine | Justification |
 |---|---|---|---|
 | `INTERNET` | normal | Escale | Interroger le serveur MOTIS. Sans elle l'application ne fait rien. |
 | `ACCESS_COARSE_LOCATION` | dangereuse | Escale | Facultative. Centrer la carte, proposer « Ma position » comme départ. Demandée **à l'usage**, au premier appui sur le bouton de position, jamais au démarrage. |
 | `ACCESS_FINE_LOCATION` | dangereuse | Escale | Facultative. Demandée seulement si l'usager insiste pour un centrage précis, après la précédente. |
-| `POST_NOTIFICATIONS` | dangereuse | Escale | Facultative. Demandée au moment où l'usager active sa **première** surveillance de trajet, jamais avant. |
 | `ACCESS_NETWORK_STATE` | **normal** | MapLibre | Le `ConnectivityReceiver` de la bibliothèque appelle `getActiveNetworkInfo()` et lève une `SecurityException` sans elle. Accordée à l'installation, sans écran de consentement ; elle ne donne accès qu'à l'état « connecté ou non ». |
-| `WAKE_LOCK` | **normal** | `androidx.work` | La bibliothèque tient l'appareil éveillé le temps d'exécuter la tâche de surveillance. Accordée à l'installation ; elle ne donne accès à aucune donnée. |
 
-**L'application reste entièrement utilisable si les quatre permissions facultatives sont refusées.**
+**L'application reste entièrement utilisable si les deux permissions facultatives de
+localisation sont refusées.**
 C'est une exigence de SPEC.md § 11, pas une intention.
 
-### Deux permissions explicitement retirées — c'est un point fort du dossier
+### Quatre permissions de fond qui n'entrent plus du tout
 
-`androidx.work` déclare quatre permissions dans son propre manifeste. Deux sont retenues ci-dessus.
-Les **deux autres sont retirées** du manifeste fusionné par `tools:node="remove"` :
+`androidx.work` déclarait dans son propre manifeste `RECEIVE_BOOT_COMPLETED` (*démarrage
+automatique*), `FOREGROUND_SERVICE` (*service en arrière-plan*), `WAKE_LOCK` et
+`ACCESS_NETWORK_STATE`, et `POST_NOTIFICATIONS` servait à prévenir l'usager du résultat d'une
+vérification. La bibliothèque était la dépendance des trajets surveillés ; **la fonction a été
+retirée** pour ce qu'elle coûtait en confidentialité (SPEC.md § 5.5.1), et la dépendance avec elle.
 
-- **`RECEIVE_BOOT_COMPLETED`** — permission de *démarrage automatique*. Elle sert au
-  `RescheduleReceiver` d'`androidx.work`. Conséquence assumée, écrite dans la spec (§ 5.5.1) et
-  annoncée à l'usager dans l'écran d'activation : après un redémarrage du téléphone, une
-  surveillance ne se replanifie qu'à la prochaine ouverture de l'application, et une occurrence
-  peut être manquée.
-- **`FOREGROUND_SERVICE`** — permission de *service en arrière-plan*. Escale n'appelle jamais
-  `setForeground`, et le service correspondant est désactivé dès la fusion des manifestes par une
-  valeur booléenne redéfinie (`app/src/main/res/values/bools_watch.xml`).
+Ces permissions ne sont donc plus retirées de la fusion par `tools:node="remove"` : **elles
+n'entrent plus du tout**, ce qu'un relecteur constate directement sur le manifeste fusionné.
+`ACCESS_NETWORK_STATE` reste, apportée par MapLibre. Un test du dépôt
+(`NoBackgroundWorkTest`) échoue si le code réintroduit une tâche de fond, un service, un récepteur
+ou l'une de ces permissions.
 
 `ACCESS_WIFI_STATE` et `<uses-feature android:name="android.hardware.wifi">`, apportées par
 MapLibre qui ne s'en sert nulle part, sont retirées de la même manière. Le manifeste fusionné ne
@@ -213,7 +211,7 @@ contient **aucun `<uses-feature>`**.
 Ne sont demandées, et ne doivent jamais l'être : aucune permission de stockage, de contacts,
 d'appareil photo, de journal d'appels, ni `SCHEDULE_EXACT_ALARM`.
 
-### Une septième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
+### Une cinquième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
 
 Le manifeste de publication déclare aussi :
 
@@ -227,11 +225,11 @@ C'est une permission **définie par l'application elle-même**, insérée automa
 détenir, c'est-à-dire aucune autre. Elle sert à `ContextCompat.registerReceiver` pour émuler
 `RECEIVER_NOT_EXPORTED` sur les versions d'Android antérieures à 13. Elle n'ouvre aucun accès et ne
 donne lieu à aucun écran de consentement. Elle est signalée ici parce qu'un relecteur qui compte les
-lignes du manifeste en trouvera sept et non six, et qu'il vaut mieux que l'explication soit écrite
+lignes du manifeste en trouvera cinq et non quatre, et qu'il vaut mieux que l'explication soit écrite
 d'avance qu'improvisée.
 
 Le § 11 de la spec disait « permissions déclarées, et aucune autre » sans la mentionner : **il a été
-amendé pour la nommer**, dans la même forme que les puces `ACCESS_NETWORK_STATE` et `WAKE_LOCK`.
+amendé pour la nommer**, dans la même forme que la puce `ACCESS_NETWORK_STATE`.
 `PRIVACY.md` la décrit également, en termes destinés à l'usager. Le manifeste et les trois documents
 disent donc désormais la même chose, ce qu'un relecteur peut vérifier ligne à ligne.
 
@@ -240,8 +238,6 @@ disent donc désormais la même chose, ce qu'un relecteur peut vérifier ligne �
 | Composant | Origine | Protection |
 |---|---|---|
 | `io.github.mgdx.escale.MainActivity` | Escale | Point d'entrée du lanceur. Aucun `intent-filter` autre que `MAIN`/`LAUNCHER` : ni deep link, ni schéma personnalisé, ni surface d'attaque. |
-| `androidx.work.impl.background.systemjob.SystemJobService` | `androidx.work` | `android.permission.BIND_JOB_SERVICE` |
-| `androidx.work.impl.diagnostics.DiagnosticsReceiver` | `androidx.work` | `android.permission.DUMP` |
 | `androidx.profileinstaller.ProfileInstallReceiver` | `androidx.profileinstaller` | `android.permission.DUMP` |
 
 Aucun composant exporté sans protection. Aucun `ContentProvider` exporté, aucun `FileProvider`.
@@ -352,11 +348,10 @@ l'anti-feature n'est **pas** appliqué si la fonction est optionnelle, désactiv
 soumise à un consentement éclairé.
 
 - Escale ne collecte rien pour son compte, n'a pas de serveur propre, n'émet aucun identifiant.
-- La seule requête envoyée sans que l'usager ait l'application sous les yeux est celle des trajets
-  surveillés (§ 5.5.1) : **désactivée par défaut**, activée trajet par trajet, plafonnée à cinq
-  trajets, une seule requête par occurrence, et l'écran d'activation dit en toutes lettres qu'une
-  requête à heure fixe révèle une habitude de déplacement. C'est précisément le régime que la
-  définition exempte.
+- **Aucune requête n'est envoyée sans que l'usager ait l'application sous les yeux.** La seule qui
+  l'était, celle des trajets surveillés, a été retirée (§ 5.5.1) précisément parce qu'une requête à
+  heure fixe révèle une habitude de déplacement. L'application n'a plus ni tâche de fond, ni
+  service, ni notification.
 - Aucune des applications de transport citées plus haut ne porte `Tracking`.
 
 ### `NonFreeAssets`, `NonFreeDep`, `NonFreeAdd` — non
@@ -618,8 +613,8 @@ Par ordre. Le premier n'est pas négociable ; le deuxième, qui bloquait la rece
    l'instance publique `api.transitous.org` est tenue par des bénévoles, à leurs frais, avec une
    politique d'usage. Une application publiée sur F-Droid peut multiplier leur trafic sans qu'ils
    en aient été avertis. Le message doit dire ce qu'Escale envoie, à quelle fréquence, ce qu'elle
-   ne fait pas (aucun sondage périodique, une seule requête par occurrence de surveillance,
-   cinq surveillances au plus, la surveillance désactivée par défaut), et donner le `User-Agent`
+   ne fait pas (aucun sondage périodique, aucune requête hors premier plan, aucune tâche de fond),
+   et donner le `User-Agent`
    qui permettra de l'identifier dans leurs journaux :
    `Escale/1.0.0 (+https://github.com/mgdx/escale)`.
 

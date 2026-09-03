@@ -229,11 +229,6 @@ dependencies {
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)
 
-  // Le seul travail de fond de l'application : les trajets surveillés (SPEC.md § 5.5.1 et § 7.7).
-  // Une tâche à exécution unique par occurrence, replanifiée après chaque exécution ; jamais de
-  // `PeriodicWorkRequest`, que la spec interdit.
-  implementation(libs.androidx.work.runtime.ktx)
-
   // Carte : MapLibre GL Android, licence BSD, compatible F-Droid (SPEC.md § 3). La carte est
   // rendue par le moteur natif, jamais par une WebView (SPEC.md § 2).
   implementation(libs.maplibre.android.sdk)
@@ -260,7 +255,7 @@ dependencies {
 
 /**
  * Les classes que **quelque chose d'autre que le bytecode** désigne par leur nom : le code natif de
- * MapLibre (`FindClass`), `Class.forName` dans Room et WorkManager, le manifeste pour l'application
+ * MapLibre (`FindClass`), `Class.forName` dans Room, le manifeste pour l'application
  * et l'activité. R8 n'a aucun moyen de le savoir : si la règle qui les protège disparaît, il les
  * renomme, et l'application se lance puis échoue à l'endroit exact où personne ne regarde.
  *
@@ -274,11 +269,6 @@ val classesKeptByName = listOf(
   // Room appelle `Class.forName("<base>_Impl")`. Protégée par la règle de `room-runtime`
   // (`-keep class * extends androidx.room.RoomDatabase { void <init>(); }`).
   "io.github.mgdx.escale.data.db.EscaleDatabase_Impl",
-  // WorkManager instancie le worker par son nom de classe, enregistré dans sa propre base.
-  // Protégée par `-keepnames class * extends androidx.work.ListenableWorker` de `work-runtime`.
-  // `CoroutineWorker` étend bien `ListenableWorker`, pas `Worker` : la règle historique
-  // `-keep class * extends androidx.work.Worker`, elle, n'aurait pas suffi.
-  "io.github.mgdx.escale.work.JourneyWatchWorker",
   // Trouvées depuis le moteur natif de MapLibre. Protégées par `@Keep` et le fichier de règles par
   // défaut d'AGP, pas par le `proguard.txt` de l'AAR — d'où l'intérêt de le vérifier.
   "org.maplibre.android.maps.NativeMapView",

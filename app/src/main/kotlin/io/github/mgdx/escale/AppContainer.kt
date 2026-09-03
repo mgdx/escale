@@ -17,7 +17,6 @@ import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.repository.TripRepository
-import io.github.mgdx.escale.core.repository.WatchedJourneysRepository
 import io.github.mgdx.escale.data.db.EscaleDatabase
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
@@ -36,7 +35,6 @@ import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
 import io.github.mgdx.escale.data.repository.RentalsRepositoryImpl
 import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
 import io.github.mgdx.escale.data.repository.TripRepositoryImpl
-import io.github.mgdx.escale.data.repository.WatchedJourneysRepositoryImpl
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
@@ -47,13 +45,6 @@ import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import io.github.mgdx.escale.ui.session.SearchSession
-import io.github.mgdx.escale.ui.watch.DataStoreWatchSettingsStore
-import io.github.mgdx.escale.ui.watch.WatchOpenRequests
-import io.github.mgdx.escale.ui.watch.WatchSettingsStore
-import io.github.mgdx.escale.work.WatchAlarms
-import io.github.mgdx.escale.work.WatchNotifications
-import io.github.mgdx.escale.work.WatchNotifier
-import io.github.mgdx.escale.work.WatchScheduler
 import java.io.File
 
 /**
@@ -96,10 +87,10 @@ class AppContainer(context: Context) {
   }
 
   /**
-   * La base locale : favoris, historique et trajets surveillés (SPEC.md § 5.5).
+   * La base locale : favoris et historique (SPEC.md § 5.5).
    *
    * Elle est **privée**. C'est la donnée la plus sensible de l'application — le domicile, le lieu
-   * de travail, tout ce qui a été cherché — et rien n'y accède autrement que par les trois dépôts
+   * de travail, tout ce qui a été cherché — et rien n'y accède autrement que par les deux dépôts
    * ci-dessous. Exposer la base laisserait un écran écrire une requête à lui, hors de tout contrat.
    */
   private val database: EscaleDatabase by lazy { EscaleDatabase.create(appContext) }
@@ -115,16 +106,6 @@ class AppContainer(context: Context) {
    */
   val historyRepository: HistoryRepository by lazy {
     HistoryRepositoryImpl(database, preferencesRepository)
-  }
-
-  /**
-   * Les trajets surveillés (SPEC.md § 5.5.1), **persistance seulement**.
-   *
-   * Aucune tâche `WorkManager`, aucune notification, aucune permission : le lot qui les écrira se
-   * branchera ici. La limite de cinq est appliquée à l'écriture, d'après `JourneyWatchLimit`.
-   */
-  val watchedJourneysRepository: WatchedJourneysRepository by lazy {
-    WatchedJourneysRepositoryImpl(database)
   }
 
   /**
@@ -256,33 +237,6 @@ class AppContainer(context: Context) {
   val tripRepository: TripRepository by lazy {
     TripRepositoryImpl(TripApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
   }
-
-  /**
-   * Les réglages de la surveillance et le résultat de la dernière vérification (SPEC.md § 5.5.1).
-   *
-   * Il partage le fichier DataStore des autres réglages et ne possède que ses propres clés, comme
-   * [mapCameraStore] et [cleartextConsentStore].
-   */
-  val watchSettingsStore: WatchSettingsStore by lazy { DataStoreWatchSettingsStore(preferences) }
-
-  /**
-   * La programmation des trajets surveillés (SPEC.md § 5.5.1), **seul travail de fond autorisé**.
-   *
-   * Il n'émet que des tâches à **exécution unique**, replanifiées après chaque exécution : SPEC.md
-   * § 7.7 interdit toute tâche périodique, tout service et toute synchronisation.
-   */
-  val watchScheduler: WatchAlarms by lazy { WatchScheduler(appContext) }
-
-  /** Le canal dédié et silencieux des trajets surveillés (SPEC.md § 5.5.1). */
-  val watchNotifications: WatchNotifier by lazy { WatchNotifications(appContext) }
-
-  /**
-   * Le trajet surveillé qu'un appui sur une notification demande à ouvrir (SPEC.md § 5.5.1).
-   *
-   * Partagé ici pour que la notification et la navigation n'aient pas à se connaître, comme
-   * [stopDepartureRequests] et [mapSelection] (docs/architecture.md § 11.4).
-   */
-  val watchOpenRequests: WatchOpenRequests by lazy { WatchOpenRequests() }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"

@@ -25,12 +25,7 @@ data class FavoritePlace(
   val displayName: String get() = label?.takeIf { it.isNotBlank() } ?: location.name
 }
 
-/**
- * Un trajet mis en favori : un couple départ / arrivée, éventuellement avec des préférences.
- *
- * Le jalon des trajets surveillés (SPEC.md § 5.5.1) viendra y accrocher sa configuration de
- * surveillance ; ce type ne la porte pas encore.
- */
+/** Un trajet mis en favori : un couple départ / arrivée, éventuellement avec des préférences. */
 data class FavoriteJourney(
   val id: Long,
   /** Nom donné par l'usager, ou nul pour laisser l'interface composer « Départ → Arrivée ». */

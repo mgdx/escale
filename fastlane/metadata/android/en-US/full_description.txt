@@ -4,7 +4,7 @@ Type where you are and where you are going. Escale offers several routes, sorted
 
 <b>What you get</b>
 
-<ul><li>Departure and arrival times, total duration and number of changes for every route.</li><li>Live delays and cancellations, and the disruption notices published by the operator.</li><li>Step-by-step detail of a trip: the line and its direction, the platform, every stop along the way, walking and cycling directions, wheelchair access, and whether bikes are allowed on board.</li><li>Shared bikes and scooters shown next to your own bike, with how many vehicles are free at the station and how many docks are left where you arrive.</li><li>A full-screen map with stops and stations.</li><li>The next departures at any stop.</li><li>Home, work, saved places and saved journeys — kept on your phone.</li><li>If, and only if, you turn it on: Escale checks a saved journey once, an hour before you leave, and notifies you only when something has changed.</li></ul>
+<ul><li>Departure and arrival times, total duration and number of changes for every route.</li><li>Live delays and cancellations, and the disruption notices published by the operator.</li><li>Step-by-step detail of a trip: the line and its direction, the platform, every stop along the way, walking and cycling directions, wheelchair access, and whether bikes are allowed on board.</li><li>Shared bikes and scooters shown next to your own bike, with how many vehicles are free at the station and how many docks are left where you arrive.</li><li>A full-screen map with stops and stations.</li><li>The next departures at any stop.</li><li>Home, work, saved places and saved journeys — kept on your phone.</li></ul>
 
 <b>What to know before installing</b>
 
@@ -20,6 +20,6 @@ Map data © OpenStreetMap contributors, licensed under the ODbL: <a href="https:
 
 <b>Privacy</b>
 
-No analytics, no tracker, no advertising, no Google Play services. Nothing leaves your phone except the requests sent to the routing server you have configured. Favourites, home, work and search history stay in local storage; automatic backup is switched off, so they are never copied anywhere else.
+No analytics, no tracker, no advertising, no Google Play services. Nothing leaves your phone except the requests sent to the routing server you have configured, and nothing is sent while the app is closed: Escale has no background task, no service and no notification. Favourites, home, work and search history stay in local storage; automatic backup is switched off, so they are never copied anywhere else.
 
 Escale is free software, released under the GNU General Public License v3 or later.

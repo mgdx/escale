@@ -149,7 +149,7 @@ en basculant la langue de l'application avec `adb shell cmd locale set-app-local
 |---|---|---|---|
 | 01 | `01-search.png` | `01-recherche.png` | Autocomplétion : arrêts distingués des lieux, modes desservis en toutes lettres |
 | 02 | `02-results.png` | `02-resultats.png` | Feuille de résultats, frise à l'échelle, tracé sur la carte |
-| 03 | `03-trip-details.png` | `03-detail.png` | Détail d'un trajet, portions dépliables, surveillance activée |
+| 03 | `03-trip-details.png` | `03-detail.png` | Détail d'un trajet, portions dépliables |
 | 04 | `04-journey-on-map.png` | `04-trajet-sur-la-carte.png` | Tracé exact de la ligne sur la carte, cadré sous la feuille |
 
 **Quatre captures restent à prendre**, faute d'avoir pu les atteindre de façon fiable en pilotage

@@ -14,16 +14,6 @@
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
   <!--
-    Notifications des trajets surveillés (SPEC.md § 5.5.1 et § 11). Facultative, demandée au
-    moment où l'usager active sa **première** surveillance et jamais avant ; refusée, la
-    surveillance reste proposée sans notification et son résultat s'affiche à l'ouverture de
-    l'application.
-    `SCHEDULE_EXACT_ALARM` n'est pas demandée et ne doit jamais l'être : SPEC.md § 5.5.1 dit
-    qu'« un décalage de quelques minutes est acceptable et évite une permission intrusive ».
-  -->
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-  <!--
     Imposée par MapLibre : son `ConnectivityReceiver` appelle
     `ConnectivityManager.getActiveNetworkInfo()` pour suspendre le téléchargement des tuiles hors
     ligne, et lève une SecurityException sans elle. Elle ne donne accès à aucune donnée
@@ -32,29 +22,12 @@
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
   <!--
-    WAKE_LOCK vient du manifeste d'androidx.work et n'est pas retirée : la bibliothèque s'en sert
-    pour tenir l'appareil éveillé le temps d'exécuter une tâche. C'est une permission de niveau
-    *normal*, accordée à l'installation, sans écran de consentement et sans accès à la moindre
-    donnée. Elle est documentée dans PRIVACY.md.
-
-    RECEIVE_BOOT_COMPLETED, elle, est retirée : SPEC.md § 11 exclut toute permission de démarrage
-    automatique. androidx.work la déclare pour son `RescheduleReceiver`, qui reprogramme ses tâches
-    après un redémarrage. Conséquence assumée et documentée : un redémarrage de l'appareil diffère
-    les surveillances jusqu'à la prochaine ouverture de l'application, qui les replanifie
-    (`WatchScheduler.sync`). Le récepteur reste déclaré par la bibliothèque mais ne reçoit jamais
-    rien faute de cette permission.
-
-    FOREGROUND_SERVICE est retirée pour la même raison — « aucune permission de service en
-    arrière-plan » — et c'est sans conséquence : Escale n'appelle jamais `setForeground`, et le
-    service correspondant d'androidx.work est désactivé par la valeur booléenne redéfinie dans
-    res/values/bools_watch.xml.
+    Aucune permission de travail de fond, et c'est vérifié plutôt que promis (voir
+    `NoBackgroundWorkTest`). RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE, WAKE_LOCK et
+    POST_NOTIFICATIONS entraient toutes par le manifeste d'androidx.work, que l'application ne
+    dépend plus depuis le retrait des trajets surveillés : elles ne sont plus ni demandées ni à
+    retirer de la fusion. `SCHEDULE_EXACT_ALARM` n'a jamais été demandée et ne doit pas l'être.
   -->
-  <uses-permission
-      android:name="android.permission.RECEIVE_BOOT_COMPLETED"
-      tools:node="remove" />
-  <uses-permission
-      android:name="android.permission.FOREGROUND_SERVICE"
-      tools:node="remove" />
 
   <!--
     ACCESS_WIFI_STATE et la fonctionnalité `android.hardware.wifi` viennent du manifeste de

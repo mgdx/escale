@@ -68,7 +68,6 @@ import io.github.mgdx.escale.ui.results.modeLabel
 import io.github.mgdx.escale.ui.results.onRouteColor
 import io.github.mgdx.escale.ui.results.rememberTimeFormatter
 import io.github.mgdx.escale.ui.results.routeColor
-import io.github.mgdx.escale.ui.watch.WatchSlot
 import java.time.Instant
 
 /**
@@ -248,9 +247,6 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
     item(key = SUMMARY_KEY) { DetailSummary(journey = journey, state = state) }
-    // Point d'accroche du lot « trajets surveillés » (SPEC.md § 5.5.1). Le composable ne dessine
-    // rien tant que le trajet n'est pas en favori : la spec ne propose la surveillance que de là.
-    item(key = WATCH_KEY) { WatchSlot() }
     if (journey.alerts.isNotEmpty()) {
       // Le bandeau des perturbations en vigueur, le même qu'en tête de carte de résultat
       // (SPEC.md § 5.2). Le détail de chacune reste dans la portion qui la porte.
@@ -527,7 +523,6 @@ private fun transitHeading(line: JourneyShareLine.Transit): String {
 }
 
 private const val SUMMARY_KEY = "resume"
-private const val WATCH_KEY = "surveillance"
 private const val ALERTS_KEY = "perturbations"
 private const val ERROR_KEY = "erreur"
 private const val ORIGIN_KEY = "depart"

@@ -159,8 +159,9 @@ Ce dépôt bénéficie de skills dédiés. Invoque-les au lieu d'improviser :
 - Introduire un service Google Play, un SDK d'analyse, un traqueur, un rapport de plantage
   automatique, ou toute dépendance non libre. C'est rédhibitoire pour le projet.
 - Ajouter une permission au manifeste.
-- Mettre en place une tâche de fond, un service, une synchronisation ou du polling. La seule
-  exception autorisée est décrite au § 5.5.1 de la spec.
+- Mettre en place une tâche de fond, un service, une synchronisation ou du polling. **Il n'y a plus
+  d'exception** : le § 5.5.1 de la spec, qui en décrivait une, l'interdit désormais nommément, et
+  `NoBackgroundWorkTest` fait échouer la compilation si le code en réintroduit une.
 - Élargir le périmètre. Une idée en dehors de la spec se note dans une issue, elle ne s'implémente pas.
 - Journaliser une adresse, une coordonnée ou une requête utilisateur, même en débogage.
 

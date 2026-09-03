@@ -1,0 +1,458 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "143db389b30c4f904fc3dcfb600bee4a",
+    "entities": [
+      {
+        "tableName": "named_locations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` TEXT NOT NULL, `savedAt` INTEGER NOT NULL, `stopId` TEXT, `name` TEXT NOT NULL, `description` TEXT, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `kind` TEXT NOT NULL, `servedModes` TEXT NOT NULL, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "savedAt",
+            "columnName": "savedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.stopId",
+            "columnName": "stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "location.name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "location.lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.servedModes",
+            "columnName": "servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "favorite_places",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `label` TEXT, `createdAt` INTEGER NOT NULL, `stopId` TEXT, `name` TEXT NOT NULL, `description` TEXT, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `kind` TEXT NOT NULL, `servedModes` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.stopId",
+            "columnName": "stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "location.name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "location.lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location.servedModes",
+            "columnName": "servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "favorite_stops",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`stopId` TEXT NOT NULL, `name` TEXT NOT NULL, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `modes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`stopId`))",
+        "fields": [
+          {
+            "fieldPath": "stopId",
+            "columnName": "stopId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modes",
+            "columnName": "modes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "stopId"
+          ]
+        }
+      },
+      {
+        "tableName": "favorite_journeys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `label` TEXT, `category` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `from_stopId` TEXT, `from_name` TEXT NOT NULL, `from_description` TEXT, `from_lat` REAL NOT NULL, `from_lon` REAL NOT NULL, `from_kind` TEXT NOT NULL, `from_servedModes` TEXT NOT NULL, `to_stopId` TEXT, `to_name` TEXT NOT NULL, `to_description` TEXT, `to_lat` REAL NOT NULL, `to_lon` REAL NOT NULL, `to_kind` TEXT NOT NULL, `to_servedModes` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.stopId",
+            "columnName": "from_stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "from.name",
+            "columnName": "from_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.description",
+            "columnName": "from_description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "from.lat",
+            "columnName": "from_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.lon",
+            "columnName": "from_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.kind",
+            "columnName": "from_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.servedModes",
+            "columnName": "from_servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.stopId",
+            "columnName": "to_stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "to.name",
+            "columnName": "to_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.description",
+            "columnName": "to_description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "to.lat",
+            "columnName": "to_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.lon",
+            "columnName": "to_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.kind",
+            "columnName": "to_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.servedModes",
+            "columnName": "to_servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_favorite_journeys_from_name_from_lat_from_lon_to_name_to_lat_to_lon_category",
+            "unique": true,
+            "columnNames": [
+              "from_name",
+              "from_lat",
+              "from_lon",
+              "to_name",
+              "to_lat",
+              "to_lon",
+              "category"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_favorite_journeys_from_name_from_lat_from_lon_to_name_to_lat_to_lon_category` ON `${TABLE_NAME}` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`, `category`)"
+          }
+        ]
+      },
+      {
+        "tableName": "search_history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timeMode` TEXT NOT NULL DEFAULT 'NOW', `timeMillis` INTEGER, `searchedAt` INTEGER NOT NULL, `from_stopId` TEXT, `from_name` TEXT NOT NULL, `from_description` TEXT, `from_lat` REAL NOT NULL, `from_lon` REAL NOT NULL, `from_kind` TEXT NOT NULL, `from_servedModes` TEXT NOT NULL, `to_stopId` TEXT, `to_name` TEXT NOT NULL, `to_description` TEXT, `to_lat` REAL NOT NULL, `to_lon` REAL NOT NULL, `to_kind` TEXT NOT NULL, `to_servedModes` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeMode",
+            "columnName": "timeMode",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'NOW'"
+          },
+          {
+            "fieldPath": "timeMillis",
+            "columnName": "timeMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "searchedAt",
+            "columnName": "searchedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.stopId",
+            "columnName": "from_stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "from.name",
+            "columnName": "from_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.description",
+            "columnName": "from_description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "from.lat",
+            "columnName": "from_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.lon",
+            "columnName": "from_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.kind",
+            "columnName": "from_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from.servedModes",
+            "columnName": "from_servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.stopId",
+            "columnName": "to_stopId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "to.name",
+            "columnName": "to_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.description",
+            "columnName": "to_description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "to.lat",
+            "columnName": "to_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.lon",
+            "columnName": "to_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.kind",
+            "columnName": "to_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to.servedModes",
+            "columnName": "to_servedModes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_search_history_from_name_from_lat_from_lon_to_name_to_lat_to_lon",
+            "unique": true,
+            "columnNames": [
+              "from_name",
+              "from_lat",
+              "from_lon",
+              "to_name",
+              "to_lat",
+              "to_lon"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_search_history_from_name_from_lat_from_lon_to_name_to_lat_to_lon` ON `${TABLE_NAME}` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '143db389b30c4f904fc3dcfb600bee4a')"
+    ]
+  }
+}

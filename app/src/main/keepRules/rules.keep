@@ -26,10 +26,6 @@
 # - **Room** — `room-runtime` livre `-keep class * extends androidx.room.RoomDatabase { void <init>(); }`,
 #   ce qui protège `EscaleDatabase_Impl`, la seule classe que Room cherche par `Class.forName`.
 #   Les DAO sont atteints depuis cette implémentation : R8 les garde par accessibilité.
-# - **WorkManager** — `work-runtime` livre `-keepnames class * extends androidx.work.ListenableWorker`
-#   et la conservation de ses constructeurs. `JourneyWatchWorker` est un `CoroutineWorker`, donc un
-#   `ListenableWorker` : il est couvert. (La règle historique `-keep class * extends androidx.work.Worker`,
-#   qu'on recopie souvent, ne l'aurait **pas** été.)
 # - **MapLibre** — le `proguard.txt` de l'AAR conserve `TileOperation`, `RenderingStats`,
 #   `NativeMapOptions`, les champs d'énumération et le paquet `org.maplibre.geojson`. Tout le reste
 #   de la frontière JNI est annoté `@Keep` dans la bibliothèque, et le fichier par défaut d'AGP

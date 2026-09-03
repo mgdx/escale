@@ -364,70 +364,30 @@ Accessible depuis la recherche (en choisissant un arrêt), depuis la carte, ou d
   « Tout effacer » est présent dans les réglages.
 - Aucune donnée de localisation n'est journalisée en dehors de ces deux mécanismes.
 
-#### 5.5.1 Trajets surveillés
+#### 5.5.1 Aucune surveillance de trajet
 
-Un trajet mis en favori peut être **surveillé** : l'application vérifie son état **une seule fois,
-une heure avant l'heure de départ prévue**, et notifie l'utilisateur uniquement si quelque chose a
-changé. C'est le seul travail de fond de l'application.
+Une version antérieure de cette spec décrivait ici des **trajets surveillés** : l'application
+vérifiait l'état d'un trajet favori une heure avant l'heure de départ habituelle et notifiait
+l'usager si quelque chose avait changé. **La fonction est retirée, et elle ne doit pas revenir.**
 
-**Configuration d'une surveillance**
+Le motif est la confidentialité, et il est décisif : une requête envoyée au serveur à heure fixe,
+la veille du même trajet, jour après jour, **dessine une habitude de déplacement** — l'heure à
+laquelle quelqu'un part de chez lui et l'endroit où il se rend. Ce que la fonction demandait à
+l'usager de consentir valait plus cher que ce qu'elle lui rendait, d'autant que l'information est
+disponible à l'ouverture de l'application, gratuitement et sans rien révéler d'autre qu'une
+consultation.
 
-- Depuis un trajet favori : bascule « Me prévenir avant le départ ».
-- L'utilisateur définit l'**heure de départ habituelle** et les **jours concernés**
-  (par ex. lundi à vendredi, 8 h 10). Sans récurrence, la surveillance vaut pour une date unique
-  puis se désactive d'elle-même.
-- Désactivé par défaut. Limite de **5 trajets surveillés** simultanés, pour que la fonction reste
-  frugale et compréhensible.
+Le retrait est entier, et pas seulement au niveau de l'interface :
 
-**Déclenchement**
+- Aucune tâche de fond, donc plus aucune dépendance à `androidx.work` (§ 7.7).
+- Aucune notification, donc plus de `POST_NOTIFICATIONS`, ni de `WAKE_LOCK`, ni de permission de
+  démarrage automatique ou de service à retirer de la fusion (§ 11).
+- Aucun stockage : la table `watched_journeys` est **supprimée** par une migration Room, parce que
+  ce qu'elle contenait — heure et jours de départ habituels — est de la même nature que ce que la
+  fonction révélait au serveur. Les trajets favoris, eux, sont conservés intacts.
 
-- Une tâche `WorkManager` à exécution unique est planifiée pour **T − 60 minutes**, replanifiée
-  après chaque exécution pour la prochaine occurrence.
-- Contraintes : réseau disponible, pas de batterie faible. **Pas d'alarme exacte**
-  (`SCHEDULE_EXACT_ALARM` n'est pas demandée) : un décalage de quelques minutes est acceptable et
-  évite une permission intrusive.
-- **Une seule requête réseau par occurrence.** Pas de vérification intermédiaire, pas de nouvelle
-  tentative en boucle : en cas d'échec, une seule reprise après 5 minutes, puis abandon silencieux.
-- La surveillance ne s'exécute pas si le trajet a déjà été consulté dans l'application dans les
-  30 dernières minutes : la donnée est déjà fraîche.
-- **Après un redémarrage de l'appareil, les surveillances sont replanifiées à la prochaine
-  ouverture de l'application**, et non au démarrage du téléphone : reprogrammer une tâche au
-  démarrage exige `RECEIVE_BOOT_COMPLETED`, permission de démarrage automatique que le § 11
-  interdit. Une occurrence peut donc être manquée, et **cela ne doit pas être silencieux** : une
-  fonction qui échoue sans le dire est pire qu'une fonction absente. L'écran d'activation
-  l'annonce en une phrase, au même titre que l'avertissement sur les habitudes de déplacement.
-
-**La requête**
-
-- `GET /api/v6/refresh-itinerary` avec l'`id` de l'itinéraire enregistré, qui recalcule avec les
-  données temps réel du moment sans relancer une recherche complète.
-- L'`id` d'itinéraire est marqué « expérimental » côté MOTIS et son format peut changer ; il peut
-  aussi devenir invalide après une mise à jour d'horaires côté serveur. **Repli obligatoire** :
-  si l'appel échoue en 400/404, rejouer la requête `plan` d'origine et retenir l'itinéraire le plus
-  proche en heure de départ. Un échec du repli n'affiche rien.
-
-**La notification**
-
-- Émise **seulement s'il y a une différence utile** par rapport au trajet enregistré :
-  retard supérieur à un seuil réglable (5 minutes par défaut), suppression d'une course,
-  perturbation nouvelle sur une des portions, ou trajet devenu impossible.
-- Rien à signaler : aucune notification. Un réglage « me prévenir même si tout va bien » existe,
-  désactivé par défaut.
-- Contenu : la ligne concernée, la nature du problème, la nouvelle heure de départ conseillée
-  s'il en existe une. Un appui ouvre le détail du trajet rafraîchi.
-- Canal de notification dédié, silencieux par défaut, désactivable depuis les réglages système.
-- `POST_NOTIFICATIONS` (Android 13+) demandée **au moment où l'utilisateur active sa première
-  surveillance**, jamais avant. Refus de la permission : la surveillance est proposée sans
-  notification, l'état étant alors visible à l'ouverture de l'application.
-
-**Ce que cela implique, et qui doit être dit à l'utilisateur**
-
-L'écran d'activation explique en une phrase que l'application enverra une requête au serveur
-configuré une heure avant chaque trajet surveillé, et que ces requêtes, à heure fixe, révèlent des
-habitudes de déplacement. Le détail figure dans `PRIVACY.md`. Cinq trajets surveillés représentent
-au plus cinq requêtes par jour ouvré, ce qui reste très en deçà d'une session d'usage normale et
-compatible avec la politique de l'instance publique — mais la fonction reste **opt-in**, et
-n'est jamais proposée d'elle-même.
+C'est une **interdiction**, au même titre que celles du § 11 : un test du dépôt échoue si le code
+réintroduit une tâche de fond, une permission de fond, un service ou un récepteur.
 
 ### 5.6 Réglages
 
@@ -589,10 +549,11 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
 5. Cache mémoire des réponses `plan` pour la durée de la recherche ; cache disque de 24 h pour les
    résultats de géocodage.
 6. `detailedLegs=false` sur la liste de résultats, `true` seulement à l'ouverture d'un trajet.
-7. **Aucun travail de fond, à une exception près et une seule** : les trajets surveillés (§ 5.5.1),
-   qui émettent une requête unique une heure avant un départ configuré par l'utilisateur. En dehors
-   de ce cas, l'application ne fait de réseau que lorsqu'elle est au premier plan : aucun service,
-   aucune tâche périodique, aucune synchronisation.
+7. **Aucun travail de fond, sans exception.** L'application ne fait de réseau que lorsqu'elle est
+   au premier plan : aucun service, aucune tâche périodique, aucune synchronisation, aucune tâche
+   différée. La seule exception qu'admettait une version antérieure de cette spec, les trajets
+   surveillés, est retirée (§ 5.5.1) : une requête à heure fixe avant un trajet habituel trahit une
+   habitude de déplacement.
 8. Délai d'expiration de 30 s, une seule tentative de reprise, pas de reprise sur les erreurs 4xx.
 9. Carte : aucune requête sous le zoom 11, déclenchement à l'arrêt de la caméra uniquement,
    emprise élargie de 30 %, cache par emprise, annulation systématique (§ 5.7).
@@ -652,19 +613,11 @@ Permissions déclarées, et aucune autre :
 
 - `INTERNET`
 - `ACCESS_COARSE_LOCATION` et `ACCESS_FINE_LOCATION`, facultatives, demandées à l'usage
-- `POST_NOTIFICATIONS`, facultative, demandée seulement à l'activation d'une première surveillance
-  de trajet (§ 5.5.1)
 - `ACCESS_NETWORK_STATE`, exigée par MapLibre : son `ConnectivityReceiver` appelle
   `getActiveNetworkInfo()` pour suspendre le téléchargement des tuiles hors ligne, et lève une
   `SecurityException` sans elle. Permission de **niveau normal** : accordée à l'installation, sans
   écran de consentement, elle ne donne accès qu'à l'état « connecté ou non » de l'appareil et ne
   révèle rien sur l'usager ni sur ses déplacements.
-- `WAKE_LOCK`, exigée par `androidx.work` : la bibliothèque tient l'appareil éveillé le temps
-  d'exécuter une tâche, faute de quoi la vérification d'un trajet surveillé (§ 5.5.1) serait
-  interrompue par la mise en veille. Permission de **niveau normal** : accordée à l'installation,
-  sans écran de consentement, elle ne donne accès à aucune donnée et ne révèle rien sur l'usager ni
-  sur ses déplacements — elle empêche seulement l'appareil de se rendormir pendant les quelques
-  secondes que dure la requête.
 - `io.github.mgdx.escale.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, insérée dans le manifeste
   fusionné par `androidx.core` : `ContextCompat.registerReceiver` s'en sert pour émuler
   `RECEIVER_NOT_EXPORTED` sur les versions d'Android antérieures à 13, en protégeant par elle les
@@ -673,27 +626,21 @@ Permissions déclarées, et aucune autre :
   application signée avec la même clé pourrait l'obtenir, c'est-à-dire aucune autre. Elle n'est
   donc accordée à personne, ne donne accès à aucune donnée, n'ouvre aucun échange hors de
   l'application et ne donne lieu à aucun écran de consentement. Elle est nommée ici parce qu'un
-  relecteur qui compte les entrées du manifeste fusionné en trouve **sept** et non six.
+  relecteur qui compte les entrées du manifeste fusionné en trouve **cinq** et non quatre.
 
-`androidx.work` déclare **quatre** permissions dans son propre manifeste. `ACCESS_NETWORK_STATE` est
-déjà celle de MapLibre et `WAKE_LOCK` est retenue ci-dessus ; les **deux autres sont explicitement
-retirées** du manifeste fusionné, par `tools:node="remove"`, parce que la phrase qui suit les
-interdit nommément :
-
-- `RECEIVE_BOOT_COMPLETED`, qui est une permission de **démarrage automatique** : elle sert au
-  `RescheduleReceiver` de la bibliothèque, qui reprogramme ses tâches après un redémarrage.
-  Conséquence, spécifiée au § 5.5.1 et annoncée à l'usager : une surveillance ne se replanifie
-  qu'à la prochaine ouverture de l'application.
-- `FOREGROUND_SERVICE`, qui est une permission de **service en arrière-plan** : l'application
-  n'appelle jamais `setForeground`, et le service correspondant de la bibliothèque est désactivé
-  dès la fusion des manifestes.
+`RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE`, `WAKE_LOCK` et `POST_NOTIFICATIONS` entraient
+autrefois par le manifeste d'`androidx.work`, dépendance des trajets surveillés. La fonction et la
+bibliothèque étant retirées (§ 5.5.1), **aucune de ces quatre permissions n'apparaît plus dans le
+manifeste fusionné**, et il n'y a plus rien à en retirer par `tools:node="remove"`. Le jour où une
+bibliothèque en réintroduirait une, elle serait retirée de la fusion plutôt que tolérée.
 
 L'application doit rester entièrement utilisable si la permission de localisation est refusée.
 Aucune permission de stockage, de contacts, de démarrage automatique, de service en arrière-plan,
 ni d'alarme exacte.
 Un fichier `PRIVACY.md` documente précisément ce qui est envoyé au serveur (les coordonnées de
-départ et d'arrivée, l'heure, les préférences de modes), ce qui reste local, et le cas particulier
-des trajets surveillés : une requête à heure prévisible, qui trahit une habitude de déplacement.
+départ et d'arrivée, l'heure, les préférences de modes) et ce qui reste local. Il dit aussi ce
+qu'Escale ne fait pas : **aucune requête n'est envoyée sans que l'usager ait l'application sous les
+yeux**.
 
 ---
 
@@ -733,8 +680,7 @@ la CI GitHub Actions (compilation, tests, lint sur chaque poussée).
 8. **Libre-service** : `rentals`, disponibilités, intégration aux onglets Vélo et Transport en
    commun, filtres de types de véhicules, liens exploitants, marqueurs sur la carte.
 9. **Départs** : `stoptimes`, détail de course.
-10. **Favoris et historique** : domicile, travail, Room, réglages, effacement, puis trajets
-    surveillés (WorkManager, `refresh-itinerary`, notifications).
+10. **Favoris et historique** : domicile, travail, Room, réglages, effacement.
 11. **Finition** : accessibilité, traduction française, métadonnées Fastlane, conformité F-Droid.
 
 Chaque jalon se termine par une application qui compile, dont les tests passent, et qui est

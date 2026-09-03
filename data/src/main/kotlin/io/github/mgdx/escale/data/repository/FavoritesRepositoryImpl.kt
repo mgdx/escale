@@ -94,7 +94,6 @@ class FavoritesRepositoryImpl(database: EscaleDatabase, private val clock: () ->
     )
   }
 
-  /** La surveillance éventuelle part avec le trajet, par la cascade de la clé étrangère. */
   override suspend fun removeJourney(id: Long): Outcome<Unit> = write { dao.deleteJourney(id) }
 
   private fun observeNamedLocation(slot: NamedLocationSlot): Flow<Location?> =

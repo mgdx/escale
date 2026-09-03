@@ -4,7 +4,7 @@ Indiquez d'où vous partez et où vous allez. Escale propose plusieurs trajets, 
 
 <b>Ce que vous y trouvez</b>
 
-<ul><li>Heure de départ, heure d'arrivée, durée totale et nombre de correspondances pour chaque trajet.</li><li>Retards et suppressions en temps réel, et les messages de perturbation publiés par l'exploitant.</li><li>Le détail d'un trajet, portion par portion : la ligne et sa direction, le quai, tous les arrêts traversés, les instructions à pied et à vélo, l'accessibilité en fauteuil, et si les vélos sont acceptés à bord.</li><li>Les vélos et trottinettes en libre-service à côté de votre propre vélo, avec le nombre de véhicules disponibles à la station et le nombre de places libres à l'arrivée.</li><li>Une carte plein écran avec les arrêts et les stations.</li><li>Les prochains départs à n'importe quel arrêt.</li><li>Domicile, travail, lieux et trajets favoris — conservés sur votre téléphone.</li><li>Si vous l'activez, et seulement dans ce cas : Escale vérifie un trajet enregistré une fois, une heure avant votre départ, et ne vous prévient que si quelque chose a changé.</li></ul>
+<ul><li>Heure de départ, heure d'arrivée, durée totale et nombre de correspondances pour chaque trajet.</li><li>Retards et suppressions en temps réel, et les messages de perturbation publiés par l'exploitant.</li><li>Le détail d'un trajet, portion par portion : la ligne et sa direction, le quai, tous les arrêts traversés, les instructions à pied et à vélo, l'accessibilité en fauteuil, et si les vélos sont acceptés à bord.</li><li>Les vélos et trottinettes en libre-service à côté de votre propre vélo, avec le nombre de véhicules disponibles à la station et le nombre de places libres à l'arrivée.</li><li>Une carte plein écran avec les arrêts et les stations.</li><li>Les prochains départs à n'importe quel arrêt.</li><li>Domicile, travail, lieux et trajets favoris — conservés sur votre téléphone.</li></ul>
 
 <b>À savoir avant d'installer</b>
 
@@ -20,6 +20,6 @@ Données cartographiques © les contributeurs OpenStreetMap, sous licence ODbL :
 
 <b>Vie privée</b>
 
-Aucune mesure d'audience, aucun traqueur, aucune publicité, aucun service Google Play. Rien ne quitte votre téléphone en dehors des requêtes envoyées au serveur d'itinéraires que vous avez configuré. Favoris, domicile, travail et historique de recherche restent en mémoire locale ; la sauvegarde automatique est désactivée, ils ne sont donc jamais recopiés ailleurs.
+Aucune mesure d'audience, aucun traqueur, aucune publicité, aucun service Google Play. Rien ne quitte votre téléphone en dehors des requêtes envoyées au serveur d'itinéraires que vous avez configuré, et rien n'est envoyé pendant que l'application est fermée : Escale n'a ni tâche de fond, ni service, ni notification. Favoris, domicile, travail et historique de recherche restent en mémoire locale ; la sauvegarde automatique est désactivée, ils ne sont donc jamais recopiés ailleurs.
 
 Escale est un logiciel libre, publié sous licence GNU General Public License v3 ou ultérieure.

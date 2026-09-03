@@ -29,7 +29,6 @@ import io.github.mgdx.escale.ui.settings.SettingsRoute
 import io.github.mgdx.escale.ui.settings.SettingsScreen
 import io.github.mgdx.escale.ui.trip.TripRoute
 import io.github.mgdx.escale.ui.trip.TripScreen
-import io.github.mgdx.escale.ui.watch.WatchDetailNavigation
 
 /**
  * Le graphe de navigation, en routes typées (docs/architecture.md § 3, règle 4).
@@ -142,16 +141,13 @@ private fun FavoritesDestination(navController: NavHostController) {
 /**
  * Les demandes déposées **hors de la navigation**, consommées ici (docs/architecture.md § 11.4).
  *
- * Deux lots y déposent ce qu'ils ne savent pas ouvrir eux-mêmes : la carte, l'arrêt dont l'usager
- * veut les départs ; les trajets surveillés, celui dont il vient de lire la notification. Les
- * regrouper garde `EscaleNavHost` à la taille d'une table des matières, comme le fait déjà
- * `FavoritesDestination` pour son écran.
+ * La carte y dépose ce qu'elle ne sait pas ouvrir elle-même : l'arrêt dont l'usager veut les
+ * départs. Passer par ce point unique garde `EscaleNavHost` à la taille d'une table des matières,
+ * comme le fait déjà `FavoritesDestination` pour son écran.
  */
 @Composable
 private fun PendingRequestNavigation(navController: NavHostController) {
   StopDepartureNavigation(navController)
-  // `launchSingleTop` : deux appuis très rapprochés ouvrent un seul écran de détail.
-  WatchDetailNavigation(onOpenDetail = { navController.navigate(DetailRoute) { launchSingleTop = true } })
 }
 
 /**

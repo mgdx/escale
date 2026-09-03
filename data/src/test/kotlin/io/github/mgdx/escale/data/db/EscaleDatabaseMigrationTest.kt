@@ -95,7 +95,7 @@ class EscaleDatabaseMigrationTest {
   }
 
   @Test
-  fun `la migration 2 vers 3 fusionne les doublons deja crees, sans perdre la surveillance`() {
+  fun `la migration 2 vers 3 fusionne les doublons deja crees, en gardant le bon`() {
     writeVersion(2) { db ->
       // Quatre fois le même trajet, comme l'écran de détail savait en créer avant la version 3.
       repeat(4) { rang -> db.execSQL(insertJourney(id = rang + 1, name = "Nation")) }
@@ -112,16 +112,44 @@ class EscaleDatabaseMigrationTest {
     try {
       val journeys = runBlocking { database.favoritesDao().observeJourneys().first() }
       assertEquals(2, journeys.size)
-      // Le doublon conservé est celui qui portait la surveillance, et non le plus ancien.
+      // Le doublon conservé est celui qui portait la surveillance, et non le plus ancien — la
+      // fonction a été retirée depuis, mais la règle de fusion, elle, s'applique toujours aux bases
+      // restées en version 2.
       assertEquals(listOf(3L, 5L), journeys.map { it.id }.sorted())
-      val watched = runBlocking { database.watchedJourneysDao().observeWatched().first() }
-      assertEquals(listOf(3L), watched.map { it.journeyId })
 
       // Et l'index unique tient désormais : un cinquième essai n'ajoute plus rien.
       val existing = runBlocking {
         database.favoritesDao().findJourney("Bastille", 48.85, 2.37, "Nation", 48.84, 2.39, "TRANSIT")
       }
       assertEquals(3L, existing)
+    } finally {
+      database.close()
+    }
+  }
+
+  @Test
+  fun `la migration 4 vers 5 supprime la table des trajets surveilles sans toucher aux favoris`() {
+    writeVersion(4) { db ->
+      db.execSQL(insertJourney(id = 1, name = "Nation"))
+      // Une surveillance enregistrée du temps où la fonction existait : l'heure et les jours où
+      // l'usager part de chez lui. C'est précisément ce que la migration doit effacer.
+      db.execSQL(
+        "INSERT INTO watched_journeys (journeyId, departureMinuteOfDay, daysOfWeek, createdAt) " +
+          "VALUES (1, 490, 'MONDAY,TUESDAY', 1740816600000)",
+      )
+    }
+
+    val database = openMigrated()
+    try {
+      // Le trajet favori survit entier : c'est la surveillance qu'on retire, pas le favori.
+      val journeys = runBlocking { database.favoritesDao().observeJourneys().first() }
+      assertEquals(listOf(1L), journeys.map { it.id })
+
+      // Et la table a bien disparu de la base, pas seulement du code.
+      val tables = database.openHelper.writableDatabase.query(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'watched_journeys'",
+      )
+      tables.use { assertEquals(0, it.count) }
     } finally {
       database.close()
     }
@@ -222,6 +250,7 @@ class EscaleDatabaseMigrationTest {
       EscaleDatabase.MIGRATION_1_2,
       EscaleDatabase.MIGRATION_2_3,
       EscaleDatabase.MIGRATION_3_4,
+      EscaleDatabase.MIGRATION_4_5,
     )
     .allowMainThreadQueries()
     .build()

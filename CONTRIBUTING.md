@@ -88,7 +88,6 @@ strings_trip.xml        détail d'une course
 strings_departures.xml  prochains départs
 strings_settings.xml    réglages, dont l'écran « Serveur MOTIS »
 strings_favorites.xml   favoris et historique
-strings_watch.xml       trajets surveillés et notifications
 strings_about.xml       écran « À propos » et attributions
 ```
 

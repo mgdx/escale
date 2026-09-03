@@ -97,7 +97,6 @@ internal abstract class FavoritesDao {
     category = entity.category,
   ) ?: insertJourney(entity)
 
-  /** La clé étrangère de `watched_journeys` est en `CASCADE` : la surveillance part avec le favori. */
   @Query("DELETE FROM favorite_journeys WHERE id = :id")
   abstract suspend fun deleteJourney(id: Long)
 }
