@@ -59,6 +59,9 @@
 
   <string name="watch_notifications_off">Les notifications sont désactivées. Le trajet reste vérifié, et le résultat s\'affiche ici.</string>
 
+  <string name="watch_opening">Chargement du trajet à jour…</string>
+  <string name="watch_open_failed">Ce trajet n\'a pas pu être rechargé</string>
+
   <string name="watch_last_check">Vérifié à %1$s · %2$s</string>
   <string name="watch_last_check_none">Pas encore vérifié.</string>
   <string name="watch_status_nothing">rien à signaler</string>

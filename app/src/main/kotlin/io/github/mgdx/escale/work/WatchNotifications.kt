@@ -67,11 +67,11 @@ class WatchNotifications(private val context: Context) : WatchNotifier {
       .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
       .setPriority(NotificationCompat.PRIORITY_LOW)
       .setAutoCancel(true)
-      .setContentIntent(openApplication(journeyId))
+      .setContentIntent(openJourney(journeyId))
       .build()
     return try {
       createChannel()
-      NotificationManagerCompat.from(context).notify(notificationId(journeyId), notification)
+      NotificationManagerCompat.from(context).notify(WatchNotificationIds.notificationId(journeyId), notification)
       true
     } catch (_: SecurityException) {
       // La permission a pu être retirée entre la vérification et l'émission : on se tait.
@@ -81,7 +81,7 @@ class WatchNotifications(private val context: Context) : WatchNotifier {
 
   /** Retire la notification d'un trajet dont la surveillance vient d'être arrêtée. */
   override fun cancel(journeyId: Long) {
-    NotificationManagerCompat.from(context).cancel(notificationId(journeyId))
+    NotificationManagerCompat.from(context).cancel(WatchNotificationIds.notificationId(journeyId))
   }
 
   /**
@@ -101,17 +101,29 @@ class WatchNotifications(private val context: Context) : WatchNotifier {
   }
 
   /**
-   * L'appui sur la notification ouvre l'application.
+   * L'appui sur la notification ouvre le détail du trajet rafraîchi (SPEC.md § 5.5.1).
    *
-   * `FLAG_IMMUTABLE` : l'intention ne porte aucune donnée qu'un tiers aurait à compléter, et une
-   * `PendingIntent` modifiable est une porte ouverte (SPEC.md § 11).
+   * **L'intention ne porte que l'identifiant du trajet favori**, un numéro de ligne de la base
+   * locale : ni origine, ni destination, ni horaire. Une `PendingIntent` traverse le système et
+   * peut être lue par lui ; SPEC.md § 11 interdit qu'une donnée de localisation s'y trouve, et un
+   * numéro de ligne n'en est pas une. C'est aussi suffisant : le reste se relit dans la base.
+   *
+   * `FLAG_ACTIVITY_CLEAR_TOP` **sans** `FLAG_ACTIVITY_SINGLE_TOP` : l'activité étant en mode
+   * `standard`, elle est recréée avec cette intention-ci. Les trois cas — application fermée, en
+   * arrière-plan, ou ouverte sur un autre écran — aboutissent donc au même endroit, sans que
+   * `MainActivity` ait à traiter une nouvelle intention.
+   *
+   * `FLAG_IMMUTABLE` : rien à compléter par un tiers, une intention modifiable est une porte
+   * ouverte. `FLAG_UPDATE_CURRENT` : une nouvelle alerte sur le même trajet remplace les extras de
+   * la précédente au lieu de resservir les anciens.
    */
-  private fun openApplication(journeyId: Long): PendingIntent {
+  private fun openJourney(journeyId: Long): PendingIntent {
     val intent = Intent(context, MainActivity::class.java)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      .putExtra(EXTRA_JOURNEY_ID, journeyId)
     return PendingIntent.getActivity(
       context,
-      notificationId(journeyId),
+      WatchNotificationIds.requestCode(journeyId),
       intent,
       PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
@@ -180,8 +192,6 @@ class WatchNotifications(private val context: Context) : WatchNotifier {
 
   private fun join(vararg parts: String?) = parts.filterNot { it.isNullOrBlank() }.joinToString(separator = " ")
 
-  private fun notificationId(journeyId: Long) = NOTIFICATION_ID_BASE + journeyId.toInt()
-
   /** Le titre et le corps d'une notification, une fois mis en mots. */
   private data class WatchMessage(val title: String, val body: String)
 
@@ -192,7 +202,11 @@ class WatchNotifications(private val context: Context) : WatchNotifier {
      */
     const val CHANNEL_ID = "watched_journeys"
 
-    /** Une notification par trajet surveillé, cinq au plus (`JourneyWatchLimit`). */
-    private const val NOTIFICATION_ID_BASE = 4200
+    /**
+     * L'identifiant du trajet favori concerné, porté par l'intention de la notification.
+     *
+     * C'est la seule donnée qui traverse le système, et c'est un numéro de ligne locale.
+     */
+    const val EXTRA_JOURNEY_ID = "io.github.mgdx.escale.watch.journeyId"
   }
 }
