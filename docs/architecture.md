@@ -102,6 +102,10 @@ Noms et emplacements figés. Les champs sont dérivés de `docs/motis-openapi.ya
 | `StopTimeEntry` | un départ à un arrêt | ligne, direction, quai, heures théorique et réelle, `cancelled` |
 | `Disruption` | une `Alert` de l'API | `headerText`, `descriptionText`, `severity`, `cause`, `effect`, `periods`, `url` |
 | `RentalAvailability` | état d'une station | `numVehiclesAvailable`, `vehicleTypesAvailable`, `vehicleDocksAvailable`, `isRenting`, `isReturning`, `retrievedAt: Instant` |
+| `FavoritePlace` | lieu favori **nommé** | `id: Long`, `label: String?`, `location`, `createdAt`, `displayName` — le libellé n'est pas décoratif, le §5.5 parle de « lieux nommés » |
+| `FavoriteJourney` | trajet favori | `id: Long`, `label`, `from`, `to`, `category` |
+| `SearchHistoryEntry` | une recherche passée | `id: Long`, `from`, `to`, `time: TimeChoice`, `searchedAt` — **pas** de `SearchQuery` : les préférences du §5.6 sont globales et ne se figent pas dans un historique |
+| `WatchedJourney` | trajet surveillé (§5.5.1) | trajet favori, heure de départ habituelle, jours, `itineraryId`, `lastViewedAt` |
 | `ServerConfig` | serveur configuré | `baseUrl`, `label`, `hasTiles: Boolean`, `lastCheckedAt: Instant?` |
 | `Delay` | écart temps réel | calculé dans `:core.format`, jamais dans l'UI |
 
@@ -132,7 +136,7 @@ TripRepository        détail d'une course, prochains départs à un arrêt
 StopsRepository       arrêts par emprise et par palier de zoom
 RentalsRepository     stations et véhicules en libre-service, disponibilités
 PreferencesRepository réglages (Flow), écriture
-FavoritesRepository   domicile, travail, lieux, arrêts, trajets
+FavoritesRepository   domicile, travail, lieux **nommés** (identifiés, pas désignés par leurs coordonnées), arrêts, trajets
 HistoryRepository     dernières recherches, effacement
 WatchedJourneysRepository  trajets surveillés (§5.5.1) : heure, jours, identifiant d'itinéraire
 ```
@@ -289,3 +293,18 @@ Corollaire pour la lecture de `SPEC.md` : quand la spec énumère des modes, ell
 vocabulaire de l'API, parapluies compris. Une liste de la spec peut donc être **plus courte** que
 la liste de feuilles à comparer côté client. Le code doit alors documenter l'écart et citer la
 ligne de l'OpenAPI, sans quoi le lot suivant « corrigera » la correction.
+
+### 11.6 Migrations Room, sans `room-testing`
+
+La base est versionnée, son schéma est **exporté et commité** dans `data/schemas/`, et
+`fallbackToDestructiveMigration` est **interdit** : une mise à jour publiée ne doit jamais effacer
+le domicile, le travail ni les favoris de quelqu'un.
+
+`androidx.room:room-testing` n'est pas au catalogue, donc `MigrationTestHelper` n'est pas
+disponible. La méthode retenue, et à reprendre pour les migrations suivantes : **reconstruire une
+base de la version précédente à partir de son schéma JSON exporté**, y insérer des lignes, puis
+laisser Room ouvrir la base migrée — c'est Room lui-même qui valide alors que le schéma obtenu
+correspond à celui qu'il attend. Voir `EscaleDatabaseMigrationTest`.
+
+C'est aussi la raison pour laquelle le JSON exporté **se commite** : sans lui, cette vérification
+est impossible et aucune migration future n'est démontrable.
