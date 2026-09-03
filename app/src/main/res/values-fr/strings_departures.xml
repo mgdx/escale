@@ -9,7 +9,7 @@
 
   <plurals name="departures_lines_served">
     <item quantity="one">%1$d ligne</item>
-    <item quantity="many">%1$d de lignes</item>
+    <item quantity="many">%1$d lignes</item>
     <item quantity="other">%1$d lignes</item>
   </plurals>
   <!-- « 30 lignes · 1, 4, 7 » : le compte, puis les numéros que la place permet. -->

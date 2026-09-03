@@ -30,9 +30,11 @@
   <string name="detail_no_intermediate_stop">Sans arrêt</string>
   <plurals name="detail_intermediate_stops">
     <item quantity="one">%d arrêt desservi</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d d\'arrêts desservis</item>
+    <!-- Catégorie CLDR « many » du français : elle ne vaut que pour les millions (1000000,
+         2000000…), et lint l'exige dès qu'un pluriel porte un nombre. La construction « 2 millions
+         DE X » suppose le nombre écrit en toutes lettres ; avec %d, qui rend « 2000000 », elle
+         serait fautive. La forme reprend donc « other ». -->
+    <item quantity="many">%d arrêts desservis</item>
     <item quantity="other">%d arrêts desservis</item>
   </plurals>
   <string name="detail_show_stops">Afficher les arrêts desservis</string>
@@ -98,39 +100,38 @@
   <string name="detail_rental_not_returning">La station de retour n\'accepte plus de retour pour le moment</string>
   <plurals name="detail_rental_available_bikes">
     <item quantity="one">%d vélo disponible</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l\'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d de vélos disponibles</item>
+    <!-- Voir la note ci-dessus : forme « many » exigée par lint, identique à « other ». -->
+    <item quantity="many">%d vélos disponibles</item>
     <item quantity="other">%d vélos disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_cargo_bikes">
     <item quantity="one">%d vélo cargo disponible</item>
-    <item quantity="many">%d de vélos cargos disponibles</item>
+    <item quantity="many">%d vélos cargos disponibles</item>
     <item quantity="other">%d vélos cargos disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_scooters">
     <item quantity="one">%d trottinette disponible</item>
-    <item quantity="many">%d de trottinettes disponibles</item>
+    <item quantity="many">%d trottinettes disponibles</item>
     <item quantity="other">%d trottinettes disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_mopeds">
     <item quantity="one">%d scooter disponible</item>
-    <item quantity="many">%d de scooters disponibles</item>
+    <item quantity="many">%d scooters disponibles</item>
     <item quantity="other">%d scooters disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_cars">
     <item quantity="one">%d voiture disponible</item>
-    <item quantity="many">%d de voitures disponibles</item>
+    <item quantity="many">%d voitures disponibles</item>
     <item quantity="other">%d voitures disponibles</item>
   </plurals>
   <plurals name="detail_rental_available_vehicles">
     <item quantity="one">%d véhicule disponible</item>
-    <item quantity="many">%d de véhicules disponibles</item>
+    <item quantity="many">%d véhicules disponibles</item>
     <item quantity="other">%d véhicules disponibles</item>
   </plurals>
   <plurals name="detail_rental_docks_free">
     <item quantity="one">%d place libre à l\'arrivée</item>
-    <item quantity="many">%d de places libres à l\'arrivée</item>
+    <item quantity="many">%d places libres à l\'arrivée</item>
     <item quantity="other">%d places libres à l\'arrivée</item>
   </plurals>
 

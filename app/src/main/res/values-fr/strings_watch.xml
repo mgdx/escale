@@ -18,7 +18,7 @@
   <string name="watch_notification_suggested">Départ conseillé : %1$s.</string>
   <plurals name="watch_notification_delay">
     <item quantity="one">%1$d minute de retard.</item>
-    <item quantity="many">%1$d de minutes de retard.</item>
+    <item quantity="many">%1$d minutes de retard.</item>
     <item quantity="other">%1$d minutes de retard.</item>
   </plurals>
 
@@ -53,7 +53,7 @@
 
   <plurals name="watch_limit_reached">
     <item quantity="one">Vous surveillez déjà %1$d trajet. Arrêtez-le d\'abord.</item>
-    <item quantity="many">Vous surveillez déjà %1$d de trajets. Arrêtez-en un d\'abord.</item>
+    <item quantity="many">Vous surveillez déjà %1$d trajets. Arrêtez-en un d\'abord.</item>
     <item quantity="other">Vous surveillez déjà %1$d trajets. Arrêtez-en un d\'abord.</item>
   </plurals>
 

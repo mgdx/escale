@@ -41,9 +41,11 @@
   <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
   <plurals name="map_stop_lines_served">
     <item quantity="one">%d ligne desservie</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d de lignes desservies</item>
+    <!-- Catégorie CLDR « many » du français : elle ne vaut que pour les millions (1000000,
+         2000000…), et lint l'exige dès qu'un pluriel porte un nombre. La construction « 2 millions
+         DE X » suppose le nombre écrit en toutes lettres ; avec %d, qui rend « 2000000 », elle
+         serait fautive. La forme reprend donc « other ». -->
+    <item quantity="many">%d lignes desservies</item>
     <item quantity="other">%d lignes desservies</item>
   </plurals>
   <string name="map_stop_lines_loading">Chargement des lignes\u2026</string>
@@ -71,14 +73,13 @@
   <!-- Infobulle d'une station : nom, véhicules disponibles, places libres, lien vers l'exploitant. -->
   <plurals name="map_rental_vehicles_available">
     <item quantity="one">%d véhicule disponible</item>
-    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
-         l'exige pour que le pluriel soit complet. -->
-    <item quantity="many">%d de véhicules disponibles</item>
+    <!-- Voir la note ci-dessus : forme « many » exigée par lint, identique à « other ». -->
+    <item quantity="many">%d véhicules disponibles</item>
     <item quantity="other">%d véhicules disponibles</item>
   </plurals>
   <plurals name="map_rental_docks_available">
     <item quantity="one">%d place libre</item>
-    <item quantity="many">%d de places libres</item>
+    <item quantity="many">%d places libres</item>
     <item quantity="other">%d places libres</item>
   </plurals>
   <string name="map_rental_not_renting">Prise temporairement suspendue</string>
