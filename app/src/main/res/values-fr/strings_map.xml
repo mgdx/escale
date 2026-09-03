@@ -53,4 +53,13 @@
   <string name="map_stop_close">Fermer le détail de l\'arrêt</string>
   <!-- Le mode, puis le numéro de ligne : « Métro 14 ». -->
   <string name="map_stop_line_description">%1$s %2$s</string>
+
+  <!-- Libre-service sur la carte (SPEC.md § 5.7). Le type de véhicule est écrit en toutes lettres
+       pour les lecteurs d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins
+       (SPEC.md § 9). -->
+  <string name="map_rental_form_bicycle">Vélo</string>
+  <string name="map_rental_form_scooter">Trottinette</string>
+  <string name="map_rental_form_moped">Scooter</string>
+  <string name="map_rental_form_car">Voiture</string>
+  <string name="map_rental_form_other">Véhicule partagé</string>
 </resources>

@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.map
 
+import io.github.mgdx.escale.core.geo.RentalMarker
 import io.github.mgdx.escale.core.geo.StopMarker
 import io.github.mgdx.escale.core.geo.TraceMarker
 import io.github.mgdx.escale.core.geo.TraceSegment
@@ -87,6 +88,37 @@ object MapGeoJson {
     }
   }
 
+  /**
+   * Les stations et véhicules en libre-service d'une même famille (SPEC.md § 5.7).
+   *
+   * L'appelant passe les stations et les véhicules **séparément** : chaque famille a sa source, son
+   * palier de zoom et son seuil de regroupement (voir `MapRentals.kt`).
+   *
+   * Chaque entité porte tout ce dont la couche a besoin pour se dessiner sans jamais être
+   * reconstruite — son dessin ([PROPERTY_ICON]), son nom — et tout ce que l'infobulle affichera
+   * sans nouvel appel : véhicules disponibles, places libres, lien vers l'exploitant (§ 5.7).
+   * C'est ce qui fait qu'un appui ouvre l'infobulle instantanément, sans réseau.
+   */
+  fun rentals(markers: List<RentalMarker>): String = collection {
+    for (marker in markers) {
+      feature(
+        properties = {
+          put(PROPERTY_RENTAL_ID, marker.id)
+          put(PROPERTY_LABEL, marker.name)
+          put(PROPERTY_RENTAL_KIND, marker.kind.name)
+          put(PROPERTY_RENTAL_FORM, RentalIcon.of(marker.formFactor).name)
+          put(PROPERTY_ICON, RentalIcon.of(marker.formFactor).imageId(marker.kind))
+          put(PROPERTY_RENTAL_VEHICLES, marker.vehiclesAvailable)
+          put(PROPERTY_RENTAL_DOCKS, marker.docksAvailable)
+          put(PROPERTY_RENTAL_RENTING, marker.isRenting)
+          put(PROPERTY_RENTAL_RETURNING, marker.isReturning)
+          marker.rentalUriAndroid?.let { put(PROPERTY_RENTAL_URI, it) }
+        },
+        geometry = { point(marker.point) },
+      )
+    }
+  }
+
   /** Les marqueurs de départ, d'arrivée et de correspondance d'un trajet (SPEC.md § 5.3). */
   fun journeyMarkers(markers: List<TraceMarker>): String = collection {
     for (marker in markers) {
@@ -158,4 +190,28 @@ object MapGeoJson {
 
   /** Identifiant du dessin posé sur la feuille de style pour cet arrêt. */
   const val PROPERTY_ICON = "icon"
+
+  /** Identifiant de la station ou du véhicule en libre-service. */
+  const val PROPERTY_RENTAL_ID = "rentalId"
+
+  /** Famille du marqueur : le nom d'une valeur de `RentalMarkerKind`. */
+  const val PROPERTY_RENTAL_KIND = "rentalKind"
+
+  /** Type de véhicule dessiné : le nom d'une valeur de `RentalIcon`. */
+  const val PROPERTY_RENTAL_FORM = "rentalForm"
+
+  /** Véhicules disponibles à la prise (SPEC.md § 5.7). */
+  const val PROPERTY_RENTAL_VEHICLES = "rentalVehicles"
+
+  /** Places libres au retour, tous types confondus. Zéro pour un véhicule isolé. */
+  const val PROPERTY_RENTAL_DOCKS = "rentalDocks"
+
+  /** Faux quand la station est temporairement hors service à la prise. */
+  const val PROPERTY_RENTAL_RENTING = "rentalRenting"
+
+  /** Faux quand la station est temporairement hors service au retour. */
+  const val PROPERTY_RENTAL_RETURNING = "rentalReturning"
+
+  /** Lien profond vers l'exploitant. Absent quand le flux n'en publie pas. */
+  const val PROPERTY_RENTAL_URI = "rentalUri"
 }
