@@ -439,11 +439,23 @@ private fun CallTimes(call: StopVisit, realTime: Boolean) {
  *
  * Rien n'est affiché sans donnée temps réel : `Delay.between` rend alors `null`, et l'horaire
  * théorique reste tu puisqu'il est égal, par construction, à l'heure déjà affichée (SPEC.md § 5.2).
- * À l'heure, l'écart ne mérite pas non plus une ligne : c'est le cas normal.
+ *
+ * **« À l'heure » s'écrit, lui aussi.** Les heures juste au-dessus sont teintes en vert par
+ * `delayColor` : sans cette ligne, le seul signe qu'un passage est à l'heure serait une couleur, ce
+ * que SPEC.md § 9 interdit. Les deux autres écrans qui affichent un écart l'écrivent déjà.
  */
 @Composable
 private fun DelayLines(delay: Delay?, scheduled: Instant) {
-  if (delay == null || delay.quality == DelayQuality.ON_TIME) return
+  if (delay == null) return
+  if (delay.quality == DelayQuality.ON_TIME) {
+    TripLine(
+      icon = R.drawable.ic_check_circle,
+      text = stringResource(R.string.results_delay_on_time),
+      color = delayColor(delay.quality),
+      style = MaterialTheme.typography.bodySmall,
+    )
+    return
+  }
   val formatTime = rememberTimeFormatter()
   val amount = durationText(delay.formatted)
   TripLine(

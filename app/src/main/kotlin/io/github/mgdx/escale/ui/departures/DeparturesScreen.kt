@@ -224,6 +224,20 @@ private fun ModeChip(label: String, icon: Int?, selected: Boolean, onClick: () -
         )
       }
     },
+    // La coche que Material pose d'ordinaire à l'état sélectionné a cédé sa place au pictogramme
+    // de mode : sans elle, la puce active ne se distinguait plus que par sa couleur de fond, ce
+    // que SPEC.md § 9 interdit. Elle revient à droite, où elle ne prend la place de rien.
+    trailingIcon = if (selected) {
+      {
+        Icon(
+          painter = painterResource(R.drawable.ic_check_circle),
+          contentDescription = null,
+          modifier = Modifier.size(ChipIconSize),
+        )
+      }
+    } else {
+      null
+    },
   )
 }
 

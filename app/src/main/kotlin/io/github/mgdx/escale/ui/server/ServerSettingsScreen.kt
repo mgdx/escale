@@ -469,10 +469,23 @@ private fun SwitchEffectsText(dialog: ServerDialog.SwitchEffects) {
     Text(text = stringResource(R.string.server_settings_switch_message, dialog.baseUrl))
     Text(text = stringResource(R.string.server_settings_switch_favorites))
     if (dialog.untested) {
-      Text(
-        text = stringResource(R.string.server_settings_switch_untested),
-        color = MaterialTheme.colorScheme.error,
-      )
+      // Un avertissement se distingue d'une explication par son pictogramme, jamais par sa seule
+      // couleur (SPEC.md § 9). L'icône est muette, le texte à côté dit tout.
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        Icon(
+          painter = painterResource(R.drawable.ic_warning),
+          contentDescription = null,
+          modifier = Modifier.size(18.dp),
+          tint = MaterialTheme.colorScheme.error,
+        )
+        Text(
+          text = stringResource(R.string.server_settings_switch_untested),
+          color = MaterialTheme.colorScheme.error,
+        )
+      }
     }
   }
 }

@@ -221,18 +221,18 @@ private fun WatchAlertSection(state: WatchUiState, actions: WatchActions) {
 private fun WatchStatusSection(state: WatchUiState) {
   Column(verticalArrangement = Arrangement.spacedBy(RowSpacing)) {
     if (state.limitReached || state.limitBlocking) {
-      Text(
+      WatchStatusLine(
+        icon = R.drawable.ic_warning,
         text = limitMessage(state.watchedCount),
-        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.error,
       )
     }
     // Refus de POST_NOTIFICATIONS, ou canal éteint depuis les réglages système : la surveillance
     // reste proposée, sans notification (SPEC.md § 5.5.1).
     if (state.watched && !state.notificationsAllowed) {
-      Text(
+      WatchStatusLine(
+        icon = R.drawable.ic_warning,
         text = stringResource(R.string.watch_notifications_off),
-        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
@@ -243,6 +243,29 @@ private fun WatchStatusSection(state: WatchUiState) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
+  }
+}
+
+/**
+ * Une ligne d'état : un pictogramme, un texte, une couleur — dans cet ordre d'importance.
+ *
+ * Sans le pictogramme, un avertissement ne se distinguait d'une information neutre que par sa
+ * couleur, ce que SPEC.md § 9 interdit. L'icône est muette : le texte à côté dit la même chose.
+ */
+@Composable
+private fun WatchStatusLine(@DrawableRes icon: Int, text: String, color: Color) {
+  Row(
+    modifier = Modifier.semantics(mergeDescendants = true) { },
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(RowSpacing),
+  ) {
+    Icon(
+      painter = painterResource(icon),
+      contentDescription = null,
+      modifier = Modifier.size(StatusIconSize),
+      tint = color,
+    )
+    Text(text = text, style = MaterialTheme.typography.bodyMedium, color = color)
   }
 }
 
@@ -317,3 +340,4 @@ private val SheetPadding = 16.dp
 private val SectionSpacing = 20.dp
 private val RowSpacing = 12.dp
 private val ChipSpacing = 8.dp
+private val StatusIconSize = 18.dp
