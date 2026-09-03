@@ -78,9 +78,16 @@ import java.time.Instant
  *
  * @param onBack sortie de l'écran. Elle ne libère rien : le trajet reste mis en évidence et tracé
  *   sur la carte au retour dans la liste (SPEC.md § 5.1).
+ * @param onTripSelected ouvre l'écran « détail de la course » (`/api/v6/trip`, SPEC.md § 5.3).
+ *   Nul tant qu'aucun appelant ne le branche : la commande n'apparaît alors pas dans les portions,
+ *   un bouton qui ne mène nulle part étant pire que pas de bouton du tout.
  */
 @Composable
-fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun DetailScreen(
+  onBack: () -> Unit,
+  modifier: Modifier = Modifier,
+  onTripSelected: ((tripId: String) -> Unit)? = null,
+) {
   val container = appContainer()
   val viewModel: DetailViewModel = viewModel(factory = DetailViewModel.factory(container))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -95,7 +102,7 @@ fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   LaunchedEffect(state.closed) { if (state.closed) onBack() }
   DetailContent(
     state = state,
-    actions = rememberDetailActions(viewModel),
+    actions = rememberDetailActions(viewModel, onTripSelected),
     onBack = onBack,
     modifier = modifier,
   )
@@ -103,12 +110,16 @@ fun DetailScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 /** Les gestes de l'écran, regroupés pour ne pas les recréer à chaque recomposition. */
 @Composable
-private fun rememberDetailActions(viewModel: DetailViewModel): DetailActions = remember(viewModel) {
+private fun rememberDetailActions(
+  viewModel: DetailViewModel,
+  onTripSelected: ((tripId: String) -> Unit)?,
+): DetailActions = remember(viewModel, onTripSelected) {
   DetailActions(
     onRefresh = viewModel::onRefresh,
     onLegToggled = viewModel::onLegToggled,
     onStopsToggled = viewModel::onStopsToggled,
     onStepsToggled = viewModel::onStepsToggled,
+    onTripSelected = onTripSelected,
   )
 }
 
