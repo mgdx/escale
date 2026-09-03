@@ -37,28 +37,41 @@ fun mapCameraInsets(
   resultsSheetHeight: Dp,
   screenHeight: Dp,
 ): MapCameraInsets = MapCameraInsets(
-  top = maxOf(systemTop, floatingHeight(searchCardHeight, screenHeight)),
-  bottom = maxOf(systemBottom, floatingHeight(resultsSheetHeight, screenHeight)),
+  top = maxOf(systemTop, searchCardCover(searchCardHeight, screenHeight)),
+  bottom = maxOf(systemBottom, sheetCover(resultsSheetHeight, screenHeight)),
 )
 
 /**
- * La part de carte qu'un élément flottant recouvre vraiment.
+ * La part de carte que la carte de recherche recouvre vraiment.
  *
- * Deux cas s'écartent de la mesure brute :
+ * **Un élément qui occupe presque tout l'écran n'en est plus un.** Le champ de recherche actif
+ * passe en plein écran, clavier compris (SPEC.md § 5.1), et sa hauteur est alors celle de l'écran :
+ * la prendre pour celle du bandeau replié rendrait le cadrage absurde. La carte est de toute façon
+ * invisible à ce moment-là, et la mesure du bandeau revient dès que le champ se referme.
  *
- * - **un élément qui occupe presque tout l'écran n'en est plus un.** Le champ de recherche actif
- *   passe en plein écran, clavier compris (SPEC.md § 5.1), et sa hauteur est alors celle de
- *   l'écran : la prendre pour celle du bandeau replié rendrait le cadrage absurde. La carte est de
- *   toute façon invisible à ce moment-là, et la mesure du bandeau revient dès que le champ se
- *   referme ;
- * - **un élément ne peut pas confisquer toute la carte.** Une feuille de résultats dépliée à fond
- *   ne laisserait plus rien à cadrer : sa contribution est plafonnée, et le bornage final de
- *   [fittedInto] achève de garantir qu'un trajet reste cadrable.
+ * En deçà, la hauteur mesurée est reprise **telle quelle**. La plafonner reviendrait à dire à la
+ * caméra que le bandeau cache moins qu'il ne cache, et le tracé passerait dessous : c'est le
+ * bornage final de [fittedInto], et lui seul, qui garantit qu'il reste de quoi cadrer.
  */
-private fun floatingHeight(measured: Dp, screenHeight: Dp): Dp = when {
+private fun searchCardCover(measured: Dp, screenHeight: Dp): Dp = when {
   screenHeight <= 0.dp -> measured
   measured > screenHeight * FULL_SCREEN_RATIO -> 0.dp
-  else -> minOf(measured, screenHeight * MAX_FLOATING_RATIO)
+  else -> measured
+}
+
+/**
+ * La part de carte que la feuille de résultats recouvre vraiment.
+ *
+ * La hauteur mesurée est reprise telle quelle jusqu'à [MAX_SHEET_RATIO], **au-delà de la hauteur
+ * de la feuille repliée** : sous-estimer ce que la feuille cache faisait glisser la fin du trajet
+ * — son marqueur d'arrivée compris — juste sous son bord, anomalie vue sur téléphone.
+ *
+ * Le plafond ne vaut donc que pour la feuille dépliée, qui ne peut pas confisquer toute la carte :
+ * sans lui, il ne resterait rien à cadrer, et le bornage de [fittedInto] devrait tout rattraper.
+ */
+private fun sheetCover(measured: Dp, screenHeight: Dp): Dp = when {
+  screenHeight <= 0.dp -> measured
+  else -> minOf(measured, screenHeight * MAX_SHEET_RATIO)
 }
 
 /** Le remplissage de la caméra, en pixels, tel que MapLibre l'attend. */
@@ -94,8 +107,14 @@ private fun shrinkFactor(total: Int, dimension: Float): Float {
 /** Au-delà, ce n'est plus un élément flottant posé sur la carte : c'est un écran. */
 private const val FULL_SCREEN_RATIO = 0.7f
 
-/** Part de la carte qu'un seul élément flottant peut revendiquer dans le cadrage. */
-private const val MAX_FLOATING_RATIO = 0.4f
+/**
+ * Part de la carte que la feuille de résultats peut revendiquer dans le cadrage.
+ *
+ * Au-dessus de la hauteur de la feuille repliée — 45 % de l'écran (`ResultsSheetSlot`) —, pour que
+ * celle-ci soit prise en compte pour ce qu'elle est ; en dessous de la feuille dépliée, à qui on
+ * ne laisse pas toute la carte.
+ */
+private const val MAX_SHEET_RATIO = 0.5f
 
 /** Part d'un axe que les deux remplissages réunis peuvent consommer : il reste un cinquième. */
 private const val MAX_PADDING_RATIO = 0.8f

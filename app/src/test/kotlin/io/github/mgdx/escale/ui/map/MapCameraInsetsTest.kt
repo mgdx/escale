@@ -58,10 +58,25 @@ class MapCameraInsetsTest {
   }
 
   @Test
-  fun `un élément ne confisque jamais plus de deux cinquièmes de la carte`() {
-    // Une feuille dépliée aux trois cinquièmes reste un élément flottant, mais sa contribution au
-    // cadrage est plafonnée : sans quoi il ne resterait rien à cadrer.
-    assertEquals(screen * 0.4f, insets(searchCard = 0.dp, sheet = 480.dp).bottom)
+  fun `la feuille repliée est prise en compte pour toute sa hauteur`() {
+    // Anomalie relevée sur téléphone : la feuille repliée occupe 45 % de l'écran, et son plafond
+    // en revendiquait 40 %. La caméra croyait donc voir plus de carte qu'il n'y en avait, et la
+    // fin du trajet — marqueur d'arrivée compris — passait juste sous le bord de la feuille.
+    assertEquals(screen * 0.45f, insets(searchCard = 0.dp, sheet = screen * 0.45f).bottom)
+  }
+
+  @Test
+  fun `la feuille dépliée ne confisque jamais plus de la moitié de la carte`() {
+    // Dépliée, elle couvre les neuf dixièmes de l'écran : sans plafond, il ne resterait rien à
+    // cadrer.
+    assertEquals(screen * 0.5f, insets(searchCard = 0.dp, sheet = 720.dp).bottom)
+  }
+
+  @Test
+  fun `une carte de recherche agrandie est prise en compte pour toute sa hauteur`() {
+    // À 200 % d'agrandissement, le bandeau de recherche dépasse les deux cinquièmes de l'écran
+    // sans pour autant devenir un écran : le rogner remettrait le tracé derrière lui.
+    assertEquals(360.dp, insets(searchCard = 360.dp, sheet = 0.dp).top)
   }
 
   @Test
