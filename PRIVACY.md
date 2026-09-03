@@ -90,7 +90,7 @@ appareil, ce que ce document promet précisément de ne jamais faire.
 
 ## Permissions
 
-Escale déclare **six** permissions, et aucune autre :
+Escale déclare **six** permissions Android, et aucune autre :
 
 | Permission | Pourquoi | Quand elle est demandée |
 |---|---|---|
@@ -109,12 +109,22 @@ elle ne s'en sert nulle part, et Escale la retire de son manifeste.
 aucune donnée, et elle empêche seulement l'appareil de se rendormir pendant les quelques secondes
 que dure la vérification d'un trajet surveillé.
 
+**Une septième ligne, qui n'est pas une permission Android.** Si vous lisez le manifeste de
+l'application installée, vous y trouverez aussi
+`io.github.mgdx.escale.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Ce n'est pas une permission de
+la plateforme : c'est une permission qu'Escale **définit pour elle-même**, ajoutée automatiquement
+par une bibliothèque d'Android (`androidx.core`) pour empêcher les autres applications de parler
+aux composants internes d'Escale sur les versions d'Android antérieures à la 13. Elle est de
+niveau *signature*, ce qui veut dire que seule une application signée avec la même clé pourrait
+l'obtenir — donc aucune. Elle ne donne accès à rien, ne vous est jamais soumise, et n'existe que
+pour fermer une porte, pas pour en ouvrir une.
+
 Aucune permission de stockage, de contacts, de **démarrage automatique** ni de **service en
 arrière-plan** n'est demandée. Les deux dernières, `RECEIVE_BOOT_COMPLETED` et
 `FOREGROUND_SERVICE`, sont déclarées par la bibliothèque de tâches d'Android : **Escale les retire
 de son manifeste**, une par une et explicitement. Vous pouvez le vérifier vous-même : le manifeste
 d'une application installée est public, et celui d'Escale ne contient que les six permissions du
-tableau ci-dessus.
+tableau ci-dessus, plus la permission de signature décrite juste avant, qui ne donne accès à rien.
 
 **Aucune alarme exacte** (`SCHEDULE_EXACT_ALARM`) n'est demandée non plus. C'est un choix : la
 vérification peut être décalée de quelques minutes par le système, ce qui est sans conséquence pour

@@ -665,6 +665,15 @@ Permissions déclarées, et aucune autre :
   sans écran de consentement, elle ne donne accès à aucune donnée et ne révèle rien sur l'usager ni
   sur ses déplacements — elle empêche seulement l'appareil de se rendormir pendant les quelques
   secondes que dure la requête.
+- `io.github.mgdx.escale.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, insérée dans le manifeste
+  fusionné par `androidx.core` : `ContextCompat.registerReceiver` s'en sert pour émuler
+  `RECEIVER_NOT_EXPORTED` sur les versions d'Android antérieures à 13, en protégeant par elle les
+  récepteurs enregistrés à l'exécution. Ce n'est pas une permission de la plateforme mais une
+  permission **définie par l'application elle-même**, de **niveau `signature`** : seule une
+  application signée avec la même clé pourrait l'obtenir, c'est-à-dire aucune autre. Elle n'est
+  donc accordée à personne, ne donne accès à aucune donnée, n'ouvre aucun échange hors de
+  l'application et ne donne lieu à aucun écran de consentement. Elle est nommée ici parce qu'un
+  relecteur qui compte les entrées du manifeste fusionné en trouve **sept** et non six.
 
 `androidx.work` déclare **quatre** permissions dans son propre manifeste. `ACCESS_NETWORK_STATE` est
 déjà celle de MapLibre et `WAKE_LOCK` est retenue ci-dessus ; les **deux autres sont explicitement

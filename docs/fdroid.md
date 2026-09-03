@@ -213,7 +213,7 @@ contient **aucun `<uses-feature>`**.
 Ne sont demandées, et ne doivent jamais l'être : aucune permission de stockage, de contacts,
 d'appareil photo, de journal d'appels, ni `SCHEDULE_EXACT_ALARM`.
 
-### Une septième entrée, qui n'est pas une permission Android
+### Une septième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
 
 Le manifeste de publication déclare aussi :
 
@@ -229,6 +229,11 @@ détenir, c'est-à-dire aucune autre. Elle sert à `ContextCompat.registerReceiv
 donne lieu à aucun écran de consentement. Elle est signalée ici parce qu'un relecteur qui compte les
 lignes du manifeste en trouvera sept et non six, et qu'il vaut mieux que l'explication soit écrite
 d'avance qu'improvisée.
+
+Le § 11 de la spec disait « permissions déclarées, et aucune autre » sans la mentionner : **il a été
+amendé pour la nommer**, dans la même forme que les puces `ACCESS_NETWORK_STATE` et `WAKE_LOCK`.
+`PRIVACY.md` la décrit également, en termes destinés à l'usager. Le manifeste et les trois documents
+disent donc désormais la même chose, ce qu'un relecteur peut vérifier ligne à ligne.
 
 ### Composants exportés
 
