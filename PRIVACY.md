@@ -105,14 +105,16 @@ donne accès qu'au fait que l'appareil soit connecté ou non — ni le nom du r�
 ni rien qui vous concerne. La bibliothèque de carte réclamait également l'accès à l'état du Wi-Fi ;
 elle ne s'en sert nulle part, et Escale la retire de son manifeste.
 
-`WAKE_LOCK` est également de niveau *normal* : elle ne donne accès à aucune donnée, elle empêche
-seulement l'appareil de se rendormir pendant qu'une tâche s'exécute.
+`WAKE_LOCK` est également de niveau *normal* : elle ne vous est pas soumise, elle ne donne accès à
+aucune donnée, et elle empêche seulement l'appareil de se rendormir pendant les quelques secondes
+que dure la vérification d'un trajet surveillé.
 
 Aucune permission de stockage, de contacts, de **démarrage automatique** ni de **service en
-arrière-plan** n'est demandée : la bibliothèque de tâches déclarait les deux dernières, Escale les
-retire de son manifeste. Conséquence assumée : après un redémarrage de l'appareil, les
-surveillances programmées sont remises en place à la prochaine ouverture de l'application, et non
-au démarrage du téléphone.
+arrière-plan** n'est demandée. Les deux dernières, `RECEIVE_BOOT_COMPLETED` et
+`FOREGROUND_SERVICE`, sont déclarées par la bibliothèque de tâches d'Android : **Escale les retire
+de son manifeste**, une par une et explicitement. Vous pouvez le vérifier vous-même : le manifeste
+d'une application installée est public, et celui d'Escale ne contient que les six permissions du
+tableau ci-dessus.
 
 **Aucune alarme exacte** (`SCHEDULE_EXACT_ALARM`) n'est demandée non plus. C'est un choix : la
 vérification peut être décalée de quelques minutes par le système, ce qui est sans conséquence pour
@@ -167,6 +169,11 @@ jours que vous avez choisis. Elles révèlent donc une **habitude de déplacemen
 serveur ou le réseau, ce que votre usage manuel de l'application ne fait pas. C'est la raison pour
 laquelle la surveillance est un choix explicite, annoncé en toutes lettres sur l'écran d'activation
 et révocable à tout moment.
+
+- **Si vous redémarrez votre téléphone**, les surveillances sont reprogrammées à la prochaine
+  ouverture d'Escale, et non au démarrage de l'appareil : se relancer toute seule au démarrage
+  exigerait une permission qu'Escale refuse de demander. Une vérification peut donc être manquée
+  entre les deux, et l'écran d'activation vous le dit.
 
 Ce qui n'a pas lieu : aucun service permanent, aucune tâche périodique, aucune synchronisation,
 aucun relevé de votre position, et rien qui parte ailleurs que vers le serveur que vous avez choisi.

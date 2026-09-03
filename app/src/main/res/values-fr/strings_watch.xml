@@ -34,6 +34,8 @@
   <string name="watch_summary_format">%1$s · %2$s</string>
   <string name="watch_value_separator">", "</string>
 
+  <string name="watch_restart_notice">Si vous redémarrez votre téléphone, les trajets surveillés sont reprogrammés à la prochaine ouverture d\'Escale plutôt qu\'au démarrage : l\'application ne demande aucune permission pour se lancer d\'elle-même.</string>
+
   <string name="watch_time_label">Heure de départ habituelle</string>
   <string name="watch_time_action">Modifier l\'heure de départ</string>
   <string name="watch_time_confirm">Valider l\'heure</string>

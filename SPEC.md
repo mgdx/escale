@@ -390,6 +390,12 @@ changé. C'est le seul travail de fond de l'application.
   tentative en boucle : en cas d'échec, une seule reprise après 5 minutes, puis abandon silencieux.
 - La surveillance ne s'exécute pas si le trajet a déjà été consulté dans l'application dans les
   30 dernières minutes : la donnée est déjà fraîche.
+- **Après un redémarrage de l'appareil, les surveillances sont replanifiées à la prochaine
+  ouverture de l'application**, et non au démarrage du téléphone : reprogrammer une tâche au
+  démarrage exige `RECEIVE_BOOT_COMPLETED`, permission de démarrage automatique que le § 11
+  interdit. Une occurrence peut donc être manquée, et **cela ne doit pas être silencieux** : une
+  fonction qui échoue sans le dire est pire qu'une fonction absente. L'écran d'activation
+  l'annonce en une phrase, au même titre que l'avertissement sur les habitudes de déplacement.
 
 **La requête**
 
@@ -653,6 +659,25 @@ Permissions déclarées, et aucune autre :
   `SecurityException` sans elle. Permission de **niveau normal** : accordée à l'installation, sans
   écran de consentement, elle ne donne accès qu'à l'état « connecté ou non » de l'appareil et ne
   révèle rien sur l'usager ni sur ses déplacements.
+- `WAKE_LOCK`, exigée par `androidx.work` : la bibliothèque tient l'appareil éveillé le temps
+  d'exécuter une tâche, faute de quoi la vérification d'un trajet surveillé (§ 5.5.1) serait
+  interrompue par la mise en veille. Permission de **niveau normal** : accordée à l'installation,
+  sans écran de consentement, elle ne donne accès à aucune donnée et ne révèle rien sur l'usager ni
+  sur ses déplacements — elle empêche seulement l'appareil de se rendormir pendant les quelques
+  secondes que dure la requête.
+
+`androidx.work` déclare **quatre** permissions dans son propre manifeste. `ACCESS_NETWORK_STATE` est
+déjà celle de MapLibre et `WAKE_LOCK` est retenue ci-dessus ; les **deux autres sont explicitement
+retirées** du manifeste fusionné, par `tools:node="remove"`, parce que la phrase qui suit les
+interdit nommément :
+
+- `RECEIVE_BOOT_COMPLETED`, qui est une permission de **démarrage automatique** : elle sert au
+  `RescheduleReceiver` de la bibliothèque, qui reprogramme ses tâches après un redémarrage.
+  Conséquence, spécifiée au § 5.5.1 et annoncée à l'usager : une surveillance ne se replanifie
+  qu'à la prochaine ouverture de l'application.
+- `FOREGROUND_SERVICE`, qui est une permission de **service en arrière-plan** : l'application
+  n'appelle jamais `setForeground`, et le service correspondant de la bibliothèque est désactivé
+  dès la fusion des manifestes.
 
 L'application doit rester entièrement utilisable si la permission de localisation est refusée.
 Aucune permission de stockage, de contacts, de démarrage automatique, de service en arrière-plan,
