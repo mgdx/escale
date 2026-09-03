@@ -30,4 +30,13 @@ data class RentalAvailability(
   val rentalUriAndroid: String? = null,
   /** Heure à laquelle l'application a obtenu ce relevé, à afficher telle quelle. */
   val retrievedAt: Instant,
+  /**
+   * Nature de chaque identifiant de type cité par [vehicleTypesAvailable] et
+   * [vehicleDocksAvailable], quand le système la publie.
+   *
+   * Les identifiants de types sont opaques et propres à chaque exploitant : sans cette table, la
+   * ventilation « par type » de SPEC.md § 5.3 ne serait qu'une suite de codes internes. Vide quand
+   * le système ne décrit pas ses types — l'affichage se rabat alors sur [numVehiclesAvailable].
+   */
+  val vehicleKinds: Map<String, RentalVehicleKind> = emptyMap(),
 )
