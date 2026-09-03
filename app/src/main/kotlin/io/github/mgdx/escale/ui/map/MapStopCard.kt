@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -32,9 +31,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
-import io.github.mgdx.escale.core.format.HexColor
 import io.github.mgdx.escale.core.model.StopLine
 import io.github.mgdx.escale.core.model.TransitMode
+import io.github.mgdx.escale.ui.results.onRouteColor
+import io.github.mgdx.escale.ui.results.routeColor
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 
 /**
@@ -159,8 +159,14 @@ private fun StopLines(stop: SelectedStop) {
 private fun StopLineChip(line: StopLine) {
   val mode = stringResource(StopIcon.of(line.mode).label)
   val label = line.label.ifBlank { mode }
-  val background = HexColor.parse(line.color)?.let(::Color) ?: MaterialTheme.colorScheme.secondaryContainer
-  val foreground = HexColor.parse(line.textColor)?.let(::Color) ?: MaterialTheme.colorScheme.onSecondaryContainer
+  // La couleur vient du réseau : le texte qui se pose dessus passe par le repli de contraste, sans
+  // quoi un `onSecondaryContainer` du thème se retrouverait sur un fond dont il ne sait rien.
+  val background = routeColor(line.color) ?: MaterialTheme.colorScheme.secondaryContainer
+  val foreground = onRouteColor(
+    textColor = line.textColor,
+    background = line.color,
+    fallback = MaterialTheme.colorScheme.onSecondaryContainer,
+  )
   val description = stringResource(R.string.map_stop_line_description, mode, label)
 
   Row(

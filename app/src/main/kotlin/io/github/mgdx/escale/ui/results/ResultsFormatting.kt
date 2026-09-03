@@ -220,12 +220,17 @@ private val SlightDark = Color(SLIGHT_DARK)
 internal fun routeColor(value: String?): Color? = HexColor.parse(value)?.let(::Color)
 
 /**
- * La couleur de texte à poser sur une pastille de ligne : celle que le serveur publie si elle
- * existe, sinon celle que la luminance du fond impose. Un blanc posé sur le jaune d'un tramway ne
- * se lit pas, et SPEC.md § 9 exige un contraste conforme.
+ * La couleur de texte à poser sur une pastille de ligne colorée par le réseau.
+ *
+ * Trois cas, et un seul endroit pour les trancher (SPEC.md § 9) :
+ * - le serveur publie une couleur de texte **qui se lit** sur le fond : c'est elle ;
+ * - il n'en publie pas, ou celle qu'il publie n'atteint pas le niveau AA : le noir ou le blanc,
+ *   celui des deux qui contraste — un blanc posé sur le jaune d'un tramway ne se lit pas ;
+ * - le serveur ne publie **aucune** couleur de fond : la pastille est alors celle du thème, et
+ *   c'est le `on…` du thème qui va avec. Une `routeTextColor` isolée n'aurait aucun contraste
+ *   garanti sur un fond dont elle ne sait rien.
  */
 internal fun onRouteColor(textColor: String?, background: String?, fallback: Color): Color {
-  routeColor(textColor)?.let { return it }
-  val argb = HexColor.parse(background) ?: return fallback
-  return if (HexColor.needsLightText(argb)) Color.White else Color.Black
+  val resolved = HexColor.textOn(background = background, preferred = textColor) ?: return fallback
+  return Color(checkNotNull(HexColor.parse(resolved)))
 }

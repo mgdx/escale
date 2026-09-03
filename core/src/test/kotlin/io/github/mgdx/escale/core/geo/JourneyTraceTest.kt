@@ -74,9 +74,18 @@ class JourneyTraceTest {
 
   @Test
   fun `la couleur de la ligne l'emporte sur celle du mode`() {
+    val segment = journeyTrace(journey(transit(color = "003399", textColor = "ffffff"))).segments.single()
+    assertEquals("#003399", segment.color)
+    assertEquals("#FFFFFF", segment.textColor)
+  }
+
+  @Test
+  fun `une couleur de texte publiée mais illisible est écartée`() {
+    // Le blanc que le réseau annonce sur ce vert ne donne que 2,4:1, sous le 4,5:1 de SPEC.md § 9 :
+    // le libellé passe au noir, qui y atteint 7:1. Un libellé illisible vaut un libellé absent.
     val segment = journeyTrace(journey(transit(color = "4dbd38", textColor = "ffffff"))).segments.single()
     assertEquals("#4DBD38", segment.color)
-    assertEquals("#FFFFFF", segment.textColor)
+    assertEquals("#000000", segment.textColor)
   }
 
   @Test
