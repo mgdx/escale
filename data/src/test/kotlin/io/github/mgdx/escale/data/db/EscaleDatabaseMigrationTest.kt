@@ -127,6 +127,77 @@ class EscaleDatabaseMigrationTest {
     }
   }
 
+  @Test
+  fun `la migration 3 vers 4 fusionne les recherches repetees, en gardant la plus recente`() {
+    writeVersion(3) { db ->
+      // La même paire cherchée trois fois, à trois heures différentes : le cas de tous les jours.
+      db.execSQL(insertSearch(id = 1, to = "Nation", searchedAt = 1_740_816_600_000L, mode = "NOW", millis = null))
+      db.execSQL(
+        insertSearch(
+          id = 2,
+          to = "Nation",
+          searchedAt = 1_740_820_000_000L,
+          mode = "DEPART_AT",
+          millis = 1_740_900_000_000L,
+        ),
+      )
+      db.execSQL(
+        insertSearch(
+          id = 3,
+          to = "Nation",
+          searchedAt = 1_740_830_000_000L,
+          mode = "ARRIVE_BY",
+          millis = 1_740_910_000_000L,
+        ),
+      )
+      // Une autre paire, qui n'a rien à voir et doit survivre entière.
+      db.execSQL(insertSearch(id = 4, to = "Opéra", searchedAt = 1_740_818_000_000L, mode = "NOW", millis = null))
+    }
+
+    val database = openMigrated()
+    try {
+      val entries = runBlocking { database.historyDao().observeRecent(50).first() }
+      assertEquals(2, entries.size)
+      val nation = entries.single { it.to.name == "Nation" }
+      // La plus récente, avec son horodatage **et** son heure demandée.
+      assertEquals(3L, nation.id)
+      assertEquals(1_740_830_000_000L, nation.searchedAt)
+      assertEquals(TIME_MODE_ARRIVE_BY, nation.timeMode)
+      assertEquals(1_740_910_000_000L, nation.timeMillis)
+
+      // Et l'index unique tient désormais : rejouer la paire remplace la ligne, il n'y en a pas deux.
+      runBlocking {
+        database.historyDao().record(
+          SearchHistoryEntity(
+            from = nation.from,
+            to = nation.to,
+            timeMode = TIME_MODE_NOW,
+            searchedAt = 1_740_840_000_000L,
+          ),
+          50,
+        )
+      }
+      val after = runBlocking { database.historyDao().observeRecent(50).first() }
+      assertEquals(2, after.size)
+      assertEquals(1_740_840_000_000L, after.first { it.to.name == "Nation" }.searchedAt)
+    } finally {
+      database.close()
+    }
+  }
+
+  /** Une ligne de `search_history` en version 3, écrite à la main. */
+  private fun insertSearch(id: Int, to: String, searchedAt: Long, mode: String, millis: Long?): String = """
+    INSERT INTO search_history (
+      id, searchedAt, timeMode, timeMillis,
+      from_stopId, from_name, from_description, from_lat, from_lon, from_kind, from_servedModes,
+      to_stopId, to_name, to_description, to_lat, to_lon, to_kind, to_servedModes
+    ) VALUES (
+      $id, $searchedAt, '$mode', ${millis ?: "NULL"},
+      NULL, '12 rue des Lilas', NULL, 48.8566, 2.3522, 'ADDRESS', '',
+      NULL, '$to', NULL, 48.8443, 2.3735, 'ADDRESS', ''
+    )
+  """.trimIndent()
+
   /** Une ligne de `favorite_journeys` en version 2, écrite à la main. */
   private fun insertJourney(id: Int, name: String): String = """
     INSERT INTO favorite_journeys (
@@ -147,7 +218,11 @@ class EscaleDatabaseMigrationTest {
    * tables, colonnes, valeurs par défaut **et index** — et refuse de s'ouvrir au moindre écart.
    */
   private fun openMigrated(): EscaleDatabase = Room.databaseBuilder(context, EscaleDatabase::class.java, FILE_NAME)
-    .addMigrations(EscaleDatabase.MIGRATION_1_2, EscaleDatabase.MIGRATION_2_3)
+    .addMigrations(
+      EscaleDatabase.MIGRATION_1_2,
+      EscaleDatabase.MIGRATION_2_3,
+      EscaleDatabase.MIGRATION_3_4,
+    )
     .allowMainThreadQueries()
     .build()
 

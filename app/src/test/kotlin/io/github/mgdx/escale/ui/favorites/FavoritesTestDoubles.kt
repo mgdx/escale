@@ -108,7 +108,12 @@ class FakeFavoritesRepository : FavoritesRepository {
   }
 }
 
-/** L'historique, en mémoire. [recorded] est ce qui prouve qu'une recherche a été enregistrée une fois. */
+/**
+ * L'historique, en mémoire. [recorded] est ce qui prouve qu'une recherche a été enregistrée une fois.
+ *
+ * Il déduplique sur le couple départ / arrivée, comme le dépôt réel : une paire cherchée deux fois
+ * n'occupe qu'une ligne, la plus récente. Un doublon qui passerait ici ne prouverait rien.
+ */
 class FakeHistoryRepository(enabled: Boolean = true) : HistoryRepository {
   private val entriesState = MutableStateFlow<List<SearchHistoryEntry>>(emptyList())
 
@@ -127,7 +132,8 @@ class FakeHistoryRepository(enabled: Boolean = true) : HistoryRepository {
     if (!enabled) return Outcome.Success(Unit)
     val entry = SearchHistoryEntry(id = nextId++, from = from, to = to, time = time, searchedAt = NOW)
     recorded += entry
-    entriesState.value = listOf(entry) + entriesState.value
+    val others = entriesState.value.filterNot { it.from.name == from.name && it.to.name == to.name }
+    entriesState.value = listOf(entry) + others
     return Outcome.Success(Unit)
   }
 

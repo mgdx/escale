@@ -147,4 +147,55 @@ class HistoryRepositoryImplTest {
   private companion object {
     val START: Instant = Instant.parse("2026-03-01T08:10:00Z")
   }
+
+  @Test
+  fun `la meme paire cherchee deux fois n occupe qu une ligne, la plus recente`() = runBlocking {
+    val repository = repository()
+    val matin = TimeChoice.DepartAt(Instant.parse("2026-03-02T07:00:00Z"))
+    repository.record("Nation", matin)
+    now = now.plusSeconds(3600)
+    val soir = TimeChoice.ArriveBy(Instant.parse("2026-03-02T18:00:00Z"))
+    repository.record("Nation", soir)
+
+    // Une ligne, pas deux : les cinquante entrées sont cinquante trajets, pas cinquante lignes.
+    assertEquals(1, database.rowCount("search_history"))
+    val relue = repository.recentSearches.first().single()
+    // C'est la dernière qui fait foi, avec son horodatage et son heure demandée.
+    assertEquals(now, relue.searchedAt)
+    assertEquals(soir, relue.time)
+  }
+
+  @Test
+  fun `une paire rejouee remonte en tete des dernieres recherches`() = runBlocking {
+    val repository = repository()
+    repository.record("Nation")
+    now = now.plusSeconds(60)
+    repository.record("Bastille")
+    now = now.plusSeconds(60)
+    repository.record("Nation")
+
+    assertEquals(listOf("Nation", "Bastille"), repository.recentSearches.first().map { it.to.name })
+  }
+
+  @Test
+  fun `le sens compte, un retour n est pas la meme recherche qu un aller`() = runBlocking {
+    val repository = repository()
+    val lilas = address("12 rue des Lilas")
+    val nation = stopLocation("de:06:Nation", "Nation")
+    repository.record(from = lilas, to = nation, time = TimeChoice.Now)
+    repository.record(from = nation, to = lilas, time = TimeChoice.Now)
+
+    assertEquals(2, database.rowCount("search_history"))
+  }
+
+  @Test
+  fun `deux homonymes a des points differents restent deux recherches`() = runBlocking {
+    val repository = repository()
+    val arrivee = address("Gare", lat = 50.63, lon = 3.07)
+    repository.record(from = address("Mairie", lat = 48.85, lon = 2.35), to = arrivee, time = TimeChoice.Now)
+    repository.record(from = address("Mairie", lat = 45.75, lon = 4.85), to = arrivee, time = TimeChoice.Now)
+
+    // Aucun `stopId` de part et d'autre : c'est le nom **et** les coordonnées qui départagent.
+    assertEquals(2, database.rowCount("search_history"))
+  }
 }

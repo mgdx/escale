@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *    `BuildConfig.DEBUG`. Un journal de requêtes contiendrait ici des adresses.
  * 3. Aucune donnée ne quitte la base par une autre voie que les dépôts de `data.repository`.
  *
- * **`version = 3`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
+ * **`version = 4`, et aucun `fallbackToDestructiveMigration`.** Une base de favoris qui s'efface
  * toute seule à la mise à jour est un défaut, pas une simplification : chaque version fournit donc
  * sa `Migration`, et les schémas exportés dans `data/schemas` sont ce qui permet de les vérifier.
  */
@@ -34,7 +34,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     SearchHistoryEntity::class,
     WatchedJourneyEntity::class,
   ],
-  version = 3,
+  version = 4,
   exportSchema = true,
 )
 abstract class EscaleDatabase : RoomDatabase() {
@@ -112,6 +112,45 @@ abstract class EscaleDatabase : RoomDatabase() {
         "`index_favorite_journeys_from_name_from_lat_from_lon_to_name_to_lat_to_lon_category` " +
         "ON `favorite_journeys` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`, `category`)"
 
+    /**
+     * Version 3 → 4 : une même paire cherchée dix fois n'occupe plus dix lignes.
+     *
+     * Là encore, **une base déjà pleine de répétitions est le cas normal** : les versions
+     * précédentes enregistraient une ligne par recherche. Les doublons sont donc fusionnés avant la
+     * création de l'index, dans la même transaction — soit les deux réussissent, soit rien n'a
+     * lieu, jamais une base que l'application ne saurait plus ouvrir.
+     *
+     * La ligne conservée par couple est **la plus récente**, celle que l'usager reconnaîtra, avec
+     * son horodatage et son heure demandée. L'identifiant départage les ex æquo à la milliseconde,
+     * exactement comme le tri de lecture.
+     */
+    val MIGRATION_3_4 = object : Migration(startVersion = 3, endVersion = 4) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+          """
+          DELETE FROM search_history WHERE id NOT IN (
+            SELECT (
+              SELECT keep.id FROM search_history AS keep
+              WHERE keep.from_name = h.from_name AND keep.from_lat = h.from_lat
+                AND keep.from_lon = h.from_lon AND keep.to_name = h.to_name
+                AND keep.to_lat = h.to_lat AND keep.to_lon = h.to_lon
+              ORDER BY keep.searchedAt DESC, keep.id DESC
+              LIMIT 1
+            )
+            FROM search_history AS h
+          )
+          """.trimIndent(),
+        )
+        db.execSQL(UNIQUE_HISTORY_INDEX)
+      }
+    }
+
+    /** Voir [UNIQUE_JOURNEY_INDEX] : recopié tel que Room le décrit dans `schemas/…/4.json`. */
+    private const val UNIQUE_HISTORY_INDEX =
+      "CREATE UNIQUE INDEX IF NOT EXISTS " +
+        "`index_search_history_from_name_from_lat_from_lon_to_name_to_lat_to_lon` " +
+        "ON `search_history` (`from_name`, `from_lat`, `from_lon`, `to_name`, `to_lat`, `to_lon`)"
+
     /** Nom du fichier dans le répertoire privé `databases/` de l'application. */
     const val FILE_NAME = "escale.db"
 
@@ -125,7 +164,7 @@ abstract class EscaleDatabase : RoomDatabase() {
      */
     fun create(context: Context): EscaleDatabase =
       Room.databaseBuilder(context.applicationContext, EscaleDatabase::class.java, FILE_NAME)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
         .build()
   }
 }
