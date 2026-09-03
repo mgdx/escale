@@ -313,6 +313,7 @@ private fun List<QuickChip>.savedLocation(kind: SavedPlaceKind): Location? =
  */
 internal fun chipKey(chip: QuickChip): String = when (chip) {
   is QuickChip.Saved -> chip.kind.name
+
   // L'identifiant, jamais les noms : la même paire cherchée à deux heures différentes donne
   // deux puces, et deux clés identiques font planter la liste paresseuse.
   is QuickChip.Recent -> "recent-" + chip.search.id
