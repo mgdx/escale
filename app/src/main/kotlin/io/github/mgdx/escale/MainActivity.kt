@@ -7,12 +7,14 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ThemeChoice
 import io.github.mgdx.escale.nav.EscaleNavHost
+import io.github.mgdx.escale.ui.map.MapInstance
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 
 /**
@@ -32,8 +34,10 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      val preferences = (application as EscaleApplication).container.preferencesRepository
-      val display by preferences.displayPreferences.collectAsStateWithLifecycle(DisplayPreferences())
+      val container = (application as EscaleApplication).container
+      val display by container.preferencesRepository.displayPreferences
+        .collectAsStateWithLifecycle(DisplayPreferences())
+      ReportMapDrawn(container.mapInstance)
       val darkTheme = when (display.theme) {
         ThemeChoice.SYSTEM -> isSystemInDarkTheme()
         ThemeChoice.LIGHT -> false
@@ -51,6 +55,29 @@ class MainActivity : ComponentActivity() {
       EscaleTheme(darkTheme = darkTheme) {
         EscaleNavHost()
       }
+    }
+  }
+
+  /**
+   * Signale au système que l'application est réellement affichée, **au sens de SPEC.md § 5.7** :
+   * « démarrage à froid jusqu'à la première image de carte : moins de 1,5 s ».
+   *
+   * **Instrument de mesure, pas fonctionnalité.** Ce code ne change rien à ce qui s'affiche ; il
+   * n'existe que pour rendre l'objectif vérifiable. Sans lui, la seule mesure disponible est celle
+   * d'`am start -W`, qui rend la première image de l'**activité** — la carte, elle, s'initialise
+   * après, et l'objectif de la spec reste alors non mesuré. `reportFullyDrawn()` fait journaliser
+   * au système une ligne `Fully drawn …: +XXXms` comptée depuis le lancement du processus.
+   *
+   * L'état vient de la carte et non de l'activité, parce que la carte lui survit (règle 8 du
+   * § 5.7) : au second lancement, l'image est déjà rendue et le témoin vaut `true` d'emblée, si
+   * bien que l'appel part aussitôt. `reportFullyDrawn()` appelé deux fois est ignoré par le
+   * système, et seul le démarrage à froid produit une mesure ayant un sens.
+   */
+  @Composable
+  private fun ReportMapDrawn(mapInstance: MapInstance) {
+    val drawn by mapInstance.firstFrameRendered.collectAsStateWithLifecycle()
+    LaunchedEffect(drawn) {
+      if (drawn) reportFullyDrawn()
     }
   }
 }
