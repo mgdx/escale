@@ -1,0 +1,7 @@
+Première version.
+
+Calcul d'itinéraire en transport en commun, en voiture, à vélo et à pied, avec retards et perturbations en temps réel. Détail portion par portion : arrêts intermédiaires, quais, accessibilité, vélos à bord. Libre-service avec disponibilité. Carte plein écran, prochains départs à un arrêt, favoris et historique conservés sur le téléphone.
+
+Compatible avec tout serveur MOTIS ; Transitous par défaut.
+
+Anglais et français, thèmes clair et sombre.
