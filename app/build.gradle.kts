@@ -150,8 +150,14 @@ android {
     abi {
       isEnable = true
       reset()
-      // La liste complète, ou la seule ABI demandée par `-Pabi` (voir plus haut).
-      include(*includedAbis.toTypedArray())
+      // La liste complète, ou la seule ABI demandée par `-Pabi` (voir plus haut). Les quatre noms
+      // sont écrits en toutes lettres dans la branche par défaut : c'est là que lint les lit pour
+      // sa vérification `ChromeOsAbiSupport`, qui exige un binaire x86 ou x86_64.
+      if (requestedAbi == null) {
+        include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+      } else {
+        include(requestedAbi)
+      }
       // Pas d'APK universel : il annulerait tout le gain, et personne ne l'installerait.
       isUniversalApk = false
     }
@@ -366,11 +372,13 @@ val verifyReleaseVersionCodes = tasks.register("verifyReleaseVersionCodes") {
   val base = baseVersionCode
   val expectedAbis = includedAbis.toSet()
   doLast {
-    @Suppress("UNCHECKED_CAST")
-    val parsed = groovy.json.JsonSlurper().parse(metadata.get().asFile) as Map<String, Any>
-    val elements = parsed["elements"] as List<Map<String, Any>>
+    // Projections étoilées plutôt que types génériques : `JsonSlurper` rend des `Any?`, et un
+    // transtypage générique ne serait pas vérifiable — donc un avertissement, que CLAUDE.md
+    // n'accepte pas.
+    val parsed = groovy.json.JsonSlurper().parse(metadata.get().asFile) as Map<*, *>
+    val elements = (parsed["elements"] as List<*>).filterIsInstance<Map<*, *>>()
     val produced = elements.associate { element ->
-      val filters = element["filters"] as List<Map<String, Any>>
+      val filters = (element["filters"] as List<*>).filterIsInstance<Map<*, *>>()
       val abi = filters.single { it["filterType"] == "ABI" }["value"] as String
       abi to (element["versionCode"] as Number).toInt()
     }
