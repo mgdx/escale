@@ -22,4 +22,8 @@
   <string name="error_server_unreachable">The server is not responding.</string>
   <string name="error_api_version_too_old">This server runs a version of MOTIS that is too old for Escale.</string>
   <string name="error_unknown">Something went wrong.</string>
+
+  <!-- Libellé de tout indicateur de chargement : sans nom, un lecteur d'écran passe devant une
+       barre de progression sans rien dire (SPEC.md § 9). -->
+  <string name="action_loading">Loading</string>
 </resources>

@@ -46,4 +46,6 @@
   <string name="favorites_deleted">Supprimé.</string>
   <string name="favorites_history_cleared">Recherches récentes effacées.</string>
   <string name="favorites_failed">Rien n\'a pu être enregistré. Réessayez.</string>
+
+  <string name="favorites_open_departures">Afficher les prochains départs</string>
 </resources>

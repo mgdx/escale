@@ -4,19 +4,23 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -34,10 +38,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.WatchAlertSettings
@@ -99,13 +107,20 @@ private fun WatchTimeSection(state: WatchUiState, onTimeChanged: (LocalTime) -> 
   Column(verticalArrangement = Arrangement.spacedBy(RowSpacing)) {
     Text(text = stringResource(R.string.watch_time_label), style = MaterialTheme.typography.titleSmall)
     val description = stringResource(R.string.watch_time_action)
+    val chosen = timeLabel(state.time)
     OutlinedButton(
       onClick = { picking = true },
       modifier = Modifier
         .sizeIn(minHeight = TouchTarget)
-        .semantics { contentDescription = description },
+        // Le `contentDescription` remplace le texte du bouton : posé seul, il faisait disparaître
+        // l'heure choisie de l'annonce, et le bouton disait la même chose à 7 h 30 qu'à 18 h 05.
+        // C'est exactement ce que `stateDescription` existe pour dire (SPEC.md § 9).
+        .semantics {
+          contentDescription = description
+          stateDescription = chosen
+        },
     ) {
-      Text(text = timeLabel(state.time))
+      Text(text = chosen)
     }
   }
   if (picking) {
@@ -273,21 +288,26 @@ private fun WatchButtons(state: WatchUiState, actions: WatchActions, onDismiss: 
   }
 }
 
+/**
+ * Une ligne à interrupteur, sur le modèle des réglages.
+ *
+ * **Toute la ligne** est la cible, et c'est elle qui porte le rôle : le libellé n'est alors énoncé
+ * qu'une fois, l'état vient du rôle, et la zone sensible fait la largeur de la feuille au lieu des
+ * 48 dp de l'interrupteur (SPEC.md § 9). L'interrupteur reçoit `onCheckedChange = null`, sans quoi
+ * il resterait une seconde cible annonçant la même chose.
+ */
 @Composable
 private fun WatchSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   Row(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = Modifier
+      .fillMaxWidth()
+      .sizeIn(minHeight = TouchTarget)
+      .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(RowSpacing),
   ) {
     Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-    Switch(
-      checked = checked,
-      onCheckedChange = onCheckedChange,
-      modifier = Modifier
-        .sizeIn(minWidth = TouchTarget, minHeight = TouchTarget)
-        .semantics { contentDescription = label },
-    )
+    Switch(checked = checked, onCheckedChange = null)
   }
 }
 

@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -116,7 +117,14 @@ internal fun DeparturesContent(
       // Le rafraîchissement laisse la liste en place : SPEC.md § 8 interdit de remplacer des
       // horaires déjà lus par une page blanche.
       if (state.refreshing || state.paging != null) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        val loading = stringResource(R.string.action_loading)
+        LinearProgressIndicator(
+          // Sans nom, la barre n'est qu'une animation : le lecteur d'écran passe devant sans rien
+          // dire, alors que la liste change sous le doigt (SPEC.md § 9).
+          modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = loading },
+        )
       }
       ModeFilters(state = state, onFilterSelected = onFilterSelected)
       state.error?.let { ErrorMessage(error = it, onRetry = onRefresh) }

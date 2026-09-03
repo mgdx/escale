@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -118,7 +119,16 @@ internal fun TripContent(
     Column(modifier = Modifier.padding(innerPadding)) {
       // Le rafraîchissement laisse la desserte en place : SPEC.md § 8 interdit de remplacer une
       // information déjà lue par une page blanche.
-      if (state.refreshing) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+      if (state.refreshing) {
+        val loading = stringResource(R.string.action_loading)
+        LinearProgressIndicator(
+          // Sans nom, la barre n'est qu'une animation : le lecteur d'écran passe devant sans rien
+          // dire, et la liste change sous le doigt (SPEC.md § 9).
+          modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = loading },
+        )
+      }
       state.error?.let { ErrorMessage(error = it, onRetry = onRefresh) }
       TripBody(state)
     }
@@ -323,6 +333,11 @@ private fun CallRow(call: StopVisit, realTime: Boolean, alerts: List<Disruption>
   Column(
     modifier = Modifier
       .fillMaxWidth()
+      // Un arrêt s'annonce **d'un bloc** : son nom, ses heures, son quai et son état forment une
+      // seule phrase. Sans cette fusion, une desserte de trente arrêts demande deux cents
+      // balayages pour être parcourue (SPEC.md § 9). La ligne n'étant pas cliquable, aucun
+      // `clickable` ne fusionne à notre place.
+      .semantics(mergeDescendants = true) { }
       // Cible tactile d'au moins 48 dp, même sans appui : la liste reste lisible à 200 % (§ 9).
       .defaultMinSize(minHeight = RowMinHeight)
       .padding(horizontal = ScreenPadding, vertical = RowSpacing),

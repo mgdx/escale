@@ -55,7 +55,10 @@ import io.github.mgdx.escale.ui.results.routeColor
 internal fun DepartureRow(entry: StopTimeEntry, onOpen: (() -> Unit)?, modifier: Modifier = Modifier) {
   val openLabel = stringResource(R.string.departures_open_trip)
   val clickable = if (onOpen == null) {
-    Modifier
+    // Sans course à ouvrir, la ligne n'est pas cliquable — et ce sont les courses ajoutées en temps
+    // réel qui sont dans ce cas, les plus utiles à entendre. Il faut alors fusionner à la main ce
+    // que `clickable` fusionne d'ordinaire, sans quoi le départ se lit en six morceaux (§ 9).
+    Modifier.semantics(mergeDescendants = true) { }
   } else {
     Modifier.clickable(onClickLabel = openLabel, role = Role.Button, onClick = onOpen)
   }

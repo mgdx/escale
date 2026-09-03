@@ -129,4 +129,10 @@
   <string name="results_empty_hint_transfers">Allow more transfers in the settings</string>
   <string name="results_empty_hint_time">Try another departure time</string>
   <string name="results_empty_hint_transit">Try the public transport tab</string>
+
+  <!-- La poignée de la feuille. Son libellé d'action dit ce que l'appui va faire ; son nom et son
+       état disent ce qu'elle est et où elle en est (SPEC.md § 9). -->
+  <string name="results_sheet_handle">Results panel</string>
+  <string name="results_sheet_state_expanded">Expanded</string>
+  <string name="results_sheet_state_collapsed">Collapsed</string>
 </resources>

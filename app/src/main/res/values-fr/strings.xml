@@ -12,4 +12,6 @@
   <string name="error_server_unreachable">Le serveur ne répond pas.</string>
   <string name="error_api_version_too_old">Ce serveur utilise une version de MOTIS trop ancienne pour Escale.</string>
   <string name="error_unknown">Une erreur est survenue.</string>
+
+  <string name="action_loading">Chargement en cours</string>
 </resources>

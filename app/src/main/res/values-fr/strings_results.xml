@@ -108,4 +108,8 @@
   <string name="results_empty_hint_transfers">Autoriser plus de correspondances dans les réglages</string>
   <string name="results_empty_hint_time">Essayer un autre horaire</string>
   <string name="results_empty_hint_transit">Essayer l\'onglet transport en commun</string>
+
+  <string name="results_sheet_handle">Panneau des résultats</string>
+  <string name="results_sheet_state_expanded">Déplié</string>
+  <string name="results_sheet_state_collapsed">Replié</string>
 </resources>

@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -277,9 +278,21 @@ private fun StopRow(visit: StopVisit) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
+      // Le nom, la mention de suppression et l'heure forment une seule annonce (SPEC.md § 9).
+      .semantics(mergeDescendants = true) { }
       .padding(start = NestedIndent),
     horizontalArrangement = Arrangement.spacedBy(RowSpacing),
   ) {
+    if (visit.cancelled) {
+      // Le pictogramme de suppression, comme partout ailleurs dans l'application : le rouge et le
+      // barré ne portent jamais seuls l'information (SPEC.md § 9). Il est muet, le mot est écrit.
+      Icon(
+        painter = painterResource(R.drawable.ic_cancel),
+        contentDescription = null,
+        modifier = Modifier.size(RowIconSize),
+        tint = MaterialTheme.colorScheme.error,
+      )
+    }
     Text(
       text = if (visit.cancelled) stringResource(R.string.results_summary, name, text) else name,
       style = MaterialTheme.typography.bodyMedium,

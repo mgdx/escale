@@ -57,4 +57,8 @@
   <string name="favorites_deleted">Removed.</string>
   <string name="favorites_history_cleared">Recent searches deleted.</string>
   <string name="favorites_failed">Nothing could be saved. Try again.</string>
+
+  <!-- Libellé de l'action d'un arrêt favori : il dit où l'appui mène, ce que le nom de la section
+       ne disait pas (SPEC.md § 9). -->
+  <string name="favorites_open_departures">Show next departures</string>
 </resources>

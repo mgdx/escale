@@ -427,6 +427,9 @@ private fun EndpointRow(labelRes: Int, icon: Int, name: String, time: Instant) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
+      // « Départ, Gare de Lyon, 8 h 12 » en une phrase plutôt qu'en trois arrêts de balayage : la
+      // nature du point, son nom et son heure ne se comprennent qu'ensemble (SPEC.md § 9).
+      .semantics(mergeDescendants = true) { }
       .padding(horizontal = CardPadding),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(RowSpacing),

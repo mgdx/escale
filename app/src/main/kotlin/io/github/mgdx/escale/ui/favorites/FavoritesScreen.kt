@@ -321,7 +321,9 @@ private fun NamedRow(kind: SavedPlaceKind, location: Location?, addTextRes: Int,
 @Composable
 private fun StopRow(row: FavoriteStopUi, actions: FavoritesActions) {
   val unrecognized = row.recognition == StopRecognition.UNRECOGNIZED
-  val openLabel = stringResource(R.string.favorites_section_stops)
+  // Le libellé d'action dit ce que l'appui fait, pas le nom de la section où l'on se trouve : le
+  // lecteur d'écran annonçait « appuyez deux fois pour Arrêts » (SPEC.md § 9).
+  val openLabel = stringResource(R.string.favorites_open_departures)
   ListItem(
     headlineContent = { Text(text = row.stop.name) },
     modifier = Modifier
