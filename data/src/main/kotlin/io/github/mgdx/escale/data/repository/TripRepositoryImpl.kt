@@ -23,10 +23,7 @@ import java.time.Instant
  *
  * Rien n'est journalisé : un identifiant d'arrêt est une donnée de localisation (SPEC.md § 8, § 11).
  */
-class TripRepositoryImpl(
-  private val api: TripApi,
-  private val serverRepository: ServerRepository,
-) : TripRepository {
+class TripRepositoryImpl(private val api: TripApi, private val servers: ServerRepository) : TripRepository {
 
   override suspend fun trip(tripId: String, detailedLegs: Boolean): Outcome<Journey> =
     api.trip(baseUrl(), tripId, detailedLegs)
@@ -50,5 +47,5 @@ class TripRepositoryImpl(
     cursor = cursor,
   )
 
-  private suspend fun baseUrl(): String = serverRepository.current.first().baseUrl
+  private suspend fun baseUrl(): String = servers.current.first().baseUrl
 }

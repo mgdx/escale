@@ -42,7 +42,7 @@ class TripRepositoryImplTest {
     }
     return TripRepositoryImpl(
       api = TripApi(versionName = "1.0.0", engine = engine),
-      serverRepository = FakeServerRepository("https://serveur.exemple"),
+      servers = FakeServerRepository("https://serveur.exemple"),
     )
   }
 

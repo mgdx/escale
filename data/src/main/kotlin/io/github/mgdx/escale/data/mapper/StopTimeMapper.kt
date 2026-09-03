@@ -40,25 +40,17 @@ internal fun StopTimesResponseDto.toDomain(arriveBy: Boolean): StopTimePage = St
  * aucune desserte, et l'interface n'en fait pas une ligne cliquable.
  */
 internal fun StopTimeDto.toDomain(arriveBy: Boolean): StopTimeEntry {
-  val scheduledRaw = if (arriveBy) {
-    place.scheduledArrival ?: place.scheduledDeparture
-  } else {
-    place.scheduledDeparture ?: place.scheduledArrival
-  }
-  val actualRaw = if (arriveBy) place.arrival ?: place.departure else place.departure ?: place.arrival
-  val scheduled = instantOrNull(scheduledRaw) ?: instantOrNull(actualRaw) ?: Instant.EPOCH
+  val times = place.times(arriveBy)
   return StopTimeEntry(
     tripId = tripId.trimToNull().orEmpty(),
     mode = transitModeOf(mode),
-    // Le serveur arbitre déjà entre numéro court et nom long dans `displayName` ; les deux autres
-    // ne servent que de repli, exactement comme sur une portion de trajet.
-    lineName = displayName.trimToNull() ?: routeShortName.trimToNull() ?: routeLongName.trimToNull().orEmpty(),
+    lineName = lineName(),
     headsign = headsign.trimToNull().orEmpty(),
     agencyName = agencyName.trimToNull().orEmpty(),
     // Le quai temps réel prime sur celui de la base horaire, qui sert de repli.
     track = place.track.trimToNull() ?: place.scheduledTrack.trimToNull(),
-    scheduledTime = scheduled,
-    time = instantOrNull(actualRaw) ?: scheduled,
+    scheduledTime = times.scheduled,
+    time = times.actual,
     realTime = realTime,
     // Le passage est supprimé dès que la course entière l'est : le serveur remplit déjà les deux
     // champs ainsi, on ne s'en remet pas à lui pour une information qui barre une ligne à l'écran.
@@ -68,6 +60,32 @@ internal fun StopTimeDto.toDomain(arriveBy: Boolean): StopTimeEntry {
     routeTextColor = HexColor.normalize(routeTextColor) ?: HexColor.readableTextOn(routeColor),
     alerts = place.alerts.map { it.toDomain() },
   )
+}
+
+/**
+ * Le libellé de ligne à afficher.
+ *
+ * Le serveur arbitre déjà entre numéro court et nom long dans `displayName` ; les deux autres ne
+ * servent que de repli, exactement comme sur une portion de trajet.
+ */
+private fun StopTimeDto.lineName(): String =
+  displayName.trimToNull() ?: routeShortName.trimToNull() ?: routeLongName.trimToNull().orEmpty()
+
+/** L'heure effective d'un passage et son horaire théorique. */
+private data class EventTimes(val actual: Instant, val scheduled: Instant)
+
+/**
+ * Les deux heures d'un passage, choisies selon ce que la requête demandait.
+ *
+ * Le schéma `Place` porte deux couples d'heures ; un départ n'utilise que le sien, une arrivée que
+ * le sien. Chacun se replie sur l'autre, parce qu'un terminus n'a qu'une des deux : un train qui
+ * finit sa course ne repart pas.
+ */
+private fun StopTimePlaceDto.times(arriveBy: Boolean): EventTimes {
+  val scheduledRaw = if (arriveBy) scheduledArrival ?: scheduledDeparture else scheduledDeparture ?: scheduledArrival
+  val actualRaw = if (arriveBy) arrival ?: departure else departure ?: arrival
+  val scheduled = instantOrNull(scheduledRaw) ?: instantOrNull(actualRaw) ?: Instant.EPOCH
+  return EventTimes(actual = instantOrNull(actualRaw) ?: scheduled, scheduled = scheduled)
 }
 
 /**
