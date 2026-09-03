@@ -62,4 +62,27 @@
   <string name="map_rental_form_moped">Scooter</string>
   <string name="map_rental_form_car">Voiture</string>
   <string name="map_rental_form_other">Véhicule partagé</string>
+
+  <!-- Les deux familles de marqueurs. Elles se distinguent déjà par la forme de leur pastille sur
+       la carte ; le libellé le dit en toutes lettres dans l'infobulle. -->
+  <string name="map_rental_kind_station">Station</string>
+  <string name="map_rental_kind_vehicle">Véhicule en libre accès</string>
+
+  <!-- Infobulle d'une station : nom, véhicules disponibles, places libres, lien vers l'exploitant. -->
+  <plurals name="map_rental_vehicles_available">
+    <item quantity="one">%d véhicule disponible</item>
+    <!-- Catégorie « many » du français : elle ne vaut que pour les millions, mais le système
+         l'exige pour que le pluriel soit complet. -->
+    <item quantity="many">%d de véhicules disponibles</item>
+    <item quantity="other">%d véhicules disponibles</item>
+  </plurals>
+  <plurals name="map_rental_docks_available">
+    <item quantity="one">%d place libre</item>
+    <item quantity="many">%d de places libres</item>
+    <item quantity="other">%d places libres</item>
+  </plurals>
+  <string name="map_rental_not_renting">Prise temporairement suspendue</string>
+  <string name="map_rental_not_returning">Retour temporairement suspendu</string>
+  <string name="map_rental_open_app">Ouvrir l\'application de l\'exploitant</string>
+  <string name="map_rental_close">Fermer le détail du libre-service</string>
 </resources>
