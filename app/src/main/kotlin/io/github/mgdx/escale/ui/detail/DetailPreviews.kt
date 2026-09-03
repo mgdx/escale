@@ -185,6 +185,9 @@ private val noActions = DetailActions(
   onLegToggled = {},
   onStopsToggled = {},
   onStepsToggled = {},
+  // Branchée pour que l'étoile soit visible en aperçu : c'est son dessin qui distingue les deux
+  // états, et il se regarde (SPEC.md § 9).
+  onToggleFavorite = {},
 )
 
 @Composable
@@ -200,6 +203,20 @@ private fun DetailPreview(state: DetailUiState) {
 @Composable
 private fun DetailCollapsedPreview() {
   DetailPreview(DetailUiState(journey = sampleJourney, detailed = true, refreshedAt = at(24)))
+}
+
+/** L'étoile pleine : le trajet affiché est déjà en favori (SPEC.md § 5.5). */
+@Preview(showBackground = true, name = "Détail, trajet déjà en favori")
+@Preview(
+  showBackground = true,
+  name = "Détail, trajet déjà en favori, thème sombre",
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun DetailFavoritePreview() {
+  DetailPreview(
+    DetailUiState(journey = sampleJourney, detailed = true, refreshedAt = at(24), favoriteId = 1),
+  )
 }
 
 @Preview(showBackground = true, name = "Portions dépliées, thème clair", heightDp = 1400)

@@ -14,7 +14,11 @@
   <string name="detail_action_share">Share this trip</string>
   <string name="detail_action_refresh">Refresh</string>
   <!-- Jalon 10 : les favoris. La commande n'apparaît que branchée. -->
-  <string name="detail_action_favorite">Add to favourites</string>
+  <!-- L'étoile de la barre : son libellé dit ce que l'appui va faire, et change donc avec
+       l'état du trajet. Sans cela, un lecteur d'écran annonce la même chose dans les deux
+       cas (SPEC.md § 9). -->
+  <string name="detail_action_favorite_add">Add to favourites</string>
+  <string name="detail_action_favorite_remove">Remove from favourites</string>
 
   <!-- Le détail complet des portions n'arrive qu'après une seconde requête (SPEC.md § 7.6) :
        pendant ce temps, l'écran montre déjà les heures, la durée et la frise. -->
@@ -159,5 +163,6 @@
 
   <!-- Retour de « Ajouter aux favoris » (SPEC.md § 5.5). -->
   <string name="detail_favorite_added">Journey added to your favourites.</string>
-  <string name="detail_favorite_failed">The journey could not be saved. Try again.</string>
+  <string name="detail_favorite_removed">Journey removed from your favourites.</string>
+  <string name="detail_favorite_failed">The change could not be saved. Try again.</string>
 </resources>

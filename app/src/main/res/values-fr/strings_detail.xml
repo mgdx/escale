@@ -4,7 +4,11 @@
 
   <string name="detail_action_share">Partager ce trajet</string>
   <string name="detail_action_refresh">Rafraîchir</string>
-  <string name="detail_action_favorite">Ajouter aux favoris</string>
+  <!-- L'étoile de la barre : son libellé dit ce que l'appui va faire, et change donc avec
+       l'état du trajet. Sans cela, un lecteur d'écran annonce la même chose dans les deux
+       cas (SPEC.md § 9). -->
+  <string name="detail_action_favorite_add">Ajouter aux favoris</string>
+  <string name="detail_action_favorite_remove">Retirer des favoris</string>
 
   <string name="detail_loading_details">Chargement du détail…</string>
   <string name="detail_refreshed_at">Temps réel arrêté à %1$s</string>
@@ -143,5 +147,6 @@
 
   <!-- Retour de « Ajouter aux favoris » (SPEC.md § 5.5). -->
   <string name="detail_favorite_added">Trajet ajouté à vos favoris.</string>
-  <string name="detail_favorite_failed">Le trajet n\'a pas pu être enregistré. Réessayez.</string>
+  <string name="detail_favorite_removed">Trajet retiré de vos favoris.</string>
+  <string name="detail_favorite_failed">La modification n\'a pas pu être enregistrée. Réessayez.</string>
 </resources>

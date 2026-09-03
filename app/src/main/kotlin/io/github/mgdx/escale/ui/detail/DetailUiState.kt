@@ -45,7 +45,14 @@ data class DetailUiState(
    * après la mort du processus. L'écran se referme au lieu d'afficher une page vide.
    */
   val closed: Boolean = false,
-  /** Le retour de « Ajouter aux favoris », à montrer une fois puis à oublier (SPEC.md § 5.5). */
+  /**
+   * L'identifiant du favori qui désigne déjà ce trajet, ou `null` s'il n'y en a pas.
+   *
+   * C'est **l'état de l'étoile** de la barre supérieure : pleine quand il y en a un, en contour
+   * sinon. Un booléen aurait suffi à l'afficher, mais pas à retirer le bon favori d'un appui.
+   */
+  val favoriteId: Long? = null,
+  /** Le retour d'un ajout ou d'un retrait, à montrer une fois puis à oublier (SPEC.md § 5.5). */
   val message: DetailMessage? = null,
 )
 
@@ -57,6 +64,7 @@ data class DetailUiState(
  */
 enum class DetailMessage {
   FAVORITE_ADDED,
+  FAVORITE_REMOVED,
   FAVORITE_FAILED,
 }
 

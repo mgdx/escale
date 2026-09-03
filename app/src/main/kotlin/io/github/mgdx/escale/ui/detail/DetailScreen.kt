@@ -123,7 +123,7 @@ private fun rememberDetailActions(
     onStopsToggled = viewModel::onStopsToggled,
     onStepsToggled = viewModel::onStepsToggled,
     onTripSelected = onTripSelected,
-    onAddToFavorites = viewModel::onAddToFavorites,
+    onToggleFavorite = viewModel::onToggleFavorite,
     onMessageShown = viewModel::onMessageShown,
   )
 }
@@ -152,11 +152,12 @@ internal data class DetailActions(
    */
   val onTripSelected: ((tripId: String) -> Unit)? = null,
   /**
-   * « Ajouter aux favoris » (SPEC.md § 5.3 et § 5.5) : le couple départ / arrivée de la recherche
-   * en cours rejoint les trajets favoris. Reste facultatif pour que les aperçus composent l'écran
-   * sans dépôt — un bouton qui ne fait rien serait pire que pas de bouton (voir [onTripSelected]).
+   * L'étoile de la barre supérieure (SPEC.md § 5.3 et § 5.5) : elle **bascule**, ajoutant le
+   * couple départ / arrivée aux favoris ou l'en retirant. Reste facultative pour que les aperçus
+   * composent l'écran sans dépôt — un bouton qui ne fait rien serait pire que pas de bouton du tout
+   * (voir [onTripSelected]).
    */
-  val onAddToFavorites: (() -> Unit)? = null,
+  val onToggleFavorite: (() -> Unit)? = null,
   /** Le message affiché après un ajout a été montré : l'écran le dit, pour qu'il soit oublié. */
   val onMessageShown: () -> Unit = {},
 )
@@ -192,7 +193,9 @@ internal fun DetailContent(
             )
           }
         },
-        actions = { if (journey != null) DetailBarActions(journey = journey, actions = actions) },
+        actions = {
+          if (journey != null) DetailBarActions(journey = journey, state = state, actions = actions)
+        },
       )
     },
   ) { innerPadding ->
@@ -203,14 +206,20 @@ internal fun DetailContent(
 
 /** Rafraîchir, partager, mettre en favori (SPEC.md § 5.3). */
 @Composable
-private fun RowScope.DetailBarActions(journey: Journey, actions: DetailActions) {
+private fun RowScope.DetailBarActions(journey: Journey, state: DetailUiState, actions: DetailActions) {
   val share = rememberShareAction(journey)
-  val favorite = actions.onAddToFavorites
+  val favorite = actions.onToggleFavorite
   if (favorite != null) {
+    // L'étoile **porte l'état réel du trajet** : pleine s'il est déjà en favori, en contour sinon,
+    // et son libellé dit ce que l'appui va faire. Deux dessins et deux libellés, jamais une nuance
+    // de couleur : rien ne doit reposer sur la seule couleur (SPEC.md § 9).
+    val saved = state.favoriteId != null
     IconButton(onClick = favorite) {
       Icon(
-        painter = painterResource(R.drawable.ic_star_outline),
-        contentDescription = stringResource(R.string.detail_action_favorite),
+        painter = painterResource(if (saved) R.drawable.ic_star_filled else R.drawable.ic_star_outline),
+        contentDescription = stringResource(
+          if (saved) R.string.detail_action_favorite_remove else R.string.detail_action_favorite_add,
+        ),
       )
     }
   }
