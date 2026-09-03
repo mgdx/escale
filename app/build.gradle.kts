@@ -138,6 +138,11 @@ dependencies {
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.kotlinx.serialization.json)
 
+  // Le seul travail de fond de l'application : les trajets surveillés (SPEC.md § 5.5.1 et § 7.7).
+  // Une tâche à exécution unique par occurrence, replanifiée après chaque exécution ; jamais de
+  // `PeriodicWorkRequest`, que la spec interdit.
+  implementation(libs.androidx.work.runtime.ktx)
+
   // Carte : MapLibre GL Android, licence BSD, compatible F-Droid (SPEC.md § 3). La carte est
   // rendue par le moteur natif, jamais par une WebView (SPEC.md § 2).
   implementation(libs.maplibre.android.sdk)

@@ -47,6 +47,12 @@ import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.CleartextConsentStore
 import io.github.mgdx.escale.ui.server.DataStoreCleartextConsentStore
 import io.github.mgdx.escale.ui.session.SearchSession
+import io.github.mgdx.escale.ui.watch.DataStoreWatchSettingsStore
+import io.github.mgdx.escale.ui.watch.WatchSettingsStore
+import io.github.mgdx.escale.work.WatchAlarms
+import io.github.mgdx.escale.work.WatchNotifications
+import io.github.mgdx.escale.work.WatchNotifier
+import io.github.mgdx.escale.work.WatchScheduler
 import java.io.File
 
 /**
@@ -249,6 +255,25 @@ class AppContainer(context: Context) {
   val tripRepository: TripRepository by lazy {
     TripRepositoryImpl(TripApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
   }
+
+  /**
+   * Les réglages de la surveillance et le résultat de la dernière vérification (SPEC.md § 5.5.1).
+   *
+   * Il partage le fichier DataStore des autres réglages et ne possède que ses propres clés, comme
+   * [mapCameraStore] et [cleartextConsentStore].
+   */
+  val watchSettingsStore: WatchSettingsStore by lazy { DataStoreWatchSettingsStore(preferences) }
+
+  /**
+   * La programmation des trajets surveillés (SPEC.md § 5.5.1), **seul travail de fond autorisé**.
+   *
+   * Il n'émet que des tâches à **exécution unique**, replanifiées après chaque exécution : SPEC.md
+   * § 7.7 interdit toute tâche périodique, tout service et toute synchronisation.
+   */
+  val watchScheduler: WatchAlarms by lazy { WatchScheduler(appContext) }
+
+  /** Le canal dédié et silencieux des trajets surveillés (SPEC.md § 5.5.1). */
+  val watchNotifications: WatchNotifier by lazy { WatchNotifications(appContext) }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"
