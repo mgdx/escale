@@ -16,6 +16,7 @@ propose l'amendement de la spec dans le même commit que le code.
 
 ```bash
 ./gradlew assembleDebug            # compiler
+./gradlew assembleRelease          # compiler la publication minifiée (R8), non signée
 ./gradlew test                     # tests JVM (:core, :data)
 ./gradlew connectedAndroidTest     # tests instrumentés (appareil branché requis)
 ./gradlew ktlintCheck detekt lint  # qualité

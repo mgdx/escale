@@ -52,8 +52,15 @@ android {
 
   buildTypes {
     release {
+      // R8 : minification du code **et** réduction des ressources. En AGP 9, `optimization.enable`
+      // remplace le couple `isMinifyEnabled` / `isShrinkResources` et active les deux d'un coup ;
+      // le fichier de règles par défaut `proguard-android-optimize.txt` est inclus d'office
+      // (`optimization.keepRules.includeDefault`, vrai par convention).
+      //
+      // Les règles propres au projet vivent dans `src/main/keepRules/` — le mécanisme d'AGP 9 —
+      // et non dans un `proguard-rules.pro` référencé par `proguardFiles`, qui est l'ancienne voie.
       optimization {
-        enable = false
+        enable = true
       }
     }
   }
