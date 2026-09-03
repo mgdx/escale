@@ -53,6 +53,13 @@ Les quatre doivent passer **sans le moindre avertissement**. Un avertissement n'
 traiter plus tard : soit il se corrige, soit il se supprime explicitement avec un commentaire qui
 explique pourquoi il est légitime.
 
+L'intégration continue rejoue ces quatre commandes sur chaque poussée et chaque pull request
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), et y ajoute
+`./gradlew :app:assembleRelease`. Cette dernière est la seule à faire tourner R8, donc la seule à pouvoir signaler une règle de
+conservation devenue fausse ou un APK sorti des 15 Mo par architecture. Si vous touchez aux
+dépendances, aux ressources ou à `app/src/main/keepRules/`, lancez-la aussi en local : son échec ne
+se voit nulle part ailleurs.
+
 Vérifiez également le rendu sur un appareil ou un émulateur, en **thème clair et en thème sombre**,
 après rotation, et avec la taille de texte poussée à 200 %.
 
@@ -159,6 +166,12 @@ Ces règles valent pour le français seul. L'anglais de `values/` emploie les gu
    l'application » d'Android 13 et des versions suivantes : une traduction absente de cette liste
    n'y est jamais proposée, et reste inatteignable autrement qu'en changeant la langue de tout
    l'appareil.
+8. Si vous le souhaitez, traduisez aussi la **fiche F-Droid** : copiez
+   `fastlane/metadata/android/fr-FR/` sous le code de votre langue au format fastlane (`de-DE`,
+   `pt-BR` — pas `values-de` ni `values-pt-rBR`) et traduisez les quatre fichiers texte. Attention,
+   ces fichiers ont des limites de longueur que rien ne signale : elles sont expliquées, avec la
+   façon de les vérifier, dans [`fastlane/README.md`](fastlane/README.md). C'est facultatif : une
+   langue sans fiche traduite retombe simplement sur l'anglais.
 
 ### Vérifier une traduction
 

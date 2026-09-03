@@ -29,7 +29,7 @@ fastlane/metadata/android/
 
 `fdroidserver` **tronque en silence** ce qui dépasse : ni `fdroid lint` ni `fdroid update`
 n'émettent le moindre avertissement, et la fiche est publiée amputée. Les valeurs viennent de
-`char_limits` dans [`fdroidserver/common.py`](https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/common.py#L216) :
+`char_limits` dans [`fdroidserver/common.py`][charlimits] :
 
 | Fichier | Limite | en-US | fr-FR |
 |---|---:|---:|---:|
@@ -66,8 +66,8 @@ un `<br>` parasite à l'intérieur de la liste.
 
 Or `fdroidserver` n'affiche comme « nouveautés » que le fichier nommé d'après le
 **`CurrentVersionCode`**, et celui-ci est **le plus grand des quatre**
-([`checkupdates.py`](https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/checkupdates.py#L547)
-trie les `VercodeOperation` et retient le dernier). Le fichier attendu est donc :
+([`checkupdates.py`][checkupdates] trie les `VercodeOperation` et retient le dernier).
+Le fichier attendu est donc :
 
 > **`changelogs/4001.txt`** — et non `1.txt`, qui est le `versionCode` de `defaultConfig` et
 > n'apparaît dans aucun APK publié.
@@ -136,3 +136,6 @@ Copiez `fastlane/metadata/android/fr-FR/` sous le code de la nouvelle langue, tr
 fichiers texte, recopiez `images/icon.png` tel quel et fournissez votre propre série de captures.
 Le code de langue suit la convention de fastlane (`de-DE`, `pt-BR`), pas celle des répertoires de
 ressources Android (`values-de`, `values-pt-rBR`). Voir `CONTRIBUTING.md`.
+
+[charlimits]: https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/common.py#L216
+[checkupdates]: https://gitlab.com/fdroid/fdroidserver/-/blob/master/fdroidserver/checkupdates.py#L547
