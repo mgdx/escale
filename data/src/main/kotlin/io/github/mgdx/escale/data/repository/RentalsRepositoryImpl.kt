@@ -46,29 +46,40 @@ class RentalsRepositoryImpl(
   private val serverMutex = Mutex()
   private var lastBaseUrl: String? = null
 
+  /**
+   * La carte n'a pas de `fresh` : ses requêtes sont déclenchées par la caméra, jamais par un geste
+   * de l'usager, et ce sont exactement celles que le cache d'une minute est là pour retenir.
+   */
   override suspend fun stationsIn(area: BoundingBox): Outcome<List<RentalAvailability>> {
     val query = RentalsQuery.Within(area)
-    return load(query) { baseUrl, retrievedAt -> api.within(baseUrl, area, retrievedAt) }
+    return load(query, fresh = false) { baseUrl, retrievedAt -> api.within(baseUrl, area, retrievedAt) }
   }
 
-  override suspend fun availabilityNear(point: LatLon, radiusMeters: Int): Outcome<List<RentalAvailability>> {
+  override suspend fun availabilityNear(
+    point: LatLon,
+    radiusMeters: Int,
+    fresh: Boolean,
+  ): Outcome<List<RentalAvailability>> {
     val query = RentalsQuery.Around(point, radiusMeters)
-    return load(query) { baseUrl, retrievedAt -> api.around(baseUrl, point, radiusMeters, retrievedAt) }
+    return load(query, fresh) { baseUrl, retrievedAt -> api.around(baseUrl, point, radiusMeters, retrievedAt) }
   }
 
   /**
-   * Le cache d'abord, le serveur ensuite, et jamais l'inverse.
+   * Le cache d'abord, le serveur ensuite — sauf si l'usager a demandé lui-même un relevé.
    *
    * L'heure du relevé est prise **avant** l'appel et transmise au serveur comme au cache : c'est
    * elle qui s'affiche, et elle doit dater la réponse et son entrée de cache de la même valeur,
-   * sans quoi une disponibilité rendue par le cache paraîtrait plus fraîche qu'elle ne l'est.
+   * sans quoi une disponibilité rendue par le cache paraîtrait plus fraîche qu'elle ne l'est. Un
+   * relevé obtenu sur `fresh` remplace l'entrée en cache, heure comprise : c'est bien une nouvelle
+   * réponse, et elle doit être datée comme telle.
    */
   private suspend fun load(
     query: RentalsQuery,
+    fresh: Boolean,
     request: suspend (baseUrl: String, retrievedAt: Instant) -> Outcome<List<RentalAvailability>>,
   ): Outcome<List<RentalAvailability>> {
     val baseUrl = baseUrl()
-    cache.cached(query)?.let { return Outcome.Success(it) }
+    if (!fresh) cache.cached(query)?.let { return Outcome.Success(it) }
     val outcome = request(baseUrl, now())
     if (outcome is Outcome.Success) cache.store(query, outcome.value)
     return outcome

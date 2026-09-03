@@ -460,10 +460,10 @@ private fun VehicleBreakdown(station: RentalAvailability) {
  * L'heure du relevé et le bouton de rafraîchissement que SPEC.md § 5.3 exige.
  *
  * **L'heure affichée est celle de la réponse du serveur**, pas celle de l'affichage : c'est tout
- * l'intérêt de la mention. Un appui sur le bouton dans la minute qui suit peut donc laisser la même
- * heure — le dépôt rend alors sa réponse en cache, qui a moins de soixante secondes et que
- * SPEC.md § 5.7 juge encore fraîche. Redater un relevé qu'on n'a pas refait serait précisément le
- * mensonge que cette ligne existe pour empêcher.
+ * l'intérêt de la mention. Le bouton, lui, contourne le cache d'une minute — il repart au serveur
+ * quoi qu'il arrive, et l'heure affichée avance donc à chaque appui. Le cache est là pour retenir
+ * les requêtes automatiques, pas pour absorber un geste délibéré : un bouton qui ne fait rien
+ * pendant une minute, sans le dire, laisse croire qu'on a redemandé (SPEC.md § 7.4).
  */
 @Composable
 private fun AvailabilityStatus(availability: RentalLegAvailability, onRefresh: () -> Unit) {

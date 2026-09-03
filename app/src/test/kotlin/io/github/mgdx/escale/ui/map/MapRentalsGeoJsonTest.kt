@@ -5,6 +5,7 @@ import io.github.mgdx.escale.core.geo.rentalMarkers
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalPointKind
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
@@ -87,6 +88,8 @@ class MapRentalsGeoJsonTest {
             numVehiclesAvailable = 1,
             formFactors = listOf(RentalFormFactor.SCOOTER_STANDING),
             retrievedAt = retrieved,
+            // C'est la nature du point qui en fait un véhicule isolé, pas son nom vide.
+            kind = RentalPointKind.FREE_FLOATING,
           ),
         ),
       ),

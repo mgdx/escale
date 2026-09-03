@@ -102,6 +102,45 @@ class RentalsRepositoryImplTest {
   }
 
   @Test
+  fun `un releve demande par l'usager contourne le cache`() = runTest {
+    // Le cache d'une minute retient les requêtes automatiques, pas une action délibérée : un bouton
+    // qui ne fait rien pendant une minute, sans le dire, fait croire qu'on a redemandé (§ 7.4).
+    val repository = repository()
+    repository.availabilityNear(berlin)
+    now = start.plusSeconds(5)
+    repository.availabilityNear(berlin, fresh = true)
+
+    assertEquals(2, requests)
+  }
+
+  @Test
+  fun `le releve ainsi obtenu remplace celui du cache, heure comprise`() = runTest {
+    val repository = repository()
+    repository.availabilityNear(berlin)
+    now = start.plusSeconds(5)
+    repository.availabilityNear(berlin, fresh = true)
+
+    // C'est une nouvelle réponse : elle doit être datée comme telle, et servir les lectures
+    // suivantes jusqu'à sa propre expiration.
+    now = start.plusSeconds(6)
+    val cached = repository.availabilityNear(berlin)
+    assertEquals(start.plusSeconds(5), (cached as Outcome.Success).value.first().retrievedAt)
+    assertEquals(2, requests)
+  }
+
+  @Test
+  fun `la carte, elle, ne contourne jamais le cache`() = runTest {
+    // Ses requêtes viennent de la caméra, jamais d'un geste : ce sont exactement celles que le
+    // cache est là pour retenir.
+    val repository = repository()
+    repository.stationsIn(wide)
+    now = start.plusSeconds(30)
+    repository.stationsIn(wide)
+
+    assertEquals(1, requests)
+  }
+
+  @Test
   fun `une autre station est une autre demande`() = runTest {
     val repository = repository()
     repository.availabilityNear(berlin)

@@ -325,6 +325,39 @@ class DetailViewModelTest {
   }
 
   @Test
+  fun `deplier une portion se contente de la reponse en cache`() {
+    val viewModel = openRentalJourney()
+
+    viewModel.onLegToggled(0)
+
+    assertEquals(listOf(false, false), rentals.freshCalls)
+  }
+
+  @Test
+  fun `le bouton de rafraichissement, lui, contourne le cache`() {
+    // Un bouton qui ne fait rien pendant une minute, sans le dire, laisse croire à l'usager qu'il a
+    // redemandé. Le cache retient les requêtes automatiques, pas un geste délibéré (SPEC.md § 7.4).
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    rentals.freshCalls.clear()
+
+    viewModel.onRentalRefresh(0)
+
+    assertEquals(listOf(true, true), rentals.freshCalls)
+  }
+
+  @Test
+  fun `rafraichir le trajet contourne le cache lui aussi`() {
+    val viewModel = openRentalJourney()
+    viewModel.onLegToggled(0)
+    rentals.freshCalls.clear()
+
+    viewModel.onRefresh()
+
+    assertTrue(rentals.freshCalls.isNotEmpty() && rentals.freshCalls.all { it })
+  }
+
+  @Test
   fun `rafraichir le trajet rafraichit aussi les disponibilites affichees`() {
     // Elles sont plus périssables que les horaires : les laisser telles quelles pendant que le
     // reste de l'écran se met à jour serait exactement le mensonge que l'heure de relevé évite.

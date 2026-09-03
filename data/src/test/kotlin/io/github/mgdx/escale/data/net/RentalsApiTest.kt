@@ -3,6 +3,7 @@ package io.github.mgdx.escale.data.net
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalPointKind
 import io.github.mgdx.escale.core.model.RentalPropulsionType
 import io.github.mgdx.escale.core.model.RentalVehicleKind
 import io.github.mgdx.escale.core.model.countsByKind
@@ -179,6 +180,25 @@ class RentalsApiTest {
   }
 
   @Test
+  fun `une station sans nom ni borne reste une station, et rien ne doit la redeviner`() = runTest {
+    // **Le test qui verrouille le défaut d'intégration du jalon 8.** Cette station Villo n'a pas de
+    // nom, pas de borne publiée — comme aucun flux relevé — et se serait donc fait classer en
+    // véhicule en libre accès par toute heuristique fondée sur ces deux signaux. Elle apparaîtrait
+    // alors au zoom 15 au lieu du zoom 13, avec la mauvaise forme de marqueur et le mauvais
+    // libellé. Seul le schéma d'API dont elle provient tranche, et c'est ce mapping qui le sait.
+    val closed = checkNotNull(around("rentals_brussels_closed_station.json").firstOrNull { it.name.isEmpty() })
+
+    assertEquals(RentalPointKind.STATION, closed.kind)
+    assertTrue("elle ne publie aucune borne, comme tous les flux relevés", closed.vehicleDocksAvailable.isEmpty())
+    assertTrue("et l'exploitant ne la nomme pas", closed.name.isEmpty())
+  }
+
+  @Test
+  fun `les stations nommees sont des stations, elles aussi`() = runTest {
+    assertTrue(around("rentals_berlin_hauptbahnhof.json").all { it.kind == RentalPointKind.STATION })
+  }
+
+  @Test
   fun `les vehicules en free-floating deviennent des disponibilites d'un vehicule`() = runTest {
     val area = BoundingBox(min = LatLon(47.66, 9.173), max = LatLon(47.664, 9.178))
     val engine = MockEngine { respond(fixture("rentals_konstanz_free_floating.json"), HttpStatusCode.OK, jsonHeaders) }
@@ -190,6 +210,9 @@ class RentalsApiTest {
     val vehicles = all.filter { it.name.isEmpty() }
     assertEquals(6, vehicles.size)
     assertTrue("un véhicule libre vaut un", vehicles.all { it.numVehiclesAvailable == 1 })
+    // Et il porte sa nature, qui décide de son palier de zoom et de la forme de son marqueur.
+    assertTrue(vehicles.all { it.kind == RentalPointKind.FREE_FLOATING })
+    assertEquals(RentalPointKind.STATION, all.single { it.name.isNotEmpty() }.kind)
     assertEquals(
       listOf(RentalFormFactor.SCOOTER_STANDING),
       vehicles.first { it.formFactors.contains(RentalFormFactor.SCOOTER_STANDING) }.formFactors,

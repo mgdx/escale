@@ -161,8 +161,12 @@ class FakeRentalsRepository(var availabilities: List<RentalAvailability> = empty
     return failure?.let { Outcome.Failure(it) } ?: Outcome.Success(availabilities)
   }
 
-  override suspend fun availabilityNear(point: LatLon, radiusMeters: Int): Outcome<List<RentalAvailability>> =
-    Outcome.Success(emptyList())
+  /** La carte n'appelle jamais ce chemin : il sert la portion de trajet de SPEC.md § 5.3. */
+  override suspend fun availabilityNear(
+    point: LatLon,
+    radiusMeters: Int,
+    fresh: Boolean,
+  ): Outcome<List<RentalAvailability>> = Outcome.Success(emptyList())
 }
 
 /** Réglages d'affichage en mémoire : les trois bascules de couches de SPEC.md § 5.6. */
