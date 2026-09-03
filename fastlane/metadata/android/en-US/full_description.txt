@@ -1,0 +1,25 @@
+Escale finds your way across town — by public transport, by car, by bike or on foot — and tells you what is actually happening right now: which lines to take, where to change, and how late the vehicle is running.
+
+Type where you are and where you are going. Escale offers several routes, sorted into four tabs: Transit, Car, Bike and Walk.
+
+<b>What you get</b>
+
+<ul><li>Departure and arrival times, total duration and number of changes for every route.</li><li>Live delays and cancellations, and the disruption notices published by the operator.</li><li>Step-by-step detail of a trip: the line and its direction, the platform, every stop along the way, walking and cycling directions, wheelchair access, and whether bikes are allowed on board.</li><li>Shared bikes and scooters shown next to your own bike, with how many vehicles are free at the station and how many docks are left where you arrive.</li><li>A full-screen map with stops and stations.</li><li>The next departures at any stop.</li><li>Home, work, saved places and saved journeys — kept on your phone.</li><li>If, and only if, you turn it on: Escale checks a saved journey once, an hour before you leave, and notifies you only when something has changed.</li></ul>
+
+<b>What to know before installing</b>
+
+Escale needs an internet connection and cannot plan a journey offline. It computes nothing itself: it asks a routing server, and it is only as good as the data that server has. By default it talks to Transitous, a public server run by volunteers, which covers a large part of the world — including regions where coverage is partial or missing. You can point Escale at any other MOTIS routing server, your own for instance, from the settings.
+
+Escale does not sell tickets, does not book anything, and does not give turn-by-turn navigation.
+
+<b>Attribution</b>
+
+Timetables and routing on the default server come from the Transitous community, built on open data published by transport operators: <a href="https://transitous.org/sources/">https://transitous.org/sources/</a>
+
+Map data © OpenStreetMap contributors, licensed under the ODbL: <a href="https://www.openstreetmap.org/copyright">https://www.openstreetmap.org/copyright</a>
+
+<b>Privacy</b>
+
+No analytics, no tracker, no advertising, no Google Play services. Nothing leaves your phone except the requests sent to the routing server you have configured. Favourites, home, work and search history stay in local storage; automatic backup is switched off, so they are never copied anywhere else.
+
+Escale is free software, released under the GNU General Public License v3 or later.

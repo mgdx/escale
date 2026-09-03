@@ -1,0 +1,119 @@
+# Intégration continue d'Escale (SPEC.md § 12).
+#
+# Ce que ce fichier garantit, et pourquoi chaque morceau est là :
+#
+#   - Les quatre commandes de CLAUDE.md (« Terminé, ça veut dire quoi », point 1) tournent sur
+#     chaque poussée et sur chaque pull request, dans l'ordre du moins cher au plus cher, pour que
+#     la faute la plus banale soit signalée en premier.
+#   - `assembleRelease` tourne aussi. C'est la seule étape où R8 s'exécute, donc la seule qui puisse
+#     voir une règle de conservation manquante ou un APK devenu trop gros : les deux tâches
+#     `verifyReleaseKeepRules` et `verifyReleaseApkSize` finalisent `assembleRelease` et échouent le
+#     travail. Sans cette étape, la minification casserait en silence, à la publication seulement.
+#   - Aucun secret, aucune clé de signature, aucun service tiers. `assembleRelease` produit des APK
+#     **non signés** : c'est exactement ce que F-Droid compile et signe ensuite lui-même.
+#
+# Ce fichier n'a jamais été exécuté sur les serveurs de GitHub — le dépôt n'y est pas encore poussé.
+# Il est écrit pour l'être ; le premier passage réel peut demander un ajustement de la version de
+# plateforme Android installée ci-dessous.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Aucune écriture. Le travail ne publie rien, ne commente rien, ne pousse rien.
+permissions:
+  contents: read
+
+# Une poussée qui en remplace une autre annule la précédente : le résultat qui compte est celui du
+# dernier état de la branche. Jamais sur la branche par défaut, dont chaque état mérite son résultat.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  verification:
+    name: Compilation, tests et qualité
+    # Image épinglée plutôt que `ubuntu-latest` : une montée de version de l'image ne doit pas
+    # changer le résultat du jour au lendemain sans que personne ne l'ait décidé.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      # Toutes les actions sont épinglées à un **SHA de commit**, jamais à une étiquette ni à une
+      # branche : une étiquette se déplace, et une action qui se déplace peut exécuter un code que
+      # personne n'a relu. Le commentaire donne la version lisible correspondante.
+      - name: Récupérer les sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # JDK 21, et non 17.
+      #
+      # `gradle/gradle-daemon-jvm.properties` fixe `toolchainVersion=21` : le démon Gradle de ce
+      # projet **exige** un JDK 21, il ne démarre pas sur un autre. Fourni ici en local, Gradle le
+      # trouve par la détection de chaînes d'outils ; à défaut il irait le télécharger depuis
+      # api.foojay.io au milieu du travail, ce qu'une CI n'a pas à faire.
+      #
+      # Le bytecode produit reste du 17 (`sourceCompatibility`/`jvmTarget` dans chaque module) :
+      # c'est le JDK **qui fait tourner Gradle** qui doit être en 21, pas la cible de compilation.
+      - name: Installer le JDK 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # `compileSdk`/`targetSdk` valent 37 (app/build.gradle.kts). L'image du serveur ne l'a pas
+      # forcément déjà : on l'installe explicitement plutôt que de laisser AGP le télécharger de
+      # lui-même, pour que la panne éventuelle soit lisible ici et pas au milieu d'une compilation.
+      - name: Installer la plateforme Android 37
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses > /dev/null
+          "$sdkmanager" 'platforms;android-37' 'build-tools;37.0.0'
+
+      # Le cache ne porte que le **dépôt de dépendances** de Gradle (`~/.gradle/caches`), c'est-à-dire
+      # des artefacts Maven immuables : il fait gagner du téléchargement, il ne réutilise aucun
+      # résultat de tâche d'un travail précédent. Trois précautions pour qu'il ne masque rien :
+      #
+      #   - `cache-provider: basic` — l'implémentation libre, adossée au cache de GitHub Actions.
+      #     La valeur par défaut, `enhanced`, passe par un service commercial tiers : SPEC.md § 2
+      #     l'exclut.
+      #   - pas de `cache-encryption-key`, donc le **cache de configuration de Gradle n'est ni
+      #     enregistré ni restauré** : chaque passage reconfigure la compilation depuis zéro, et une
+      #     erreur introduite dans un script de compilation est vue tout de suite.
+      #   - `cache-read-only` reste à sa valeur par défaut : seule la branche par défaut alimente le
+      #     cache. Une pull request lit, elle n'écrit pas, donc elle ne peut pas l'empoisonner.
+      #
+      # `validate-wrappers` vérifie en plus la somme de contrôle de `gradle/wrapper/gradle-wrapper.jar`
+      # contre la liste des distributions Gradle officielles : c'est le seul binaire versionné du
+      # dépôt, et c'est ce qui atteste qu'il n'a pas été remplacé.
+      - name: Préparer Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-provider: basic
+          validate-wrappers: true
+          build-scan-publish: false
+          dependency-graph: disabled
+
+      # Chaque commande est une étape à part : la ligne rouge de l'interface désigne alors
+      # directement la vérification qui a cédé. Aucune étape n'est en `continue-on-error`, aucune ne
+      # termine par `|| true` : un échec échoue.
+      - name: Style — ktlint et detekt
+        run: ./gradlew ktlintCheck detekt --console=plain
+
+      - name: Compilation de débogage
+        run: ./gradlew :app:assembleDebug --console=plain
+
+      - name: Tests JVM
+        run: ./gradlew test --console=plain
+
+      - name: Lint Android
+        run: ./gradlew lint --console=plain
+
+      # R8, les règles de conservation et le budget de taille. Volontairement en dernier : c'est
+      # l'étape la plus longue, et la seule dont l'échec ne se voit nulle part ailleurs.
+      # `verifyReleaseKeepRules` et `verifyReleaseApkSize` finalisent `assembleRelease` : elles
+      # n'ont ni entrée ni sortie déclarée, donc elles s'exécutent à chaque passage, même si
+      # `assembleRelease` est à jour.
+      - name: Publication minifiée et garde-fous R8
+        run: ./gradlew :app:assembleRelease --console=plain

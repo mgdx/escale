@@ -2,6 +2,8 @@
 
 > *Get there, any way you like* — *Aller là-bas, comme vous voulez*
 
+[![CI](https://github.com/mgdx/escale/actions/workflows/ci.yml/badge.svg)](https://github.com/mgdx/escale/actions/workflows/ci.yml)
+
 **Escale** est un client Android libre pour un serveur
 [MOTIS](https://github.com/motis-project/motis) 2.x : recherche d'itinéraire multimodale, détail des
 trajets portion par portion, carte, horaires en temps réel et véhicules en libre-service.
@@ -57,6 +59,22 @@ Le projet est découpé en trois modules Gradle :
 
 Le découpage et les règles de contribution entre modules sont décrits dans
 [`docs/architecture.md`](docs/architecture.md).
+
+Ces mêmes commandes tournent sur chaque poussée et chaque *pull request*
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), avec en plus `assembleRelease` : c'est la
+seule étape où R8 s'exécute, donc la seule qui puisse voir une règle de conservation disparue ou un
+APK sorti du budget de taille. Le travail n'emploie aucun secret et aucune clé de signature.
+
+## Publication
+
+Escale est destinée au dépôt principal de **F-Droid**, qui compile depuis les sources et signe
+lui-même : le dépôt ne contient aucune clé, et `assembleRelease` produit volontairement des APK non
+signés, un par architecture.
+
+- L'état de conformité à la politique d'inclusion, dépendance par dépendance et permission par
+  permission, est dans [`docs/fdroid.md`](docs/fdroid.md).
+- La fiche affichée par F-Droid — descriptions, nouveautés, icône, captures — est dans
+  [`fastlane/`](fastlane/README.md), en anglais et en français.
 
 ## Attributions
 

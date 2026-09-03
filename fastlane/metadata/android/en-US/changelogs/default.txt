@@ -1,0 +1,7 @@
+First release.
+
+Journey planning by public transport, car, bike and on foot, with live delays, cancellations and disruption notices. Trip detail leg by leg: intermediate stops, platforms, wheelchair access, bikes on board. Shared bikes and scooters with availability. Full-screen map, next departures at a stop, favourites and history kept on the phone.
+
+Works with any MOTIS routing server; Transitous by default.
+
+English and French, light and dark themes.
