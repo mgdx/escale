@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.trip
 
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.model.Disruption
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.LatLon
@@ -37,13 +38,14 @@ class TripViewModelTest {
     now = { clock },
   )
 
-  private fun place(name: String, at: Instant, track: String? = null) = Place(
+  private fun place(name: String, at: Instant, track: String? = null, alerts: List<Disruption> = emptyList()) = Place(
     name = name,
     coordinates = LatLon(53.55, 10.0),
     stopId = "stop:$name",
     track = track,
     scheduledTime = at,
     time = at,
+    alerts = alerts,
   )
 
   private fun journey(stops: List<String> = listOf("Hamburg Hbf", "Berlin Hbf")): Journey {
@@ -75,6 +77,54 @@ class TripViewModelTest {
       transfers = 0,
       legs = listOf(leg),
     )
+  }
+
+  @Test
+  fun `un arret perturbe n'affiche que ce qui lui est propre`() {
+    // Le serveur attache le même message aux deux niveaux : au niveau de la course, où le bandeau
+    // de tête l'annonce déjà, et au niveau de l'arrêt. L'écran ne doit pas le dire deux fois.
+    val course = Disruption(headerText = "Retard prévisible", descriptionText = "5 min")
+    val stopOnly = Disruption(headerText = "Départ voie 8", descriptionText = "Voie modifiée")
+    val end = fixedNow.plusSeconds(3600)
+    val at = fixedNow.plusSeconds(600)
+    val leg = JourneyLeg.Transit(
+      startTime = fixedNow,
+      endTime = end,
+      scheduledStartTime = fixedNow,
+      scheduledEndTime = end,
+      duration = Duration.ofHours(1),
+      from = place("Altona", fixedNow),
+      to = place("Nürnberg Hbf", end),
+      alerts = listOf(course),
+      mode = TransitMode.HIGHSPEED_RAIL,
+      lineName = "ICE 91",
+      intermediateStops = listOf(
+        StopVisit(
+          place = place("Berlin Hbf", at, alerts = listOf(course, stopOnly)),
+          arrival = at,
+          departure = at.plusSeconds(120),
+        ),
+      ),
+    )
+    trips.tripAnswer = Outcome.Success(
+      Journey(
+        id = null,
+        startTime = fixedNow,
+        endTime = end,
+        scheduledStartTime = fixedNow,
+        scheduledEndTime = end,
+        duration = Duration.ofHours(1),
+        transfers = 0,
+        legs = listOf(leg),
+      ),
+    )
+
+    val state = viewModel().uiState.value
+    val berlin = state.calls.single { it.place.name == "Berlin Hbf" }
+
+    assertEquals(listOf(course), state.alerts)
+    assertEquals(listOf(stopOnly), state.alertsAt(berlin))
+    assertTrue(state.alertsAt(state.calls.first()).isEmpty())
   }
 
   @Test

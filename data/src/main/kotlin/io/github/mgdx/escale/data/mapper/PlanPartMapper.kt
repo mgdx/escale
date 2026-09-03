@@ -43,6 +43,10 @@ internal fun PlanPlaceDto.toDomain(prefersDeparture: Boolean, fallback: Instant)
     scheduledTime = scheduled,
     time = instantOrNull(actualRaw) ?: scheduled,
     level = level,
+    // Les perturbations de ce point-là, à ne pas confondre avec celles de la portion. Elles sont
+    // remplies pour **toute** extrémité et tout arrêt intermédiaire, sur `plan` comme sur `trip` :
+    // le même mapping sert aux deux, et un arrêt perturbé doit se dire des deux côtés.
+    alerts = alerts.map { it.toDomain() },
   )
 }
 

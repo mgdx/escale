@@ -90,15 +90,47 @@ class TripCallsTest {
     assertTrue(journey.calls.isEmpty())
   }
 
+  @Test
+  fun `un arret porte ses propres perturbations, distinctes de celles de la course`() {
+    // `/api/v6/trip` rend des `alerts` dans le `place` de chaque arrêt : une perturbation qui ne
+    // concerne qu'un quai ne doit pas remonter au niveau de la course, ni s'y perdre.
+    val moved = Disruption(headerText = "Départ voie 8", descriptionText = "Voie modifiée")
+    val calls = tripOf(leg(from = "Altona", to = "Nürnberg Hbf", between = listOf("Berlin Hbf"), stopAlert = moved))
+      .calls
+
+    assertEquals(listOf(moved), calls[1].place.alerts)
+    assertTrue(calls.first().place.alerts.isEmpty())
+    assertTrue(calls.last().place.alerts.isEmpty())
+  }
+
+  @Test
+  fun `le recollement d'un arret de jonction reunit les perturbations des deux cotes`() {
+    // On arrive par une portion et on repart par l'autre : n'en garder qu'une moitié ferait
+    // disparaître le message que le serveur n'a attaché qu'à l'autre.
+    val arrival = Disruption(headerText = "Ascenseur en panne", descriptionText = "")
+    val departure = Disruption(headerText = "Départ voie 8", descriptionText = "")
+    val first = leg(from = "Altona", to = "Hamburg Hbf", between = emptyList(), endAlert = arrival)
+    val second = leg(
+      from = "Hamburg Hbf",
+      to = "Berlin Hbf",
+      between = emptyList(),
+      shiftMinutes = 20,
+      startAlert = departure,
+    )
+
+    assertEquals(listOf(arrival, departure), tripOf(first, second).calls[1].place.alerts)
+  }
+
   // --- Fabriques d'exemples -----------------------------------------------------------------
 
-  private fun stop(name: String, at: Instant, track: String? = null) = Place(
+  private fun stop(name: String, at: Instant, track: String? = null, alert: Disruption? = null) = Place(
     name = name,
     coordinates = LatLon(lat = 53.55, lon = 10.0),
     stopId = "stop:$name",
     track = track,
     scheduledTime = at,
     time = at,
+    alerts = listOfNotNull(alert),
   )
 
   @Suppress("LongParameterList")
@@ -109,6 +141,9 @@ class TripCallsTest {
     shiftMinutes: Long = 0,
     cancelled: Boolean = false,
     departureTrack: String? = null,
+    stopAlert: Disruption? = null,
+    startAlert: Disruption? = null,
+    endAlert: Disruption? = null,
   ): JourneyLeg.Transit {
     val start = origin.plusSeconds(shiftMinutes * 60)
     val end = start.plusSeconds(3600)
@@ -118,14 +153,19 @@ class TripCallsTest {
       scheduledStartTime = start,
       scheduledEndTime = end,
       duration = Duration.ofHours(1),
-      from = stop(from, start, departureTrack),
-      to = stop(to, end),
+      from = stop(from, start, departureTrack, startAlert),
+      to = stop(to, end, alert = endAlert),
       cancelled = cancelled,
       mode = TransitMode.HIGHSPEED_RAIL,
       lineName = "ICE 91",
       intermediateStops = between.mapIndexed { index, name ->
         val at = start.plusSeconds((index + 1) * 600L)
-        StopVisit(place = stop(name, at), arrival = at, departure = at.plusSeconds(120), cancelled = cancelled)
+        StopVisit(
+          place = stop(name, at, alert = stopAlert),
+          arrival = at,
+          departure = at.plusSeconds(120),
+          cancelled = cancelled,
+        )
       },
     )
   }

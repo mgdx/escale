@@ -40,6 +40,20 @@ object Disruptions {
   }
 
   /**
+   * Les perturbations de [alerts] que [alreadyShown] n'annonce pas déjà, sans doublon.
+   *
+   * Le cas qui l'exige : la desserte d'une course porte des perturbations à **deux** niveaux — la
+   * course entière et chaque arrêt (`docs/motis-api.md`, § `/api/v6/trip`). Un serveur qui attache
+   * le même message aux deux ferait afficher deux fois la même chose, une fois en tête d'écran et
+   * une fois sur l'arrêt, et l'usager y lirait deux perturbations là où il n'y en a qu'une.
+   *
+   * L'égalité est celle de [Disruption], c'est-à-dire celle de tous ses champs : deux messages qui
+   * ne diffèrent que par leur période d'impact restent deux perturbations distinctes.
+   */
+  fun excluding(alerts: List<Disruption>, alreadyShown: List<Disruption>): List<Disruption> =
+    alerts.distinct().filterNot { it in alreadyShown }
+
+  /**
    * La gravité la plus forte de [alerts], ou `null` si la liste est vide.
    *
    * C'est elle qu'un bandeau annonce en toutes lettres : SPEC.md § 9 interdit de la confier à la

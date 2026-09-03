@@ -4,6 +4,9 @@ import io.github.mgdx.escale.core.format.Delay
 import io.github.mgdx.escale.core.format.DelayQuality
 import io.github.mgdx.escale.core.model.DepartureFilters
 import io.github.mgdx.escale.core.model.DepartureModeFilter
+import io.github.mgdx.escale.core.model.DisruptionEffect
+import io.github.mgdx.escale.core.model.DisruptionSeverity
+import io.github.mgdx.escale.core.model.Disruptions
 import io.github.mgdx.escale.core.model.StopTimeEntry
 import io.github.mgdx.escale.core.model.StopTimePage
 import io.github.mgdx.escale.core.model.TransitMode
@@ -238,6 +241,50 @@ class TripApiTest {
     // Les quais sont rendus quand la source les publie, et seulement là.
     assertEquals("1", checkNotNull(calls.firstOrNull { it.place.name == "Ludwigslust Bahnhof" }).place.track)
     assertNull(calls[1].place.track)
+  }
+
+  @Test
+  fun `une course porte des perturbations a deux niveaux, la course et chaque arret`() = runTest {
+    // Fixture **enrichie à la main**, comme `plan_with_alerts_enriched.json` : aucune course
+    // capturée sur api.transitous.org ne portait d'alerte par arrêt, et le schéma `Place` en prévoit
+    // pourtant un tableau (docs/motis-openapi.yaml, schéma `Place`, champ `alerts`).
+    val engine = MockEngine { respond(fixture("trip_ice91_stop_alerts.json"), HttpStatusCode.OK, jsonHeaders) }
+    val journey = (
+      TripApi(versionName = "1.0.0", engine = engine).use {
+        it.trip(baseUrl, "20260902_07:34_de-DELFI_3383408655", detailedLegs = false)
+      } as Outcome.Success
+      ).value
+
+    // Le niveau « course » ne récupère pas les perturbations d'arrêt, et réciproquement.
+    assertEquals("ICE 91 : retard prévisible", journey.alerts.single().headerText)
+
+    val disrupted = journey.calls.filter { it.place.alerts.isNotEmpty() }
+    assertEquals(1, disrupted.size)
+    assertEquals("S+U Berlin Hauptbahnhof", disrupted.single().place.name)
+    val alert = disrupted.single().place.alerts.single()
+    assertEquals(DisruptionSeverity.WARNING, alert.severity)
+    assertEquals(DisruptionEffect.STOP_MOVED, alert.effect)
+    // Le HTML de la description est réduit à l'entrée, l'adresse du lien étant conservée.
+    assertEquals(
+      "En raison de travaux, l'ICE 91 part voie 8 et non voie 3. " +
+        "Voir l'information (https://www.bahn.de/meldungen).",
+      alert.descriptionText,
+    )
+    // Ce que l'écran de course affichera sur cet arrêt : la perturbation de l'arrêt, pas celle de
+    // la course, que le bandeau de tête annonce déjà.
+    assertEquals(listOf(alert), Disruptions.excluding(disrupted.single().place.alerts, journey.alerts))
+  }
+
+  @Test
+  fun `les arrets intermediaires d'un trajet portent aussi leurs perturbations`() = runTest {
+    // Le même mapping sert à `plan` et à `trip` : un arrêt sans alerte rend une liste vide, jamais
+    // un nul, et l'écran de détail n'a rien de particulier à traiter.
+    val engine = MockEngine { respond(fixture("trip_ice91.json"), HttpStatusCode.OK, jsonHeaders) }
+    val journey = (
+      TripApi(versionName = "1.0.0", engine = engine).use { it.trip(baseUrl, "course", detailedLegs = false) }
+        as Outcome.Success
+      ).value
+    assertTrue(journey.calls.all { it.place.alerts.isEmpty() })
   }
 
   // --- Les erreurs ----------------------------------------------------------------------------
