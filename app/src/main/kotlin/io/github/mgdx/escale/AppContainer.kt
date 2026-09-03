@@ -13,10 +13,12 @@ import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.PreferencesRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.repository.StopsRepository
+import io.github.mgdx.escale.core.repository.TripRepository
 import io.github.mgdx.escale.data.net.GeocodeApi
 import io.github.mgdx.escale.data.net.MapApi
 import io.github.mgdx.escale.data.net.MotisClient
 import io.github.mgdx.escale.data.net.StopsApi
+import io.github.mgdx.escale.data.net.TripApi
 import io.github.mgdx.escale.data.prefs.PreferencesRepositoryImpl
 import io.github.mgdx.escale.data.prefs.ServerRepositoryImpl
 import io.github.mgdx.escale.data.repository.GeocodeRepositoryImpl
@@ -24,6 +26,7 @@ import io.github.mgdx.escale.data.repository.MapRepositoryImpl
 import io.github.mgdx.escale.data.repository.PlanCache
 import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
 import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
+import io.github.mgdx.escale.data.repository.TripRepositoryImpl
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
@@ -182,6 +185,17 @@ class AppContainer(context: Context) {
    * (docs/architecture.md § 11.4).
    */
   val searchSession: SearchSession by lazy { SearchSession() }
+
+  /**
+   * Les prochains départs à un arrêt et la desserte d'une course (SPEC.md § 5.4 et § 5.3).
+   *
+   * **Aucun cache**, contrairement à [stopsRepository] : un horaire temps réel se périme en
+   * secondes, et le servir depuis une mémoire annoncerait un retard qui n'est plus vrai. La
+   * fraîcheur est réglée par `RealtimeRefreshPolicy` et par le geste de l'usager (SPEC.md § 7.4).
+   */
+  val tripRepository: TripRepository by lazy {
+    TripRepositoryImpl(TripApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
+  }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"

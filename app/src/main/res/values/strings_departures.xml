@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes de l'écran des prochains départs à un arrêt (SPEC.md § 5.4).
+  Une chaîne ajoutée ici l'est aussi dans values-fr/ (docs/architecture.md § 3, règle 2).
+
+  Les libellés de retard, de suppression, de durée et de mode ne sont pas repris ici : ils vivent
+  dans strings_results.xml et strings_map.xml, et cet écran les réutilise tels quels — un retard
+  doit se dire pareil dans une liste de trajets et sur un tableau de départs, et un métro doit
+  s'appeler « métro » aussi bien dans l'infobulle de la carte qu'ici.
+-->
+<resources>
+  <!-- Dernier recours quand le serveur ne nomme pas l'arrêt : aucun écran ne reste sans titre. -->
+  <string name="departures_stop_unnamed">Stop</string>
+  <string name="departures_action_refresh">Refresh</string>
+
+  <!-- En-tête : les lignes desservant l'arrêt, telles que /api/v6/stop les rend. -->
+  <plurals name="departures_lines_served">
+    <item quantity="one">%1$d line</item>
+    <item quantity="other">%1$d lines</item>
+  </plurals>
+  <!-- « 30 lignes · 1, 4, 7 » : le compte, puis les numéros que la place permet. -->
+  <string name="departures_lines_summary">%1$s · %2$s</string>
+
+  <!-- Filtres par mode de transport. Une puce recouvre plusieurs modes de l'API : « train »
+       réunit les grandes lignes, les trains régionaux et les trains de banlieue, mais pas le
+       métro, qui a sa propre puce (docs/architecture.md § 11.5). -->
+  <string name="departures_filter_label">Filter by mode</string>
+  <string name="departures_filter_all">All</string>
+  <string name="departures_filter_train">Train</string>
+  <string name="departures_filter_subway">Subway</string>
+  <string name="departures_filter_tram">Tram</string>
+  <string name="departures_filter_bus">Bus</string>
+  <string name="departures_filter_ferry">Ferry</string>
+  <string name="departures_filter_other">Other</string>
+
+  <!-- Une ligne de la liste : heure, ligne, direction, quai. -->
+  <string name="departures_towards">To %1$s</string>
+  <string name="departures_track">Platform %1$s</string>
+  <!-- Lu par le lecteur d'écran à la place de l'heure barrée, qui ne se dit pas (SPEC.md § 9). -->
+  <string name="departures_scheduled_time">Scheduled %1$s</string>
+  <string name="departures_open_trip">Show every stop of this service</string>
+  <!-- Le pictogramme de mode est toujours doublé d'un libellé : « Bus, line 18 » (SPEC.md § 9). -->
+  <string name="departures_line_description">%1$s, line %2$s</string>
+
+  <!-- Pagination (SPEC.md § 5.4). -->
+  <string name="departures_earlier">Earlier</string>
+  <string name="departures_later">Later</string>
+
+  <!-- États vides (SPEC.md § 8 : jamais une liste vide muette). -->
+  <string name="departures_empty">No departures in the coming hours</string>
+  <string name="departures_empty_hint">Try again later, or look at a wider time range with “Later”.</string>
+  <string name="departures_empty_filtered">No departures for this mode</string>
+  <string name="departures_empty_filtered_hint">Choose “All” to see every departure from this stop.</string>
+</resources>
