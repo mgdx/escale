@@ -49,19 +49,5 @@
   <string name="search_chip_recent">%1$s → %2$s</string>
 
   <string name="search_served_modes">Desservi par %1$s</string>
-  <string name="search_mode_tram">Tram</string>
-  <string name="search_mode_subway">Métro</string>
-  <string name="search_mode_ferry">Bateau</string>
-  <string name="search_mode_airplane">Avion</string>
-  <string name="search_mode_bus">Bus</string>
-  <string name="search_mode_coach">Autocar</string>
-  <string name="search_mode_rail">Train</string>
-  <string name="search_mode_highspeed_rail">Train à grande vitesse</string>
-  <string name="search_mode_long_distance">Train grandes lignes</string>
-  <string name="search_mode_night_rail">Train de nuit</string>
-  <string name="search_mode_regional_rail">Train régional</string>
-  <string name="search_mode_suburban">Train de banlieue</string>
-  <string name="search_mode_funicular">Funiculaire</string>
-  <string name="search_mode_aerial_lift">Téléphérique</string>
   <string name="search_mode_other">Autre</string>
 </resources>

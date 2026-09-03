@@ -60,22 +60,10 @@
   <string name="search_chip_recent">%1$s → %2$s</string>
 
   <!-- Modes desservis par un arrêt (SPEC.md § 5.1). Faute d'icônes de mode, qui appartiennent à
-       l'écran des résultats, ils sont écrits en toutes lettres. -->
+       l'écran des résultats, ils sont écrits en toutes lettres — et avec les mots de
+       strings_results.xml, où vivent tous les libellés de mode du projet. Seul « Autre » est
+       déclaré ici : ce n'est pas un mode, c'est l'absence de mode connu. -->
   <string name="search_served_modes">Served by %1$s</string>
   <string name="search_mode_separator" translatable="false">" · "</string>
-  <string name="search_mode_tram">Tram</string>
-  <string name="search_mode_subway">Metro</string>
-  <string name="search_mode_ferry">Ferry</string>
-  <string name="search_mode_airplane">Plane</string>
-  <string name="search_mode_bus">Bus</string>
-  <string name="search_mode_coach">Coach</string>
-  <string name="search_mode_rail">Train</string>
-  <string name="search_mode_highspeed_rail">High-speed train</string>
-  <string name="search_mode_long_distance">Intercity train</string>
-  <string name="search_mode_night_rail">Night train</string>
-  <string name="search_mode_regional_rail">Regional train</string>
-  <string name="search_mode_suburban">Suburban train</string>
-  <string name="search_mode_funicular">Funicular</string>
-  <string name="search_mode_aerial_lift">Cable car</string>
   <string name="search_mode_other">Other</string>
 </resources>
