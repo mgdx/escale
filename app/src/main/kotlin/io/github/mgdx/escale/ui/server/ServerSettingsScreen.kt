@@ -336,7 +336,16 @@ private fun KnownServerRow(server: ServerConfig, inUse: Boolean, onSelect: () ->
   val forgetLabel = stringResource(R.string.server_settings_forget)
   val forgetActions = remember(inUse, forgetLabel, onForget) {
     // Le serveur en service ne se supprime pas, pas plus par l'action que par le balayage.
-    if (inUse) emptyList() else listOf(CustomAccessibilityAction(forgetLabel) { onForget(); true })
+    if (inUse) {
+      emptyList()
+    } else {
+      listOf(
+        CustomAccessibilityAction(forgetLabel) {
+          onForget()
+          true
+        },
+      )
+    }
   }
   SwipeToDismissBox(
     state = dismissState,

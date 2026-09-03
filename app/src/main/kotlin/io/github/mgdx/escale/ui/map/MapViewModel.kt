@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
+import io.github.mgdx.escale.core.geo.MAX_BROWSABLE_STOPS
 import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.geo.MapDataRequest
 import io.github.mgdx.escale.core.geo.MapViewport
 import io.github.mgdx.escale.core.geo.RentalMarker
 import io.github.mgdx.escale.core.geo.RentalMarkerKind
+import io.github.mgdx.escale.core.geo.StopMarker
+import io.github.mgdx.escale.core.geo.browsableStops
 import io.github.mgdx.escale.core.geo.center
 import io.github.mgdx.escale.core.geo.isPointLike
 import io.github.mgdx.escale.core.geo.journeyTrace
@@ -118,6 +121,14 @@ class MapViewModel(
    */
   private val cameraIdles = MutableStateFlow<MapViewport?>(null)
 
+  /**
+   * Les marqueurs de la dernière réponse d'arrêts, tels quels.
+   *
+   * Ils servent au parcours en liste de SPEC.md § 9, qui doit dire exactement ce que la carte
+   * montre : c'est la même donnée, filtrée par l'emprise visible et le palier courant.
+   */
+  private val loadedStops = MutableStateFlow<List<StopMarker>>(emptyList())
+
   private var tokens = 0L
   private var locationJob: Job? = null
   private var stopDetailJob: Job? = null
@@ -127,6 +138,7 @@ class MapViewModel(
   init {
     observeStyle()
     observeStops()
+    observeBrowsableStops()
     observeRentals()
     observePointsOfInterest()
     observeSelectedJourney()
@@ -313,7 +325,11 @@ class MapViewModel(
       // Une emprise sans réponse laisse les marqueurs précédents en place : une carte qui se vide
       // parce que le réseau a hoqueté est pire qu'une carte un peu en retard (SPEC.md § 8).
       ?: return
-    val drawing = withContext(computeDispatcher) { stopsDrawing(stops) }
+    val markers = withContext(computeDispatcher) { stopMarkers(stops) }
+    val drawing = withContext(computeDispatcher) { stopsDrawing(markers) }
+    // Les mêmes marqueurs alimentent le parcours en liste : la liste dit ce que la carte montre
+    // parce qu'elle part de la même donnée, jamais d'une seconde requête (SPEC.md § 9).
+    loadedStops.value = markers
     state.update {
       it.copy(
         plannedRequest = request,
@@ -330,18 +346,53 @@ class MapViewModel(
    * garde son dessin et son nom. L'autre source reçoit une collection vide, ce qui l'efface sans
    * démonter la moindre couche (règle 8).
    */
-  private fun stopsDrawing(stops: List<Stop>): StopsDrawing {
-    val geoJson = MapGeoJson.stops(stopMarkers(stops))
-    return if (shouldClusterStops(stops.size)) {
+  private fun stopsDrawing(markers: List<StopMarker>): StopsDrawing {
+    val geoJson = MapGeoJson.stops(markers)
+    return if (shouldClusterStops(markers.size)) {
       StopsDrawing(plain = MapGeoJson.EMPTY, clustered = geoJson)
     } else {
       StopsDrawing(plain = geoJson, clustered = MapGeoJson.EMPTY)
     }
   }
 
+  /**
+   * Tient à jour la liste des arrêts affichés (SPEC.md § 9).
+   *
+   * Elle se recalcule à chaque arrêt de caméra, et à chaque réponse d'arrêts : ce sont les deux
+   * seuls moments où « ce que la carte montre » change. Aucune requête n'en naît — la donnée est
+   * déjà là — et le calcul part sur [computeDispatcher], comme la mise en GeoJSON, pour que le fil
+   * principal reste sous les 16 ms qu'exige le § 5.7.
+   *
+   * Un déplacement qui ne franchit aucun seuil de cache ne provoque donc aucun octet de réseau,
+   * mais met bien la liste à jour : c'est l'emprise **visible** qui a changé, pas la donnée.
+   */
+  private fun observeBrowsableStops() {
+    viewModelScope.launch {
+      combine(loadedStops, cameraIdles.filterNotNull()) { markers, viewport -> markers to viewport }
+        .collectLatest { (markers, viewport) ->
+          val visible = withContext(computeDispatcher) {
+            browsableStops(markers = markers, visibleArea = viewport.visibleArea, zoom = viewport.zoom)
+          }
+          state.update {
+            it.copy(
+              browsableStops = visible.map(StopMarker::toSelectedStop),
+              browsableStopsTruncated = visible.size >= MAX_BROWSABLE_STOPS,
+            )
+          }
+        }
+    }
+  }
+
   private fun clearStops() {
+    loadedStops.value = emptyList()
     state.update {
-      it.copy(stopsGeoJson = MapGeoJson.EMPTY, clusteredStopsGeoJson = MapGeoJson.EMPTY, selectedStop = null)
+      it.copy(
+        stopsGeoJson = MapGeoJson.EMPTY,
+        clusteredStopsGeoJson = MapGeoJson.EMPTY,
+        selectedStop = null,
+        browsableStops = emptyList(),
+        browsableStopsTruncated = false,
+      )
     }
   }
 

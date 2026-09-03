@@ -1,3 +1,8 @@
+// Les nombres de ce fichier — minutes, coordonnées — **sont** la donnée d'exemple : les baptiser un
+// par un n'apprendrait rien à personne. La suppression est limitée à ce fichier d'aperçus, qui ne
+// porte aucune règle.
+@file:Suppress("MagicNumber")
+
 package io.github.mgdx.escale.ui.trip
 
 import android.content.res.Configuration

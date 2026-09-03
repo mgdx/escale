@@ -1,3 +1,8 @@
+// Les nombres de ce fichier — minutes, coordonnées — **sont** la donnée d'exemple : les baptiser un
+// par un n'apprendrait rien à personne. La suppression est limitée à ce fichier d'aperçus, qui ne
+// porte aucune règle.
+@file:Suppress("MagicNumber")
+
 package io.github.mgdx.escale.ui.departures
 
 import android.content.res.Configuration
@@ -29,22 +34,26 @@ private val ORIGIN: Instant = Instant.parse("2026-03-03T08:00:00Z")
 
 private fun at(minutes: Long): Instant = ORIGIN.plusSeconds(minutes * 60)
 
+/** Une ligne d'exemple : ce qui distingue deux départs, et rien de plus. */
+private data class SampleLine(
+  val mode: TransitMode,
+  val name: String,
+  val color: String? = null,
+  val textColor: String? = null,
+)
+
 private fun departure(
   id: String,
-  mode: TransitMode,
-  line: String,
+  line: SampleLine,
   headsign: String,
   minutes: Long,
   delayMinutes: Long = 0,
   track: String? = null,
   cancelled: Boolean = false,
-  color: String? = null,
-  textColor: String? = null,
-  alerts: List<Disruption> = emptyList(),
 ) = StopTimeEntry(
   tripId = id,
-  mode = mode,
-  lineName = line,
+  mode = line.mode,
+  lineName = line.name,
   headsign = headsign,
   agencyName = "RATP",
   track = track,
@@ -52,10 +61,14 @@ private fun departure(
   time = at(minutes + delayMinutes),
   realTime = true,
   cancelled = cancelled,
-  routeColor = color,
-  routeTextColor = textColor,
-  alerts = alerts,
+  routeColor = line.color,
+  routeTextColor = line.textColor,
 )
+
+private val METRO_1 = SampleLine(TransitMode.SUBWAY, "1", "#FFCD00", "#000000")
+private val METRO_6 = SampleLine(TransitMode.SUBWAY, "6", "#6ECA97", "#000000")
+private val RER_A = SampleLine(TransitMode.SUBURBAN, "RER A", "#E3051C", "#FFFFFF")
+private val BUS_22 = SampleLine(TransitMode.BUS, "22")
 
 private val previewState = DeparturesUiState(
   // Un nom long exprès : c'est lui qui révèle la troncature de la barre de titre à 200 %.
@@ -69,16 +82,10 @@ private val previewState = DeparturesUiState(
   filters = listOf(DepartureModeFilter.SUBWAY, DepartureModeFilter.BUS),
   feed = DepartureFeed(
     entries = listOf(
-      departure("a", TransitMode.SUBWAY, "1", "Château de Vincennes", 2, color = "#FFCD00", textColor = "#000000"),
-      departure("b", TransitMode.SUBURBAN, "RER A", "Marne-la-Vallée — Chessy", 5, delayMinutes = 4, track = "2"),
-      departure("c", TransitMode.BUS, "22", "Porte de Saint-Cloud", 7, cancelled = true),
-      departure(
-        id = "d",
-        mode = TransitMode.SUBWAY,
-        line = "6",
-        headsign = "Nation",
-        minutes = 9,
-        color = "#6ECA97",
+      departure("a", METRO_1, "Château de Vincennes", 2),
+      departure("b", RER_A, "Marne-la-Vallée — Chessy", 5, delayMinutes = 4, track = "2"),
+      departure("c", BUS_22, "Porte de Saint-Cloud", 7, cancelled = true),
+      departure(id = "d", line = METRO_6, headsign = "Nation", minutes = 9).copy(
         alerts = listOf(
           Disruption(
             headerText = "Travaux sur la ligne 6",
