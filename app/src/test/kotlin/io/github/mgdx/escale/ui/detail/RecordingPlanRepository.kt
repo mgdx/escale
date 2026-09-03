@@ -139,12 +139,20 @@ class RecordingRentalsRepository : RentalsRepository {
 
   val calls = mutableListOf<LatLon>()
 
+  /** Vrai pour chaque appel qui a demandé à contourner le cache, dans l'ordre de [calls]. */
+  val freshCalls = mutableListOf<Boolean>()
+
   var answer: Outcome<List<RentalAvailability>> = Outcome.Success(emptyList())
 
   override suspend fun stationsIn(area: BoundingBox): Outcome<List<RentalAvailability>> = answer
 
-  override suspend fun availabilityNear(point: LatLon, radiusMeters: Int): Outcome<List<RentalAvailability>> {
+  override suspend fun availabilityNear(
+    point: LatLon,
+    radiusMeters: Int,
+    fresh: Boolean,
+  ): Outcome<List<RentalAvailability>> {
     calls += point
+    freshCalls += fresh
     return answer
   }
 }

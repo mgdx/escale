@@ -87,11 +87,11 @@ class DetailViewModel(
    */
   fun onRefresh() {
     load()
-    state.value.rentals.keys.toList().forEach(::loadRental)
+    state.value.rentals.keys.toList().forEach { loadRental(it, fresh = true) }
   }
 
   /** Le bouton de rafraîchissement propre à une portion en libre-service (SPEC.md § 5.3). */
-  fun onRentalRefresh(index: Int) = loadRental(index)
+  fun onRentalRefresh(index: Int) = loadRental(index, fresh = true)
 
   /**
    * Le retour au premier plan (SPEC.md § 7.4).
@@ -112,7 +112,7 @@ class DetailViewModel(
     // SPEC.md § 7 interdit d'émettre une requête dont on ne montre pas encore la réponse. Un trajet
     // en transport en commun avec deux rabattements partagés n'en émet donc aucune tant que
     // l'usager n'ouvre pas la portion concernée.
-    if (index in state.value.expandedLegs) loadRental(index)
+    if (index in state.value.expandedLegs) loadRental(index, fresh = false)
   }
 
   fun onStopsToggled(index: Int) {
@@ -187,16 +187,21 @@ class DetailViewModel(
    *
    * **Un véhicule en free-floating n'émet aucune requête** : il n'a pas de station dont compter les
    * vélos, et interroger le point où il se trouve ne rendrait que le véhicule lui-même.
+   *
+   * @param fresh vrai quand c'est l'usager qui a demandé le relevé, et non le dépliage d'une
+   *   portion. Le cache d'une minute retient les requêtes automatiques, jamais un geste délibéré :
+   *   un bouton qui ne fait rien pendant une minute, sans le dire, fait croire à l'usager qu'il a
+   *   redemandé (SPEC.md § 7.4).
    */
-  private fun loadRental(index: Int) {
+  private fun loadRental(index: Int, fresh: Boolean) {
     val leg = state.value.journey?.legs?.getOrNull(index) as? JourneyLeg.Rental ?: return
     val rental = leg.rental ?: return
     if (rental.fromStationName == null && rental.toStationName == null) return
     rentalWork[index]?.cancel()
     rentalWork[index] = viewModelScope.launch {
       updateRental(index) { it.copy(loading = true, error = null) }
-      val pickup = station(leg.from.coordinates, rental.fromStationName)
-      val dropoff = station(leg.to.coordinates, rental.toStationName)
+      val pickup = station(leg.from.coordinates, rental.fromStationName, fresh)
+      val dropoff = station(leg.to.coordinates, rental.toStationName, fresh)
       val failure = listOfNotNull(pickup, dropoff).filterIsInstance<Outcome.Failure>().firstOrNull()
       updateRental(index) {
         it.copy(
@@ -217,9 +222,9 @@ class DetailViewModel(
    *
    * @return `null` quand la portion n'a pas de station de ce côté — il n'y a alors rien à demander.
    */
-  private suspend fun station(point: LatLon, name: String?): Outcome<RentalAvailability?>? {
+  private suspend fun station(point: LatLon, name: String?, fresh: Boolean): Outcome<RentalAvailability?>? {
     if (name == null) return null
-    return when (val outcome = rentalsRepository.availabilityNear(point)) {
+    return when (val outcome = rentalsRepository.availabilityNear(point, fresh = fresh)) {
       is Outcome.Failure -> outcome
       is Outcome.Success -> Outcome.Success(outcome.value.stationFor(point, name))
     }
