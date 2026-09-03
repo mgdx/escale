@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.watch
 
 import android.Manifest
+import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,10 +48,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.WatchAlertSettings
 import io.github.mgdx.escale.ui.settings.uses24HourClock
+import io.github.mgdx.escale.ui.theme.EscaleTheme
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -70,33 +74,50 @@ import java.time.LocalTime
 internal fun WatchSheet(state: WatchUiState, actions: WatchActions, onDismiss: () -> Unit) {
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-    Column(
-      modifier = Modifier
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = SheetPadding)
-        .padding(bottom = SheetPadding),
-      verticalArrangement = Arrangement.spacedBy(SectionSpacing),
-    ) {
-      Text(text = stringResource(R.string.watch_sheet_title), style = MaterialTheme.typography.titleLarge)
-      Text(
-        text = stringResource(R.string.watch_privacy_notice),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-      // La seconde chose que l'usager doit savoir avant d'activer : après un redémarrage du
-      // téléphone, une occurrence peut être manquée (SPEC.md § 5.5.1 et § 11). Le taire ferait de
-      // la surveillance une fonction qui échoue sans le dire.
-      Text(
-        text = stringResource(R.string.watch_restart_notice),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-      WatchTimeSection(state = state, onTimeChanged = actions.onTimeChanged)
-      WatchDaysSection(state = state, onDayToggled = actions.onDayToggled)
-      WatchAlertSection(state = state, actions = actions)
-      WatchStatusSection(state = state)
-      WatchButtons(state = state, actions = actions, onDismiss = onDismiss)
-    }
+    WatchSheetContent(state = state, actions = actions, onDismiss = onDismiss)
+  }
+}
+
+/**
+ * Le contenu de la feuille, séparé de la modale qui le porte.
+ *
+ * La séparation n'est pas décorative : un `ModalBottomSheet` ne se rend pas dans l'outil d'aperçu,
+ * si bien qu'aucune de ces sections n'avait jamais été vue à 200 % d'agrandissement (SPEC.md § 9).
+ * Extraite, elle s'y voit.
+ */
+@Composable
+internal fun WatchSheetContent(
+  state: WatchUiState,
+  actions: WatchActions,
+  onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Column(
+    modifier = modifier
+      .verticalScroll(rememberScrollState())
+      .padding(horizontal = SheetPadding)
+      .padding(bottom = SheetPadding),
+    verticalArrangement = Arrangement.spacedBy(SectionSpacing),
+  ) {
+    Text(text = stringResource(R.string.watch_sheet_title), style = MaterialTheme.typography.titleLarge)
+    Text(
+      text = stringResource(R.string.watch_privacy_notice),
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    // La seconde chose que l'usager doit savoir avant d'activer : après un redémarrage du
+    // téléphone, une occurrence peut être manquée (SPEC.md § 5.5.1 et § 11). Le taire ferait de
+    // la surveillance une fonction qui échoue sans le dire.
+    Text(
+      text = stringResource(R.string.watch_restart_notice),
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    WatchTimeSection(state = state, onTimeChanged = actions.onTimeChanged)
+    WatchDaysSection(state = state, onDayToggled = actions.onDayToggled)
+    WatchAlertSection(state = state, actions = actions)
+    WatchStatusSection(state = state)
+    WatchButtons(state = state, actions = actions, onDismiss = onDismiss)
   }
 }
 
@@ -291,10 +312,14 @@ private fun WatchButtons(state: WatchUiState, actions: WatchActions, onDismiss: 
       }
     }
   }
-  Row(
+  // « Fermer » et « Arrêter la surveillance » côte à côte ne tiennent pas sur une ligne d'écran
+  // étroit à 200 % : la `FlowRow` les fait passer l'un sous l'autre plutôt que de les comprimer
+  // (SPEC.md § 9).
+  FlowRow(
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(RowSpacing, Alignment.End),
-    verticalAlignment = Alignment.CenterVertically,
+    verticalArrangement = Arrangement.spacedBy(RowSpacing),
+    itemVerticalAlignment = Alignment.CenterVertically,
   ) {
     TextButton(onClick = onDismiss, modifier = Modifier.sizeIn(minHeight = TouchTarget)) {
       Text(text = stringResource(R.string.watch_close))
@@ -333,6 +358,47 @@ private fun WatchSwitchRow(label: String, checked: Boolean, onCheckedChange: (Bo
     Switch(checked = checked, onCheckedChange = null)
   }
 }
+
+@Preview(showBackground = true, name = "Surveillance, thème clair", heightDp = 900)
+@Preview(
+  showBackground = true,
+  name = "Surveillance, thème sombre",
+  heightDp = 900,
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Preview(showBackground = true, name = "Surveillance, texte à 200 %", heightDp = 1800, fontScale = 2f)
+@Composable
+private fun WatchSheetPreview() = PreviewSheet(
+  WatchUiState(
+    favoriteId = 1,
+    watched = true,
+    days = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+    notificationsAllowed = false,
+  ),
+)
+
+/** La limite atteinte : le pire cas de mise en page, deux avertissements et deux boutons. */
+@Preview(showBackground = true, name = "Surveillance, limite atteinte à 200 %", heightDp = 1800, fontScale = 2f)
+@Composable
+private fun WatchSheetLimitPreview() = PreviewSheet(WatchUiState(favoriteId = 1, watchedCount = 5))
+
+@Composable
+private fun PreviewSheet(state: WatchUiState) {
+  EscaleTheme(dynamicColor = false) {
+    Surface {
+      WatchSheetContent(state = state, actions = PREVIEW_ACTIONS, onDismiss = {})
+    }
+  }
+}
+
+private val PREVIEW_ACTIONS = WatchActions(
+  onWatchedChanged = {},
+  onTimeChanged = {},
+  onDayToggled = {},
+  onThresholdChanged = {},
+  onNotifyAlwaysChanged = {},
+  onNotificationPermissionResult = {},
+)
 
 /** Cible tactile minimale de SPEC.md § 9. */
 private val TouchTarget = 48.dp
