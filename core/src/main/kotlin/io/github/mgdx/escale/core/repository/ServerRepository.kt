@@ -1,7 +1,7 @@
 package io.github.mgdx.escale.core.repository
 
-import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.ServerTestProgress
 import io.github.mgdx.escale.core.result.Outcome
 import kotlinx.coroutines.flow.Flow
 
@@ -29,10 +29,16 @@ interface ServerRepository {
   suspend fun resetToDefault(): Outcome<Unit>
 
   /**
-   * Test de connexion en trois étapes : santé, version d'API, tuiles.
+   * Test de connexion en trois étapes : santé, version d'API, tuiles (SPEC.md § 5.6.1).
    *
-   * Ne rend un [Outcome.Failure] que si la première étape échoue franchement ; les étapes 2 et 3
-   * se traduisent par des drapeaux faux dans le [ServerCheck], pas par une erreur.
+   * Rend un flux **froid** : rien ne part avant la collecte, et chaque étape signale son départ
+   * puis son verdict au fur et à mesure, pour que l'écran fasse progresser ses trois lignes
+   * séparément. Le flux se termine de lui-même quand la troisième étape a rendu son verdict ;
+   * l'abandonner interrompt le test.
+   *
+   * Aucune émission ne vaut échec du test : c'est l'appelant qui décide de ce que valent les trois
+   * verdicts réunis — une API trop ancienne ferme l'enregistrement direct, un serveur sans tuiles
+   * reste utilisable (SPEC.md § 5.7).
    */
-  suspend fun test(baseUrl: String): Outcome<ServerCheck>
+  fun test(baseUrl: String): Flow<ServerTestProgress>
 }

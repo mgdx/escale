@@ -6,15 +6,18 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.ServerTestProgress
+import io.github.mgdx.escale.core.model.ServerTestStep
 import io.github.mgdx.escale.core.model.ServerUrl
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.data.net.MotisClient
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import java.io.IOException
@@ -53,29 +56,71 @@ class ServerRepositoryImpl(private val dataStore: DataStore<Preferences>, privat
 
   override suspend fun resetToDefault(): Outcome<Unit> = save(DEFAULT_SERVER)
 
-  override suspend fun test(baseUrl: String): Outcome<ServerCheck> {
+  /**
+   * Les trois étapes, menées l'une après l'autre, chacune annoncée puis tranchée avant que la
+   * suivante ne parte (SPEC.md § 5.6.1).
+   *
+   * Elles restent séquentielles et ne sont pas lancées en parallèle : la première conditionne les
+   * deux autres, et trois requêtes simultanées vers un serveur qu'on est en train d'éprouver
+   * seraient un mauvais service à lui rendre comme à l'usager.
+   */
+  override fun test(baseUrl: String): Flow<ServerTestProgress> = flow {
     val normalized = ServerUrl.normalize(baseUrl)
-      ?: return Outcome.Failure(EscaleError.BadRequest(serverMessage = null))
-    // Étape 1 : le serveur répond-il ? C'est la seule étape dont l'échec fait échouer le test.
+    if (normalized == null) {
+      emit(ServerTestProgress.Started(ServerTestStep.REACHABLE))
+      emit(
+        ServerTestProgress.Finished(
+          step = ServerTestStep.REACHABLE,
+          passed = false,
+          error = EscaleError.BadRequest(serverMessage = null),
+        ),
+      )
+      emitSkipped()
+      return@flow
+    }
+    // Étape 1 : le serveur répond-il ? C'est la seule étape dont l'échec arrête le test.
+    emit(ServerTestProgress.Started(ServerTestStep.REACHABLE))
     val health = when (val outcome = client.health(normalized)) {
       is Outcome.Success -> outcome.value
-      is Outcome.Failure -> return Outcome.Failure(outcome.error)
+
+      is Outcome.Failure -> {
+        emit(
+          ServerTestProgress.Finished(
+            step = ServerTestStep.REACHABLE,
+            passed = false,
+            error = outcome.error,
+          ),
+        )
+        emitSkipped()
+        return@flow
+      }
     }
-    // Étapes 2 et 3 : une API trop ancienne ou un serveur sans tuiles se signalent par un drapeau,
-    // pas par une erreur (SPEC.md § 5.6.1).
+    emit(ServerTestProgress.Finished(step = ServerTestStep.REACHABLE, passed = true, health = health))
+
+    // Étapes 2 et 3 : une API trop ancienne ou un serveur sans tuiles se signalent par un verdict
+    // négatif, jamais par une erreur (SPEC.md § 5.6.1).
+    emit(ServerTestProgress.Started(ServerTestStep.API_VERSION))
     val apiCompatible = client.probeApiVersion(normalized) is Outcome.Success
+    emit(ServerTestProgress.Finished(step = ServerTestStep.API_VERSION, passed = apiCompatible))
+
+    emit(ServerTestProgress.Started(ServerTestStep.TILES))
     val tilesAvailable = when (val outcome = client.probeTiles(normalized)) {
       is Outcome.Success -> outcome.value
       is Outcome.Failure -> false
     }
-    return Outcome.Success(
-      ServerCheck(
-        reachable = true,
-        apiCompatible = apiCompatible,
-        tilesAvailable = tilesAvailable,
-        health = health,
-      ),
-    )
+    emit(ServerTestProgress.Finished(step = ServerTestStep.TILES, passed = tilesAvailable))
+  }
+
+  /**
+   * Les deux étapes que l'échec de la première rend sans objet.
+   *
+   * Elles ne sont pas menées : les lancer vers un serveur qui n'a pas répondu ferait attendre
+   * l'usager deux expirations de plus pour ne rien lui apprendre. Elles ne sont pas non plus
+   * marquées en échec, ce qui affirmerait sur ce serveur quelque chose qui n'a pas été mesuré.
+   */
+  private suspend fun FlowCollector<ServerTestProgress>.emitSkipped() {
+    emit(ServerTestProgress.Skipped(ServerTestStep.API_VERSION))
+    emit(ServerTestProgress.Skipped(ServerTestStep.TILES))
   }
 
   /**

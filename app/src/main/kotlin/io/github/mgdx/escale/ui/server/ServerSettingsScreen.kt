@@ -518,6 +518,7 @@ private fun CheckStepState.iconRes(): Int = when (this) {
   CheckStepState.PASSED -> R.drawable.ic_check_circle
   CheckStepState.FAILED -> R.drawable.ic_error
   CheckStepState.ABSENT -> R.drawable.ic_info
+  CheckStepState.SKIPPED -> R.drawable.ic_info
 }
 
 private fun CheckStepState.labelRes(): Int = when (this) {
@@ -526,6 +527,7 @@ private fun CheckStepState.labelRes(): Int = when (this) {
   CheckStepState.PASSED -> R.string.server_settings_step_passed
   CheckStepState.FAILED -> R.string.server_settings_step_failed
   CheckStepState.ABSENT -> R.string.server_settings_step_absent
+  CheckStepState.SKIPPED -> R.string.server_settings_step_skipped
 }
 
 @Composable

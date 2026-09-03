@@ -180,6 +180,7 @@
   <string name="server_settings_step_passed">Passed</string>
   <string name="server_settings_step_failed">Failed</string>
   <string name="server_settings_step_absent">Not available</string>
+  <string name="server_settings_step_skipped">Not applicable — the server did not answer</string>
   <string name="server_settings_tiles_absent_notice">This server serves no map tiles. Escale remains usable: the map simply has no background.</string>
 
   <!-- Serveurs déjà utilisés. La suppression se fait au balayage ou par l'action d'accessibilité

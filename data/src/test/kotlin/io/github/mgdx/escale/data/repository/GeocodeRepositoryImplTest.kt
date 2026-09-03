@@ -1,8 +1,9 @@
 package io.github.mgdx.escale.data.repository
 
 import io.github.mgdx.escale.core.model.LatLon
-import io.github.mgdx.escale.core.model.ServerCheck
 import io.github.mgdx.escale.core.model.ServerConfig
+import io.github.mgdx.escale.core.model.ServerTestProgress
+import io.github.mgdx.escale.core.model.ServerTestStep
 import io.github.mgdx.escale.core.repository.ServerRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
@@ -40,8 +41,11 @@ class GeocodeRepositoryImplTest {
     override suspend fun save(config: ServerConfig): Outcome<Unit> = Outcome.Success(Unit)
     override suspend fun forget(baseUrl: String): Outcome<Unit> = Outcome.Success(Unit)
     override suspend fun resetToDefault(): Outcome<Unit> = Outcome.Success(Unit)
-    override suspend fun test(baseUrl: String): Outcome<ServerCheck> =
-      Outcome.Success(ServerCheck(reachable = true, apiCompatible = true, tilesAvailable = true))
+    override fun test(baseUrl: String): Flow<ServerTestProgress> = flowOf(
+      ServerTestProgress.Finished(ServerTestStep.REACHABLE, passed = true),
+      ServerTestProgress.Finished(ServerTestStep.API_VERSION, passed = true),
+      ServerTestProgress.Finished(ServerTestStep.TILES, passed = true),
+    )
   }
 
   private fun repository(
