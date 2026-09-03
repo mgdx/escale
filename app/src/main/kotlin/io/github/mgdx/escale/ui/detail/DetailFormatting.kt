@@ -199,3 +199,10 @@ internal fun dateTimeText(instant: Instant): String {
     )
   }
 }
+
+/** Le retour d'un ajout aux favoris (SPEC.md § 5.5), nommé par le `ViewModel`, écrit ici. */
+@StringRes
+internal fun DetailMessage.textRes(): Int = when (this) {
+  DetailMessage.FAVORITE_ADDED -> R.string.detail_favorite_added
+  DetailMessage.FAVORITE_FAILED -> R.string.detail_favorite_failed
+}

@@ -9,6 +9,7 @@ import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.AutocompleteRules
 import io.github.mgdx.escale.core.repository.AutocompleteState
 import io.github.mgdx.escale.core.result.Outcome
+import io.github.mgdx.escale.ui.favorites.FakeFavoritesRepository
 import io.github.mgdx.escale.ui.map.FakeCameraMemory
 import io.github.mgdx.escale.ui.map.FakeLocationSource
 import io.github.mgdx.escale.ui.map.MapPickPurpose
@@ -25,6 +26,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.Instant
 import java.time.ZoneId
 
 /**
@@ -49,10 +51,12 @@ class SearchViewModelTest {
   private val locations = FakeLocationSource()
   private val cameras = FakeCameraMemory()
   private val savedState = SavedStateHandle()
+  private val favorites = FakeFavoritesRepository()
+  private val history = FakeRecentSearchesSource()
 
   private fun viewModel(
     savedPlaces: SavedPlacesSource = EmptySavedPlacesSource,
-    recent: RecentSearchesSource = EmptyRecentSearchesSource,
+    recent: RecentSearchesSource = history,
     geocodeRepository: FakeSearchGeocodeRepository = geocode,
   ) = SearchViewModel(
     geocodeRepository = geocodeRepository,
@@ -270,5 +274,109 @@ class SearchViewModelTest {
     viewModel.onShortcutSelected(SearchShortcut.HOME)
     advanceUntilIdle()
     assertEquals(home, session.draft.value.to)
+  }
+
+  @Test
+  fun `une recherche est enregistree quand elle part, pas quand un champ change`() = runTest(scheduler) {
+    val viewModel = viewModel()
+
+    // Un seul champ rempli : ce n'est pas encore une recherche, rien ne part et rien n'est ecrit.
+    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onSuggestionSelected(bastille)
+    advanceUntilIdle()
+    assertTrue(history.recorded.isEmpty())
+
+    // Les deux champs : « des que Depart et Arrivee sont renseignes, la recherche se lance ».
+    viewModel.onOpenField(SearchField.TO)
+    viewModel.onSuggestionSelected(gareDeLyon)
+    advanceUntilIdle()
+
+    assertEquals(1, history.recorded.size)
+    assertEquals(bastille, history.recorded.single().from)
+    assertEquals(gareDeLyon, history.recorded.single().to)
+    assertEquals(TimeChoice.Now, history.recorded.single().time)
+  }
+
+  @Test
+  fun `la meme recherche n est pas enregistree deux fois, une heure differente si`() = runTest(scheduler) {
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onSuggestionSelected(bastille)
+    viewModel.onOpenField(SearchField.TO)
+    viewModel.onSuggestionSelected(gareDeLyon)
+    advanceUntilIdle()
+
+    // Rouvrir un champ, le refermer, revenir : la recherche affichee est la meme, pas une seconde.
+    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onCloseField()
+    advanceUntilIdle()
+    assertEquals(1, history.recorded.size)
+
+    // Changer l'heure, en revanche, est une autre recherche (SPEC.md § 5.1).
+    viewModel.onTimeNowSelected()
+    advanceUntilIdle()
+    assertEquals(1, history.recorded.size)
+    session.setTime(TimeChoice.ArriveBy(Instant.parse("2026-03-02T09:00:00Z")))
+    advanceUntilIdle()
+    assertEquals(2, history.recorded.size)
+  }
+
+  @Test
+  fun `historique desactive, l ecran n en sait rien et le depot ne garde rien`() = runTest(scheduler) {
+    history.enabled = false
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onSuggestionSelected(bastille)
+    viewModel.onOpenField(SearchField.TO)
+    viewModel.onSuggestionSelected(gareDeLyon)
+    advanceUntilIdle()
+
+    // La bascule est tenue par `HistoryRepository`, et non recopiee ici (SPEC.md § 5.6).
+    assertTrue(history.recorded.isEmpty())
+  }
+
+  @Test
+  fun `une puce de derniere recherche rejoue la recherche entiere, heure comprise`() = runTest(scheduler) {
+    val quand = TimeChoice.ArriveBy(Instant.parse("2026-03-02T09:00:00Z"))
+    val recent = RecentSearch(id = 1, from = bastille, to = gareDeLyon, time = quand)
+    val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(recent)))
+    advanceUntilIdle()
+
+    viewModel.onChipSelected(viewModel.uiState.value.chips.filterIsInstance<QuickChip.Recent>().single())
+    advanceUntilIdle()
+
+    assertEquals(bastille, session.draft.value.from)
+    assertEquals(gareDeLyon, session.draft.value.to)
+    assertEquals(quand, session.draft.value.time)
+  }
+
+  @Test
+  fun `un appui long sur la puce domicile permet de la supprimer`() = runTest(scheduler) {
+    val home: Location = address("Domicile", lat = 48.86, lon = 2.34)
+    favorites.setHome(home)
+    val viewModel = viewModel(savedPlaces = FavoritesSavedPlacesSource(favorites))
+    advanceUntilIdle()
+
+    val chip = viewModel.uiState.value.chips.filterIsInstance<QuickChip.Saved>().single()
+    viewModel.onChipLongPressed(chip)
+    assertEquals(SavedPlaceKind.HOME, viewModel.uiState.value.savedPlaceMenu)
+
+    viewModel.onRemoveSavedPlace(SavedPlaceKind.HOME)
+    advanceUntilIdle()
+
+    // Le menu se referme, et la puce disparait d'elle-meme : plus rien n'est renseigne.
+    assertNull(viewModel.uiState.value.savedPlaceMenu)
+    assertTrue(viewModel.uiState.value.chips.isEmpty())
+  }
+
+  @Test
+  fun `une puce de derniere recherche n ouvre aucun menu`() = runTest(scheduler) {
+    val recent = RecentSearch(id = 1, from = bastille, to = gareDeLyon, time = TimeChoice.Now)
+    val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(recent)))
+    advanceUntilIdle()
+
+    viewModel.onChipLongPressed(viewModel.uiState.value.chips.single())
+
+    assertNull(viewModel.uiState.value.savedPlaceMenu)
   }
 }

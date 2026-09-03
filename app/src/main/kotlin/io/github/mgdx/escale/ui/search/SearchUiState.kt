@@ -86,6 +86,14 @@ data class SearchUiState(
   /** Les puces d'accès rapide. Vide dès qu'un des deux champs est renseigné. */
   val chips: List<QuickChip> = emptyList(),
 
+  /**
+   * La puce Domicile ou Travail sur laquelle l'usager a fait un appui long, ou `null`.
+   *
+   * SPEC.md § 5.5 : « une fois renseignés, ils sont modifiables et supprimables depuis les réglages
+   * comme depuis un appui long sur la puce ».
+   */
+  val savedPlaceMenu: SavedPlaceKind? = null,
+
   val timePicker: TimePickerUi? = null,
 
   /** « Choisir sur la carte » : l'écran s'efface et attend un appui long (SPEC.md § 5.1). */

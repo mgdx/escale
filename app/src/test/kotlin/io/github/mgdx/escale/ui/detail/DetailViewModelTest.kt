@@ -2,13 +2,17 @@ package io.github.mgdx.escale.ui.detail
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyPage
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
+import io.github.mgdx.escale.ui.favorites.FakeFavoritesRepository
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.session.SearchSession
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -416,12 +420,51 @@ class DetailViewModelTest {
     return viewModel()
   }
 
+  private val favorites = FakeFavoritesRepository()
+
   private fun viewModel(session: SearchSession = sessionWithSearch()) = DetailViewModel(
     selection = selection,
     session = session,
     planRepository = repository,
     rentalsRepository = rentals,
+    favoritesRepository = favorites,
     savedState = savedState,
     now = { clock },
   )
+
+  @Test
+  fun `mettre un trajet en favori enregistre le couple cherche, avec sa categorie`() = runBlocking {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    val viewModel = viewModel()
+
+    viewModel.onAddToFavorites()
+
+    val favori = favorites.journeys.first().single()
+    // Ce sont les deux points de la recherche qui sont enregistres, avec leur identifiant d'arret
+    // quand ils en ont un (docs/architecture.md § 11.3), et non les extremites du trajet affiche.
+    assertEquals("Bercy", favori.from.name)
+    assertEquals("Nation", favori.to.name)
+    // Un rabattement a pied vers un train reste un trajet en transport en commun.
+    assertEquals(JourneyCategory.TRANSIT, favori.category)
+    assertEquals(DetailMessage.FAVORITE_ADDED, viewModel.uiState.value.message)
+
+    viewModel.onMessageShown()
+    assertNull(viewModel.uiState.value.message)
+  }
+
+  @Test
+  fun `un echec d enregistrement se dit, sans laisser croire que c est fait`() = runBlocking {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    favorites.failing = true
+    val viewModel = viewModel()
+
+    viewModel.onAddToFavorites()
+
+    assertEquals(DetailMessage.FAVORITE_FAILED, viewModel.uiState.value.message)
+    assertTrue(favorites.journeys.first().isEmpty())
+  }
 }

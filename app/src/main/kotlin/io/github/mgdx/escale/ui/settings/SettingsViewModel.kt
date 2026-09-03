@@ -127,8 +127,9 @@ class SettingsViewModel(
             geocodeRepository = container.geocodeRepository,
             // Paresseux : ouvrir les réglages ne doit pas construire la carte.
             tileCacheCleaner = { container.mapInstance.purgeTileCache() },
-            // Jalon 10 : `HistoryCleaner { container.historyRepository.clear() }` (SettingsMaintenance).
-            historyCleaner = null,
+            // Branché : l'entrée « Effacer les recherches récentes » apparaît d'elle-même dans la
+            // rubrique « Données », confirmation comprise (SPEC.md § 5.5 et § 5.6).
+            historyCleaner = { container.historyRepository.clear() },
           ),
         )
       }

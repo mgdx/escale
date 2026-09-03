@@ -40,6 +40,12 @@
   <string name="search_kind_place">Lieu</string>
   <string name="search_kind_stop">Arrêt</string>
 
+  <!-- Appui long sur une puce Domicile ou Travail (SPEC.md § 5.5). `search_saved_place_options`
+       est le libellé de l'appui long : c'est lui que le lecteur d'écran annonce en action. -->
+  <string name="search_saved_place_options">Modifier ou supprimer</string>
+  <string name="search_saved_place_edit">Modifier</string>
+  <string name="search_saved_place_delete">Supprimer</string>
+
   <string name="search_chip_recent">%1$s → %2$s</string>
 
   <string name="search_served_modes">Desservi par %1$s</string>

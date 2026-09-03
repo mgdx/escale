@@ -43,6 +43,13 @@ import java.util.Locale
  * « Dès que Départ et Arrivée sont renseignés, la recherche se lance » : il n'y a donc pas de
  * bouton « Rechercher », et rien ici pour en tenir lieu.
  *
+ * **C'est ici qu'une recherche est enregistrée dans l'historique** (SPEC.md § 5.5), et c'est
+ * délibéré : une recherche est lancée au moment où le brouillon devient complet — « dès que Départ
+ * et Arrivée sont renseignés, la recherche se lance » — et non à chaque fois qu'un champ change.
+ * [recordIfComplete] n'écrit donc qu'une fois par recherche distincte, heure comprise. La bascule
+ * « conserver les recherches récentes » n'est pas relue ici : `HistoryRepository` la respecte déjà,
+ * et la vérifier deux fois serait une règle de plus à maintenir à deux endroits.
+ *
  * Il ne réimplémente pas davantage les règles de sobriété de SPEC.md § 7.1 : l'anti-rebond de
  * 350 ms, le minimum de trois caractères et l'annulation de la requête précédente vivent dans
  * `autocompleteStream`, dans `:core`, où ils se testent en temps virtuel. Ici, on ne fait que
@@ -76,6 +83,9 @@ class SearchViewModel(
 
   /** La dernière frappe émise, pour pouvoir la rejouer telle quelle. */
   private var lastQuery = AutocompleteQuery("")
+
+  /** La dernière recherche écrite dans l'historique, pour ne pas l'y écrire deux fois. */
+  private var lastRecorded: RecordedSearch? = null
 
   /** Vrai quand une position est déjà connue sans rien demander à l'usager. */
   private val myLocationKnown = MutableStateFlow(false)
@@ -147,6 +157,26 @@ class SearchViewModel(
     state.update { it.copy(awaitingMapPick = false) }
   }
 
+  /**
+   * Appui long sur une puce Domicile ou Travail : elle devient modifiable et supprimable
+   * (SPEC.md § 5.5). Les puces de dernière recherche n'ouvrent rien : elles s'effacent depuis
+   * l'écran des favoris, où elles sont listées avec leur heure.
+   */
+  fun onChipLongPressed(chip: QuickChip) {
+    val saved = chip as? QuickChip.Saved ?: return
+    state.update { it.copy(savedPlaceMenu = saved.kind) }
+  }
+
+  fun onDismissSavedPlaceMenu() {
+    state.update { it.copy(savedPlaceMenu = null) }
+  }
+
+  /** « Supprimer » depuis l'appui long : le lieu redevient non renseigné, sans puce (SPEC.md § 5.5). */
+  fun onRemoveSavedPlace(kind: SavedPlaceKind) {
+    onDismissSavedPlaceMenu()
+    viewModelScope.launch { savedPlaces.clear(kind) }
+  }
+
   /** Une puce d'accès rapide (SPEC.md § 5.1). */
   fun onChipSelected(chip: QuickChip) {
     when (chip) {
@@ -157,9 +187,12 @@ class SearchViewModel(
         chip.location,
       )
 
+      // Une dernière recherche se rejoue **entièrement**, heure comprise : sans elle, la puce
+      // lancerait une autre recherche sous le même libellé (SPEC.md § 5.1).
       is QuickChip.Recent -> {
         session.setFrom(chip.search.from)
         session.setTo(chip.search.to)
+        session.setTime(chip.search.time)
       }
     }
   }
@@ -305,6 +338,7 @@ class SearchViewModel(
   }
 
   private fun applySnapshot(snapshot: Snapshot) {
+    recordIfComplete(snapshot.draft)
     state.update {
       it.copy(
         from = snapshot.draft.from,
@@ -314,6 +348,24 @@ class SearchViewModel(
         shortcuts = snapshot.shortcuts,
       )
     }
+  }
+
+  /**
+   * Enregistre la recherche **au moment où elle part** (SPEC.md § 5.5).
+   *
+   * Le brouillon complet est le seul signal disponible, et c'est le bon : il n'y a pas de bouton
+   * « Rechercher », et c'est exactement à cet instant que la feuille de résultats émet sa requête.
+   * Un champ qui change ne suffit pas — une arrivée saisie sans départ n'est pas une recherche —,
+   * et la même recherche affichée à nouveau après une rotation ou un retour d'écran n'en est pas
+   * une seconde : [lastRecorded] retient la dernière écrite, heure comprise.
+   */
+  private fun recordIfComplete(draft: SearchDraft) {
+    val from = draft.from ?: return
+    val to = draft.to ?: return
+    val search = RecordedSearch(from, to, draft.time)
+    if (search == lastRecorded) return
+    lastRecorded = search
+    viewModelScope.launch { recentSearches.record(from, to, draft.time) }
   }
 
   /**
@@ -359,10 +411,21 @@ class SearchViewModel(
       session.setTo(restored.to)
       session.setTime(restored.time)
     }
+    // Une recherche restituée après la mort du processus a déjà été enregistrée avant elle : la
+    // retenir ici évite d'en écrire un doublon à la reprise.
+    val current = session.draft.value
+    val restoredFrom = current.from
+    val restoredTo = current.to
+    if (restoredFrom != null && restoredTo != null) {
+      lastRecorded = RecordedSearch(restoredFrom, restoredTo, current.time)
+    }
     val field: String? = savedState[SAVED_FIELD]
     val restoredField = SearchField.entries.firstOrNull { it.name == field }
     if (restoredField != null) state.update { it.copy(activeField = restoredField) }
   }
+
+  /** Ce qui identifie une recherche pour l'historique : deux points et une heure, rien de plus. */
+  private data class RecordedSearch(val from: Location, val to: Location, val time: TimeChoice)
 
   private data class Snapshot(val draft: SearchDraft, val chips: List<QuickChip>, val shortcuts: List<SearchShortcut>)
 
@@ -388,11 +451,8 @@ class SearchViewModel(
           selection = container.mapSelection,
           locationSource = container.deviceLocationSource,
           cameraMemory = container.mapCameraStore,
-          // À BRANCHER AU JALON 10 : `FavoritesRepository` et `HistoryRepository`. D'ici là, aucune
-          // puce ni entrée de domicile ou de travail n'est affichée, et rien n'est réclamé à
-          // l'usager (SPEC.md § 5.5).
-          savedPlaces = EmptySavedPlacesSource,
-          recentSearches = EmptyRecentSearchesSource,
+          savedPlaces = FavoritesSavedPlacesSource(container.favoritesRepository),
+          recentSearches = HistoryRecentSearchesSource(container.historyRepository),
           savedState = createSavedStateHandle(),
         )
       }

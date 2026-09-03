@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.search
 
+import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.ui.session.SearchDraft
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -10,7 +11,12 @@ class QuickChipsTest {
 
   private val home = address("Domicile")
   private val work = address("Travail")
-  private val recent = RecentSearch(from = address("Bastille"), to = stop("stop:1", "Gare de Lyon"))
+  private val recent = RecentSearch(
+    id = 1,
+    from = address("Bastille"),
+    to = stop("stop:1", "Gare de Lyon"),
+    time = TimeChoice.Now,
+  )
 
   @Test
   fun `champs vides, domicile et travail renseignes, les deux puces s'affichent`() {
@@ -51,7 +57,14 @@ class QuickChipsTest {
 
   @Test
   fun `les puces sont bornees, une rangee n'est pas un pense-bete`() {
-    val many = List(12) { index -> RecentSearch(address("Depart $index"), address("Arrivee $index")) }
+    val many = List(12) { index ->
+      RecentSearch(
+        id = index.toLong(),
+        from = address("Depart $index"),
+        to = address("Arrivee $index"),
+        time = TimeChoice.Now,
+      )
+    }
 
     assertEquals(5, quickChips(SearchDraft(), null, null, many).size)
   }

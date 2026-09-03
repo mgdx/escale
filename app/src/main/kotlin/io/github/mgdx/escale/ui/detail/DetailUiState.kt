@@ -45,7 +45,20 @@ data class DetailUiState(
    * après la mort du processus. L'écran se referme au lieu d'afficher une page vide.
    */
   val closed: Boolean = false,
+  /** Le retour de « Ajouter aux favoris », à montrer une fois puis à oublier (SPEC.md § 5.5). */
+  val message: DetailMessage? = null,
 )
+
+/**
+ * Retour affiché après une action, traduit en chaîne par l'écran.
+ *
+ * Le `ViewModel` nomme le message et n'en connaît pas le texte : c'est ce qui lui permet de ne
+ * référencer aucune ressource et de rester lisible en JVM.
+ */
+enum class DetailMessage {
+  FAVORITE_ADDED,
+  FAVORITE_FAILED,
+}
 
 /**
  * Ce que l'on sait de la disponibilité d'une portion en libre-service, à un instant donné.
