@@ -68,7 +68,7 @@
   </plurals>
 
   <string name="settings_require_bike_transport_title">Uniquement les services acceptant les vélos</string>
-  <string name="settings_require_bike_transport_description">Ne retient que les trains, cars et bateaux qui embarquent les vélos.</string>
+  <string name="settings_require_bike_transport_description">Ne retient que les trains, bus et bateaux qui embarquent les vélos.</string>
 
   <string name="settings_rental_form_factors_title">Véhicules en libre-service</string>
   <string name="settings_rental_form_factors_description">Les véhicules partagés qu\'Escale peut proposer, pour un trajet entier comme pour rejoindre ou quitter un arrêt. Un type décoché n\'apparaît nulle part. Au moins un type doit rester coché.</string>
@@ -78,7 +78,7 @@
   <string name="settings_rental_car">Voiture</string>
   <string name="settings_rental_moped">Cyclomoteur</string>
   <string name="settings_rental_scooter_standing">Trottinette</string>
-  <string name="settings_rental_scooter_seated">Scooter assis</string>
+  <string name="settings_rental_scooter_seated">Trottinette assise</string>
   <string name="settings_rental_other">Autre véhicule</string>
 
   <string name="settings_theme_title">Thème</string>
@@ -100,7 +100,7 @@
   <string name="settings_show_stops_title">Afficher les arrêts sur la carte</string>
   <string name="settings_show_stops_description">Gares, stations et arrêts, dès que l\'échelle le permet. Désactivé, ils restent masqués à tous les niveaux de zoom.</string>
   <string name="settings_show_rentals_title">Afficher le libre-service sur la carte</string>
-  <string name="settings_show_rentals_description">Stations et véhicules laissés en libre-service.</string>
+  <string name="settings_show_rentals_description">Stations et véhicules laissés hors station.</string>
   <string name="settings_show_points_of_interest_title">Afficher les points d\'intérêt sur la carte</string>
   <string name="settings_show_points_of_interest_description">Services publics, monuments, parcs et équipements qui aident à se repérer.</string>
 
@@ -137,7 +137,7 @@
   <string name="settings_cleared_history">Recherches récentes effacées.</string>
   <string name="settings_cleared_tile_cache">Cache de la carte vidé.</string>
   <string name="settings_cleared_results_cache">Résultats en mémoire effacés.</string>
-  <string name="settings_cleared_geocode_cache">Lieux en mémoire effacés.</string>
+  <string name="settings_cleared_geocode_cache">Lieux enregistrés effacés.</string>
   <string name="settings_clear_failed">Rien n\'a pu être effacé. Réessayez.</string>
   <string name="settings_reset_done">Réglages rétablis.</string>
   <string name="settings_save_failed">Ce réglage n\'a pas pu être enregistré.</string>

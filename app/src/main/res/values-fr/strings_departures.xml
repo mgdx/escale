@@ -24,7 +24,7 @@
   <string name="departures_filter_ferry">Bateau</string>
   <string name="departures_filter_other">Autre</string>
 
-  <string name="departures_towards">Vers %1$s</string>
+  <string name="departures_towards">Direction %1$s</string>
   <string name="departures_track">Quai %1$s</string>
   <string name="departures_scheduled_time">Prévu à %1$s</string>
   <string name="departures_open_trip">Voir la desserte complète de cette course</string>

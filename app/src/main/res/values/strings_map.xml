@@ -41,14 +41,14 @@
        d'écran : le pictogramme seul ne dirait rien, et la couleur encore moins (SPEC.md § 9). -->
   <string name="map_stop_mode_rail">Train</string>
   <string name="map_stop_mode_regional_rail">Regional train</string>
-  <string name="map_stop_mode_subway">Underground</string>
+  <string name="map_stop_mode_subway">Metro</string>
   <string name="map_stop_mode_tram">Tram</string>
   <string name="map_stop_mode_bus">Bus</string>
   <string name="map_stop_mode_coach">Coach</string>
   <string name="map_stop_mode_ferry">Ferry</string>
   <string name="map_stop_mode_aerial_lift">Cable car</string>
   <string name="map_stop_mode_funicular">Funicular</string>
-  <string name="map_stop_mode_airplane">Flight</string>
+  <string name="map_stop_mode_airplane">Plane</string>
   <string name="map_stop_mode_transit">Public transport</string>
 
   <!-- Infobulle d'un arrêt : le nom, les lignes desservies, et le chemin vers les départs. -->
@@ -61,7 +61,7 @@
   <string name="map_stop_lines_none">No line serves this stop.</string>
   <string name="map_stop_departures">Next departures</string>
   <string name="map_stop_close">Close stop details</string>
-  <!-- Le mode, puis le numéro de ligne : « Underground 14 ». -->
+  <!-- Le mode, puis le numéro de ligne : « Metro 14 ». -->
   <string name="map_stop_line_description">%1$s %2$s</string>
 
   <!-- Libre-service sur la carte (SPEC.md § 5.7). Le type de véhicule est écrit en toutes lettres

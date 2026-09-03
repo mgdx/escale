@@ -29,7 +29,7 @@
   <string name="map_stop_mode_rail">Train</string>
   <string name="map_stop_mode_regional_rail">Train régional</string>
   <string name="map_stop_mode_subway">Métro</string>
-  <string name="map_stop_mode_tram">Tramway</string>
+  <string name="map_stop_mode_tram">Tram</string>
   <string name="map_stop_mode_bus">Bus</string>
   <string name="map_stop_mode_coach">Autocar</string>
   <string name="map_stop_mode_ferry">Bateau</string>
@@ -61,14 +61,14 @@
        (SPEC.md § 9). -->
   <string name="map_rental_form_bicycle">Vélo</string>
   <string name="map_rental_form_scooter">Trottinette</string>
-  <string name="map_rental_form_moped">Scooter</string>
+  <string name="map_rental_form_moped">Cyclomoteur</string>
   <string name="map_rental_form_car">Voiture</string>
   <string name="map_rental_form_other">Véhicule partagé</string>
 
   <!-- Les deux familles de marqueurs. Elles se distinguent déjà par la forme de leur pastille sur
        la carte ; le libellé le dit en toutes lettres dans l'infobulle. -->
   <string name="map_rental_kind_station">Station</string>
-  <string name="map_rental_kind_vehicle">Véhicule en libre accès</string>
+  <string name="map_rental_kind_vehicle">Véhicule sans station</string>
 
   <!-- Infobulle d'une station : nom, véhicules disponibles, places libres, lien vers l'exploitant. -->
   <plurals name="map_rental_vehicles_available">

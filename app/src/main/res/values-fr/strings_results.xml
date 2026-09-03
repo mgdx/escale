@@ -70,7 +70,7 @@
   <string name="results_mode_tram">Tram</string>
   <string name="results_mode_subway">Métro</string>
   <string name="results_mode_rail">Train</string>
-  <string name="results_mode_regional_rail">TER</string>
+  <string name="results_mode_regional_rail">Train régional</string>
   <string name="results_mode_suburban">Train de banlieue</string>
   <string name="results_mode_highspeed_rail">Train à grande vitesse</string>
   <string name="results_mode_long_distance">Train grandes lignes</string>
@@ -86,7 +86,7 @@
   <string name="results_mode_rental_bike">Vélo partagé</string>
   <string name="results_mode_rental_cargo_bike">Vélo cargo partagé</string>
   <string name="results_mode_rental_scooter">Trottinette partagée</string>
-  <string name="results_mode_rental_moped">Scooter partagé</string>
+  <string name="results_mode_rental_moped">Cyclomoteur partagé</string>
   <string name="results_mode_rental_car">Voiture partagée</string>
   <string name="results_rental_operator">Exploité par %1$s</string>
 

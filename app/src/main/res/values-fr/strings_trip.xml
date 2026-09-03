@@ -7,8 +7,8 @@
   <string name="trip_title">Détail de la course</string>
   <string name="trip_action_refresh">Rafraîchir</string>
 
-  <string name="trip_towards">Vers %1$s</string>
-  <string name="trip_agency">Exploitée par %1$s</string>
+  <string name="trip_towards">Direction %1$s</string>
+  <string name="trip_agency">Transporteur : %1$s</string>
   <string name="trip_line_description">%1$s, ligne %2$s</string>
 
   <plurals name="trip_calls_count">

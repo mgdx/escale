@@ -32,7 +32,7 @@
   <!-- Perturbations attachées à un arrêt précis de la desserte, et non à la course entière.
        Le libellé dit à qui elles s'appliquent : le bandeau qui suit, lui, est celui de la course
        et des résultats, et ne le précise pas. -->
-  <string name="trip_call_alerts">Alerts at this stop</string>
+  <string name="trip_call_alerts">Service alerts at this stop</string>
 
   <!-- États (SPEC.md § 8 : jamais un écran vide muet). -->
   <string name="trip_loading">Loading every stop of this service…</string>

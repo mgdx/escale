@@ -27,7 +27,7 @@
   <string name="departures_filter_label">Filter by mode</string>
   <string name="departures_filter_all">All</string>
   <string name="departures_filter_train">Train</string>
-  <string name="departures_filter_subway">Subway</string>
+  <string name="departures_filter_subway">Metro</string>
   <string name="departures_filter_tram">Tram</string>
   <string name="departures_filter_bus">Bus</string>
   <string name="departures_filter_ferry">Ferry</string>
