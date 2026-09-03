@@ -5,6 +5,7 @@ import io.github.mgdx.escale.ui.session.SearchDraft
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
 
 /** SPEC.md § 5.1 : quelles puces s'affichent, et surtout lesquelles ne s'affichent pas. */
 class QuickChipsTest {
@@ -89,5 +90,39 @@ class QuickChipsTest {
       ),
       searchShortcuts(myLocationKnown = true, home = home, work = work),
     )
+  }
+
+  @Test
+  fun `deux recherches du meme trajet a des heures differentes ont deux cles distinctes`() {
+    val matin = TimeChoice.DepartAt(Instant.parse("2026-03-02T07:00:00Z"))
+    val soir = TimeChoice.ArriveBy(Instant.parse("2026-03-02T18:00:00Z"))
+    val depart = address("Lille Flandres")
+    val arrivee = address("Lille Grand Palais")
+    val recentes = listOf(
+      RecentSearch(id = 2, from = depart, to = arrivee, time = soir),
+      RecentSearch(id = 1, from = depart, to = arrivee, time = matin),
+    )
+
+    val cles = quickChips(SearchDraft(), home = null, work = null, recentSearches = recentes).map(::chipKey)
+
+    // Chercher deux fois le meme trajet est le cas d'usage le plus banal qui soit. Deux cles egales
+    // ne degradent pas l'affichage : Compose leve, et l'ecran d'accueil disparait.
+    assertEquals(2, cles.size)
+    assertEquals(cles.size, cles.distinct().size)
+  }
+
+  @Test
+  fun `aucune puce ne partage sa cle avec une autre, quelle que soit la rangee`() {
+    val lieu = address("Domicile")
+    val recentes = List(4) { rang ->
+      RecentSearch(id = rang.toLong(), from = lieu, to = lieu, time = TimeChoice.Now)
+    }
+
+    val cles = quickChips(SearchDraft(), home = lieu, work = lieu, recentSearches = recentes).map(::chipKey)
+
+    // Domicile et travail peuvent designer le meme lieu, et une recherche peut partir et arriver au
+    // meme endroit : c'est le pire cas, et il ne doit rien casser.
+    assertEquals(6, cles.size)
+    assertEquals(cles.size, cles.distinct().size)
   }
 }
