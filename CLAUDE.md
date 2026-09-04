@@ -171,7 +171,9 @@ Ce dépôt bénéficie de skills dédiés. Invoque-les au lieu d'improviser :
 - Commits en français, à l'impératif, un commit par changement cohérent. Pas de commit fourre-tout
   en fin de session.
 - Ne committe jamais un état qui ne compile pas ou dont les tests échouent.
-- Ne pousse pas sur `main` directement.
+- **Le travail terminé va sur `main`, sans pull request.** Une fois le lot commité sur sa
+  branche et vérifié (§ « Terminé, ça veut dire quoi »), fusionne-la dans `main` et pousse
+  `main` dans la foulée, en avance rapide quand c'est possible. Pas d'attente de relecture.
 - Ne modifie pas `SPEC.md` de ta propre initiative : propose la modification, elle se valide à part.
 
 ## Terminé, ça veut dire quoi
