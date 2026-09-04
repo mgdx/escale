@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -16,11 +15,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,28 +70,25 @@ fun LocateButton(state: LocateState, onClick: () -> Unit, modifier: Modifier = M
  */
 @Composable
 fun AttributionBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  // La mention doit rester lisible en permanence, pas occuper le coin de la carte : le texte seul,
+  // sans pictogramme, sur une pastille juste assez opaque pour se détacher du fond. Le point de
+  // contact, lui, garde ses 48 dp grâce à `minimumInteractiveComponentSize`, qui agrandit la zone
+  // tactile sans agrandir le dessin.
+  val actionLabel = stringResource(R.string.map_attribution_button)
   Surface(
     onClick = onClick,
-    modifier = modifier.sizeIn(minHeight = MIN_TOUCH_TARGET),
+    modifier = modifier
+      .minimumInteractiveComponentSize()
+      .semantics { onClick(label = actionLabel, action = null) },
     color = MaterialTheme.colorScheme.surface.copy(alpha = ATTRIBUTION_ALPHA),
     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    shape = MaterialTheme.shapes.small,
+    shape = MaterialTheme.shapes.extraSmall,
   ) {
-    Row(
-      modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Icon(
-        painter = painterResource(R.drawable.ic_info),
-        contentDescription = stringResource(R.string.map_attribution_button),
-        modifier = Modifier.size(ATTRIBUTION_ICON_SIZE),
-      )
-      Text(
-        text = stringResource(R.string.map_attribution_short),
-        style = MaterialTheme.typography.labelSmall,
-        modifier = Modifier.padding(start = 4.dp),
-      )
-    }
+    Text(
+      text = stringResource(R.string.map_attribution_short),
+      style = MaterialTheme.typography.labelSmall,
+      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+    )
   }
 }
 
@@ -209,7 +207,6 @@ val LOCATE_BUTTON_SIZE = 56.dp
 val MIN_TOUCH_TARGET = 48.dp
 
 private const val ATTRIBUTION_ALPHA = 0.85f
-private val ATTRIBUTION_ICON_SIZE = 16.dp
 
 /** Obligations d'attribution de SPEC.md § 4.2. */
 private const val OPENSTREETMAP_URL = "https://www.openstreetmap.org/copyright"
