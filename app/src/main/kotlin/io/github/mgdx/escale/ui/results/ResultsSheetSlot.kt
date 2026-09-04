@@ -26,7 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -223,17 +223,17 @@ private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
 /**
  * Les quatre onglets, dans l'ordre de SPEC.md § 5.2.
  *
- * Ils défilent horizontalement : « Transport en commun » ne tient pas sur un quart d'écran, et
- * SPEC.md § 9 interdit de le tronquer à 200 % d'agrandissement. Chaque onglet porte son
- * pictogramme, son libellé, **et la durée du trajet le plus rapide de sa catégorie**.
+ * Chaque onglet porte son pictogramme **et la durée du trajet le plus rapide de sa catégorie** ;
+ * le libellé n'est plus écrit, le pictogramme suffit à reconnaître le mode. Les quatre tiennent
+ * donc côte à côte sur la largeur, sans défilement horizontal ni troncature à 200 %
+ * d'agrandissement (SPEC.md § 9). Le libellé reste dit en toutes lettres au lecteur d'écran.
  */
 @Composable
 private fun ResultsTabs(state: ResultsUiState, onSelected: (JourneyCategory) -> Unit) {
   val categories = JourneyCategory.entries
-  PrimaryScrollableTabRow(
+  PrimaryTabRow(
     selectedTabIndex = categories.indexOf(state.category),
     modifier = Modifier.fillMaxWidth(),
-    edgePadding = TabEdgePadding,
   ) {
     categories.forEach { category ->
       CategoryTab(
@@ -247,15 +247,16 @@ private fun ResultsTabs(state: ResultsUiState, onSelected: (JourneyCategory) -> 
 }
 
 /**
- * Un onglet : son pictogramme, son libellé, et la durée annoncée en dessous (SPEC.md § 5.2).
+ * Un onglet : son pictogramme, et la durée annoncée en dessous (SPEC.md § 5.2).
  *
  * Le contenu est posé à la main plutôt que par les emplacements `text` et `icon` de Material :
- * ceux-ci figent la hauteur de l'onglet à 72 dp, et la troisième ligne y serait tronquée dès que
- * l'usager agrandit le texte — ce que SPEC.md § 9 interdit. Ici, l'onglet prend la hauteur de ce
- * qu'il contient, et la barre suit.
+ * ceux-ci figent la hauteur de l'onglet, et la durée y serait tronquée dès que l'usager agrandit
+ * le texte — ce que SPEC.md § 9 interdit. Ici, l'onglet prend la hauteur de ce qu'il contient, et
+ * la barre suit.
  *
- * Le lecteur d'écran n'entend pas « Vélo » puis « 7 min » comme deux fragments : l'onglet porte
- * une seule annonce, qui dit la catégorie **et** ce qu'elle propose (SPEC.md § 9).
+ * Le libellé de la catégorie n'est pas écrit : le pictogramme le dit assez. Il n'est pas perdu
+ * pour autant — le lecteur d'écran entend une annonce unique qui nomme la catégorie **et** ce
+ * qu'elle propose (SPEC.md § 9).
  */
 @Composable
 private fun CategoryTab(category: JourneyCategory, headline: TabHeadline, selected: Boolean, onClick: () -> Unit) {
@@ -271,11 +272,6 @@ private fun CategoryTab(category: JourneyCategory, headline: TabHeadline, select
       verticalArrangement = Arrangement.spacedBy(TabSpacing),
     ) {
       Icon(painter = painterResource(category.iconRes()), contentDescription = null)
-      Text(
-        text = stringResource(category.labelRes()),
-        style = MaterialTheme.typography.titleSmall,
-        textAlign = TextAlign.Center,
-      )
       Text(
         text = headlineText(headline),
         style = MaterialTheme.typography.labelMedium,
@@ -428,7 +424,6 @@ private val SheetElevation: Dp = 8.dp
 private val HandleTouchTarget: Dp = 48.dp
 private val HandleWidth: Dp = 32.dp
 private val HandleHeight: Dp = 4.dp
-private val TabEdgePadding: Dp = 8.dp
 private val TabHorizontalPadding: Dp = 16.dp
 private val TabVerticalPadding: Dp = 12.dp
 private val TabSpacing: Dp = 4.dp
