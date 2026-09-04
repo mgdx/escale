@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import io.github.mgdx.escale.core.model.CategoryOrder
 import io.github.mgdx.escale.core.model.ClockFormat
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ElevationCosts
@@ -69,6 +70,9 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
   override suspend fun updateDisplayPreferences(preferences: DisplayPreferences): Outcome<Unit> = write { stored ->
     stored[KEY_THEME] = preferences.theme.name
     stored[KEY_CLOCK_FORMAT] = preferences.clockFormat.name
+    // Une chaîne, et non un `stringSet` : un ensemble n'a pas d'ordre, et c'est précisément
+    // l'ordre qu'on enregistre ici.
+    stored[KEY_CATEGORY_ORDER] = preferences.categoryOrder.joinToString(ORDER_SEPARATOR) { it.name }
     stored[KEY_SHOW_STOPS] = preferences.showStops
     stored[KEY_SHOW_RENTALS] = preferences.showRentals
     stored[KEY_SHOW_POINTS_OF_INTEREST] = preferences.showPointsOfInterest
@@ -106,6 +110,12 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
   private fun toDisplayPreferences(stored: Preferences) = DisplayPreferences(
     theme = enumOrDefault(stored[KEY_THEME], ThemeChoice.entries, DEFAULT_DISPLAY.theme),
     clockFormat = enumOrDefault(stored[KEY_CLOCK_FORMAT], ClockFormat.entries, DEFAULT_DISPLAY.clockFormat),
+    // `CategoryOrder` complète et dédoublonne : une valeur abîmée rend un ordre utilisable, jamais
+    // une liste à laquelle il manquerait un onglet.
+    categoryOrder = stored[KEY_CATEGORY_ORDER]
+      ?.split(ORDER_SEPARATOR)
+      ?.let(CategoryOrder::of)
+      ?: DEFAULT_DISPLAY.categoryOrder,
     showStops = stored[KEY_SHOW_STOPS] ?: DEFAULT_DISPLAY.showStops,
     showRentals = stored[KEY_SHOW_RENTALS] ?: DEFAULT_DISPLAY.showRentals,
     showPointsOfInterest = stored[KEY_SHOW_POINTS_OF_INTEREST] ?: DEFAULT_DISPLAY.showPointsOfInterest,
@@ -138,6 +148,9 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
     val DEFAULT_SEARCH = SearchPreferences()
     val DEFAULT_DISPLAY = DisplayPreferences()
 
+    /** L'ordre des onglets tient sur une seule clé, ses noms séparés par une virgule. */
+    const val ORDER_SEPARATOR = ","
+
     val KEY_PEDESTRIAN_SPEED = doublePreferencesKey("search_pedestrian_speed")
     val KEY_PEDESTRIAN_PROFILE = stringPreferencesKey("search_pedestrian_profile")
     val KEY_CYCLING_SPEED = doublePreferencesKey("search_cycling_speed")
@@ -149,6 +162,7 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
 
     val KEY_THEME = stringPreferencesKey("display_theme")
     val KEY_CLOCK_FORMAT = stringPreferencesKey("display_clock_format")
+    val KEY_CATEGORY_ORDER = stringPreferencesKey("display_category_order")
     val KEY_SHOW_STOPS = booleanPreferencesKey("display_show_stops")
     val KEY_SHOW_RENTALS = booleanPreferencesKey("display_show_rentals")
     val KEY_SHOW_POINTS_OF_INTEREST = booleanPreferencesKey("display_show_points_of_interest")
@@ -166,6 +180,7 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
       KEY_RENTAL_FORM_FACTORS,
       KEY_THEME,
       KEY_CLOCK_FORMAT,
+      KEY_CATEGORY_ORDER,
       KEY_SHOW_STOPS,
       KEY_SHOW_RENTALS,
       KEY_SHOW_POINTS_OF_INTEREST,

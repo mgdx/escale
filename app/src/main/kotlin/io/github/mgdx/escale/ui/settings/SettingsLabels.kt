@@ -8,11 +8,13 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.ClockFormat
 import io.github.mgdx.escale.core.model.CyclingSpeedOption
 import io.github.mgdx.escale.core.model.ElevationCosts
+import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.PedestrianProfile
 import io.github.mgdx.escale.core.model.PedestrianSpeedOption
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalFormFactorSelection
 import io.github.mgdx.escale.core.model.ThemeChoice
+import io.github.mgdx.escale.ui.results.labelRes
 import java.time.Duration
 
 /**
@@ -110,6 +112,21 @@ internal fun rentalFormFactorsLabel(allowed: Set<RentalFormFactor>): String {
       .map { stringResource(it.labelRes()) }
     names.joinToString(separator = stringResource(R.string.settings_value_separator))
   }
+}
+
+/**
+ * L'ordre des onglets, écrit en toutes lettres sous l'entrée de réglage : « Transport en commun,
+ * Voiture, Vélo, À pied ».
+ *
+ * Il évite d'ouvrir l'écran dédié pour savoir ce qui est réglé, et il nomme les catégories — le
+ * sous-titre d'un réglage ne peut pas se contenter de pictogrammes (SPEC.md § 9).
+ */
+@Composable
+internal fun categoryOrderLabel(order: List<JourneyCategory>): String {
+  // `map` est une fonction en ligne : le contexte de composition y survit, contrairement à
+  // `joinToString`, dont la transformation n'est pas en ligne.
+  val names = order.map { stringResource(it.labelRes()) }
+  return names.joinToString(separator = stringResource(R.string.settings_value_separator))
 }
 
 @StringRes

@@ -16,8 +16,9 @@
   <string name="settings_action_done">Done</string>
   <string name="settings_action_delete">Clear</string>
   <string name="settings_action_reset">Restore</string>
-  <!-- Sépare deux valeurs énumérées sur une même ligne. -->
-  <string name="settings_value_separator">, </string>
+  <!-- Sépare deux valeurs énumérées sur une même ligne. Entre guillemets : sans eux, la plateforme
+       supprime l'espace de fin et les valeurs se collent au séparateur. -->
+  <string name="settings_value_separator">", "</string>
 
   <!-- Rubriques (SPEC.md § 5.6). -->
   <string name="settings_section_search">Search preferences</string>
@@ -208,4 +209,14 @@
   <string name="server_settings_public_instance_notice">The default server, api.transitous.org, is a public instance run by volunteers at their own expense. Please use it sparingly.</string>
   <string name="server_settings_policy_link">Transitous usage policy</string>
   <string name="server_settings_policy_url" translatable="false">https://transitous.org/api/</string>
+
+  <!-- Ordre des onglets de la feuille de résultats (SPEC.md § 5.2 et § 5.6). L'écran dédié dit les
+       deux voies d'accès, le glissé-déposé et les actions d'accessibilité : décrire le seul geste
+       au doigt reviendrait à annoncer une commande inatteignable au lecteur d'écran. -->
+  <string name="settings_category_order_title">Category order</string>
+  <string name="settings_category_order_description">The order of the tabs on the results sheet, and which one Escale opens on.</string>
+  <string name="settings_category_order_hint">Drag a category by its handle to move it, or use its “Move up” and “Move down” actions. The first category is the tab Escale opens on. Nothing is removed: all four are always searched.</string>
+  <string name="settings_category_order_position">%1$s, position %2$d of %3$d</string>
+  <string name="settings_category_order_move_up">Move up</string>
+  <string name="settings_category_order_move_down">Move down</string>
 </resources>

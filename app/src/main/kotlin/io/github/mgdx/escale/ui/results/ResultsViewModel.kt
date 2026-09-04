@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
+import io.github.mgdx.escale.core.model.CategoryOrder
+import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
@@ -71,6 +73,7 @@ class ResultsViewModel(
   private val session: SearchSession,
   private val planRepository: PlanRepository,
   private val searchPreferences: Flow<SearchPreferences>,
+  private val displayPreferences: Flow<DisplayPreferences>,
   private val selection: SelectedJourneyStore,
   private val savedState: SavedStateHandle,
   private val now: () -> Instant = Instant::now,
@@ -110,10 +113,36 @@ class ResultsViewModel(
   /** Faux tant que le dépôt n'a rien émis : aucune recherche ne part avant de les connaître. */
   private var preferencesKnown = false
 
+  /**
+   * Vrai dès que l'usager a lui-même choisi un onglet, et **après la mort du processus** si c'était
+   * le cas avant elle.
+   *
+   * C'est ce qui départage les deux lectures possibles de l'ordre des catégories : tant que
+   * personne n'a touché aux languettes, la première de la liste est celle qu'on ouvre ; dès qu'un
+   * onglet a été choisi, c'est lui qu'on retrouve, et un ordre modifié entre-temps ne le déloge pas.
+   */
+  private var categoryChosen = savedState.contains(KEY_CATEGORY)
+
   init {
     viewModelScope.launch {
       searchPreferences.collect(::onPreferencesChanged)
     }
+    viewModelScope.launch {
+      displayPreferences.collect(::onDisplayPreferencesChanged)
+    }
+  }
+
+  /**
+   * L'ordre des onglets a changé (SPEC.md § 5.6).
+   *
+   * **Aucune requête n'en découle** : les listes affichées ont été calculées avec les mêmes
+   * paramètres, seule leur disposition change. C'est toute la différence avec un réglage de
+   * recherche, qui périme les résultats et fait tout repartir.
+   */
+  private fun onDisplayPreferencesChanged(display: DisplayPreferences) {
+    val order = CategoryOrder.sanitized(display.categoryOrder)
+    state.update { it.copy(categoryOrder = order) }
+    if (!categoryChosen) switchTo(order.first())
   }
 
   /**
@@ -157,8 +186,20 @@ class ResultsViewModel(
    * serveur en panne serait interrogé à chaque aller-retour entre deux onglets.
    */
   fun onCategorySelected(category: JourneyCategory) {
-    if (state.value.category == category) return
     savedState[KEY_CATEGORY] = category.name
+    categoryChosen = true
+    switchTo(category)
+  }
+
+  /**
+   * Passe à un autre onglet, que l'usager l'ait demandé ou que l'ordre réglé l'ait désigné.
+   *
+   * Seul [onCategorySelected] en garde la trace : un onglet ouvert parce qu'il est en tête de
+   * l'ordre n'est pas un onglet choisi, et il doit pouvoir céder la place au suivant si l'usager
+   * range ses catégories autrement.
+   */
+  private fun switchTo(category: JourneyCategory) {
+    if (state.value.category == category) return
     state.update { it.copy(category = category) }
     val tab = state.value.tabs[category]
     if (tab == null) load(category) else syncSelection()
@@ -239,8 +280,14 @@ class ResultsViewModel(
     jobs.clear()
     val category = state.value.category
     // Les quatre onglets sont en attente **avant** la première requête : leur languette annonce
-    // qu'une réponse arrive, et non qu'il n'y a rien à proposer (SPEC.md § 5.2).
-    state.value = ResultsUiState(open = open, category = category, tabs = if (open) awaiting() else emptyMap())
+    // qu'une réponse arrive, et non qu'il n'y a rien à proposer (SPEC.md § 5.2). L'ordre réglé
+    // n'est pas un résultat : il traverse la remise à zéro intacte.
+    state.value = ResultsUiState(
+      open = open,
+      category = category,
+      categoryOrder = state.value.categoryOrder,
+      tabs = if (open) awaiting() else emptyMap(),
+    )
     // Plus aucun résultat à montrer : la carte n'a plus rien à tracer, jusqu'à ce que la nouvelle
     // recherche en rende. Le premier trajet du nouveau jeu sera mis en évidence tout seul.
     syncSelection()
@@ -271,10 +318,15 @@ class ResultsViewModel(
     }
   }
 
-  /** L'onglet consulté, puis les trois autres dans l'ordre des onglets (SPEC.md § 5.2). */
+  /**
+   * L'onglet consulté, puis les trois autres **dans l'ordre des languettes** (SPEC.md § 5.2).
+   *
+   * L'ordre est celui que l'usager a réglé (SPEC.md § 5.6) : les onglets qu'il a mis en tête sont
+   * ceux dont il attend la durée en premier.
+   */
   private fun searchOrder(): List<JourneyCategory> {
     val category = state.value.category
-    return listOf(category) + JourneyCategory.entries.filterNot { it == category }
+    return listOf(category) + state.value.categoryOrder.filterNot { it == category }
   }
 
   /**
@@ -394,9 +446,14 @@ class ResultsViewModel(
     selection.select(journey)
   }
 
+  /**
+   * L'onglet à ouvrir avant que le moindre réglage ne soit connu : celui que l'usager consultait,
+   * à défaut le premier de l'ordre par défaut. L'ordre réglé, lui, arrive quelques instants plus
+   * tard et prend le relais dans [onDisplayPreferencesChanged].
+   */
   private fun restoredCategory(): JourneyCategory {
     val saved = savedState.get<String>(KEY_CATEGORY)
-    return JourneyCategory.entries.firstOrNull { it.name == saved } ?: JourneyCategory.TRANSIT
+    return JourneyCategory.entries.firstOrNull { it.name == saved } ?: CategoryOrder.DEFAULT.first()
   }
 
   companion object {
@@ -417,6 +474,7 @@ class ResultsViewModel(
           session = container.searchSession,
           planRepository = container.planRepository,
           searchPreferences = container.preferencesRepository.searchPreferences,
+          displayPreferences = container.preferencesRepository.displayPreferences,
           selection = container.selectedJourneyStore,
           savedState = createSavedStateHandle(),
         )

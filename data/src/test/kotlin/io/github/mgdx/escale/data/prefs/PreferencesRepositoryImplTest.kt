@@ -5,9 +5,11 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.mgdx.escale.core.model.CategoryOrder
 import io.github.mgdx.escale.core.model.ClockFormat
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ElevationCosts
+import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.PedestrianProfile
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.SearchPreferences
@@ -86,6 +88,12 @@ class PreferencesRepositoryImplTest {
     val voulues = DisplayPreferences(
       theme = ThemeChoice.DARK,
       clockFormat = ClockFormat.HOURS_12,
+      categoryOrder = listOf(
+        JourneyCategory.BIKE,
+        JourneyCategory.WALK,
+        JourneyCategory.TRANSIT,
+        JourneyCategory.CAR,
+      ),
       showStops = false,
       showRentals = false,
       showPointsOfInterest = false,
@@ -133,5 +141,17 @@ class PreferencesRepositoryImplTest {
     assertEquals(DisplayPreferences(), repository.displayPreferences.first())
     // Le fichier DataStore est partagé : le serveur configuré doit avoir survécu.
     assertEquals("https://motis.exemple.org", dataStore.data.first()[autreEcran])
+  }
+
+  @Test
+  fun `un ordre de categories illisible se relit complet`() = runBlocking {
+    // Ce que laisserait une version future ou un fichier tronqué. Une catégorie manquante serait
+    // un onglet inatteignable : la relecture complète toujours (SPEC.md § 5.2).
+    dataStore.edit { it[stringPreferencesKey("display_category_order")] = "WALK,HYPERLOOP" }
+    val relu = repository().displayPreferences.first().categoryOrder
+
+    assertEquals(JourneyCategory.WALK, relu.first())
+    assertEquals(CategoryOrder.DEFAULT.toSet(), relu.toSet())
+    assertEquals(CategoryOrder.DEFAULT.size, relu.size)
   }
 }

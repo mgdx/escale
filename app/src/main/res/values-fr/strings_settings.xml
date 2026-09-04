@@ -10,7 +10,7 @@
   <string name="settings_action_done">Terminé</string>
   <string name="settings_action_delete">Effacer</string>
   <string name="settings_action_reset">Rétablir</string>
-  <string name="settings_value_separator">, </string>
+  <string name="settings_value_separator">", "</string>
 
   <string name="settings_section_search">Préférences de recherche</string>
   <string name="settings_section_display">Affichage</string>
@@ -184,4 +184,11 @@
 
   <string name="server_settings_public_instance_notice">Le serveur par défaut, api.transitous.org, est une instance publique tenue par des bénévoles, à leurs frais. Merci d\'en faire un usage mesuré.</string>
   <string name="server_settings_policy_link">Politique d\'usage de Transitous</string>
+
+  <string name="settings_category_order_title">Ordre des catégories</string>
+  <string name="settings_category_order_description">L\'ordre des onglets de la feuille de résultats, et celui sur lequel Escale s\'ouvre.</string>
+  <string name="settings_category_order_hint">Faites glisser une catégorie par sa poignée pour la déplacer, ou employez ses actions «&#160;Monter&#160;» et «&#160;Descendre&#160;». La première catégorie est l\'onglet sur lequel Escale s\'ouvre. Rien n\'est retiré&#160;: les quatre sont toujours recherchées.</string>
+  <string name="settings_category_order_position">%1$s, position %2$d sur %3$d</string>
+  <string name="settings_category_order_move_up">Monter</string>
+  <string name="settings_category_order_move_down">Descendre</string>
 </resources>

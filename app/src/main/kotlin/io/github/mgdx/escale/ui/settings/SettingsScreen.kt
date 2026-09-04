@@ -60,6 +60,7 @@ fun SettingsScreen(
   onOpenServerSettings: () -> Unit,
   onOpenFavorites: () -> Unit,
   onOpenAbout: () -> Unit,
+  onOpenCategoryOrder: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(appContainer())),
 ) {
@@ -71,6 +72,7 @@ fun SettingsScreen(
       onOpenServerSettings = onOpenServerSettings,
       onOpenFavorites = onOpenFavorites,
       onOpenAbout = onOpenAbout,
+      onOpenCategoryOrder = onOpenCategoryOrder,
       onOpenDialog = viewModel::openDialog,
       onLanguageSettingsUnavailable = viewModel::languageSettingsUnavailable,
       onDismissDialog = viewModel::dismissDialog,
@@ -96,6 +98,8 @@ internal data class SettingsActions(
   /** L'écran des favoris et de l'historique : SPEC.md § 5.5 les veut gérables depuis les réglages. */
   val onOpenFavorites: () -> Unit,
   val onOpenAbout: () -> Unit,
+  /** L'écran « Ordre des catégories » : il range les onglets de SPEC.md § 5.2. */
+  val onOpenCategoryOrder: () -> Unit,
   val onOpenDialog: (SettingsDialog) -> Unit,
   val onLanguageSettingsUnavailable: () -> Unit,
   val onDismissDialog: () -> Unit,
@@ -251,6 +255,9 @@ private fun SearchSection(search: SearchPreferences, actions: SettingsActions) {
  *
  * Le format d'heure (`clockFormat`) attend de même son lecteur : le formatage des heures vit dans
  * `:core.format`, qui ne le consulte pas encore.
+ *
+ * L'ordre des catégories, lui, ouvre un écran dédié : un glissé-déposé ne tient pas dans un
+ * dialogue de choix, et son sous-titre rappelle l'ordre en cours sans qu'il faille l'ouvrir.
  */
 @Composable
 private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions) {
@@ -267,6 +274,12 @@ private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions
     value = stringResource(display.clockFormat.labelRes()),
     description = stringResource(R.string.settings_clock_format_description),
     onClick = { actions.onOpenDialog(SettingsDialog.ClockFormat) },
+  )
+  SettingsItem(
+    title = stringResource(R.string.settings_category_order_title),
+    value = categoryOrderLabel(display.categoryOrder),
+    description = stringResource(R.string.settings_category_order_description),
+    onClick = actions.onOpenCategoryOrder,
   )
   SettingsSwitchItem(
     title = stringResource(R.string.settings_show_stops_title),
@@ -349,6 +362,7 @@ private val previewActions = SettingsActions(
   onOpenServerSettings = {},
   onOpenFavorites = {},
   onOpenAbout = {},
+  onOpenCategoryOrder = {},
   onOpenDialog = {},
   onLanguageSettingsUnavailable = {},
   onDismissDialog = {},

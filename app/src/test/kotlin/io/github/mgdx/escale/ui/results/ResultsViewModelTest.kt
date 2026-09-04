@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.results
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyLeg
@@ -66,8 +67,11 @@ class ResultsViewModelTest {
   /** L'horloge du ViewModel, avancée à la main : c'est elle qui décide de la fraîcheur (§ 7.4). */
   private var clock = Instant.parse("2026-09-01T08:00:00Z")
 
+  /** L'ordre des onglets réglé par l'usager (SPEC.md § 5.6), par défaut celui de la spec. */
+  private val display = MutableStateFlow(DisplayPreferences())
+
   private fun viewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-    ResultsViewModel(session, repository, preferences, selection, savedState) { clock }
+    ResultsViewModel(session, repository, preferences, display, selection, savedState) { clock }
 
   private fun completeSearch() {
     session.setFrom(location("depart"))
@@ -651,5 +655,80 @@ class ResultsViewModelTest {
 
     assertTrue(repository.calls.isEmpty())
     assertFalse(model.uiState.value.open)
+  }
+
+  // --- L'ordre des onglets réglé par l'usager (SPEC.md § 5.6) ---------------------------------
+
+  private val ordreVelo = listOf(
+    JourneyCategory.BIKE,
+    JourneyCategory.WALK,
+    JourneyCategory.TRANSIT,
+    JourneyCategory.CAR,
+  )
+
+  @Test
+  fun `l ordre regle designe l onglet ouvert et l ordre de chargement`() = runTest {
+    display.value = DisplayPreferences(categoryOrder = ordreVelo)
+    val model = viewModel()
+
+    completeSearch()
+
+    // L'usager a mis le vélo en tête : c'est l'onglet qu'il retrouve ouvert, et donc celui dont la
+    // requête part la première. Les trois autres suivent dans l'ordre des languettes (§ 5.2).
+    assertEquals(JourneyCategory.BIKE, model.uiState.value.category)
+    assertEquals(ordreVelo, model.uiState.value.categoryOrder)
+    assertEquals(ordreVelo, repository.categories())
+  }
+
+  @Test
+  fun `ranger ses categories n emet aucune requete`() = runTest {
+    val model = viewModel()
+    completeSearch()
+    assertEquals(allTabs, repository.categories())
+
+    display.value = DisplayPreferences(categoryOrder = ordreVelo)
+
+    // Rien n'est périmé : les listes affichées ont été calculées avec les mêmes paramètres, seule
+    // leur disposition change. C'est toute la différence avec un réglage de recherche.
+    assertEquals(allTabs, repository.categories())
+    assertEquals(ordreVelo, model.uiState.value.categoryOrder)
+  }
+
+  @Test
+  fun `l onglet choisi par l usager resiste a un changement d ordre`() = runTest {
+    val model = viewModel()
+    completeSearch()
+    model.onCategorySelected(JourneyCategory.CAR)
+
+    display.value = DisplayPreferences(categoryOrder = ordreVelo)
+
+    // Le vélo passe en tête des languettes, mais l'usager regardait la voiture : le déloger serait
+    // lui reprendre l'onglet des mains.
+    assertEquals(JourneyCategory.CAR, model.uiState.value.category)
+  }
+
+  @Test
+  fun `l onglet restitue apres la mort du processus resiste de meme`() = runTest {
+    display.value = DisplayPreferences(categoryOrder = ordreVelo)
+    val model = viewModel(SavedStateHandle(mapOf("results.category" to JourneyCategory.WALK.name)))
+
+    completeSearch()
+
+    assertEquals(JourneyCategory.WALK, model.uiState.value.category)
+  }
+
+  @Test
+  fun `un ordre incomplet est complete avant d atteindre les languettes`() = runTest {
+    // Ce que rendrait un fichier de réglages abîmé. Une catégorie absente de l'ordre serait un
+    // onglet inatteignable : le `ViewModel` ne s'en remet pas au seul dépôt.
+    display.value = DisplayPreferences(categoryOrder = listOf(JourneyCategory.WALK))
+    val model = viewModel()
+
+    completeSearch()
+
+    assertEquals(JourneyCategory.WALK, model.uiState.value.category)
+    assertEquals(allTabs.toSet(), model.uiState.value.categoryOrder.toSet())
+    assertEquals(allTabs.size, model.uiState.value.categoryOrder.size)
+    assertEquals(allTabs.toSet(), repository.categories().toSet())
   }
 }

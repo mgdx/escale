@@ -363,7 +363,7 @@ private fun rememberSheetState(available: Dp, bottomInset: Dp): ResultsSheetStat
 }
 
 /**
- * Les quatre onglets, dans l'ordre de SPEC.md § 5.2.
+ * Les quatre onglets, dans l'ordre réglé par l'usager — celui de SPEC.md § 5.2 par défaut.
  *
  * Chaque onglet porte son pictogramme **et la durée du trajet le plus rapide de sa catégorie** ;
  * le libellé n'est plus écrit, le pictogramme suffit à reconnaître le mode. Les quatre tiennent
@@ -372,7 +372,7 @@ private fun rememberSheetState(available: Dp, bottomInset: Dp): ResultsSheetStat
  */
 @Composable
 private fun ResultsTabs(state: ResultsUiState, onSelected: (JourneyCategory) -> Unit) {
-  val categories = JourneyCategory.entries
+  val categories = state.categoryOrder
   PrimaryTabRow(
     selectedTabIndex = categories.indexOf(state.category),
     modifier = Modifier.fillMaxWidth(),

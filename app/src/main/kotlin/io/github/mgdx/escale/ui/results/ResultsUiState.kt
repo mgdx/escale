@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.results
 
+import io.github.mgdx.escale.core.model.CategoryOrder
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
@@ -99,6 +100,14 @@ data class TabResults(
 data class ResultsUiState(
   val open: Boolean = false,
   val category: JourneyCategory = JourneyCategory.TRANSIT,
+  /**
+   * L'ordre des languettes, réglé par l'usager (SPEC.md § 5.6).
+   *
+   * Il ne change **que** leur disposition : les quatre catégories sont toujours là, toujours
+   * chargées, et leurs requêtes sont les mêmes. Il décide en revanche de l'ordre de chargement des
+   * trois onglets non consultés, qui suivent les languettes (SPEC.md § 5.2).
+   */
+  val categoryOrder: List<JourneyCategory> = CategoryOrder.DEFAULT,
   val tabs: Map<JourneyCategory, TabResults> = emptyMap(),
   val bikeFilter: BikeFilter = BikeFilter.ALL,
   /** Clé du trajet choisi, au sens de `Journey.stableKey()`. */
