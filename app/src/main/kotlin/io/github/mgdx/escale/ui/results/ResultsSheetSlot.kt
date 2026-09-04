@@ -157,8 +157,11 @@ internal fun ResultsSheet(
 ) {
   BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
     // La barre de navigation du système passe sous la feuille : les onglets, qui restent à l'écran
-    // même feuille repliée, doivent rester au-dessus d'elle et non sous la barre de gestes.
-    val sheet = rememberSheetState(available = maxHeight, bottomInset = padding.calculateBottomPadding())
+    // même feuille repliée, doivent rester au-dessus d'elle et non sous la barre de gestes. La
+    // marge basse des onglets y pourvoit déjà en partie : seul ce que l'encart ajoute au-delà est
+    // réservé, sans quoi la feuille repliée traînerait une bande blanche sous les durées.
+    val bottomInset = (padding.calculateBottomPadding() - TabVerticalPadding).coerceAtLeast(0.dp)
+    val sheet = rememberSheetState(available = maxHeight, bottomInset = bottomInset)
     val description = stringResource(R.string.results_sheet_description)
     Surface(
       modifier = Modifier
@@ -543,7 +546,7 @@ private val HandleTouchTarget: Dp = 48.dp
 private val HandleWidth: Dp = 32.dp
 private val HandleHeight: Dp = 4.dp
 private val TabHorizontalPadding: Dp = 16.dp
-private val TabVerticalPadding: Dp = 12.dp
+private val TabVerticalPadding: Dp = 8.dp
 private val TabSpacing: Dp = 4.dp
 private val ContentPadding: Dp = 16.dp
 private val ListSpacing: Dp = 8.dp
