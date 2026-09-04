@@ -200,40 +200,21 @@ private fun Modifier.sheetHeight(sheet: ResultsSheetState): Modifier = layout { 
 /**
  * L'entête de la feuille : la poignée et les onglets, la partie qui **ne se cache jamais**.
  *
- * Tout l'entête est saisissable, et pas seulement la poignée : la bande des onglets s'attrape
- * aussi bien, ce qui donne une cible de glissement large. Un appui sur un onglet reste un appui —
- * le geste vertical ne l'emporte qu'une fois le seuil de glissement franchi.
+ * Tout l'entête est saisissable, et pas seulement la poignée : la bande des onglets s'attrape et
+ * s'appuie aussi bien, ce qui donne une cible large — bien au-delà des 48 dp de SPEC.md § 9. C'est
+ * ce qui permet à la bande de la poignée de rester fine sans rien coûter en accessibilité : elle
+ * montre où saisir, elle n'est plus la seule à recevoir le doigt.
+ *
+ * Un appui sur un onglet reste un appui, et le geste vertical ne l'emporte qu'une fois le seuil de
+ * glissement franchi.
  *
  * La liste, elle, n'entraîne pas la feuille : tirée vers le bas, elle rafraîchit déjà le temps réel
  * (SPEC.md § 7.4), et les deux gestes se disputeraient le doigt.
  */
 @Composable
 private fun SheetHeader(sheet: ResultsSheetState, state: ResultsUiState, onSelected: (JourneyCategory) -> Unit) {
-  Column(
-    modifier = Modifier
-      .onSizeChanged { sheet.onHeaderMeasured(it.height) }
-      .draggable(
-        orientation = Orientation.Vertical,
-        state = sheet.drag,
-        onDragStopped = { velocity -> sheet.onDragStopped(velocity) },
-      ),
-  ) {
-    SheetHandle(position = sheet.position, onToggle = sheet::onHandleClick)
-    ResultsTabs(state = state, onSelected = onSelected)
-  }
-}
-
-/**
- * La poignée de la feuille : un appui la fait passer à la position suivante, et tout l'entête qui
- * la porte se glisse à la main.
- *
- * Toute la bande fait 48 dp de haut, la cible tactile minimale de SPEC.md § 9, et porte le libellé
- * de l'action qu'un appui déclenche.
- */
-@Composable
-private fun SheetHandle(position: ResultsSheetPosition, onToggle: () -> Unit) {
   val label = stringResource(
-    if (position == ResultsSheetPosition.EXPANDED) {
+    if (sheet.position == ResultsSheetPosition.EXPANDED) {
       R.string.results_sheet_collapse
     } else {
       R.string.results_sheet_expand
@@ -243,16 +224,33 @@ private fun SheetHandle(position: ResultsSheetPosition, onToggle: () -> Unit) {
   // pour agrandir les résultats » sans jamais dire de quoi il s'agissait, ni où en était la
   // feuille. Le nom et l'état viennent donc en plus du libellé d'action (SPEC.md § 9).
   val handle = stringResource(R.string.results_sheet_handle)
-  val state = stringResource(position.stateDescription())
+  val position = stringResource(sheet.position.stateDescription())
+  Column(
+    modifier = Modifier
+      .onSizeChanged { sheet.onHeaderMeasured(it.height) }
+      .semantics {
+        contentDescription = handle
+        stateDescription = position
+      }
+      .clickable(onClickLabel = label, onClick = sheet::onHandleClick)
+      .draggable(
+        orientation = Orientation.Vertical,
+        state = sheet.drag,
+        onDragStopped = { velocity -> sheet.onDragStopped(velocity) },
+      ),
+  ) {
+    SheetHandle()
+    ResultsTabs(state = state, onSelected = onSelected)
+  }
+}
+
+/** La poignée : le trait qui dit où saisir la feuille. L'appui et le glissement sont sur l'entête. */
+@Composable
+private fun SheetHandle() {
   Box(
     modifier = Modifier
       .fillMaxWidth()
-      .height(HandleTouchTarget)
-      .semantics {
-        contentDescription = handle
-        stateDescription = state
-      }
-      .clickable(onClickLabel = label, onClick = onToggle),
+      .height(HandleBand),
     contentAlignment = Alignment.Center,
   ) {
     Box(
@@ -542,7 +540,10 @@ private const val LATER_KEY = "plus-tard"
 
 private val SheetCorner: Dp = 16.dp
 private val SheetElevation: Dp = 8.dp
-private val HandleTouchTarget: Dp = 48.dp
+
+/** La bande de la poignée : le trait et l'air qu'il lui faut, pas une cible tactile à elle seule. */
+private val HandleBand: Dp = 24.dp
+
 private val HandleWidth: Dp = 32.dp
 private val HandleHeight: Dp = 4.dp
 private val TabHorizontalPadding: Dp = 16.dp
