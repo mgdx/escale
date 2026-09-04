@@ -235,10 +235,14 @@ si elle est déjà connue sans demande de permission ; à défaut le cadrage ren
 
 ### 5.2 Résultats — l'écran central
 
-Quatre onglets, dans cet ordre. **Il n'y a pas d'onglet « Libre-service »** : les véhicules en
-libre-service sont intégrés à la catégorie correspondant à leur type — un vélo partagé relève de
-l'onglet Vélo, une trottinette aussi, et le rabattement vers une gare relève de l'onglet Transport
-en commun.
+Quatre onglets. L'ordre ci-dessous est celui d'origine, et **il est réglable** (§ 5.6) : l'usager
+range les catégories comme il l'entend, et le premier onglet de l'ordre retenu est celui sur lequel
+l'écran s'ouvre. Le réglage ne touche qu'à la disposition — aucune catégorie ne se retire, les
+quatre sont toujours recherchées, avec les mêmes paramètres.
+
+**Il n'y a pas d'onglet « Libre-service »** : les véhicules en libre-service sont intégrés à la
+catégorie correspondant à leur type — un vélo partagé relève de l'onglet Vélo, une trottinette
+aussi, et le rabattement vers une gare relève de l'onglet Transport en commun.
 
 | Onglet | Requête `plan` correspondante |
 |---|---|
@@ -265,7 +269,8 @@ Conséquences à respecter :
 Règles de comportement :
 
 - **Une requête par onglet**, et **les quatre onglets chargés au départ de la recherche, en série** :
-  l'onglet consulté d'abord, les trois autres à sa suite, une requête à la fois. Jamais quatre
+  l'onglet consulté d'abord, les trois autres à sa suite dans l'ordre des languettes, une requête à
+  la fois. Jamais quatre
   requêtes lancées ensemble : l'usager attend la réponse de l'onglet qu'il regarde, et trois
   requêtes parties en même temps que la sienne ne feraient que la retarder. Résultat mis en cache
   pour la durée de la recherche, et un onglet déjà chargé n'est jamais rechargé.
@@ -411,7 +416,14 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
   (`additionalTransferTime`), nombre maximal de correspondances (`maxTransfers`),
   exiger le transport des vélos (`requireBikeTransport`).
 - Affichage : thème (système / clair / sombre), langue, format 12 h ou 24 h,
-  couches visibles sur la carte (arrêts, libre-service, points d'intérêt).
+  couches visibles sur la carte (arrêts, libre-service, points d'intérêt),
+  ordre des catégories de l'écran de résultats.
+- **Ordre des catégories** : une entrée qui ouvre un écran dédié, où les quatre catégories du § 5.2
+  se rangent au glissé-déposé. Le geste au doigt n'est jamais la seule voie d'accès : chaque ligne
+  porte aussi les actions d'accessibilité « Monter » et « Descendre » (§ 9). L'ordre décide de la
+  disposition des languettes, de l'onglet ouvert d'emblée et de l'ordre de chargement des trois
+  autres ; il ne retire aucune catégorie et ne change aucune requête, si bien que le modifier ne
+  périme pas les résultats affichés.
 - **Langue** : ce n'est pas un réglage interne. L'entrée ouvre l'écran système « Langue de
   l'application » d'Android 13, alimenté par le `localeConfig` du manifeste, qui déclare les
   langues réellement fournies. **Elle n'est affichée qu'à partir d'Android 13** ; en deçà, elle est
