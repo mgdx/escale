@@ -110,9 +110,9 @@ private const val FULL_SCREEN_RATIO = 0.7f
 /**
  * Part de la carte que la feuille de résultats peut revendiquer dans le cadrage.
  *
- * Au-dessus de la hauteur de la feuille repliée — 45 % de l'écran (`ResultsSheetSlot`) —, pour que
- * celle-ci soit prise en compte pour ce qu'elle est ; en dessous de la feuille dépliée, à qui on
- * ne laisse pas toute la carte.
+ * Au-dessus de la position intermédiaire de la feuille — 45 % de l'écran
+ * (`ResultsSheetPosition`) —, pour que celle-ci soit prise en compte pour ce qu'elle est ; en
+ * dessous de la feuille dépliée, à qui on ne laisse pas toute la carte.
  */
 private const val MAX_SHEET_RATIO = 0.5f
 

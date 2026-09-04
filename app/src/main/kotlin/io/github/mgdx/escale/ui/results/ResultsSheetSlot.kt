@@ -1,12 +1,15 @@
 package io.github.mgdx.escale.ui.results
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.annotation.StringRes
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,10 +36,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -44,6 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,6 +58,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,6 +69,8 @@ import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.stableKey
 import io.github.mgdx.escale.ui.common.ErrorMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Emplacement de la **feuille de résultats** (SPEC.md § 5.2), branché dans le `NavHost` au point
@@ -132,8 +142,11 @@ internal data class ResultsActions(
  *
  * Ce n'est pas un `BottomSheetScaffold` : celui-ci occuperait l'écran entier et couvrirait la carte,
  * alors que la composition de docs/architecture.md § 11.4 place cet emplacement dans l'écran
- * d'accueil, qui appartient au lot « carte ». La feuille se dimensionne donc elle-même, entre deux
- * hauteurs, et `HomeScreen` mesure ce qu'elle occupe.
+ * d'accueil, qui appartient au lot « carte ». La feuille se dimensionne donc elle-même, entre les
+ * trois positions de `ResultsSheetPosition`, et `HomeScreen` mesure ce qu'elle occupe.
+ *
+ * Glissée jusqu'en bas, elle ne cache que le détail : les onglets et les durées qu'ils annoncent
+ * restent à l'écran, et la carte occupe tout le reste.
  */
 @Composable
 internal fun ResultsSheet(
@@ -143,14 +156,14 @@ internal fun ResultsSheet(
   modifier: Modifier = Modifier,
 ) {
   BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val target = maxHeight * if (expanded) EXPANDED_FRACTION else PEEK_FRACTION
-    val height by animateDpAsState(targetValue = target, label = "hauteur de la feuille de résultats")
+    // La barre de navigation du système passe sous la feuille : les onglets, qui restent à l'écran
+    // même feuille repliée, doivent rester au-dessus d'elle et non sous la barre de gestes.
+    val sheet = rememberSheetState(available = maxHeight, bottomInset = padding.calculateBottomPadding())
     val description = stringResource(R.string.results_sheet_description)
     Surface(
       modifier = Modifier
         .fillMaxWidth()
-        .height(height)
+        .sheetHeight(sheet)
         // La feuille est posée **sur** la carte : sans cet absorbeur, un appui dans une zone vide de
         // la feuille traverserait jusqu'à la carte, qui y ouvrirait son menu d'appui long. Les
         // commandes de la feuille sont touchées avant lui et consomment leurs propres gestes.
@@ -161,8 +174,7 @@ internal fun ResultsSheet(
       shadowElevation = SheetElevation,
     ) {
       Column(modifier = Modifier.fillMaxSize()) {
-        SheetHandle(expanded = expanded, onToggle = { expanded = !expanded })
-        ResultsTabs(state = state, onSelected = actions.onCategorySelected)
+        SheetHeader(sheet = sheet, state = state, onSelected = actions.onCategorySelected)
         ResultsContent(state = state, actions = actions, padding = padding)
       }
     }
@@ -170,25 +182,65 @@ internal fun ResultsSheet(
 }
 
 /**
- * La poignée de la feuille : un appui l'agrandit ou la réduit, un glissement fait de même.
+ * Fixe la hauteur de la feuille, **lue au moment de la mesure** et non de la composition.
  *
- * Toute la bande fait 48 dp de haut, la cible tactile minimale de SPEC.md § 9, et porte le libellé
- * de l'action qu'elle déclenche.
+ * Cette hauteur change à chaque image tant que le doigt glisse. La lire ici plutôt que dans un
+ * `Modifier.height` évite de recomposer les onglets et la liste soixante fois par seconde alors
+ * que seule la place occupée a changé.
+ */
+private fun Modifier.sheetHeight(sheet: ResultsSheetState): Modifier = layout { measurable, constraints ->
+  val height = sheet.height.roundToPx().coerceIn(0, constraints.maxHeight)
+  val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+  layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+}
+
+/**
+ * L'entête de la feuille : la poignée et les onglets, la partie qui **ne se cache jamais**.
+ *
+ * Tout l'entête est saisissable, et pas seulement la poignée : la bande des onglets s'attrape
+ * aussi bien, ce qui donne une cible de glissement large. Un appui sur un onglet reste un appui —
+ * le geste vertical ne l'emporte qu'une fois le seuil de glissement franchi.
+ *
+ * La liste, elle, n'entraîne pas la feuille : tirée vers le bas, elle rafraîchit déjà le temps réel
+ * (SPEC.md § 7.4), et les deux gestes se disputeraient le doigt.
  */
 @Composable
-private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
+private fun SheetHeader(sheet: ResultsSheetState, state: ResultsUiState, onSelected: (JourneyCategory) -> Unit) {
+  Column(
+    modifier = Modifier
+      .onSizeChanged { sheet.onHeaderMeasured(it.height) }
+      .draggable(
+        orientation = Orientation.Vertical,
+        state = sheet.drag,
+        onDragStopped = { velocity -> sheet.onDragStopped(velocity) },
+      ),
+  ) {
+    SheetHandle(position = sheet.position, onToggle = sheet::onHandleClick)
+    ResultsTabs(state = state, onSelected = onSelected)
+  }
+}
+
+/**
+ * La poignée de la feuille : un appui la fait passer à la position suivante, et tout l'entête qui
+ * la porte se glisse à la main.
+ *
+ * Toute la bande fait 48 dp de haut, la cible tactile minimale de SPEC.md § 9, et porte le libellé
+ * de l'action qu'un appui déclenche.
+ */
+@Composable
+private fun SheetHandle(position: ResultsSheetPosition, onToggle: () -> Unit) {
   val label = stringResource(
-    if (expanded) R.string.results_sheet_collapse else R.string.results_sheet_expand,
+    if (position == ResultsSheetPosition.EXPANDED) {
+      R.string.results_sheet_collapse
+    } else {
+      R.string.results_sheet_expand
+    },
   )
   // Un `onClickLabel` seul ne nomme pas le nœud : le lecteur d'écran annonçait « appuyez deux fois
   // pour agrandir les résultats » sans jamais dire de quoi il s'agissait, ni où en était la
   // feuille. Le nom et l'état viennent donc en plus du libellé d'action (SPEC.md § 9).
   val handle = stringResource(R.string.results_sheet_handle)
-  val state = stringResource(
-    if (expanded) R.string.results_sheet_state_expanded else R.string.results_sheet_state_collapsed,
-  )
-  var travel by remember { mutableFloatStateOf(0f) }
-  val threshold = with(LocalDensity.current) { DragThreshold.toPx() }
+  val state = stringResource(position.stateDescription())
   Box(
     modifier = Modifier
       .fillMaxWidth()
@@ -197,18 +249,7 @@ private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
         contentDescription = handle
         stateDescription = state
       }
-      .clickable(onClickLabel = label, onClick = onToggle)
-      .draggable(
-        orientation = Orientation.Vertical,
-        state = rememberDraggableState { delta -> travel += delta },
-        onDragStopped = {
-          // Vers le haut, on agrandit ; vers le bas, on réduit. En deçà du seuil, rien ne bouge :
-          // un frôlement ne doit pas faire sauter la feuille.
-          if (travel < -threshold && !expanded) onToggle()
-          if (travel > threshold && expanded) onToggle()
-          travel = 0f
-        },
-      ),
+      .clickable(onClickLabel = label, onClick = onToggle),
     contentAlignment = Alignment.Center,
   ) {
     Box(
@@ -218,6 +259,106 @@ private fun SheetHandle(expanded: Boolean, onToggle: () -> Unit) {
         .background(MaterialTheme.colorScheme.outlineVariant),
     )
   }
+}
+
+/** Ce que le lecteur d'écran annonce de la position de la feuille (SPEC.md § 9). */
+@StringRes
+private fun ResultsSheetPosition.stateDescription(): Int = when (this) {
+  ResultsSheetPosition.COLLAPSED -> R.string.results_sheet_state_collapsed
+  ResultsSheetPosition.HALF -> R.string.results_sheet_state_half
+  ResultsSheetPosition.EXPANDED -> R.string.results_sheet_state_expanded
+}
+
+/**
+ * L'état de la feuille : sa position d'ancrage, sa hauteur du moment, et le geste qui la déplace.
+ *
+ * La hauteur est une [Animatable] et non un `animateDpAsState` : elle doit suivre le doigt au
+ * pixel près pendant le glissement, puis **rejoindre son ancrage depuis l'endroit où on l'a
+ * lâchée**. Une valeur animée vers une cible, elle, repartirait de la dernière position d'ancrage
+ * et ferait sauter la feuille au moment du lâcher.
+ */
+@Stable
+private class ResultsSheetState(
+  private val scope: CoroutineScope,
+  private val anchor: MutableState<ResultsSheetPosition>,
+  private val animated: Animatable<Dp, AnimationVector1D>,
+  var density: Density,
+  var available: Dp,
+  var bottomInset: Dp,
+) {
+  /** Hauteur de l'entête telle qu'elle est mesurée à l'écran : c'est elle qui borne le repli. */
+  var headerHeight by mutableStateOf(0.dp)
+    private set
+
+  val position: ResultsSheetPosition get() = anchor.value
+  val height: Dp get() = animated.value
+  val drag = DraggableState { delta -> onDrag(delta) }
+
+  fun onHeaderMeasured(heightPx: Int) {
+    headerHeight = with(density) { heightPx.toDp() }
+  }
+
+  /** Un appui sur la poignée : la position suivante du cycle, en animation. */
+  fun onHandleClick() {
+    settleTo(position.next())
+  }
+
+  fun onDragStopped(velocityPx: Float) {
+    // La vitesse du doigt se compte vers le bas, celle de la hauteur de la feuille vers le haut.
+    val velocity = -with(density) { velocityPx.toDp() }.value
+    settleTo(settledResultsSheetPosition(animated.value, velocity, headerHeight + bottomInset, available))
+  }
+
+  /** Repose la feuille sur son ancrage sans animation : premier affichage, rotation, texte agrandi. */
+  suspend fun snapToAnchor() {
+    animated.snapTo(heightAt(position))
+  }
+
+  /** Le doigt descend, la feuille rapetisse — sans jamais sortir de ses positions extrêmes. */
+  private fun onDrag(deltaPx: Float) {
+    val delta = with(density) { deltaPx.toDp() }
+    val bounded = (animated.value - delta).coerceIn(
+      heightAt(ResultsSheetPosition.COLLAPSED),
+      heightAt(ResultsSheetPosition.EXPANDED),
+    )
+    scope.launch { animated.snapTo(bounded) }
+  }
+
+  private fun settleTo(target: ResultsSheetPosition) {
+    anchor.value = target
+    scope.launch { animated.animateTo(heightAt(target)) }
+  }
+
+  /** L'entête et l'encart système sous lui : ce que la feuille ne cache jamais. */
+  private fun heightAt(at: ResultsSheetPosition): Dp = resultsSheetHeight(at, headerHeight + bottomInset, available)
+}
+
+/**
+ * L'état de la feuille, conservé d'une composition à l'autre et **rétabli après rotation** : la
+ * feuille se retrouve à la position où l'usager l'avait laissée.
+ */
+@Composable
+private fun rememberSheetState(available: Dp, bottomInset: Dp): ResultsSheetState {
+  val scope = rememberCoroutineScope()
+  val density = LocalDensity.current
+  val anchor = rememberSaveable { mutableStateOf(ResultsSheetPosition.HALF) }
+  val sheet = remember(scope) {
+    ResultsSheetState(
+      scope = scope,
+      anchor = anchor,
+      animated = Animatable(resultsSheetHeight(anchor.value, 0.dp, available), Dp.VectorConverter),
+      density = density,
+      available = available,
+      bottomInset = bottomInset,
+    )
+  }
+  sheet.density = density
+  sheet.available = available
+  sheet.bottomInset = bottomInset
+  // La place disponible change à la rotation, la hauteur de l'entête au premier passage et à chaque
+  // changement de taille de texte : dans les deux cas, l'ancrage courant a une nouvelle hauteur.
+  LaunchedEffect(sheet, available, bottomInset, sheet.headerHeight) { sheet.snapToAnchor() }
+  return sheet
 }
 
 /**
@@ -294,19 +435,22 @@ private fun CategoryTab(category: JourneyCategory, headline: TabHeadline, select
 @Composable
 private fun ColumnScope.ResultsContent(state: ResultsUiState, actions: ResultsActions, padding: PaddingValues) {
   val tab = state.current
+  // La barre de navigation du système est sous la feuille : le contenu s'arrête au-dessus d'elle,
+  // ce qui laisse aussi la place aux onglets quand la feuille est repliée au plus bas.
   val fill = Modifier
     .weight(1f)
     .fillMaxWidth()
+    .padding(bottom = padding.calculateBottomPadding())
   when {
-    tab.error != null -> CenteredState(fill, padding) {
+    tab.error != null -> CenteredState(fill) {
       ErrorMessage(error = tab.error, onRetry = actions.onRetry)
     }
 
-    tab.loading || tab.feed == null -> CenteredState(fill, padding) { ResultsLoading() }
+    tab.loading || tab.feed == null -> CenteredState(fill) { ResultsLoading() }
 
-    tab.isEmpty -> CenteredState(fill, padding) { ResultsEmpty(category = state.category) }
+    tab.isEmpty -> CenteredState(fill) { ResultsEmpty(category = state.category) }
 
-    else -> JourneyList(state = state, actions = actions, padding = padding, modifier = fill)
+    else -> JourneyList(state = state, actions = actions, modifier = fill)
   }
 }
 
@@ -316,11 +460,9 @@ private fun ColumnScope.ResultsContent(state: ResultsUiState, actions: ResultsAc
  * illisible pour autant (SPEC.md § 9).
  */
 @Composable
-private fun CenteredState(modifier: Modifier, padding: PaddingValues, content: @Composable () -> Unit) {
+private fun CenteredState(modifier: Modifier, content: @Composable () -> Unit) {
   Box(
-    modifier = modifier
-      .verticalScroll(rememberScrollState())
-      .padding(bottom = padding.calculateBottomPadding()),
+    modifier = modifier.verticalScroll(rememberScrollState()),
     contentAlignment = Alignment.Center,
   ) {
     content()
@@ -336,12 +478,7 @@ private fun CenteredState(modifier: Modifier, padding: PaddingValues, content: @
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun JourneyList(
-  state: ResultsUiState,
-  actions: ResultsActions,
-  padding: PaddingValues,
-  modifier: Modifier = Modifier,
-) {
+private fun JourneyList(state: ResultsUiState, actions: ResultsActions, modifier: Modifier = Modifier) {
   val tab = state.current
   val journeys = state.visibleJourneys
   PullToRefreshBox(
@@ -349,28 +486,15 @@ private fun JourneyList(
     onRefresh = actions.onRefresh,
     modifier = modifier,
   ) {
-    JourneyColumn(state = state, actions = actions, padding = padding, journeys = journeys, tab = tab)
+    JourneyColumn(state = state, actions = actions, journeys = journeys, tab = tab)
   }
 }
 
 @Composable
-private fun JourneyColumn(
-  state: ResultsUiState,
-  actions: ResultsActions,
-  padding: PaddingValues,
-  journeys: List<Journey>,
-  tab: TabResults,
-) {
+private fun JourneyColumn(state: ResultsUiState, actions: ResultsActions, journeys: List<Journey>, tab: TabResults) {
   LazyColumn(
     modifier = Modifier.fillMaxSize(),
-    contentPadding = PaddingValues(
-      start = ContentPadding,
-      end = ContentPadding,
-      top = ContentPadding,
-      // La barre de navigation du système est sous la feuille : la liste doit pouvoir défiler
-      // au-delà, sans quoi la dernière carte reste inatteignable.
-      bottom = ContentPadding + padding.calculateBottomPadding(),
-    ),
+    contentPadding = PaddingValues(ContentPadding),
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
     if (state.bikeFilterVisible) {
@@ -409,12 +533,6 @@ private fun JourneyColumn(
   }
 }
 
-/** Hauteur de la feuille repliée : elle laisse la carte visible en haut (SPEC.md § 5.1). */
-private const val PEEK_FRACTION = 0.45f
-
-/** Hauteur de la feuille déployée : la carte reste visible, même réduite à une bande. */
-private const val EXPANDED_FRACTION = 0.9f
-
 private const val FILTER_KEY = "filtre"
 private const val EARLIER_KEY = "plus-tot"
 private const val LATER_KEY = "plus-tard"
@@ -429,4 +547,3 @@ private val TabVerticalPadding: Dp = 12.dp
 private val TabSpacing: Dp = 4.dp
 private val ContentPadding: Dp = 16.dp
 private val ListSpacing: Dp = 8.dp
-private val DragThreshold: Dp = 24.dp
