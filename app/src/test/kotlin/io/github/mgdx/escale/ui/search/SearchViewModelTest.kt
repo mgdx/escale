@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.search
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.geo.MapCamera
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
@@ -378,5 +379,54 @@ class SearchViewModelTest {
     viewModel.onChipLongPressed(viewModel.uiState.value.chips.single())
 
     assertNull(viewModel.uiState.value.savedPlaceMenu)
+  }
+
+  @Test
+  fun `sans cadrage memorise, le biais est la derniere position connue`() = runTest(scheduler) {
+    // Premier lancement ou cache vide : `lastCamera` ne rend rien, et une requete sans biais
+    // ramenerait des lieux du bout du monde (SPEC.md § 5.1).
+    val here = LatLon(48.85, 2.35)
+    locations.coarseGranted = true
+    locations.lastKnown = here
+    val viewModel = viewModel()
+
+    viewModel.onOpenField(SearchField.FROM)
+    advanceUntilIdle()
+    viewModel.onQueryChange("gare de lyon")
+    advanceUntilIdle()
+
+    assertEquals(listOf("gare de lyon"), geocode.requests)
+    assertEquals(listOf<LatLon?>(here), geocode.biases)
+  }
+
+  @Test
+  fun `le cadrage memorise passe avant la position`() = runTest(scheduler) {
+    val center = LatLon(45.76, 4.84)
+    cameras.save(MapCamera(center, zoom = 12.0))
+    locations.coarseGranted = true
+    locations.lastKnown = LatLon(48.85, 2.35)
+    val viewModel = viewModel()
+
+    viewModel.onOpenField(SearchField.FROM)
+    advanceUntilIdle()
+    viewModel.onQueryChange("gare de lyon")
+    advanceUntilIdle()
+
+    assertEquals(listOf<LatLon?>(center), geocode.biases)
+  }
+
+  @Test
+  fun `permission refusee, la position n'est pas consultee et le biais reste nul`() = runTest(scheduler) {
+    locations.coarseGranted = false
+    locations.lastKnown = LatLon(48.85, 2.35)
+    val viewModel = viewModel()
+
+    viewModel.onOpenField(SearchField.FROM)
+    advanceUntilIdle()
+    viewModel.onQueryChange("gare de lyon")
+    advanceUntilIdle()
+
+    assertEquals(0, locations.lastKnownCalls)
+    assertEquals(listOf<LatLon?>(null), geocode.biases)
   }
 }

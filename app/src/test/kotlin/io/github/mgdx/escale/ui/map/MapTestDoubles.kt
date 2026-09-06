@@ -63,11 +63,18 @@ class FakeLocationSource(
   var collected = 0
     private set
 
+  /** Combien de fois la position a été consultée : c'est lui qui prouve qu'elle ne l'a pas été. */
+  var lastKnownCalls = 0
+    private set
+
   override fun hasCoarsePermission(): Boolean = coarseGranted
 
   override fun hasFinePermission(): Boolean = fineGranted
 
-  override fun lastKnownLocation(): LatLon? = lastKnown.takeIf { coarseGranted }
+  override fun lastKnownLocation(): LatLon? {
+    lastKnownCalls += 1
+    return lastKnown.takeIf { coarseGranted }
+  }
 
   override fun locations(): Flow<LatLon> {
     collected += 1

@@ -19,6 +19,9 @@ class FakeSearchGeocodeRepository(
   /** Les textes réellement envoyés au serveur : c'est le compte qui prouve la sobriété. */
   val requests: MutableList<String> = mutableListOf()
 
+  /** Le biais géographique reçu à chaque requête, dans le même ordre que [requests]. */
+  val biases: MutableList<LatLon?> = mutableListOf()
+
   val reversed: MutableList<LatLon> = mutableListOf()
 
   override suspend fun autocomplete(
@@ -28,6 +31,7 @@ class FakeSearchGeocodeRepository(
     limit: Int,
   ): Outcome<List<Location>> {
     requests += text
+    biases += bias
     return suggestions
   }
 
