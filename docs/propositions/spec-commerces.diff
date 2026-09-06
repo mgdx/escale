@@ -1,0 +1,112 @@
+diff --git a/SPEC.md b/SPEC.md
+index b124119..7b64972 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -435,7 +435,8 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
+   (`additionalTransferTime`), nombre maximal de correspondances (`maxTransfers`),
+   exiger le transport des vélos (`requireBikeTransport`).
+ - Affichage : thème (système / clair / sombre), langue, format 12 h ou 24 h,
+-  couches visibles sur la carte (arrêts, libre-service, points d'intérêt),
++  couches visibles sur la carte (arrêts, libre-service, points d'intérêt, et **commerces et
++  services**, cette dernière **désactivée par défaut**),
+   ordre des catégories de l'écran de résultats.
+ - **Ordre des catégories** : une entrée qui ouvre un écran dédié, où les quatre catégories du § 5.2
+   se rangent au glissé-déposé. Le geste au doigt n'est jamais la seule voie d'accès : chaque ligne
+@@ -509,28 +510,64 @@ petite échelle, mille points sont illisibles et coûtent cher à charger.
+ | 11 → 13 | Gares et stations de métro : `RAIL`, `HIGHSPEED_RAIL`, `LONG_DISTANCE`, `SUBURBAN`, `SUBWAY` | `/api/v6/map/stops` |
+ | 13 → 15 | + tram, bus, cars, ferry, téléphériques, et **stations de véhicules en libre-service** | `/api/v6/map/stops` + `/api/v1/rentals` |
+ | ≥ 15 | + véhicules en libre-service isolés (free-floating), et **points d'intérêt** : services publics, monuments et sites remarquables, équipements (hôpitaux, écoles, bibliothèques, poste), parcs | `/api/v1/rentals` + couches du fond de carte |
+-| ≥ 17 | + entrées de stations, mobilier, libellés détaillés | couches du fond de carte |
++| ≥ 16 | + **pictogrammes des commerces et services**, si le réglage est activé (§ 5.6) | couches du fond de carte |
++| ≥ 17 | + entrées de stations, mobilier, libellés détaillés, et **les noms des commerces et services** | couches du fond de carte |
+ 
+ Points essentiels de mise en œuvre :
+ 
+-- **Les points d'intérêt ne font l'objet d'aucune requête** : ils sont déjà présents dans les
+-  tuiles vectorielles issues d'OpenStreetMap. Il suffit d'activer les couches correspondantes dans
+-  la feuille de style avec le bon `minzoom`. Aucune API à interroger, aucun coût réseau
+-  supplémentaire, et le comportement reste correct sur un serveur auto-hébergé.
+-- **Les commerces sont hors périmètre de la v1.** Ni boutiques, ni cafés, ni restaurants : ils
+-  saturent la carte et ne servent pas le propos, qui est de se déplacer. Les couches existent dans
+-  les tuiles et pourront être activées plus tard sans rien changer d'autre. La v1 s'en tient aux
+-  repères qui aident à s'orienter et à reconnaître un quartier : services publics, monuments,
+-  équipements, parcs.
++- **L'affichage des points d'intérêt ne fait l'objet d'aucune requête** : ils sont déjà présents
++  dans les tuiles vectorielles issues d'OpenStreetMap. Il suffit d'activer les couches
++  correspondantes dans la feuille de style avec le bon `minzoom`. Aucune API à interroger, aucun
++  coût réseau supplémentaire, et le comportement reste correct sur un serveur auto-hébergé. Seule
++  l'ouverture d'une fiche émet une requête, et une seule (§ 7, règle 11).
++- **Les commerces et services existent dans les tuiles et s'affichent sur demande.** La couche
++  des points d'intérêt du fond de carte porte déjà les valeurs `shop`, `amenity` et `tourism` :
++  les afficher est affaire de filtre dans la feuille de style, sans requête, sans donnée nouvelle
++  et sans image nouvelle. Ils ne s'affichent jamais **sous le zoom 16**, et le réglage qui les
++  commande est **désactivé par défaut** : la carte sert d'abord à se déplacer, et c'est l'usager
++  qui décide de la densifier. Les familles retenues sont celles du tableau ci-dessous ; les
++  repères de la v1 ne bougent pas et restent visibles dès le zoom 15, réglage ou non.
+ - Les arrêts sont demandés par **emprise rectangulaire** (`min` / `max`), avec le paramètre `modes`
+   restreint au palier de zoom courant, et `grouped=true` pour que le serveur regroupe lui-même les
+   quais d'une même gare.
+ - Chaque palier de zoom conserve les couches des paliers inférieurs : on ajoute, on ne remplace pas.
+ - Un réglage permet de masquer complètement les arrêts, les stations en libre-service ou les
+-  points d'intérêt, indépendamment du zoom.
++  points d'intérêt, indépendamment du zoom ; un quatrième commande l'affichage des commerces et
++  services, masqués par défaut (§ 5.6).
+ - Appui sur un arrêt : infobulle avec le nom et les lignes desservies, et un bouton menant aux
+   prochains départs (§ 5.4). Appui sur une station de libre-service : nom, véhicules disponibles,
+   places libres, lien vers l'exploitant.
++- Appui sur un **point d'intérêt** : une fiche à la manière de l'infobulle d'arrêt. Les repères de
++  la v1 — mairie, monument, lieu de culte, école, théâtre… — y donnent droit au même titre que les
++  commerces et services : tout pictogramme visible sur la carte répond à l'appui. La fiche porte
++  le **nom** du lieu, ou le libellé de sa famille s'il n'en a pas ; son **type** traduit
++  (« Boulangerie », « Restaurant · italien » d'après `cuisine`, « Banque · distributeur » d'après
++  `atm`, « Lieu de culte · catholique » d'après `religion` et `denomination`) ; son **adresse**,
++  obtenue par une requête de géocodage inverse émise à l'ouverture de la fiche et **annulée si la
++  fiche se ferme** avant la réponse, le numéro de voie porté par la tuile tenant lieu d'adresse en
++  attendant, et rien du tout si les deux manquent ; enfin **« Partir d'ici »** et **« Aller ici »**,
++  qui remplissent la carte de recherche comme le fait l'appui long sur la carte. Ni horaires, ni
++  site, ni téléphone : ces données ne sont ni dans les tuiles ni dans l'API, et on n'affiche pas ce
++  qu'on n'a pas. Un arrêt ou une station de libre-service au même endroit garde la priorité sur un
++  point d'intérêt.
++
++**Familles de commerces et services**, chacune dotée d'un pictogramme pris dans les sprites déjà
++servis par le serveur — aucune image nouvelle dans l'APK, aucune dépendance, aucune permission :
++
++| Famille | Valeurs OpenStreetMap |
++|---|---|
++| Alimentation | `shop` = supermarket, convenience, bakery, butcher, greengrocer, alcohol, beverages, kiosk, general, department_store, mall, marketplace |
++| Restauration | `amenity` = restaurant, fast_food, cafe, pub, bar, biergarten |
++| Santé | `amenity` = veterinary ; `shop` = chemist, optician |
++| Argent | `amenity` = bank, atm |
++| Hébergement | `tourism` = hotel, motel, hostel, guest_house, bed_and_breakfast, camp_site |
++| Services du quotidien | `amenity` = toilets, drinking_water, post_box, telephone, car_rental, car_sharing, bicycle_rental, vending_machine ; `shop` = hairdresser, laundry, dry_cleaning, travel_agency |
++| Autres commerces | toute autre valeur de `shop` portée par la tuile |
++
++Les valeurs déjà portées par les points d'intérêt de la v1 ne sont **pas** reprises dans cette
++couche : `amenity` = hospital, clinic, doctors, dentist et pharmacy restent des repères visibles
++dès le zoom 15, sans réglage, et n'apparaissent pas deux fois. La famille « Santé » ne couvre donc
++en pratique que les vétérinaires, les drogueries et les opticiens.
+ 
+ #### Fluidité et fraîcheur — règles impératives
+ 
+@@ -607,6 +644,10 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
+    emprise élargie de 30 %, cache par emprise, annulation systématique (§ 5.7).
+ 10. Les tuiles du fond de carte sont mises en cache sur disque par MapLibre, plafond de 100 Mo,
+     purgeable depuis les réglages.
++11. Les commerces et services de la carte viennent des tuiles et **ne déclenchent aucune requête**
++    (§ 5.7). La fiche de point d'intérêt est la seule qu'ils provoquent : **une** requête de
++    géocodage inverse, à l'ouverture de la fiche, **une par fiche**, annulée à sa fermeture, et
++    servie par le cache disque de 24 h du géocodage (règle 5).
+ 
+ ---
+ 
+@@ -749,5 +790,8 @@ utilisable sur un appareil réel.
+ 
+ À trancher par le mainteneur avant le jalon 1 :
+ 
+-1. Liste précise des catégories OpenStreetMap retenues pour les points d'intérêt au zoom ≥ 15,
+-   à établir en regardant le rendu réel sur une ville dense et une ville moyenne.
++1. ~~Liste précise des catégories OpenStreetMap retenues pour les points d'intérêt au zoom ≥ 15,
++   à établir en regardant le rendu réel sur une ville dense et une ville moyenne.~~
++   **Tranché.** Les repères restent ceux du § 5.7 au zoom ≥ 15 — services publics, monuments,
++   équipements, parcs — et les sept familles de commerces et services du même paragraphe s'y
++   ajoutent au zoom ≥ 16, sur réglage explicite (§ 5.6).
