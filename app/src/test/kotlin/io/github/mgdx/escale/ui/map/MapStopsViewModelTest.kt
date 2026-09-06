@@ -15,6 +15,7 @@ import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.FakeServerRepository
+import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -49,6 +50,7 @@ class MapStopsViewModelTest {
   private val maps = FakeMapRepository()
   private val geocode = FakeGeocodeRepository()
   private val selection = MapSelection()
+  private val searchSession = SearchSession()
   private val journeys = SelectedJourneyStore()
   private val stops = FakeStopsRepository()
   private val rentals = FakeRentalsRepository()
@@ -71,6 +73,7 @@ class MapStopsViewModelTest {
     cameraStore = cameras,
     locationSource = locations,
     selection = selection,
+    searchSession = searchSession,
     selectedJourneys = journeys,
     departureRequests = departures,
     computeDispatcher = UnconfinedTestDispatcher(),

@@ -8,6 +8,8 @@ import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalPointKind
@@ -15,6 +17,7 @@ import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.server.FakeServerRepository
+import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -54,6 +57,7 @@ class MapRentalsViewModelTest {
   private val maps = FakeMapRepository()
   private val geocode = FakeGeocodeRepository()
   private val selection = MapSelection()
+  private val searchSession = SearchSession()
   private val journeys = SelectedJourneyStore()
   private val stops = FakeStopsRepository()
   private val rentals = FakeRentalsRepository()
@@ -76,6 +80,7 @@ class MapRentalsViewModelTest {
     cameraStore = cameras,
     locationSource = locations,
     selection = selection,
+    searchSession = searchSession,
     selectedJourneys = journeys,
     departureRequests = departures,
     computeDispatcher = UnconfinedTestDispatcher(),
@@ -412,6 +417,45 @@ class MapRentalsViewModelTest {
     assertNull(model.uiState.value.selectedRental)
     assertTrue(model.uiState.value.rentalStationsGeoJson.contains("velib-1"))
   }
+
+  @Test
+  fun `lancer une recherche referme l'infobulle de station`() = runTest {
+    val model = viewModel()
+    model.clickRental(selectedStation())
+    assertNotNull(model.uiState.value.selectedRental)
+
+    // Le brouillon complet, c'est la recherche qui part (SPEC.md § 5.1 : pas de bouton).
+    searchSession.setFrom(place("Hôtel de Ville"))
+    assertNotNull("une origine seule ne lance rien", model.uiState.value.selectedRental)
+    searchSession.setTo(place("Gare de Lyon"))
+
+    assertNull(
+      "la feuille de résultats et l'infobulle se disputeraient le bas de l'écran",
+      model.uiState.value.selectedRental,
+    )
+  }
+
+  @Test
+  fun `une seconde recherche referme aussi l'infobulle rouverte entre-temps`() = runTest {
+    val model = viewModel()
+    searchSession.setFrom(place("Hôtel de Ville"))
+    searchSession.setTo(place("Gare de Lyon"))
+    model.clickRental(selectedStation())
+    assertNotNull(model.uiState.value.selectedRental)
+
+    // Le brouillon reste complet d'une recherche à l'autre : c'est son changement qui compte.
+    searchSession.setTo(place("Montparnasse"))
+
+    assertNull(model.uiState.value.selectedRental)
+  }
+
+  private fun place(name: String) = Location(
+    id = null,
+    name = name,
+    description = null,
+    coordinates = LatLon(48.85, 2.35),
+    kind = PlaceKind.PLACE,
+  )
 
   private fun selectedStation() = SelectedRental(
     id = "velib-1",

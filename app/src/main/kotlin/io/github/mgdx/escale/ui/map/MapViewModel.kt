@@ -36,6 +36,7 @@ import io.github.mgdx.escale.core.repository.StopsRepository
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.core.result.getOrNull
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
+import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,9 +67,9 @@ import kotlinx.coroutines.withContext
  *
  * Aucune coordonnée n'est journalisée (SPEC.md § 8 et § 11).
  */
-// Douze collaborateurs, et pas un de trop : la carte est le seul écran qui réunit le serveur
+// Treize collaborateurs, et pas un de trop : la carte est le seul écran qui réunit le serveur
 // courant, les arrêts, les réglages, le géocodage inverse, la position de l'appareil, la feuille
-// de style, la caméra mémorisée et les trois points de rendez-vous avec les autres lots. Les
+// de style, la caméra mémorisée et les quatre points de rendez-vous avec les autres lots. Les
 // regrouper en objets de commodité masquerait ce que cet écran dépend réellement, sans en retirer
 // une seule dépendance (docs/architecture.md § 9 : injection par constructeur, sans conteneur).
 @Suppress("LongParameterList")
@@ -83,6 +84,7 @@ class MapViewModel(
   private val cameraStore: MapCameraMemory,
   private val locationSource: LocationSource,
   private val selection: MapSelection,
+  private val searchSession: SearchSession,
   private val selectedJourneys: SelectedJourneyStore,
   private val departureRequests: StopDepartureRequests,
   private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
@@ -142,6 +144,7 @@ class MapViewModel(
     observeRentals()
     observePointsOfInterest()
     observeSelectedJourney()
+    observeSearches()
     applyInitialCamera()
   }
 
@@ -484,6 +487,35 @@ class MapViewModel(
   }
 
   /**
+   * Une recherche part : l'infobulle ouverte se referme (SPEC.md § 5.1).
+   *
+   * « Dès que Départ et Arrivée sont renseignés, la recherche se lance [...] les résultats montent
+   * en feuille inférieure au-dessus de la carte, qui reste visible en haut et cadre le trajet
+   * sélectionné. » La feuille et l'infobulle se disputent alors le bas de l'écran, et c'est
+   * exactement ce que [onRentalClick] refuse déjà entre deux infobulles : deux fiches superposées
+   * seraient illisibles à 200 % d'agrandissement, et l'infobulle mangerait la part de carte que le
+   * trajet doit occuper (SPEC.md § 9).
+   *
+   * Le signal est le **brouillon complet**, et non le premier trajet mis en évidence : une
+   * recherche qui met deux secondes à répondre, ou qui échoue, laisserait sinon la fiche ouverte
+   * par-dessus la feuille. Chaque brouillon complet est une recherche qui part — c'est le même
+   * signal que `ResultsViewModel` ouvre la feuille avec —, y compris quand seule la destination
+   * change d'une recherche à la suivante.
+   */
+  private fun observeSearches() {
+    viewModelScope.launch {
+      searchSession.draft.filter { it.isComplete }.collect { closeDetailCard() }
+    }
+  }
+
+  /** Referme l'infobulle ouverte, quelle que soit sa famille, et abandonne l'appel qu'elle attend. */
+  private fun closeDetailCard() {
+    stopDetailJob?.cancel()
+    stopDetailJob = null
+    state.update { it.copy(selectedStop = null, selectedRental = null) }
+  }
+
+  /**
    * Le réglage « points d'intérêt » de SPEC.md § 5.6, indépendant du zoom.
    *
    * Aucune requête n'est en jeu : les points d'intérêt sont déjà dans les tuiles vectorielles, et
@@ -703,6 +735,7 @@ class MapViewModel(
           cameraStore = container.mapCameraStore,
           locationSource = container.deviceLocationSource,
           selection = container.mapSelection,
+          searchSession = container.searchSession,
           selectedJourneys = container.selectedJourneyStore,
           departureRequests = container.stopDepartureRequests,
         )
