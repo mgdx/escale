@@ -33,6 +33,36 @@ Serveur de référence : `https://api.transitous.org`. L'usager peut en configur
 La liste ci-dessus est **complète** : tout ce que `SPEC.md` § 4.3 prévoit est appelé, et rien
 d'autre ne l'est. Aucun point d'entrée n'est en attente.
 
+### `GET /api/v1/geocode`, et le poids de son biais géographique
+
+Les paramètres sont assemblés par `data/net/GeocodeApi.kt`.
+
+| Paramètre | Valeur envoyée | Pourquoi |
+|---|---|---|
+| `text` | la saisie, espaces retirés | Trois caractères minimum (`SPEC.md` § 7.1) |
+| `place` | `latitude,longitude` du centre de la carte, à défaut la dernière position connue | Le biais géographique du § 5.1. Absent si aucun point de référence n'est connu |
+| `placeBias` | `5`, **et seulement quand `place` est envoyé** | Voir ci-dessous. Un poids sans point de référence n'a pas de sens, et un paramètre de plus salit le cache disque de 24 h (§ 7.5) |
+| `language` | la langue de l'interface | Absent si elle n'est pas connue |
+| `numResults` | `10` (§ 5.1) | |
+
+**Pourquoi `placeBias` et pas le défaut du serveur.** Le défaut de l'OpenAPI vaut 1, et ce poids est
+trop faible pour être utile : les arrêts homonymes de tout le pays passent devant les adresses
+voisines. Relevé sur `api.transitous.org`, carte centrée sur Paris, `text=rue de la paix` :
+
+| `placeBias` | Six premiers résultats |
+|---|---|
+| absent (défaut 1) | dix arrêts de bus « Rue de la Paix », de Bitche à Vierzon, aucune adresse |
+| 3 | deux lieux à Vincennes, puis les mêmes arrêts lointains |
+| 10 | lieux et adresses de la petite couronne uniquement |
+
+La valeur retenue est **5**, et elle ne doit pas dépasser 10 : au-delà, les grands arrêts nationaux
+(« Paris Gare de Lyon », les gares TGV) disparaissent derrière des commerces homonymes du quartier.
+Sur `text=gare de lyon` avec la carte sur Paris, un biais de cet ordre garde « Gare de Lyon » en
+tête et repousse Part-Dieu et Perrache derrière les résultats parisiens — le comportement voulu.
+
+`GET /api/v1/reverse-geocode` ne prend pas ce paramètre : il ne connaît que `place`, `type` et
+`numResults` (voir § 4).
+
 ### `GET /api/v6/map/stops`, pour son vrai usage
 
 Les paramètres sont assemblés par `core/query/StopsQueryBuilder.kt`.

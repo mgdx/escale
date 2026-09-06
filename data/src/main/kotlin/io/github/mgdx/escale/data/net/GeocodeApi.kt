@@ -58,7 +58,8 @@ class GeocodeApi private constructor(versionName: String, engine: HttpClientEngi
   /**
    * `GET /api/v1/geocode` : autocomplétion sur [text] (SPEC.md § 5.1).
    *
-   * @param bias `place`, le centre de la carte, qui privilégie les résultats proches.
+   * @param bias `place`, le centre de la carte, qui privilégie les résultats proches. Il est
+   *   accompagné de `placeBias` ([PLACE_BIAS]), sans quoi le poids du serveur reste à 1.
    * @param language `language`, la langue de l'interface.
    * @param limit `numResults`.
    */
@@ -71,7 +72,12 @@ class GeocodeApi private constructor(versionName: String, engine: HttpClientEngi
   ): Outcome<List<Location>> = MotisTransport.runCatchingHttp {
     val response = client.get(MotisEndpoints.url(baseUrl, MotisEndpoints.GEOCODE)) {
       parameter("text", text)
-      bias?.let { parameter("place", it.asParameter()) }
+      // Un poids sans point de référence n'a pas de sens, et un paramètre de plus salit le cache
+      // disque : `placeBias` ne part qu'avec `place`.
+      bias?.let {
+        parameter("place", it.asParameter())
+        parameter("placeBias", PLACE_BIAS)
+      }
       language?.let { parameter("language", it) }
       parameter("numResults", limit)
     }
@@ -117,7 +123,25 @@ class GeocodeApi private constructor(versionName: String, engine: HttpClientEngi
   private suspend fun decodeMatches(response: HttpResponse): List<Location> =
     json.decodeFromString(ListSerializer(GeocodeMatchDto.serializer()), response.bodyAsText()).toDomain()
 
-  private companion object {
+  internal companion object {
+    /**
+     * `placeBias`, le poids du biais géographique de `/api/v1/geocode`.
+     *
+     * Le défaut du serveur vaut 1, et c'est trop peu : les arrêts homonymes de tout le pays passent
+     * devant les adresses voisines. Relevé sur Transitous, carte centrée sur Paris,
+     * `text=rue de la paix` :
+     *
+     * | `placeBias` | Six premiers résultats |
+     * |---|---|
+     * | absent (défaut 1) | dix arrêts « Rue de la Paix », de Bitche à Vierzon, aucune adresse |
+     * | 3 | deux lieux à Vincennes, puis les mêmes arrêts lointains |
+     * | 10 | lieux et adresses de la petite couronne uniquement |
+     *
+     * 5 est le compromis retenu : au-delà de 10, les grands arrêts nationaux (« Paris Gare de
+     * Lyon », les gares TGV) disparaissent derrière des commerces homonymes du quartier.
+     */
+    const val PLACE_BIAS = 5
+
     /** SPEC.md § 7.5 : « cache disque de 24 h pour les résultats de géocodage ». */
     const val CACHE_SECONDS = 24 * 60 * 60
 
