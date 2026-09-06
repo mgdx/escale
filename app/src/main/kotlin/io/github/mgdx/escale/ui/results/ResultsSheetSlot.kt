@@ -67,6 +67,7 @@ import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
+import io.github.mgdx.escale.core.model.JourneySort
 import io.github.mgdx.escale.core.model.stableKey
 import io.github.mgdx.escale.ui.common.ErrorMessage
 import kotlinx.coroutines.CoroutineScope
@@ -122,6 +123,7 @@ private fun rememberResultsActions(viewModel: ResultsViewModel): ResultsActions 
     onLater = viewModel::onLater,
     onJourneySelected = viewModel::onJourneySelected,
     onBikeFilterChanged = viewModel::onBikeFilterChanged,
+    onSortChanged = viewModel::onSortChanged,
     onRefresh = viewModel::onPullToRefresh,
   )
 }
@@ -133,6 +135,8 @@ internal data class ResultsActions(
   val onLater: () -> Unit,
   val onJourneySelected: (Journey) -> Unit,
   val onBikeFilterChanged: (BikeFilter) -> Unit,
+  /** Le tri de la liste affichée (SPEC.md § 5.2). Il ne déclenche aucune requête. */
+  val onSortChanged: (JourneySort) -> Unit,
   /** « Tirer pour rafraîchir » : le geste de SPEC.md § 7.4. */
   val onRefresh: () -> Unit,
 )
@@ -498,6 +502,11 @@ private fun JourneyColumn(state: ResultsUiState, actions: ResultsActions, journe
     contentPadding = PaddingValues(ContentPadding),
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
+    if (state.sortVisible) {
+      item(key = SORT_KEY) {
+        SortRow(selected = state.sort, onSelected = actions.onSortChanged)
+      }
+    }
     if (state.bikeFilterVisible) {
       item(key = FILTER_KEY) {
         BikeFilterRow(selected = state.bikeFilter, onSelected = actions.onBikeFilterChanged)
@@ -534,6 +543,7 @@ private fun JourneyColumn(state: ResultsUiState, actions: ResultsActions, journe
   }
 }
 
+private const val SORT_KEY = "tri"
 private const val FILTER_KEY = "filtre"
 private const val EARLIER_KEY = "plus-tot"
 private const val LATER_KEY = "plus-tard"

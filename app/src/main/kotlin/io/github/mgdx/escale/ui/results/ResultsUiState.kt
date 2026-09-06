@@ -5,6 +5,8 @@ import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyLeg
+import io.github.mgdx.escale.core.model.JourneySort
+import io.github.mgdx.escale.core.model.sorted
 import io.github.mgdx.escale.core.result.EscaleError
 import java.time.Duration
 import java.time.Instant
@@ -110,6 +112,19 @@ data class ResultsUiState(
   val categoryOrder: List<JourneyCategory> = CategoryOrder.DEFAULT,
   val tabs: Map<JourneyCategory, TabResults> = emptyMap(),
   val bikeFilter: BikeFilter = BikeFilter.ALL,
+  /**
+   * L'ordre de présentation de la liste, **onglet par onglet** (SPEC.md § 5.2).
+   *
+   * Chaque catégorie garde le sien : trier le transport en commun par correspondances ne réordonne
+   * pas les trois autres listes, et y revenir retrouve l'ordre qu'on y avait choisi. Une catégorie
+   * absente de la table est une catégorie qu'on n'a jamais triée : elle s'en tient à l'ordre des
+   * départs.
+   *
+   * Le tri ne vaut que pour la liste affichée : les durées annoncées sous les languettes sont
+   * celles du trajet le plus rapide de chaque catégorie, que l'ordre ne touche pas. Et il ne
+   * déclenche aucune requête — la liste visible en est simplement dérivée.
+   */
+  val sorts: Map<JourneyCategory, JourneySort> = emptyMap(),
   /** Clé du trajet choisi, au sens de `Journey.stableKey()`. */
   val selectedKey: String? = null,
 ) {
@@ -117,13 +132,17 @@ data class ResultsUiState(
   val current: TabResults
     get() = tabs[category] ?: TabResults()
 
+  /** L'ordre de la liste de l'onglet consulté, celui des départs tant qu'on n'en a pas choisi d'autre. */
+  val sort: JourneySort
+    get() = sorts[category] ?: JourneySort.DEPARTURE
+
   /** Ce qu'annonce l'onglet [category], y compris tant que sa requête n'est pas partie. */
   fun headlineOf(category: JourneyCategory): TabHeadline = (tabs[category] ?: TabResults()).headline
 
-  /** Les trajets à afficher, filtre de l'onglet Vélo compris. */
+  /** Les trajets à afficher, dans l'ordre choisi et filtre de l'onglet Vélo compris. */
   val visibleJourneys: List<Journey>
     get() {
-      val journeys = current.feed?.journeys.orEmpty()
+      val journeys = current.feed?.sorted(sort).orEmpty()
       if (category != JourneyCategory.BIKE) return journeys
       return when (bikeFilter) {
         BikeFilter.ALL -> journeys
@@ -131,6 +150,13 @@ data class ResultsUiState(
         BikeFilter.SHARED -> journeys.filter { it.usesRental }
       }
     }
+
+  /**
+   * Vrai quand le sélecteur de tri a un sens : il faut au moins deux trajets pour qu'un ordre en
+   * distingue un du suivant, et un sélecteur qui n'ordonne rien n'est qu'un encombrement.
+   */
+  val sortVisible: Boolean
+    get() = visibleJourneys.size > 1
 
   /**
    * Vrai quand le filtre de l'onglet Vélo a un sens : il ne s'affiche que si les deux familles

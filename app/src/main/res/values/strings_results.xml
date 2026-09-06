@@ -119,6 +119,12 @@
   <string name="results_filter_own">My own bike</string>
   <string name="results_filter_shared">Shared</string>
 
+  <!-- Tri de la liste, en tête de l'onglet consulté (SPEC.md § 5.2). -->
+  <string name="results_sort_label">Sort by</string>
+  <string name="results_sort_departure">Departure</string>
+  <string name="results_sort_duration">Duration</string>
+  <string name="results_sort_transfers">Transfers</string>
+
   <!-- Pagination par curseur, en tête et en pied de liste (SPEC.md § 5.2). -->
   <string name="results_earlier">Earlier</string>
   <string name="results_later">Later</string>

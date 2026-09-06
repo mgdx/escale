@@ -2,6 +2,8 @@ package io.github.mgdx.escale.ui.results
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.JourneyCategory
+import io.github.mgdx.escale.core.model.JourneySort
 import io.github.mgdx.escale.core.query.PlanQueryBuilder
 
 /*
@@ -175,20 +178,66 @@ internal fun PageButton(page: ResultsPage, loading: Boolean, onClick: () -> Unit
  */
 @Composable
 internal fun BikeFilterRow(selected: BikeFilter, onSelected: (BikeFilter) -> Unit, modifier: Modifier = Modifier) {
-  val label = stringResource(R.string.results_filter_label)
-  Row(
+  ChoiceChipRow(
+    label = stringResource(R.string.results_filter_label),
+    options = BikeFilter.entries,
+    selected = selected,
+    labelOf = { stringResource(it.labelRes()) },
+    onSelected = onSelected,
+    modifier = modifier,
+  )
+}
+
+/**
+ * Le tri de la liste (SPEC.md § 5.2) : heure de départ, durée, ou nombre de correspondances.
+ *
+ * Le choix est **local** : il ne déclenche aucune requête, il ne fait que réordonner les trajets
+ * déjà reçus.
+ */
+@Composable
+internal fun SortRow(selected: JourneySort, onSelected: (JourneySort) -> Unit, modifier: Modifier = Modifier) {
+  ChoiceChipRow(
+    label = stringResource(R.string.results_sort_label),
+    options = JourneySort.entries,
+    selected = selected,
+    labelOf = { stringResource(it.labelRes()) },
+    onSelected = onSelected,
+    modifier = modifier,
+  )
+}
+
+/**
+ * Un choix unique parmi quelques options, en puces Material 3.
+ *
+ * Le groupe porte son intitulé en description : le lecteur d'écran dit de quel choix il s'agit
+ * avant d'énumérer les puces, que rien n'annonçait jusque-là (SPEC.md § 9).
+ *
+ * Les puces passent à la ligne plutôt que de déborder : à 200 % d'agrandissement, trois libellés
+ * ne tiennent plus sur la largeur, et SPEC.md § 9 interdit d'en tronquer un.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun <T> ChoiceChipRow(
+  label: String,
+  options: List<T>,
+  selected: T,
+  labelOf: @Composable (T) -> String,
+  onSelected: (T) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  FlowRow(
     modifier = modifier
       .fillMaxWidth()
       .semantics { contentDescription = label },
     horizontalArrangement = Arrangement.spacedBy(ButtonSpacing),
-    verticalAlignment = Alignment.CenterVertically,
+    verticalArrangement = Arrangement.spacedBy(ButtonSpacing),
   ) {
-    BikeFilter.entries.forEach { filter ->
-      val isSelected = filter == selected
+    options.forEach { option ->
+      val isSelected = option == selected
       FilterChip(
         selected = isSelected,
-        onClick = { onSelected(filter) },
-        label = { Text(stringResource(filter.labelRes())) },
+        onClick = { onSelected(option) },
+        label = { Text(labelOf(option)) },
         // Material ne pose pas de coche tout seul : sans elle, la puce active ne se distinguait
         // que par sa couleur de fond, ce que SPEC.md § 9 interdit. Le pictogramme est muet, l'état
         // « sélectionné » étant déjà annoncé par le rôle de la puce.
@@ -207,6 +256,12 @@ internal fun BikeFilterRow(selected: BikeFilter, onSelected: (BikeFilter) -> Uni
       )
     }
   }
+}
+
+private fun JourneySort.labelRes(): Int = when (this) {
+  JourneySort.DEPARTURE -> R.string.results_sort_departure
+  JourneySort.DURATION -> R.string.results_sort_duration
+  JourneySort.TRANSFERS -> R.string.results_sort_transfers
 }
 
 private fun BikeFilter.labelRes(): Int = when (this) {
