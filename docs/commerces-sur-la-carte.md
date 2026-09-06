@@ -21,41 +21,106 @@ permission.** C'est une feuille de style, un réglage, une fiche, et un peu de `
 
 ### 2.1 Le réglage
 
-Dans Réglages → Affichage → couches de la carte, à côté de « Arrêts », « Libre-service » et
-« Points d'intérêt », une quatrième bascule **« Commerces et services »**, **désactivée par
-défaut** : la spec veut une carte de déplacement, et c'est l'usager qui choisit de la densifier.
+> **Décision du mainteneur, septembre 2026.** Ce paragraphe décrivait une bascule unique
+> « Commerces et services ». Le périmètre a été élargi : c'est un écran entier, et chaque catégorie
+> se règle séparément.
 
-### 2.2 Les paliers de zoom
+Réglages → Affichage ne porte plus aucune bascule de couche : une seule entrée, **« Couches de la
+carte »**, ouvre un écran dédié, sur le modèle de l'écran d'ordre des catégories. **Quatorze
+bascules** s'y règlent une par une, en trois sections :
 
-Rien ne change sous le zoom 16, pour que l'information de transport reste seule lisible.
+| Section | Nombre | Contenu |
+|---|---|---|
+| Transport | 2 | Arrêts, Libre-service — les deux allumées, elles quittent la liste « Affichage » |
+| Repères | 4 | les points d'intérêt de la v1, découpés — les quatre allumées |
+| Commerces et services | 8 | Toilettes allumée, les sept autres éteintes |
 
-| Zoom | Avec le réglage activé |
+Soit **douze catégories de points d'intérêt** (4 + 8), et c'est ce nombre-là qui compte pour la
+feuille de style. La carte de déplacement reste le propos : à part les toilettes, rien de nouveau
+n'apparaît sans un geste de l'usager.
+
+### 2.2 Les paliers de zoom et les douze catégories
+
+> **Décision du mainteneur, septembre 2026.** Ce paragraphe ne décrivait que sept familles de
+> commerces. Les repères de la v1 se découpent eux aussi en catégories réglables, et les toilettes
+> sortent de « Services du quotidien » pour devenir une catégorie allumée par défaut. Une catégorie
+> « Parcs et jardins » a été envisagée puis **abandonnée** : voir plus bas.
+
+| Zoom | Ce qui apparaît |
 |---|---|
-| < 16 | Rien de plus qu'aujourd'hui. |
-| ≥ 16 | Pictogramme discret par famille, sans nom, sous les arrêts dans l'ordre de placement. |
-| ≥ 17 | Le nom, sous le pictogramme, `text-optional` : le nom s'efface avant le pictogramme quand ça se bouscule. |
+| < 15 | Rien de plus qu'aujourd'hui. |
+| ≥ 15 | Les **repères** des catégories activées, sans nom. |
+| ≥ 16 | Le nom des repères, et le **pictogramme** des catégories de commerces activées — dont les toilettes, allumées d'emblée. Pictogramme discret, sous les arrêts dans l'ordre de placement. |
+| ≥ 17 | Le nom des commerces, sous le pictogramme, `text-optional` : le nom s'efface avant le pictogramme quand ça se bouscule. |
 
-Familles retenues, chacune avec un pictogramme des sprites `basics` déjà servis par le serveur
-(aucune image nouvelle dans l'APK, déjà à 13,9 Mo sur 15) :
+Chaque catégorie porte un pictogramme des sprites `basics` déjà servis par le serveur (aucune image
+nouvelle dans l'APK, déjà à 13,9 Mo sur 15).
 
-| Famille | Valeurs OSM |
-|---|---|
-| Alimentation | `shop` = supermarket, convenience, bakery, butcher, greengrocer, alcohol, beverages, kiosk, general, department_store, mall, marketplace |
-| Restauration | `amenity` = restaurant, fast_food, cafe, pub, bar, biergarten |
-| Santé | `amenity` = pharmacy, doctors, dentist, clinic, veterinary ; `shop` = chemist, optician |
-| Argent | `amenity` = bank, atm |
-| Hébergement | `tourism` = hotel, motel, hostel, guest_house, bed_and_breakfast, camp_site |
-| Services du quotidien | `amenity` = toilets, drinking_water, post_box, telephone, car_rental, car_sharing, bicycle_rental, vending_machine ; `shop` = hairdresser, laundry, dry_cleaning, travel_agency |
-| Autres commerces | toute autre valeur de `shop` acceptée par le profil |
+**Repères — zoom ≥ 15, nom à partir de 16, les quatre allumées par défaut.** Elles reprennent
+exactement le filtre `poi-landmarks` de la v1 : à réglages par défaut, le rendu ne change pas.
 
-Les repères de la v1 (`poi-landmarks` : services publics, monuments, équipements) ne bougent
-pas et restent visibles dès le zoom 15, réglage ou non.
+| Catégorie | Valeurs OSM | Par défaut |
+|---|---|---|
+| Services publics | `amenity` = townhall, post_office, police, fire_station, courthouse, community_centre, place_of_worship | allumée |
+| Enseignement | `amenity` = school, university, college, library | allumée |
+| Culture et monuments | `amenity` = theatre, cinema, arts_centre ; `historic` = castle, monument, memorial, fort, ruins, archaeological_site, battlefield ; `tourism` = artwork, viewpoint ; `man_made` = lighthouse | allumée |
+| Santé publique | `amenity` = hospital, clinic, doctors, dentist, pharmacy | allumée |
+
+Les **lieux de culte** sont rangés dans « Services publics » et n'ont pas de catégorie propre :
+décision du mainteneur.
+
+**Parcs et jardins — catégorie abandonnée, et voici pourquoi, pour qu'on n'y revienne pas.**
+Une catégorie « Parcs et jardins » a été demandée, puis retirée après vérification dans
+`profile/full.lua` de `motis-project/tiles` : elle n'aurait contenu ni parcs ni jardins.
+
+- La couche `pois` n'accepte, pour `leisure`, que playground, dog_park, sports_centre, pitch,
+  swimming_pool, water_park, golf_course, stadium, ice_rink (`poi_leisure_values`).
+- `park` et `garden` partent dans la couche `land` sous `kind = park` / `kind = garden`
+  (`process_land`, `elseif leisure == "golf_course" or leisure == "park" or …` → `kind = leisure`),
+  et `process_land` **n'appelle jamais `set_names`** : la couche `land` ne porte pas de `name`.
+- `nature_reserve` n'est retenu nulle part.
+
+Un pictogramme, et surtout un **nom**, sur un parc est donc **impossible** sans une donnée que ni
+les tuiles ni l'API MOTIS ne fournissent. **Décision du mainteneur : « on les laisse affichés sur
+la carte et pas d'option ».** Les parcs, jardins et espaces verts restent ce qu'ils sont
+aujourd'hui — des surfaces vertes dessinées par la couche `land-park` du fond de carte dès le
+zoom 11, sans pictogramme, sans nom et sans réglage. Rien à faire côté code.
+
+**Commerces et services — zoom ≥ 16, nom à partir de 17, huit catégories dont sept éteintes par
+défaut.**
+
+| Catégorie | Valeurs OSM | Par défaut |
+|---|---|---|
+| Toilettes | `amenity` = toilets | **allumée** |
+| Alimentation | `shop` = supermarket, convenience, bakery, butcher, greengrocer, alcohol, beverages, kiosk, general, department_store, mall, marketplace | éteinte |
+| Restauration | `amenity` = restaurant, fast_food, cafe, pub, bar, biergarten | éteinte |
+| Santé | `amenity` = veterinary ; `shop` = chemist, optician | éteinte |
+| Argent | `amenity` = bank, atm | éteinte |
+| Hébergement | `tourism` = hotel, motel, hostel, guest_house, bed_and_breakfast, camp_site | éteinte |
+| Services du quotidien | `amenity` = drinking_water, post_box, telephone, car_rental, car_sharing, bicycle_rental, vending_machine ; `shop` = hairdresser, laundry, dry_cleaning, travel_agency | éteinte |
+| Autres commerces | toute autre valeur de `shop` acceptée par le profil | éteinte |
+
+Trois pièges à ne pas rater :
+
+- **« Toilettes » est la seule catégorie de cette section allumée par défaut**, et donc la seule
+  chose qu'un usager qui met à jour voit apparaître sans avoir rien réglé. C'est assumé.
+- `toilets` **ne figure plus** dans « Services du quotidien » ; `drinking_water` y reste.
+- « Santé » ne reprend pas les valeurs de « Santé publique » : pharmacie, hôpital, clinique,
+  cabinet médical et dentiste restent des **repères** visibles dès le zoom 15, et ne doivent pas
+  apparaître deux fois. Il ne reste à « Santé » que vétérinaire, droguerie et opticien.
 
 ### 2.3 La fiche
 
-Appui sur un commerce : une carte à la manière de l'infobulle d'arrêt, avec :
+> **Décision du mainteneur, septembre 2026.** La fiche s'ouvre sur **tout** point d'intérêt, pas
+> seulement sur les commerces : les repères de la v1 (mairie, monument, lieu de culte, école,
+> théâtre…) affichaient un pictogramme sans que rien ne se passe à l'appui, ce qui n'a jamais été
+> voulu. C'est ce qui rend cohérent l'exemple « Lieu de culte · catholique » ci-dessous, puisque
+> `place_of_worship` est un repère et non un commerce.
 
-- le **nom**, ou le libellé de la famille s'il n'en a pas ;
+Appui sur un point d'intérêt, quelle que soit sa catégorie : une carte à la manière de l'infobulle
+d'arrêt, avec :
+
+- le **nom**, ou le libellé de la catégorie s'il n'en a pas ;
 - le **type** traduit (« Boulangerie », « Restaurant · italien » avec `cuisine`, « Banque ·
   distributeur » avec `atm`, « Lieu de culte · catholique » avec `religion`/`denomination`) ;
 - l'**adresse**, obtenue par géocodage inverse à l'ouverture de la fiche, en une requête,
@@ -85,6 +150,12 @@ plus de coordination que de travail.
 ---
 
 ## 4. Prompts
+
+> **Avertissement.** Les prompts qui suivent décrivent **l'état initial du plan**, celui d'avant les
+> décisions du mainteneur. Ils parlent encore d'une bascule unique, de sept familles et d'une fiche
+> réservée aux commerces. **Le § 2 prime** : c'est lui qui décrit ce qui est à faire. Les prompts
+> sont conservés tels quels pour garder trace de la façon dont le travail a été découpé, pas pour
+> être suivis à la lettre.
 
 ### Lot 0 — Amendement de la spec
 
