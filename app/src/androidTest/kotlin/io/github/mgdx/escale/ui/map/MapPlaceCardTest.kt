@@ -1,16 +1,20 @@
 package io.github.mgdx.escale.ui.map
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.PoiComplement
+import io.github.mgdx.escale.core.model.PoiDetailKey
 import io.github.mgdx.escale.core.model.PoiTypeKey
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 import org.junit.Assert.assertEquals
@@ -21,13 +25,13 @@ import org.junit.runner.RunWith
 /**
  * La fiche d'un point d'intérêt, telle qu'elle s'affiche (SPEC.md § 5.7 et § 10).
  *
- * Quatre états valent d'être vus : avec nom et avec adresse, sans nom, sans adresse, et avec le
- * complément de type. Ce sont ceux où la fiche décide de montrer ou de taire une ligne — et taire
- * une ligne vide est ici une exigence, pas une commodité : « on n'affiche pas ce qu'on n'a pas ».
+ * Les états qui valent d'être vus sont ceux où la fiche décide de montrer ou de taire une ligne :
+ * avec nom, sans nom, avec adresse, avec le seul numéro de la tuile, sans rien — taire une ligne
+ * vide est ici une exigence et non une commodité, « on n'affiche pas ce qu'on n'a pas ».
  *
- * Les libellés attendus sont ceux de `values/` : les cas d'essai instrumentés tournent en anglais
- * sauf si l'appareil impose une autre langue, et comparer un texte traduit reviendrait à vérifier
- * la langue de l'appareil plutôt que la fiche.
+ * **Aucun libellé n'est écrit en dur** : ils sont relus dans les ressources, comme le composable le
+ * fait. Un cas d'essai qui comparerait « Bakery » vérifierait la langue de l'appareil, pas la
+ * fiche, et échouerait sur un téléphone réglé en français.
  */
 @RunWith(AndroidJUnit4::class)
 class MapPlaceCardTest {
@@ -35,7 +39,11 @@ class MapPlaceCardTest {
   @get:Rule
   val compose = createComposeRule()
 
-  private val point = LatLon(48.8566, 2.3522)
+  private val context: Context get() = InstrumentationRegistry.getInstrumentation().targetContext
+
+  private fun label(id: Int, vararg arguments: Any): String = context.getString(id, *arguments)
+
+  private val point = LatLon(lat = 48.8566, lon = 2.3522)
 
   private val address = Location(
     id = null,
@@ -67,7 +75,7 @@ class MapPlaceCardTest {
     )
 
     compose.onNodeWithText("Au bon pain").assertIsDisplayed()
-    compose.onNodeWithText("Bakery").assertIsDisplayed()
+    compose.onNodeWithText(label(R.string.map_place_type_bakery)).assertIsDisplayed()
     compose.onNodeWithText("12 Rue de Rivoli").assertIsDisplayed()
   }
 
@@ -77,14 +85,14 @@ class MapPlaceCardTest {
     // plus précis que la famille, et reste vrai : c'est lui qui sert de titre.
     show(SelectedPlace(point = point, category = PoiCategory.TOILETS, typeKey = PoiTypeKey.TOILETS))
 
-    compose.onNodeWithText("Public toilets").assertIsDisplayed()
+    compose.onNodeWithText(label(R.string.map_place_type_toilets)).assertIsDisplayed()
   }
 
   @Test
   fun un_commerce_que_la_table_ne_nomme_pas_garde_le_libelle_de_sa_categorie() {
     show(SelectedPlace(point = point, category = PoiCategory.OTHER_SHOPS))
 
-    compose.onNodeWithText("Other shops").assertIsDisplayed()
+    compose.onNodeWithText(label(R.string.map_place_category_other_shops)).assertIsDisplayed()
   }
 
   @Test
@@ -105,18 +113,55 @@ class MapPlaceCardTest {
   }
 
   @Test
-  fun le_complement_suit_le_type() {
+  fun l_adresse_rendue_remplace_le_numero_de_la_tuile() {
+    show(
+      SelectedPlace(
+        point = point,
+        name = "Au bon pain",
+        typeKey = PoiTypeKey.BAKERY,
+        houseNumber = "12",
+        address = address,
+        addressLoading = false,
+      ),
+    )
+
+    compose.onNodeWithText("12 Rue de Rivoli").assertIsDisplayed()
+  }
+
+  @Test
+  fun le_complement_suit_le_type_et_se_traduit() {
+    // La tuile porte « italian » ; la fiche affiche le libellé de la langue de l'appareil.
     show(
       SelectedPlace(
         point = point,
         name = "Chez Marcel",
         category = PoiCategory.DINING,
         typeKey = PoiTypeKey.RESTAURANT,
-        complement = PoiComplement.Detail("italian"),
+        complement = PoiComplement.Named(PoiDetailKey.ITALIAN),
       ),
     )
 
-    compose.onNodeWithText("Restaurant · italian").assertIsDisplayed()
+    val expected = label(
+      R.string.map_place_type_detail,
+      label(R.string.map_place_type_restaurant),
+      label(R.string.map_place_detail_italian),
+    )
+    compose.onNodeWithText(expected).assertIsDisplayed()
+  }
+
+  @Test
+  fun une_valeur_que_la_table_ne_nomme_pas_reste_lisible() {
+    show(
+      SelectedPlace(
+        point = point,
+        name = "Chez Marcel",
+        typeKey = PoiTypeKey.RESTAURANT,
+        complement = PoiComplement.Unnamed("Soul food"),
+      ),
+    )
+
+    val expected = label(R.string.map_place_type_detail, label(R.string.map_place_type_restaurant), "Soul food")
+    compose.onNodeWithText(expected).assertIsDisplayed()
   }
 
   @Test
@@ -131,7 +176,12 @@ class MapPlaceCardTest {
       ),
     )
 
-    compose.onNodeWithText("Bank · cash machine").assertIsDisplayed()
+    val expected = label(
+      R.string.map_place_type_detail,
+      label(R.string.map_place_type_bank),
+      label(R.string.map_place_detail_atm),
+    )
+    compose.onNodeWithText(expected).assertIsDisplayed()
   }
 
   @Test
@@ -139,8 +189,8 @@ class MapPlaceCardTest {
     val picked = mutableListOf<MapPickPurpose>()
     show(SelectedPlace(point = point, name = "Au bon pain", typeKey = PoiTypeKey.BAKERY), onPick = { picked += it })
 
-    compose.onNodeWithText("Start from here").performClick()
-    compose.onNodeWithText("Go to here").performClick()
+    compose.onNodeWithText(label(R.string.map_pick_departure)).performClick()
+    compose.onNodeWithText(label(R.string.map_pick_destination)).performClick()
 
     assertEquals(listOf(MapPickPurpose.DEPARTURE, MapPickPurpose.DESTINATION), picked)
   }
@@ -152,7 +202,7 @@ class MapPlaceCardTest {
       dismissed += 1
     })
 
-    compose.onNodeWithContentDescription("Close place details").performClick()
+    compose.onNodeWithContentDescription(label(R.string.map_place_close)).performClick()
 
     assertEquals(1, dismissed)
   }

@@ -1,0 +1,20 @@
+[
+  {
+    "type": "PLACE",
+    "name": "Parc de la Citadelle",
+    "id": "way/[101010101]",
+    "lat": 5.06416E1,
+    "lon": 3.0426E0,
+    "areas": [],
+    "score": 9.1E0
+  },
+  {
+    "type": "PLACE",
+    "name": "Porte Royale",
+    "id": "way/[202020202]",
+    "lat": 5.06418E1,
+    "lon": 3.0431E0,
+    "areas": [],
+    "score": 7.7E0
+  }
+]

@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.map
 
 import io.github.mgdx.escale.core.model.PoiCategory
+import io.github.mgdx.escale.core.model.PoiDetailKey
 import io.github.mgdx.escale.core.model.PoiTypeKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -25,6 +26,13 @@ class MapPoiLabelsTest {
   fun `chaque categorie a son libelle`() {
     // `poiCategoryLabel` lève sur une catégorie absente : la parcourir toutes est le cas d'essai.
     PoiCategory.entries.forEach { category -> assertTrue(poiCategoryLabel(category) != 0) }
+  }
+
+  @Test
+  fun `chaque complement a son libelle`() {
+    // `cuisine`, `religion` et `denomination` sont en anglais dans la tuile : une valeur nommée par
+    // `:core` sans traduction ici mettrait de l'anglais dans une interface en français.
+    PoiDetailKey.entries.forEach { key -> assertTrue(poiDetailLabel(key) != 0) }
   }
 
   @Test

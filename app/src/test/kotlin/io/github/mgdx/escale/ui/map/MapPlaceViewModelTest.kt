@@ -7,6 +7,7 @@ import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.PoiComplement
+import io.github.mgdx.escale.core.model.PoiDetailKey
 import io.github.mgdx.escale.core.model.PoiTypeKey
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
@@ -87,13 +88,14 @@ class MapPlaceViewModelTest {
 
   @Test
   fun `ouvrir une fiche declenche une requete d'adresse, et une seule`() = runTest {
-    geocode.label = address
+    geocode.addressLabel = address
     val model = viewModel()
 
     model.uiState.value.placeActions.onPlaceClick(bakery)
     advanceUntilIdle()
 
-    assertEquals(listOf(bakery.point), geocode.reversed)
+    assertEquals(listOf(bakery.point), geocode.addressed)
+    assertTrue("l'appui long garde sa propre voie, la fiche ne l'emprunte pas", geocode.reversed.isEmpty())
     val place = model.uiState.value.selectedPlace
     assertNotNull(place)
     assertEquals(address, place!!.address)
@@ -125,7 +127,7 @@ class MapPlaceViewModelTest {
 
     assertNull(model.uiState.value.selectedPlace)
     // Partie, mais jamais revenue : c'est exactement ce que « annulée à sa fermeture » veut dire.
-    assertEquals(1, geocode.reversed.size)
+    assertEquals(1, geocode.addressed.size)
     assertEquals(0, geocode.completed)
   }
 
@@ -139,7 +141,7 @@ class MapPlaceViewModelTest {
     model.uiState.value.placeActions.onPlaceClick(other)
     advanceUntilIdle()
 
-    assertEquals(listOf(bakery.point, other.point), geocode.reversed)
+    assertEquals(listOf(bakery.point, other.point), geocode.addressed)
     assertEquals("une fiche, une requête servie", 1, geocode.completed)
     assertEquals(other.point, model.uiState.value.selectedPlace?.point)
   }
@@ -192,14 +194,14 @@ class MapPlaceViewModelTest {
     advanceUntilIdle()
 
     assertNull(model.uiState.value.selectedPlace)
-    assertTrue("un réglage de couches ne coûte aucun octet de réseau", geocode.reversed.isEmpty())
+    assertTrue("un réglage de couches ne coûte aucun octet de réseau", geocode.addressed.isEmpty())
   }
 
   // --- « Partir d'ici » / « Aller ici » ----------------------------------------------------------
 
   @Test
   fun `choisir une destination depose le point, avec l'adresse deja rendue`() = runTest {
-    geocode.label = address
+    geocode.addressLabel = address
     val model = viewModel()
     model.uiState.value.placeActions.onPlaceClick(bakery)
     advanceUntilIdle()
@@ -224,7 +226,7 @@ class MapPlaceViewModelTest {
 
     assertEquals(MapPickPurpose.DEPARTURE, selection.pick.value?.purpose)
     assertNull("un point sans nom reste un point utilisable", selection.pick.value?.label)
-    assertEquals("une fiche vaut une requête, pas deux", 1, geocode.reversed.size)
+    assertEquals("une fiche vaut une requête, pas deux", 1, geocode.addressed.size)
   }
 
   @Test
@@ -244,12 +246,12 @@ class MapPlaceViewModelTest {
     val restaurant = bakery.copy(
       category = PoiCategory.DINING,
       typeKey = PoiTypeKey.RESTAURANT,
-      complement = PoiComplement.Detail("italian"),
+      complement = PoiComplement.Named(PoiDetailKey.ITALIAN),
     )
 
     model.uiState.value.placeActions.onPlaceClick(restaurant)
     advanceUntilIdle()
 
-    assertEquals(PoiComplement.Detail("italian"), model.uiState.value.selectedPlace?.complement)
+    assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), model.uiState.value.selectedPlace?.complement)
   }
 }

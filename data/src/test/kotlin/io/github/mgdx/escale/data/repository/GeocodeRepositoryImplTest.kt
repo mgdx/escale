@@ -114,6 +114,66 @@ class GeocodeRepositoryImplTest {
     assertNull((outcome as Outcome.Success).value)
   }
 
+  // --- L'adresse postale, pour la fiche d'un point d'intérêt (SPEC.md § 5.7) ---------------------
+
+  @Test
+  fun `l'adresse postale n'est pas le lieu le plus proche`() = runTest {
+    // Réponse réelle sur un point de la rue Jacquemars Giélée à Lille : le serveur rend d'abord
+    // deux commerces, et l'adresse n'arrive qu'en troisième position. Prendre le premier résultat
+    // afficherait le nom du restaurant en guise d'adresse — c'était le défaut.
+    val outcome = repository("reverse_geocode_jacquemars_gielee.json")
+      .reverseGeocodeAddress(LatLon(50.6306, 3.0567))
+
+    assertEquals("17 Rue Jacquemars Giélée", (outcome as Outcome.Success).value?.name)
+  }
+
+  @Test
+  fun `les deux geocodages inverses ne rendent pas la meme chose sur le meme point`() = runTest {
+    // C'est tout l'intérêt d'avoir deux voies : l'appui long veut « Préfecture de Région », la
+    // fiche veut « 17 Rue Jacquemars Giélée ». Les confondre casse l'une ou l'autre.
+    val point = LatLon(50.6306, 3.0567)
+    val lieu = repository("reverse_geocode_jacquemars_gielee.json").reverseGeocode(point)
+    val adresse = repository("reverse_geocode_jacquemars_gielee.json").reverseGeocodeAddress(point)
+
+    assertEquals("Préfecture de Région", (lieu as Outcome.Success).value?.name)
+    assertEquals("17 Rue Jacquemars Giélée", (adresse as Outcome.Success).value?.name)
+  }
+
+  @Test
+  fun `l'adresse demande plusieurs resultats, le lieu un seul`() = runTest {
+    // Une adresse au troisième rang ne se trouve pas en demandant un seul résultat ; et il ne faut
+    // pas pour autant faire calculer dix candidats au serveur pour un simple libellé.
+    val lieux = mutableListOf<HttpRequestData>()
+    repository("reverse_geocode_bastille.json", requests = lieux).reverseGeocode(LatLon(48.85, 2.36))
+    val adresses = mutableListOf<HttpRequestData>()
+    repository("reverse_geocode_bastille.json", requests = adresses).reverseGeocodeAddress(LatLon(48.85, 2.36))
+
+    assertEquals("1", lieux.single().url.parameters["numResults"])
+    assertEquals("10", adresses.single().url.parameters["numResults"])
+  }
+
+  @Test
+  fun `une adresse loin dans la liste se trouve quand meme`() = runTest {
+    // Place de la Bastille : quatre monuments avant l'adresse. La fenêtre de dix résultats est là
+    // pour ces cas-là, où le lieu remarquable écrase l'adresse dans le classement du serveur.
+    val outcome = repository("reverse_geocode_bastille.json").reverseGeocodeAddress(LatLon(48.8532, 2.3692))
+    assertEquals("4 Place de la Bastille", (outcome as Outcome.Success).value?.name)
+  }
+
+  @Test
+  fun `sans adresse dans la reponse, la fiche n'en invente pas`() = runTest {
+    // Un chemin, un parc, une place sans numéro : le serveur ne rend que des lieux. La fiche se
+    // rabat alors sur le numéro de la tuile, puis sur rien — on n'affiche pas ce qu'on n'a pas.
+    val outcome = repository("reverse_geocode_sans_adresse.json").reverseGeocodeAddress(LatLon(50.6416, 3.0426))
+    assertNull((outcome as Outcome.Success).value)
+  }
+
+  @Test
+  fun `un endroit vide rend null pour l'adresse aussi, pas une erreur`() = runTest {
+    val outcome = repository("geocode_no_result.json").reverseGeocodeAddress(LatLon(0.0, 0.0))
+    assertNull((outcome as Outcome.Success).value)
+  }
+
   @Test
   fun `vider le cache de geocodage reussit meme sans cache disque`() = runTest {
     // SPEC.md § 5.6.1 : le changement de serveur appelle cette purge, elle ne doit jamais échouer

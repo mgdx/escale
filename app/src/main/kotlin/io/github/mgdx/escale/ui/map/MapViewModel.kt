@@ -566,6 +566,10 @@ class MapViewModel(
    * requête que les points d'intérêt provoquent, **une par fiche**, servie par le cache de 24 h du
    * géocodage (SPEC.md § 7, règles 5 et 11).
    *
+   * C'est `reverseGeocodeAddress` qui est appelée, et non `reverseGeocode` : le résultat le plus
+   * proche d'un restaurant est le restaurant lui-même, et la fiche afficherait alors son nom en
+   * guise d'adresse. L'appui long, lui, veut précisément ce lieu-là et garde l'autre voie.
+   *
    * Elle referme l'infobulle d'un arrêt ou d'un point de libre-service : deux fiches superposées au
    * bas de l'écran seraient illisibles à 200 % d'agrandissement (SPEC.md § 9).
    */
@@ -574,7 +578,7 @@ class MapViewModel(
     placeAddressJob?.cancel()
     state.update { it.copy(selectedPlace = place, selectedStop = null, selectedRental = null) }
     placeAddressJob = viewModelScope.launch {
-      val address = geocodeRepository.reverseGeocode(place.point).getOrNull()
+      val address = geocodeRepository.reverseGeocodeAddress(place.point).getOrNull()
       state.update { current ->
         // L'usager a pu refermer la fiche, ou en ouvrir une autre, pendant l'appel.
         if (current.selectedPlace?.point != place.point) {
