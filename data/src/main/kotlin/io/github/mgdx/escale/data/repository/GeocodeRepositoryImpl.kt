@@ -2,6 +2,7 @@ package io.github.mgdx.escale.data.repository
 
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.repository.AutocompleteRules
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
@@ -56,6 +57,21 @@ class GeocodeRepositoryImpl(
   override suspend fun reverseGeocode(point: LatLon, language: String?): Outcome<Location?> =
     api.reverseGeocode(baseUrl(), point, REVERSE_RESULT_COUNT).map { it.firstOrNull() }
 
+  /**
+   * L'adresse postale d'une position (SPEC.md § 5.7).
+   *
+   * Le premier résultat rendu par le serveur est le lieu le plus proche, et c'est presque toujours
+   * un `PLACE` : sur un point de la rue Jacquemars Giélée à Lille, le serveur rend « Préfecture de
+   * Région », « Le Douze », **puis** « 17 Rue Jacquemars Giélée ». L'adresse existe, elle n'est
+   * simplement pas première — d'où [REVERSE_ADDRESS_RESULT_COUNT], et le filtre sur le type.
+   *
+   * Aucune adresse dans la fenêtre demandée n'est pas une erreur : c'est un endroit sans numéro,
+   * un chemin, un parc. L'appelant sait quoi en faire.
+   */
+  override suspend fun reverseGeocodeAddress(point: LatLon, language: String?): Outcome<Location?> =
+    api.reverseGeocode(baseUrl(), point, REVERSE_ADDRESS_RESULT_COUNT)
+      .map { matches -> matches.firstOrNull { it.kind == PlaceKind.ADDRESS } }
+
   override suspend fun clearGeocodeCache(): Outcome<Unit> = withContext(ioDispatcher) {
     try {
       api.clearCache()
@@ -71,5 +87,13 @@ class GeocodeRepositoryImpl(
   private companion object {
     /** L'appelant ne veut qu'un libellé : inutile de faire calculer cinq candidats au serveur. */
     const val REVERSE_RESULT_COUNT = 1
+
+    /**
+     * De quoi voir passer une adresse derrière les lieux les plus proches.
+     *
+     * Dix, et pas plus : c'est déjà large pour un point de rue, et une fenêtre plus grande ferait
+     * calculer au serveur des candidats que personne ne lira.
+     */
+    const val REVERSE_ADDRESS_RESULT_COUNT = 10
   }
 }

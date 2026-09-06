@@ -93,9 +93,18 @@ class FakeMapRepository(var outcome: Outcome<MapCamera> = Outcome.Failure(Escale
   }
 }
 
-/** Géocodage inverse : seul `reverseGeocode` est exercé par l'écran de carte. */
-class FakeGeocodeRepository(var label: Location? = null) : GeocodeRepository {
+/**
+ * Géocodage inverse, dans ses deux formes.
+ *
+ * L'écran de carte les emploie toutes les deux, et pour des raisons opposées : l'appui long veut le
+ * **lieu** le plus proche, la fiche veut l'**adresse**. Le faux dépôt les distingue donc lui aussi,
+ * sans quoi un cas d'essai ne prouverait rien de ce partage.
+ */
+class FakeGeocodeRepository(var label: Location? = null, var addressLabel: Location? = null) : GeocodeRepository {
   val reversed: MutableList<LatLon> = mutableListOf()
+
+  /** Les positions dont l'**adresse** a été demandée, dans l'ordre. */
+  val addressed: MutableList<LatLon> = mutableListOf()
 
   /**
    * Combien de temps la réponse se fait attendre.
@@ -121,6 +130,13 @@ class FakeGeocodeRepository(var label: Location? = null) : GeocodeRepository {
     if (delayMillis > 0) delay(delayMillis)
     completed += 1
     return Outcome.Success(label)
+  }
+
+  override suspend fun reverseGeocodeAddress(point: LatLon, language: String?): Outcome<Location?> {
+    addressed += point
+    if (delayMillis > 0) delay(delayMillis)
+    completed += 1
+    return Outcome.Success(addressLabel)
   }
 
   override suspend fun clearGeocodeCache(): Outcome<Unit> = Outcome.Success(Unit)

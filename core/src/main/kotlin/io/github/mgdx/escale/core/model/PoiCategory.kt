@@ -300,7 +300,7 @@ fun poiTypeKey(
 /**
  * Le complément qui suit le type dans la fiche (SPEC.md § 5.7).
  *
- * « Restaurant · italian », « Lieu de culte · catholic », « Banque · distributeur » : un seul
+ * « Restaurant · italien », « Lieu de culte · catholique », « Banque · distributeur » : un seul
  * complément, celui qui apprend le plus. La cuisine passe avant la confession, qui passe avant le
  * distributeur, parce qu'un lieu n'en porte qu'un en pratique.
  */
@@ -309,32 +309,222 @@ fun poiComplement(
   atm: Boolean = false,
   religion: String? = null,
   denomination: String? = null,
-): PoiComplement? = osmWord(cuisine)?.let(PoiComplement::Detail)
-  ?: osmWord(denomination)?.let(PoiComplement::Detail)
-  ?: osmWord(religion)?.let(PoiComplement::Detail)
+): PoiComplement? = poiDetail(cuisine)
+  ?: poiDetail(denomination)
+  ?: poiDetail(religion)
   ?: PoiComplement.CashMachine.takeIf { atm }
 
 /** Ce qui complète le type d'un lieu dans la fiche. */
 sealed interface PoiComplement {
-  /** Une valeur de la tuile, reprise telle quelle : « italian », « catholic ». */
-  data class Detail(val value: String) : PoiComplement
+  /** Une valeur que la table nomme : elle a une traduction, et c'est elle qui s'affiche. */
+  data class Named(val key: PoiDetailKey) : PoiComplement
+
+  /**
+   * Une valeur que la table ne nomme pas.
+   *
+   * OpenStreetMap en compte des centaines, et il en naît chaque semaine : plutôt que de taire
+   * ce qu'on ne sait pas traduire, on le rend lisible — « coffee_shop » devient « Coffee
+   * shop ». C'est de l'anglais, mais c'est vrai, et cela reste plus utile que rien.
+   */
+  data class Unnamed(val text: String) : PoiComplement
 
   /** La banque distribue des billets (`atm=yes`) : le complément est une chaîne traduite. */
   data object CashMachine : PoiComplement
 }
 
 /**
- * Une valeur OpenStreetMap rendue lisible : « italian;pizza » devient « italian », et
- * « fish_and_chips » devient « fish and chips ».
+ * La clé de traduction d'une valeur de `cuisine`, de `religion` ou de `denomination`.
+ *
+ * Ces trois étiquettes portent des valeurs OpenStreetMap, donc **en anglais dans la tuile** :
+ * les afficher telles quelles mettrait de l'anglais dans une interface en français, ce que
+ * CLAUDE.md interdit. Une seule table pour les trois, parce que leurs valeurs ne se recouvrent
+ * pas et qu'un lieu n'en porte qu'une à la fois.
+ */
+enum class PoiDetailKey {
+  ITALIAN,
+  FRENCH,
+  PIZZA,
+  BURGER,
+  KEBAB,
+  SUSHI,
+  JAPANESE,
+  CHINESE,
+  INDIAN,
+  THAI,
+  VIETNAMESE,
+  MEXICAN,
+  GREEK,
+  LEBANESE,
+  TURKISH,
+  SPANISH,
+  PORTUGUESE,
+  GERMAN,
+  AMERICAN,
+  GEORGIAN,
+  MOROCCAN,
+  KOREAN,
+  ASIAN,
+  AFRICAN,
+  SEAFOOD,
+  FISH,
+  FISH_AND_CHIPS,
+  VEGETARIAN,
+  VEGAN,
+  COFFEE_SHOP,
+  SANDWICH,
+  BAKERY,
+  ICE_CREAM,
+  CREPE,
+  BARBECUE,
+  CHICKEN,
+  STEAK_HOUSE,
+  NOODLE,
+  RAMEN,
+  TAPAS,
+  BREAKFAST,
+  REGIONAL,
+  INTERNATIONAL,
+  CHRISTIAN,
+  MUSLIM,
+  JEWISH,
+  BUDDHIST,
+  HINDU,
+  SIKH,
+  SHINTO,
+  TAOIST,
+  BAHAI,
+  JAIN,
+  ZOROASTRIAN,
+  PAGAN,
+  MULTIFAITH,
+  CATHOLIC,
+  ROMAN_CATHOLIC,
+  PROTESTANT,
+  ORTHODOX,
+  GREEK_ORTHODOX,
+  RUSSIAN_ORTHODOX,
+  COPTIC_ORTHODOX,
+  ARMENIAN_APOSTOLIC,
+  LUTHERAN,
+  ANGLICAN,
+  BAPTIST,
+  METHODIST,
+  EVANGELICAL,
+  PRESBYTERIAN,
+  PENTECOSTAL,
+  REFORMED,
+  ADVENTIST,
+  MORMON,
+  JEHOVAHS_WITNESS,
+  SUNNI,
+  SHIA,
+}
+
+/** Les valeurs de complément que la table nomme, par leur valeur OpenStreetMap. */
+private val DETAIL_KEYS: Map<String, PoiDetailKey> = mapOf(
+  "italian" to PoiDetailKey.ITALIAN,
+  "french" to PoiDetailKey.FRENCH,
+  "pizza" to PoiDetailKey.PIZZA,
+  "burger" to PoiDetailKey.BURGER,
+  "kebab" to PoiDetailKey.KEBAB,
+  "sushi" to PoiDetailKey.SUSHI,
+  "japanese" to PoiDetailKey.JAPANESE,
+  "chinese" to PoiDetailKey.CHINESE,
+  "indian" to PoiDetailKey.INDIAN,
+  "thai" to PoiDetailKey.THAI,
+  "vietnamese" to PoiDetailKey.VIETNAMESE,
+  "mexican" to PoiDetailKey.MEXICAN,
+  "greek" to PoiDetailKey.GREEK,
+  "lebanese" to PoiDetailKey.LEBANESE,
+  "turkish" to PoiDetailKey.TURKISH,
+  "spanish" to PoiDetailKey.SPANISH,
+  "portuguese" to PoiDetailKey.PORTUGUESE,
+  "german" to PoiDetailKey.GERMAN,
+  "american" to PoiDetailKey.AMERICAN,
+  "georgian" to PoiDetailKey.GEORGIAN,
+  "moroccan" to PoiDetailKey.MOROCCAN,
+  "korean" to PoiDetailKey.KOREAN,
+  "asian" to PoiDetailKey.ASIAN,
+  "african" to PoiDetailKey.AFRICAN,
+  "seafood" to PoiDetailKey.SEAFOOD,
+  "fish" to PoiDetailKey.FISH,
+  "fish_and_chips" to PoiDetailKey.FISH_AND_CHIPS,
+  "vegetarian" to PoiDetailKey.VEGETARIAN,
+  "vegan" to PoiDetailKey.VEGAN,
+  "coffee_shop" to PoiDetailKey.COFFEE_SHOP,
+  "sandwich" to PoiDetailKey.SANDWICH,
+  "bakery" to PoiDetailKey.BAKERY,
+  "ice_cream" to PoiDetailKey.ICE_CREAM,
+  "crepe" to PoiDetailKey.CREPE,
+  "barbecue" to PoiDetailKey.BARBECUE,
+  "chicken" to PoiDetailKey.CHICKEN,
+  "steak_house" to PoiDetailKey.STEAK_HOUSE,
+  "noodle" to PoiDetailKey.NOODLE,
+  "ramen" to PoiDetailKey.RAMEN,
+  "tapas" to PoiDetailKey.TAPAS,
+  "breakfast" to PoiDetailKey.BREAKFAST,
+  "regional" to PoiDetailKey.REGIONAL,
+  "international" to PoiDetailKey.INTERNATIONAL,
+  "christian" to PoiDetailKey.CHRISTIAN,
+  "muslim" to PoiDetailKey.MUSLIM,
+  "jewish" to PoiDetailKey.JEWISH,
+  "buddhist" to PoiDetailKey.BUDDHIST,
+  "hindu" to PoiDetailKey.HINDU,
+  "sikh" to PoiDetailKey.SIKH,
+  "shinto" to PoiDetailKey.SHINTO,
+  "taoist" to PoiDetailKey.TAOIST,
+  "bahai" to PoiDetailKey.BAHAI,
+  "jain" to PoiDetailKey.JAIN,
+  "zoroastrian" to PoiDetailKey.ZOROASTRIAN,
+  "pagan" to PoiDetailKey.PAGAN,
+  "multifaith" to PoiDetailKey.MULTIFAITH,
+  "catholic" to PoiDetailKey.CATHOLIC,
+  "roman_catholic" to PoiDetailKey.ROMAN_CATHOLIC,
+  "protestant" to PoiDetailKey.PROTESTANT,
+  "orthodox" to PoiDetailKey.ORTHODOX,
+  "greek_orthodox" to PoiDetailKey.GREEK_ORTHODOX,
+  "russian_orthodox" to PoiDetailKey.RUSSIAN_ORTHODOX,
+  "coptic_orthodox" to PoiDetailKey.COPTIC_ORTHODOX,
+  "armenian_apostolic" to PoiDetailKey.ARMENIAN_APOSTOLIC,
+  "lutheran" to PoiDetailKey.LUTHERAN,
+  "anglican" to PoiDetailKey.ANGLICAN,
+  "baptist" to PoiDetailKey.BAPTIST,
+  "methodist" to PoiDetailKey.METHODIST,
+  "evangelical" to PoiDetailKey.EVANGELICAL,
+  "presbyterian" to PoiDetailKey.PRESBYTERIAN,
+  "pentecostal" to PoiDetailKey.PENTECOSTAL,
+  "reformed" to PoiDetailKey.REFORMED,
+  "adventist" to PoiDetailKey.ADVENTIST,
+  "mormon" to PoiDetailKey.MORMON,
+  "jehovahs_witness" to PoiDetailKey.JEHOVAHS_WITNESS,
+  "sunni" to PoiDetailKey.SUNNI,
+  "shia" to PoiDetailKey.SHIA,
+)
+
+/**
+ * Le complément d'une valeur brute de tuile, traduit si la table le nomme.
+ *
+ * Exposée pour être éprouvée seule : c'est la règle que [poiComplement] applique trois fois.
+ */
+fun poiDetail(raw: String?): PoiComplement? {
+  val value = osmValue(raw) ?: return null
+  return DETAIL_KEYS[value]?.let(PoiComplement::Named) ?: PoiComplement.Unnamed(readable(value))
+}
+
+/**
+ * La valeur de la tuile, telle que la table la nomme : premier terme, sans espace, en
+ * minuscules — et **avec ses tirets bas**, qui font partie de la valeur OpenStreetMap.
  *
  * `yes` et `no` ne sont pas des mots : ils disent qu'une chose est là, pas ce qu'elle est.
  */
-internal fun osmWord(raw: String?): String? = raw
+internal fun osmValue(raw: String?): String? = raw
   ?.substringBefore(';')
   ?.trim()
-  ?.replace('_', ' ')
   ?.lowercase()
   ?.takeIf { it.isNotEmpty() && it != "yes" && it != "no" }
+
+/** « coffee_shop » devient « Coffee shop » : une capitale et des espaces, rien d'inventé. */
+private fun readable(value: String): String = value.replace('_', ' ').replaceFirstChar { it.uppercase() }
 
 /** Un commerce, nommé par la table ou non, à condition que la vitrine ne soit pas éteinte. */
 private fun shopCategory(shop: String?): PoiCategory? {

@@ -174,25 +174,30 @@ class PoiCategoryTest {
   // --- Les compléments de la fiche ---------------------------------------------------------------
 
   @Test
-  fun `la cuisine complète le type`() {
-    assertEquals(PoiComplement.Detail("italian"), poiComplement(cuisine = "italian"))
+  fun `la cuisine complète le type, et se traduit`() {
+    // La tuile porte « italian » ; la fiche ne doit pas afficher d'anglais dans une interface en
+    // français, d'où la clé plutôt que la valeur brute.
+    assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), poiComplement(cuisine = "italian"))
   }
 
   @Test
   fun `une cuisine multiple se réduit à la première`() {
-    assertEquals(PoiComplement.Detail("pizza"), poiComplement(cuisine = "pizza;kebab"))
+    assertEquals(PoiComplement.Named(PoiDetailKey.PIZZA), poiComplement(cuisine = "pizza;kebab"))
   }
 
   @Test
   fun `la confession complète le lieu de culte, et prime sur la religion`() {
-    assertEquals(PoiComplement.Detail("catholic"), poiComplement(religion = "christian", denomination = "catholic"))
-    assertEquals(PoiComplement.Detail("muslim"), poiComplement(religion = "muslim"))
+    assertEquals(
+      PoiComplement.Named(PoiDetailKey.CATHOLIC),
+      poiComplement(religion = "christian", denomination = "catholic"),
+    )
+    assertEquals(PoiComplement.Named(PoiDetailKey.MUSLIM), poiComplement(religion = "muslim"))
   }
 
   @Test
   fun `le distributeur complète la banque, à défaut de mieux`() {
     assertEquals(PoiComplement.CashMachine, poiComplement(atm = true))
-    assertEquals(PoiComplement.Detail("italian"), poiComplement(cuisine = "italian", atm = true))
+    assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), poiComplement(cuisine = "italian", atm = true))
   }
 
   @Test
@@ -203,7 +208,24 @@ class PoiCategoryTest {
   }
 
   @Test
-  fun `un souligné se lit comme une espace`() {
-    assertEquals(PoiComplement.Detail("fish and chips"), poiComplement(cuisine = "fish_and_chips"))
+  fun `une valeur que la table ne nomme pas se rend lisible, faute de mieux`() {
+    // OpenStreetMap compte des centaines de cuisines et il en naît chaque semaine : mieux vaut un
+    // mot anglais lisible qu'une valeur brute avec ses tirets bas, et mieux que rien du tout.
+    assertEquals(PoiComplement.Unnamed("Molecular"), poiComplement(cuisine = "molecular"))
+    assertEquals(PoiComplement.Unnamed("Soul food"), poiComplement(cuisine = "soul_food"))
+  }
+
+  @Test
+  fun `les valeurs nommées le sont dans les trois étiquettes`() {
+    assertEquals(PoiComplement.Named(PoiDetailKey.FISH_AND_CHIPS), poiDetail("fish_and_chips"))
+    assertEquals(PoiComplement.Named(PoiDetailKey.GEORGIAN), poiDetail("georgian"))
+    assertEquals(PoiComplement.Named(PoiDetailKey.RUSSIAN_ORTHODOX), poiDetail("russian_orthodox"))
+    assertNull(poiDetail(null))
+    assertNull(poiDetail("  "))
+  }
+
+  @Test
+  fun `la casse de la tuile ne change rien au complément`() {
+    assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), poiDetail(" Italian "))
   }
 }

@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.map
 
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.core.model.PoiCategory
+import io.github.mgdx.escale.core.model.PoiDetailKey
 import io.github.mgdx.escale.core.model.PoiTypeKey
 
 /**
@@ -113,3 +114,91 @@ private val POI_CATEGORY_LABELS: Map<PoiCategory, Int> = mapOf(
  * libellé, et `MapPoiLabelsTest` le vérifie plutôt que de laisser un `!!` en décider.
  */
 internal fun poiCategoryLabel(category: PoiCategory): Int = POI_CATEGORY_LABELS.getValue(category)
+
+/**
+ * Le libellé traduit de chaque valeur de `cuisine`, `religion` ou `denomination`.
+ *
+ * Exhaustive, comme les deux tables ci-dessus, et vérifiée par le même cas d'essai.
+ */
+private val POI_DETAIL_LABELS: Map<PoiDetailKey, Int> = mapOf(
+  PoiDetailKey.ITALIAN to R.string.map_place_detail_italian,
+  PoiDetailKey.FRENCH to R.string.map_place_detail_french,
+  PoiDetailKey.PIZZA to R.string.map_place_detail_pizza,
+  PoiDetailKey.BURGER to R.string.map_place_detail_burger,
+  PoiDetailKey.KEBAB to R.string.map_place_detail_kebab,
+  PoiDetailKey.SUSHI to R.string.map_place_detail_sushi,
+  PoiDetailKey.JAPANESE to R.string.map_place_detail_japanese,
+  PoiDetailKey.CHINESE to R.string.map_place_detail_chinese,
+  PoiDetailKey.INDIAN to R.string.map_place_detail_indian,
+  PoiDetailKey.THAI to R.string.map_place_detail_thai,
+  PoiDetailKey.VIETNAMESE to R.string.map_place_detail_vietnamese,
+  PoiDetailKey.MEXICAN to R.string.map_place_detail_mexican,
+  PoiDetailKey.GREEK to R.string.map_place_detail_greek,
+  PoiDetailKey.LEBANESE to R.string.map_place_detail_lebanese,
+  PoiDetailKey.TURKISH to R.string.map_place_detail_turkish,
+  PoiDetailKey.SPANISH to R.string.map_place_detail_spanish,
+  PoiDetailKey.PORTUGUESE to R.string.map_place_detail_portuguese,
+  PoiDetailKey.GERMAN to R.string.map_place_detail_german,
+  PoiDetailKey.AMERICAN to R.string.map_place_detail_american,
+  PoiDetailKey.GEORGIAN to R.string.map_place_detail_georgian,
+  PoiDetailKey.MOROCCAN to R.string.map_place_detail_moroccan,
+  PoiDetailKey.KOREAN to R.string.map_place_detail_korean,
+  PoiDetailKey.ASIAN to R.string.map_place_detail_asian,
+  PoiDetailKey.AFRICAN to R.string.map_place_detail_african,
+  PoiDetailKey.SEAFOOD to R.string.map_place_detail_seafood,
+  PoiDetailKey.FISH to R.string.map_place_detail_fish,
+  PoiDetailKey.FISH_AND_CHIPS to R.string.map_place_detail_fish_and_chips,
+  PoiDetailKey.VEGETARIAN to R.string.map_place_detail_vegetarian,
+  PoiDetailKey.VEGAN to R.string.map_place_detail_vegan,
+  PoiDetailKey.COFFEE_SHOP to R.string.map_place_detail_coffee_shop,
+  PoiDetailKey.SANDWICH to R.string.map_place_detail_sandwich,
+  PoiDetailKey.BAKERY to R.string.map_place_detail_bakery,
+  PoiDetailKey.ICE_CREAM to R.string.map_place_detail_ice_cream,
+  PoiDetailKey.CREPE to R.string.map_place_detail_crepe,
+  PoiDetailKey.BARBECUE to R.string.map_place_detail_barbecue,
+  PoiDetailKey.CHICKEN to R.string.map_place_detail_chicken,
+  PoiDetailKey.STEAK_HOUSE to R.string.map_place_detail_steak_house,
+  PoiDetailKey.NOODLE to R.string.map_place_detail_noodle,
+  PoiDetailKey.RAMEN to R.string.map_place_detail_ramen,
+  PoiDetailKey.TAPAS to R.string.map_place_detail_tapas,
+  PoiDetailKey.BREAKFAST to R.string.map_place_detail_breakfast,
+  PoiDetailKey.REGIONAL to R.string.map_place_detail_regional,
+  PoiDetailKey.INTERNATIONAL to R.string.map_place_detail_international,
+  PoiDetailKey.CHRISTIAN to R.string.map_place_detail_christian,
+  PoiDetailKey.MUSLIM to R.string.map_place_detail_muslim,
+  PoiDetailKey.JEWISH to R.string.map_place_detail_jewish,
+  PoiDetailKey.BUDDHIST to R.string.map_place_detail_buddhist,
+  PoiDetailKey.HINDU to R.string.map_place_detail_hindu,
+  PoiDetailKey.SIKH to R.string.map_place_detail_sikh,
+  PoiDetailKey.SHINTO to R.string.map_place_detail_shinto,
+  PoiDetailKey.TAOIST to R.string.map_place_detail_taoist,
+  PoiDetailKey.BAHAI to R.string.map_place_detail_bahai,
+  PoiDetailKey.JAIN to R.string.map_place_detail_jain,
+  PoiDetailKey.ZOROASTRIAN to R.string.map_place_detail_zoroastrian,
+  PoiDetailKey.PAGAN to R.string.map_place_detail_pagan,
+  PoiDetailKey.MULTIFAITH to R.string.map_place_detail_multifaith,
+  PoiDetailKey.CATHOLIC to R.string.map_place_detail_catholic,
+  PoiDetailKey.ROMAN_CATHOLIC to R.string.map_place_detail_roman_catholic,
+  PoiDetailKey.PROTESTANT to R.string.map_place_detail_protestant,
+  PoiDetailKey.ORTHODOX to R.string.map_place_detail_orthodox,
+  PoiDetailKey.GREEK_ORTHODOX to R.string.map_place_detail_greek_orthodox,
+  PoiDetailKey.RUSSIAN_ORTHODOX to R.string.map_place_detail_russian_orthodox,
+  PoiDetailKey.COPTIC_ORTHODOX to R.string.map_place_detail_coptic_orthodox,
+  PoiDetailKey.ARMENIAN_APOSTOLIC to R.string.map_place_detail_armenian_apostolic,
+  PoiDetailKey.LUTHERAN to R.string.map_place_detail_lutheran,
+  PoiDetailKey.ANGLICAN to R.string.map_place_detail_anglican,
+  PoiDetailKey.BAPTIST to R.string.map_place_detail_baptist,
+  PoiDetailKey.METHODIST to R.string.map_place_detail_methodist,
+  PoiDetailKey.EVANGELICAL to R.string.map_place_detail_evangelical,
+  PoiDetailKey.PRESBYTERIAN to R.string.map_place_detail_presbyterian,
+  PoiDetailKey.PENTECOSTAL to R.string.map_place_detail_pentecostal,
+  PoiDetailKey.REFORMED to R.string.map_place_detail_reformed,
+  PoiDetailKey.ADVENTIST to R.string.map_place_detail_adventist,
+  PoiDetailKey.MORMON to R.string.map_place_detail_mormon,
+  PoiDetailKey.JEHOVAHS_WITNESS to R.string.map_place_detail_jehovahs_witness,
+  PoiDetailKey.SUNNI to R.string.map_place_detail_sunni,
+  PoiDetailKey.SHIA to R.string.map_place_detail_shia,
+)
+
+/** Le libellé d'un complément nommé par la table. */
+internal fun poiDetailLabel(key: PoiDetailKey): Int = POI_DETAIL_LABELS.getValue(key)

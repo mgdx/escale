@@ -42,6 +42,10 @@ class FakeSearchGeocodeRepository(
     return reverse
   }
 
+  /** L'écran de recherche ne demande jamais d'adresse : c'est la fiche de la carte qui le fait. */
+  override suspend fun reverseGeocodeAddress(point: LatLon, language: String?): Outcome<Location?> =
+    Outcome.Success(null)
+
   override suspend fun clearGeocodeCache(): Outcome<Unit> = Outcome.Success(Unit)
 }
 

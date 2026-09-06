@@ -56,6 +56,9 @@ class AutocompleteStreamTest {
       return outcome(text)
     }
 
+    override suspend fun reverseGeocodeAddress(point: LatLon, language: String?): Outcome<Location?> =
+      Outcome.Success(null)
+
     override suspend fun reverseGeocode(point: LatLon, language: String?): Outcome<Location?> = Outcome.Success(null)
 
     override suspend fun clearGeocodeCache(): Outcome<Unit> = Outcome.Success(Unit)

@@ -28,6 +28,7 @@ import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.PoiComplement
+import io.github.mgdx.escale.core.model.PoiDetailKey
 import io.github.mgdx.escale.core.model.PoiTypeKey
 import io.github.mgdx.escale.ui.theme.EscaleTheme
 
@@ -160,8 +161,11 @@ private fun ButtonContent(icon: Int, label: String) {
 }
 
 /**
- * Le type traduit, complément compris : « Boulangerie », « Restaurant · italian », « Banque ·
- * distributeur », « Lieu de culte · catholic ».
+ * Le type traduit, complément compris : « Boulangerie », « Restaurant · italien », « Banque ·
+ * distributeur », « Lieu de culte · catholique ».
+ *
+ * Le complément vient d'une valeur OpenStreetMap, donc en anglais dans la tuile : la table de
+ * `:core` le traduit quand elle la connaît, et se contente de la rendre lisible sinon.
  *
  * À défaut de type précis, le libellé de la catégorie fait l'affaire — « Autres commerces » reste
  * vrai. Et à défaut de catégorie, il n'y a rien à écrire.
@@ -171,17 +175,13 @@ private fun placeTypeLabel(place: SelectedPlace): String? {
   val type = place.typeKey?.let { POI_TYPE_LABELS[it] }
     ?: place.category?.let(::poiCategoryLabel)
     ?: return null
-  return when (val complement = place.complement) {
-    null -> stringResource(type)
-
-    is PoiComplement.Detail -> stringResource(R.string.map_place_type_detail, stringResource(type), complement.value)
-
-    PoiComplement.CashMachine -> stringResource(
-      R.string.map_place_type_detail,
-      stringResource(type),
-      stringResource(R.string.map_place_detail_atm),
-    )
+  val complement = when (val value = place.complement) {
+    null -> return stringResource(type)
+    is PoiComplement.Named -> stringResource(poiDetailLabel(value.key))
+    is PoiComplement.Unnamed -> value.text
+    PoiComplement.CashMachine -> stringResource(R.string.map_place_detail_atm)
   }
+  return stringResource(R.string.map_place_type_detail, stringResource(type), complement)
 }
 
 private val CardPadding = 16.dp
@@ -213,7 +213,7 @@ private val PREVIEW_RESTAURANT = SelectedPlace(
   name = "Chez Marcel",
   category = PoiCategory.DINING,
   typeKey = PoiTypeKey.RESTAURANT,
-  complement = PoiComplement.Detail("italian"),
+  complement = PoiComplement.Named(PoiDetailKey.ITALIAN),
   houseNumber = "12",
   address = Location(
     id = null,

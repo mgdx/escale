@@ -1,0 +1,73 @@
+[
+  {
+    "type": "PLACE",
+    "name": "Préfecture de Région",
+    "id": "way/[112233445]",
+    "lat": 5.06308E1,
+    "lon": 3.0567E0,
+    "areas": [
+      {
+        "name": "Lille",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": false,
+        "default": true
+      }
+    ],
+    "score": 9.5E0
+  },
+  {
+    "type": "PLACE",
+    "name": "Le Douze",
+    "id": "node/[556677889]",
+    "lat": 5.06307E1,
+    "lon": 3.0568E0,
+    "areas": [
+      {
+        "name": "Lille",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": false,
+        "default": true
+      }
+    ],
+    "score": 8.1E0
+  },
+  {
+    "type": "ADDRESS",
+    "name": "17 Rue Jacquemars Giélée",
+    "id": "way/[998877665]",
+    "lat": 5.063065E1,
+    "lon": 3.05675E0,
+    "street": "Rue Jacquemars Giélée",
+    "houseNumber": "17",
+    "areas": [
+      {
+        "name": "Lille",
+        "adminLevel": 8E0,
+        "matched": true,
+        "unique": false,
+        "default": true
+      }
+    ],
+    "score": 7.4E0
+  },
+  {
+    "type": "PLACE",
+    "name": "Crédit Agricole",
+    "id": "node/[443322110]",
+    "lat": 5.06306E1,
+    "lon": 3.0569E0,
+    "areas": [],
+    "score": 6.2E0
+  },
+  {
+    "type": "PLACE",
+    "name": "Masala Bazaar",
+    "id": "node/[221100998]",
+    "lat": 5.06305E1,
+    "lon": 3.057E0,
+    "areas": [],
+    "score": 5.8E0
+  }
+]

@@ -32,6 +32,24 @@ interface GeocodeRepository {
   suspend fun reverseGeocode(point: LatLon, language: String? = null): Outcome<Location?>
 
   /**
+   * **L'adresse postale** d'une position, pour la fiche d'un point d'intérêt (SPEC.md § 5.7).
+   *
+   * Elle ne se confond pas avec [reverseGeocode], et les deux doivent coexister : le serveur rend
+   * ses résultats par proximité, si bien que le plus proche d'un restaurant est **le restaurant
+   * lui-même**, un `PLACE` qui porte son nom. C'est exactement ce que veut l'appui long — « Partir
+   * d'ici » doit dire « Préfecture de Région », pas « 17 Rue Jacquemars Giélée » — et exactement ce
+   * qu'il ne faut pas dans une fiche, qui afficherait alors le nom du lieu deux fois.
+   *
+   * Cette fonction demande donc plusieurs résultats et retient **le premier de type
+   * [io.github.mgdx.escale.core.model.PlaceKind.ADDRESS]**. Elle rend `null` quand il n'y en a
+   * aucun, et la fiche se rabat alors sur le numéro de voie de la tuile, puis sur rien.
+   *
+   * Cela reste **une** requête, la seule que les points d'intérêt provoquent (SPEC.md § 7,
+   * règle 11), et elle est servie par le même cache disque de 24 h.
+   */
+  suspend fun reverseGeocodeAddress(point: LatLon, language: String? = null): Outcome<Location?>
+
+  /**
    * Vide le cache disque de géocodage.
    *
    * Appelée quand l'usager change de serveur (SPEC.md § 5.6.1) : les résultats d'un serveur n'ont
