@@ -303,16 +303,49 @@ fun poiTypeKey(
  * « Restaurant · italien », « Lieu de culte · catholique », « Banque · distributeur » : un seul
  * complément, celui qui apprend le plus. La cuisine passe avant la confession, qui passe avant le
  * distributeur, parce qu'un lieu n'en porte qu'un en pratique.
+ *
+ * **Un complément qui répète le type n'apprend rien** et n'est pas rendu : un `amenity=cafe`
+ * portant `cuisine=coffee_shop` afficherait « Café · café ». [typeKey] est donc demandé, et
+ * [redundantValues] dit ce qui, pour ce type-là, ne mérite pas d'être écrit deux fois.
  */
 fun poiComplement(
+  typeKey: PoiTypeKey? = null,
   cuisine: String? = null,
   atm: Boolean = false,
   religion: String? = null,
   denomination: String? = null,
-): PoiComplement? = poiDetail(cuisine)
-  ?: poiDetail(denomination)
-  ?: poiDetail(religion)
+): PoiComplement? = detailUnlessRedundant(typeKey, cuisine)
+  ?: detailUnlessRedundant(typeKey, denomination)
+  ?: detailUnlessRedundant(typeKey, religion)
   ?: PoiComplement.CashMachine.takeIf { atm }
+
+/** Le complément d'une valeur, sauf quand elle ne fait que redire le type. */
+private fun detailUnlessRedundant(typeKey: PoiTypeKey?, raw: String?): PoiComplement? {
+  val value = osmValue(raw) ?: return null
+  if (typeKey != null && value in redundantValues(typeKey)) return null
+  return poiDetail(value)
+}
+
+/**
+ * Les valeurs qui, pour ce type, ne disent rien de plus que lui.
+ *
+ * La **valeur OpenStreetMap du type lui-même** d'abord : `amenity=bar` avec `cuisine=bar`,
+ * `fast_food` avec `cuisine=fast_food`, et tous ceux du même genre se règlent sans table. Les
+ * synonymes ensuite, pour le seul cas que cette égalité ne couvre pas : un café dont la cuisine
+ * est déclarée `coffee_shop`.
+ */
+private fun redundantValues(typeKey: PoiTypeKey): Set<String> =
+  SYNONYMS[typeKey].orEmpty() + VALUE_BY_KEY.getValue(typeKey)
+
+/** La valeur OpenStreetMap de chaque type, pour la comparer à celle d'un complément. */
+private val VALUE_BY_KEY: Map<PoiTypeKey, String> = POI_TYPES.associate { it.key to it.value }
+
+/** Ce qu'un type veut dire, sous un autre nom que le sien. */
+private val SYNONYMS: Map<PoiTypeKey, Set<String>> = mapOf(
+  PoiTypeKey.CAFE to setOf("coffee_shop", "coffee"),
+  PoiTypeKey.BIERGARTEN to setOf("beer_garden", "beer"),
+  PoiTypeKey.BAKERY to setOf("bread"),
+)
 
 /** Ce qui complète le type d'un lieu dans la fiche. */
 sealed interface PoiComplement {
