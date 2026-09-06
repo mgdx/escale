@@ -26,25 +26,25 @@ permission.** C'est une feuille de style, un réglage, une fiche, et un peu de `
 > se règle séparément.
 
 Réglages → Affichage ne porte plus aucune bascule de couche : une seule entrée, **« Couches de la
-carte »**, ouvre un écran dédié, sur le modèle de l'écran d'ordre des catégories. **Quinze
+carte »**, ouvre un écran dédié, sur le modèle de l'écran d'ordre des catégories. **Quatorze
 bascules** s'y règlent une par une, en trois sections :
 
 | Section | Nombre | Contenu |
 |---|---|---|
 | Transport | 2 | Arrêts, Libre-service — les deux allumées, elles quittent la liste « Affichage » |
-| Repères | 5 | les points d'intérêt de la v1, découpés — les cinq allumées |
+| Repères | 4 | les points d'intérêt de la v1, découpés — les quatre allumées |
 | Commerces et services | 8 | Toilettes allumée, les sept autres éteintes |
 
-Soit **treize catégories de points d'intérêt** (5 + 8), et c'est ce nombre-là qui compte pour la
+Soit **douze catégories de points d'intérêt** (4 + 8), et c'est ce nombre-là qui compte pour la
 feuille de style. La carte de déplacement reste le propos : à part les toilettes, rien de nouveau
 n'apparaît sans un geste de l'usager.
 
-### 2.2 Les paliers de zoom et les treize catégories
+### 2.2 Les paliers de zoom et les douze catégories
 
 > **Décision du mainteneur, septembre 2026.** Ce paragraphe ne décrivait que sept familles de
-> commerces. Les repères de la v1 se découpent eux aussi en catégories réglables, les toilettes
-> sortent de « Services du quotidien » pour devenir une catégorie allumée par défaut, et une
-> catégorie « Parcs et jardins » s'ajoute.
+> commerces. Les repères de la v1 se découpent eux aussi en catégories réglables, et les toilettes
+> sortent de « Services du quotidien » pour devenir une catégorie allumée par défaut. Une catégorie
+> « Parcs et jardins » a été envisagée puis **abandonnée** : voir plus bas.
 
 | Zoom | Ce qui apparaît |
 |---|---|
@@ -56,9 +56,8 @@ n'apparaît sans un geste de l'usager.
 Chaque catégorie porte un pictogramme des sprites `basics` déjà servis par le serveur (aucune image
 nouvelle dans l'APK, déjà à 13,9 Mo sur 15).
 
-**Repères — zoom ≥ 15, nom à partir de 16, les cinq allumées par défaut.** Les quatre premières
-reprennent exactement le filtre `poi-landmarks` de la v1 : à réglages par défaut, le rendu ne
-change pas.
+**Repères — zoom ≥ 15, nom à partir de 16, les quatre allumées par défaut.** Elles reprennent
+exactement le filtre `poi-landmarks` de la v1 : à réglages par défaut, le rendu ne change pas.
 
 | Catégorie | Valeurs OSM | Par défaut |
 |---|---|---|
@@ -66,20 +65,26 @@ change pas.
 | Enseignement | `amenity` = school, university, college, library | allumée |
 | Culture et monuments | `amenity` = theatre, cinema, arts_centre ; `historic` = castle, monument, memorial, fort, ruins, archaeological_site, battlefield ; `tourism` = artwork, viewpoint ; `man_made` = lighthouse | allumée |
 | Santé publique | `amenity` = hospital, clinic, doctors, dentist, pharmacy | allumée |
-| Parcs et jardins | `leisure` = playground, dog_park | allumée |
 
 Les **lieux de culte** sont rangés dans « Services publics » et n'ont pas de catégorie propre :
 décision du mainteneur.
 
-**Parcs et jardins — attention, la catégorie ne contient ni parcs ni jardins.** Vérifié dans
-`profile/full.lua` de `motis-project/tiles` : la couche `pois` n'accepte que
-`leisure` = playground, dog_park, sports_centre, pitch, swimming_pool, water_park, golf_course,
-stadium, ice_rink (ligne 78) ; `park` et `garden` partent dans la couche `land` sous
-`kind = park` / `kind = garden` (lignes 809-813), **sans `name`**, et `nature_reserve` n'est retenu
-nulle part. Les surfaces vertes que dessine déjà la couche `land-park` ne changent pas ; ce que la
-catégorie ajoute, ce sont les points que la tuile porte réellement — aires de jeux et parcs à
-chiens. Un pictogramme ou un nom sur le parc lui-même est **impossible** sans une donnée que ni les
-tuiles ni l'API MOTIS ne fournissent. Le nom de la catégorie reste à confirmer par le mainteneur.
+**Parcs et jardins — catégorie abandonnée, et voici pourquoi, pour qu'on n'y revienne pas.**
+Une catégorie « Parcs et jardins » a été demandée, puis retirée après vérification dans
+`profile/full.lua` de `motis-project/tiles` : elle n'aurait contenu ni parcs ni jardins.
+
+- La couche `pois` n'accepte, pour `leisure`, que playground, dog_park, sports_centre, pitch,
+  swimming_pool, water_park, golf_course, stadium, ice_rink (`poi_leisure_values`).
+- `park` et `garden` partent dans la couche `land` sous `kind = park` / `kind = garden`
+  (`process_land`, `elseif leisure == "golf_course" or leisure == "park" or …` → `kind = leisure`),
+  et `process_land` **n'appelle jamais `set_names`** : la couche `land` ne porte pas de `name`.
+- `nature_reserve` n'est retenu nulle part.
+
+Un pictogramme, et surtout un **nom**, sur un parc est donc **impossible** sans une donnée que ni
+les tuiles ni l'API MOTIS ne fournissent. **Décision du mainteneur : « on les laisse affichés sur
+la carte et pas d'option ».** Les parcs, jardins et espaces verts restent ce qu'ils sont
+aujourd'hui — des surfaces vertes dessinées par la couche `land-park` du fond de carte dès le
+zoom 11, sans pictogramme, sans nom et sans réglage. Rien à faire côté code.
 
 **Commerces et services — zoom ≥ 16, nom à partir de 17, huit catégories dont sept éteintes par
 défaut.**
