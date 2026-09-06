@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.util.Locale
 
 /**
  * Ce que l'usager a saisi jusqu'ici dans la carte de recherche (SPEC.md § 5.1).
@@ -83,6 +84,9 @@ class SearchSession {
       time = current.time,
       category = category,
       preferences = preferences,
+      // Les arrêts et les destinations affichées sont demandés dans la langue de l'interface,
+      // comme le fait déjà l'autocomplétion (SPEC.md § 5.1).
+      language = Locale.getDefault().language,
     )
   }
 }

@@ -45,7 +45,15 @@ class PlanQueryBuilderTest {
     category: JourneyCategory,
     time: TimeChoice = TimeChoice.Now,
     preferences: SearchPreferences = SearchPreferences(),
-  ) = SearchQuery(from = from, to = to, time = time, category = category, preferences = preferences)
+    language: String? = null,
+  ) = SearchQuery(
+    from = from,
+    to = to,
+    time = time,
+    category = category,
+    preferences = preferences,
+    language = language,
+  )
 
   // --- Un onglet, une requête ----------------------------------------------------------------
 
@@ -296,6 +304,28 @@ class PlanQueryBuilderTest {
         parameters.keys.any { it.contains("RentalFormFactors") },
       )
     }
+  }
+
+  // --- Langue des libellés ---------------------------------------------------------------------
+
+  @Test
+  fun `la langue de l interface part avec la recherche`() {
+    // Sans elle, les noms d'arrêts et les destinations affichées arrivent dans la langue par
+    // défaut du flux, et non dans celle de l'usager.
+    JourneyCategory.entries.forEach { category ->
+      assertEquals("fr", PlanQueryBuilder.build(query(category, language = "fr"))["language"])
+    }
+  }
+
+  @Test
+  fun `une recherche sans langue n envoie pas le parametre`() {
+    assertNull(PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))["language"])
+  }
+
+  @Test
+  fun `la pagination conserve la langue`() {
+    val search = query(JourneyCategory.TRANSIT, language = "de")
+    assertEquals("de", PlanQueryBuilder.build(search, cursor = "LATER|1756785600")["language"])
   }
 
   // --- Rafraîchissement ----------------------------------------------------------------------

@@ -160,6 +160,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `additionalTransferTime` | onglet Transport | **en minutes**, pas en secondes (`docs/motis-openapi.yaml`, « Additional transfer time reserved for each transfer in minutes ») |
 | `maxTransfers` | onglet Transport | absent = valeur serveur, volontairement très haute |
 | `requireBikeTransport` | onglet Transport | vélo embarqué dans les véhicules |
+| `language` | tous les onglets, dès que la langue de l'interface est connue | tags OpenStreetMap / GTFS (BCP-47 / ISO 639-1) : sans lui, noms d'arrêts et `headsign` arrivent dans la langue par défaut du flux. Renseigné par `SearchSession` avec `Locale.getDefault().language`, comme le fait déjà `/api/v1/geocode` |
 | `directRentalFormFactors`, `preTransitRentalFormFactors`, `postTransitRentalFormFactors` | l'usager a restreint les types de véhicules partagés | assemblés par `core/query/RentalFormFactorQuery.kt` — voir le piège n° 6, un filtre vide n'y veut pas dire « aucun véhicule » |
 
 Une préférence laissée à sa valeur par défaut **n'est pas envoyée** : la valeur par défaut du

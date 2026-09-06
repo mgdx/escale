@@ -75,6 +75,9 @@ object PlanQueryBuilder {
     parameters.putAll(timeParameters(query.time))
     parameters.putAll(modeParameters(query.category, query.preferences))
     parameters.putAll(preferenceParameters(query.category, query.preferences))
+    // La langue des libellés renvoyés : noms d'arrêts et destinations affichées (`headsign`).
+    // Absente, le serveur répond dans la langue par défaut de ses données.
+    query.language?.let { parameters[LANGUAGE] = it }
     parameters.putAll(detailParameters(detailedLegs))
     if (cursor != null) parameters[PAGE_CURSOR] = cursor
     return parameters
@@ -235,6 +238,7 @@ object PlanQueryBuilder {
   private const val ADDITIONAL_TRANSFER_TIME = "additionalTransferTime"
   private const val MAX_TRANSFERS = "maxTransfers"
   private const val REQUIRE_BIKE_TRANSPORT = "requireBikeTransport"
+  private const val LANGUAGE = "language"
   private const val DETAILED_LEGS = "detailedLegs"
   private const val DETAILED_TRANSFERS = "detailedTransfers"
   private const val PAGE_CURSOR = "pageCursor"
