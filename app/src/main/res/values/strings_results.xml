@@ -137,6 +137,8 @@
   <string name="results_empty_direct_message">No trip found within the %1$s that Escale allows for this mode.</string>
   <!-- Puce de liste : une mise en forme, pas un libellé — elle ne se traduit pas. -->
   <string name="results_empty_hint_item" translatable="false">• %1$s</string>
+  <!-- %1$s : le plafond de marche réellement envoyé par PlanQueryBuilder, jamais recopié ici. -->
+  <string name="results_empty_hint_walk">The first and last stops are looked for within %1$s of walking</string>
   <string name="results_empty_hint_window">Widen the time window</string>
   <string name="results_empty_hint_transfers">Allow more transfers in the settings</string>
   <string name="results_empty_hint_time">Try another departure time</string>

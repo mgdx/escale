@@ -13,6 +13,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
+import java.util.Locale
 
 /**
  * L'état partagé par la carte de recherche et la feuille de résultats (docs/architecture.md § 11.4).
@@ -127,6 +128,18 @@ class SearchSessionTest {
     assertEquals(address, query.to)
     assertEquals(arrival, query.time)
     assertEquals(JourneyCategory.BIKE, query.category)
+  }
+
+  @Test
+  fun `toQuery demande les libelles dans la langue de l interface`() {
+    val session = SearchSession()
+    session.setFrom(station)
+    session.setTo(address)
+
+    val query = requireNotNull(session.toQuery(JourneyCategory.TRANSIT, SearchPreferences()))
+
+    assertEquals(Locale.getDefault().language, query.language)
+    assertEquals(Locale.getDefault().language, PlanQueryBuilder.build(query)["language"])
   }
 
   /**

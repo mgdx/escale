@@ -45,7 +45,15 @@ class PlanQueryBuilderTest {
     category: JourneyCategory,
     time: TimeChoice = TimeChoice.Now,
     preferences: SearchPreferences = SearchPreferences(),
-  ) = SearchQuery(from = from, to = to, time = time, category = category, preferences = preferences)
+    language: String? = null,
+  ) = SearchQuery(
+    from = from,
+    to = to,
+    time = time,
+    category = category,
+    preferences = preferences,
+    language = language,
+  )
 
   // --- Un onglet, une requête ----------------------------------------------------------------
 
@@ -59,6 +67,38 @@ class PlanQueryBuilderTest {
     assertEquals("", parameters["directModes"])
     // Le plafond de durée directe ne veut rien dire quand on ne demande aucun trajet direct.
     assertNull(parameters["maxDirectTime"])
+  }
+
+  @Test
+  fun `l onglet transport en commun cherche les arrets a trente minutes de marche`() {
+    // Défaut serveur : 900 s. L'onglet rendait une liste vide hors ville dense, dès que le premier
+    // arrêt était à plus d'un quart d'heure de marche.
+    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))
+    assertEquals("1800", parameters["maxPreTransitTime"])
+    assertEquals("1800", parameters["maxPostTransitTime"])
+
+    // « Plus tôt » / « Plus tard » renvoient la requête telle quelle : le plafond suit.
+    val paged = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT), cursor = "LATER|1756785600")
+    assertEquals("1800", paged["maxPreTransitTime"])
+    assertEquals("1800", paged["maxPostTransitTime"])
+  }
+
+  @Test
+  fun `le rabattement a pied n est plafonne que la ou il existe`() {
+    listOf(JourneyCategory.CAR, JourneyCategory.BIKE, JourneyCategory.WALK).forEach { category ->
+      val parameters = PlanQueryBuilder.build(query(category))
+      assertNull("$category ne fait aucun rabattement", parameters["maxPreTransitTime"])
+      assertNull("$category ne fait aucun rabattement", parameters["maxPostTransitTime"])
+    }
+  }
+
+  @Test
+  fun `le plafond de marche annonce est celui reellement envoye`() {
+    // L'état vide de l'onglet nomme cette limite : les deux ne peuvent pas diverger.
+    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))
+    val announced = PlanQueryBuilder.maxPrePostTransitTime().seconds.toString()
+    assertEquals(announced, parameters["maxPreTransitTime"])
+    assertEquals(announced, parameters["maxPostTransitTime"])
   }
 
   @Test
@@ -296,6 +336,51 @@ class PlanQueryBuilderTest {
         parameters.keys.any { it.contains("RentalFormFactors") },
       )
     }
+  }
+
+  // --- Accrochage des points au réseau de rues -------------------------------------------------
+
+  @Test
+  fun `un point est accroche a une rue jusqu a un kilometre, sur tous les onglets`() {
+    // Défaut serveur : 250 m. Un point posé au milieu d'un parc, sur un quai ou sur une plage ne
+    // s'accrochait à aucune rue, et la recherche échouait sans explication.
+    JourneyCategory.entries.forEach { category ->
+      assertEquals("1000", PlanQueryBuilder.build(query(category))["maxMatchingDistance"])
+    }
+  }
+
+  @Test
+  fun `la pagination conserve la distance d accrochage`() {
+    val paged = PlanQueryBuilder.build(query(JourneyCategory.WALK), cursor = "EARLIER|1756785600")
+    assertEquals("1000", paged["maxMatchingDistance"])
+  }
+
+  @Test
+  fun `un rafraichissement n accroche aucun point`() {
+    // Le point d'entrée reconstruit un trajet déjà calculé : il n'a aucune coordonnée à apparier.
+    assertNull(PlanQueryBuilder.refresh("opaque-id")["maxMatchingDistance"])
+  }
+
+  // --- Langue des libellés ---------------------------------------------------------------------
+
+  @Test
+  fun `la langue de l interface part avec la recherche`() {
+    // Sans elle, les noms d'arrêts et les destinations affichées arrivent dans la langue par
+    // défaut du flux, et non dans celle de l'usager.
+    JourneyCategory.entries.forEach { category ->
+      assertEquals("fr", PlanQueryBuilder.build(query(category, language = "fr"))["language"])
+    }
+  }
+
+  @Test
+  fun `une recherche sans langue n envoie pas le parametre`() {
+    assertNull(PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))["language"])
+  }
+
+  @Test
+  fun `la pagination conserve la langue`() {
+    val search = query(JourneyCategory.TRANSIT, language = "de")
+    assertEquals("de", PlanQueryBuilder.build(search, cursor = "LATER|1756785600")["language"])
   }
 
   // --- Rafraîchissement ----------------------------------------------------------------------

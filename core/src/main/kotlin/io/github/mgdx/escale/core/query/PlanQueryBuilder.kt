@@ -25,8 +25,10 @@ import java.time.format.DateTimeFormatter
  *   MOTIS, un trajet en transport en commun plus lent que le meilleur trajet direct est éliminé
  *   pendant la recherche, si bien qu'une requête mixte fait disparaître des résultats ;
  * - **`maxDirectTime` explicite** sur les onglets sans transport en commun, le défaut serveur de
- *   1800 s coupant tout trajet direct de plus de trente minutes. Le serveur peut plafonner ces
- *   valeurs, c'est son droit ;
+ *   1800 s coupant tout trajet direct de plus de trente minutes — et, pour la même raison, un
+ *   `maxPreTransitTime` / `maxPostTransitTime` explicite sur l'onglet transport en commun, dont le
+ *   défaut de 900 s vide l'onglet hors ville dense. Le serveur peut plafonner ces valeurs, c'est
+ *   son droit ;
  * - **`detailedLegs=false` sur la liste**, `true` seulement à l'ouverture d'un trajet (§ 7.6).
  */
 object PlanQueryBuilder {
@@ -37,6 +39,27 @@ object PlanQueryBuilder {
   private const val MAX_DIRECT_TIME_BIKE_SECONDS = 3 * 60 * 60
 
   private const val MAX_DIRECT_TIME_WALK_SECONDS = 2 * 60 * 60
+
+  /**
+   * Plafond de marche pour rejoindre le premier arrêt et quitter le dernier, en transport en commun.
+   *
+   * Le défaut serveur est de 900 s, soit un quart d'heure : hors ville dense, l'onglet Transport en
+   * commun rendait une liste vide dès que l'arrêt le plus proche était à plus de quinze minutes de
+   * marche, alors qu'un trajet existait. Le serveur plafonne cette valeur par
+   * `street_routing_max_prepost_transit_seconds`, c'est son droit.
+   */
+  private const val MAX_PRE_POST_TRANSIT_SECONDS = 30 * 60
+
+  /**
+   * Distance maximale d'accrochage d'un point au réseau de rues, en mètres.
+   *
+   * Le défaut serveur est de 250 m : un point posé par appui long au milieu d'un parc, sur un quai
+   * ou sur une plage ne s'accrochait à aucune rue et la recherche échouait sans explication. La
+   * valeur est envoyée sur tous les onglets, et non seulement pour un point choisi sur la carte :
+   * une adresse géocodée au fond d'un lotissement a le même problème, et une règle sans condition
+   * est une règle de moins à tester. Le serveur plafonne par `max_max_matching_distance`.
+   */
+  private const val MAX_MATCHING_DISTANCE_METERS = 1000
 
   /**
    * Le plafond de durée effectivement envoyé pour un onglet, ou `null` pour l'onglet transport en
@@ -52,6 +75,14 @@ object PlanQueryBuilder {
     JourneyCategory.BIKE -> Duration.ofSeconds(MAX_DIRECT_TIME_BIKE_SECONDS.toLong())
     JourneyCategory.WALK -> Duration.ofSeconds(MAX_DIRECT_TIME_WALK_SECONDS.toLong())
   }
+
+  /**
+   * Le rabattement à pied maximal envoyé sur l'onglet Transport en commun.
+   *
+   * Comme [maxDirectTime], la valeur est lue ici par l'interface, qui la nomme dans son état vide
+   * plutôt que d'en recopier une seconde qui finirait par diverger de la requête émise.
+   */
+  fun maxPrePostTransitTime(): Duration = Duration.ofSeconds(MAX_PRE_POST_TRANSIT_SECONDS.toLong())
 
   /**
    * Le serveur attend une date-heure ISO-8601. `Instant.toString()` omet les secondes quand elles
@@ -72,9 +103,13 @@ object PlanQueryBuilder {
     val parameters = LinkedHashMap<String, String>()
     parameters[PLACE_FROM] = place(query.from)
     parameters[PLACE_TO] = place(query.to)
+    parameters[MAX_MATCHING_DISTANCE] = MAX_MATCHING_DISTANCE_METERS.toString()
     parameters.putAll(timeParameters(query.time))
     parameters.putAll(modeParameters(query.category, query.preferences))
     parameters.putAll(preferenceParameters(query.category, query.preferences))
+    // La langue des libellés renvoyés : noms d'arrêts et destinations affichées (`headsign`).
+    // Absente, le serveur répond dans la langue par défaut de ses données.
+    query.language?.let { parameters[LANGUAGE] = it }
     parameters.putAll(detailParameters(detailedLegs))
     if (cursor != null) parameters[PAGE_CURSOR] = cursor
     return parameters
@@ -129,6 +164,8 @@ object PlanQueryBuilder {
         TRANSIT_MODES to "TRANSIT",
         PRE_TRANSIT_MODES to "WALK",
         POST_TRANSIT_MODES to "WALK",
+        MAX_PRE_TRANSIT_TIME to MAX_PRE_POST_TRANSIT_SECONDS.toString(),
+        MAX_POST_TRANSIT_TIME to MAX_PRE_POST_TRANSIT_SECONDS.toString(),
         DIRECT_MODES to "",
       )
 
@@ -228,6 +265,9 @@ object PlanQueryBuilder {
   private const val PRE_TRANSIT_MODES = "preTransitModes"
   private const val POST_TRANSIT_MODES = "postTransitModes"
   private const val MAX_DIRECT_TIME = "maxDirectTime"
+  private const val MAX_PRE_TRANSIT_TIME = "maxPreTransitTime"
+  private const val MAX_POST_TRANSIT_TIME = "maxPostTransitTime"
+  private const val MAX_MATCHING_DISTANCE = "maxMatchingDistance"
   private const val PEDESTRIAN_SPEED = "pedestrianSpeed"
   private const val PEDESTRIAN_PROFILE = "pedestrianProfile"
   private const val CYCLING_SPEED = "cyclingSpeed"
@@ -235,6 +275,7 @@ object PlanQueryBuilder {
   private const val ADDITIONAL_TRANSFER_TIME = "additionalTransferTime"
   private const val MAX_TRANSFERS = "maxTransfers"
   private const val REQUIRE_BIKE_TRANSPORT = "requireBikeTransport"
+  private const val LANGUAGE = "language"
   private const val DETAILED_LEGS = "detailedLegs"
   private const val DETAILED_TRANSFERS = "detailedTransfers"
   private const val PAGE_CURSOR = "pageCursor"

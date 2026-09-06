@@ -144,6 +144,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `transitModes` | `TRANSIT` sur l'onglet Transport, **vide** sur les autres | vide = « aucune correspondance calculée » |
 | `directModes` | **vide** sur l'onglet Transport, `CAR` / `BIKE[,RENTAL]` / `WALK` sur les autres | voir le piège n° 3 |
 | `detailedLegs` | `false` sur la liste, `true` à l'ouverture d'un trajet | § 7.6, la géométrie coûte cher |
+| `maxMatchingDistance` | `1000` (mètres) | le défaut de 250 m n'accroche à aucune rue un point posé au milieu d'un parc, sur un quai ou sur une plage : la recherche échoue sans explication. Envoyé sur les quatre onglets, une adresse géocodée au fond d'un lotissement ayant le même problème. Plafonné par `max_max_matching_distance` |
 
 ### Envoyés selon le cas
 
@@ -153,6 +154,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `arriveBy` | « arriver avant » | `true` |
 | `preTransitModes`, `postTransitModes` | onglet Transport | `WALK,RENTAL` : rabattement à pied ou en libre-service |
 | `maxDirectTime` | onglets sans transport en commun | voir le piège n° 2 |
+| `maxPreTransitTime`, `maxPostTransitTime` | onglet Transport | 1800 s : le défaut serveur de 900 s vide l'onglet hors ville dense, dès que le premier arrêt est à plus d'un quart d'heure de marche. Plafonné par `street_routing_max_prepost_transit_seconds` |
 | `detailedTransfers` | écran de détail seulement | hérite de `detailedLegs` quand il est absent — c'est pourquoi il n'est envoyé que là où on le veut explicitement à `true` (§ 5.3) |
 | `pageCursor` | pagination | `previousPageCursor` / `nextPageCursor` d'une page déjà obtenue, **le reste de la requête à l'identique** |
 | `pedestrianSpeed`, `pedestrianProfile` | tous les onglets sauf Voiture | `pedestrianProfile=WHEELCHAIR` est le réglage d'accessibilité du § 9 |
@@ -160,6 +162,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `additionalTransferTime` | onglet Transport | **en minutes**, pas en secondes (`docs/motis-openapi.yaml`, « Additional transfer time reserved for each transfer in minutes ») |
 | `maxTransfers` | onglet Transport | absent = valeur serveur, volontairement très haute |
 | `requireBikeTransport` | onglet Transport | vélo embarqué dans les véhicules |
+| `language` | tous les onglets, dès que la langue de l'interface est connue | tags OpenStreetMap / GTFS (BCP-47 / ISO 639-1) : sans lui, noms d'arrêts et `headsign` arrivent dans la langue par défaut du flux. Renseigné par `SearchSession` avec `Locale.getDefault().language`, comme le fait déjà `/api/v1/geocode` |
 | `directRentalFormFactors`, `preTransitRentalFormFactors`, `postTransitRentalFormFactors` | l'usager a restreint les types de véhicules partagés | assemblés par `core/query/RentalFormFactorQuery.kt` — voir le piège n° 6, un filtre vide n'y veut pas dire « aucun véhicule » |
 
 Une préférence laissée à sa valeur par défaut **n'est pas envoyée** : la valeur par défaut du
