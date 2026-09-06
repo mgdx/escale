@@ -1,8 +1,6 @@
 package io.github.mgdx.escale.core.geo
 
 import io.github.mgdx.escale.core.model.BoundingBox
-import io.github.mgdx.escale.core.model.LatLon
-import kotlin.math.cos
 
 /**
  * Les arrêts de la carte, rendus atteignables autrement que par le doigt (SPEC.md § 9).
@@ -51,16 +49,3 @@ fun browsableStops(
  * cents noms à la synthèse vocale ne l'est pas.
  */
 const val MAX_BROWSABLE_STOPS = 40
-
-/**
- * Une distance **de classement**, pas une distance géodésique.
- *
- * Ordonner des arrêts d'un même écran ne demande pas de haversine : la projection
- * équirectangulaire conserve l'ordre à cette échelle, et le résultat n'est jamais affiché. Le carré
- * évite une racine inutile.
- */
-private fun LatLon.rankingDistanceTo(other: LatLon): Double {
-  val deltaLat = lat - other.lat
-  val deltaLon = (lon - other.lon) * cos(Math.toRadians((lat + other.lat) / 2))
-  return deltaLat * deltaLat + deltaLon * deltaLon
-}

@@ -58,6 +58,18 @@ class GeocodeApiTest {
   }
 
   @Test
+  fun `le biais geographique part avec son poids, jamais avec celui du serveur`() = runTest {
+    // Le défaut du serveur vaut 1 : trop faible, les arrêts homonymes lointains passent devant les
+    // adresses voisines.
+    var request: HttpRequestData? = null
+    val engine = engineServing("geocode_rue_de_rivoli.json") { request = it }
+    GeocodeApi(versionName = "1.0.0", engine = engine).use {
+      it.geocode(baseUrl, "Rue de Rivoli", bias = paris, language = "fr", limit = 10)
+    }
+    assertEquals(GeocodeApi.PLACE_BIAS.toString(), checkNotNull(request).url.parameters["placeBias"])
+  }
+
+  @Test
   fun `sans biais ni langue, les parametres facultatifs sont absents`() = runTest {
     var request: HttpRequestData? = null
     val engine = engineServing("geocode_rue_de_rivoli.json") { request = it }
@@ -65,6 +77,8 @@ class GeocodeApiTest {
       it.geocode(baseUrl, "Rue de Rivoli", bias = null, language = null, limit = 10)
     }
     assertNull(checkNotNull(request).url.parameters["place"])
+    // Un poids sans point de référence n'a pas de sens, et il salirait le cache disque.
+    assertNull(checkNotNull(request).url.parameters["placeBias"])
     assertNull(checkNotNull(request).url.parameters["language"])
   }
 

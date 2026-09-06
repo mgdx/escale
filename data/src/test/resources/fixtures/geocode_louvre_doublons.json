@@ -1,0 +1,85 @@
+[
+  {
+    "type": "PLACE",
+    "name": "Louvre",
+    "id": "",
+    "lat": 4.88606E1,
+    "lon": 2.3376E0,
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      }
+    ]
+  },
+  {
+    "type": "PLACE",
+    "name": "Louvre",
+    "id": "",
+    "lat": 4.88606E1,
+    "lon": 2.3376E0,
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      }
+    ]
+  },
+  {
+    "type": "PLACE",
+    "name": "Louvre",
+    "id": "",
+    "lat": 4.88606E1,
+    "lon": 2.3376E0,
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      }
+    ]
+  },
+  {
+    "type": "STOP",
+    "name": "Louvre - Rivoli",
+    "id": "fr-idf:IDFM:463130",
+    "lat": 4.886073E1,
+    "lon": 2.34094E0,
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      }
+    ],
+    "modes": [
+      "SUBWAY"
+    ]
+  },
+  {
+    "type": "ADDRESS",
+    "name": "Rue du Louvre",
+    "id": "",
+    "lat": 4.886391E1,
+    "lon": 2.34281E0,
+    "areas": [
+      {
+        "name": "Paris",
+        "adminLevel": 7E0,
+        "matched": false,
+        "unique": false,
+        "default": true
+      }
+    ]
+  }
+]

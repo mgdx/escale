@@ -5,6 +5,7 @@ import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.repository.AutocompleteRules
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.ServerRepository
+import io.github.mgdx.escale.core.repository.withoutDuplicates
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.core.result.map
@@ -37,7 +38,9 @@ class GeocodeRepositoryImpl(
     // Deuxième verrou du minimum de trois caractères de SPEC.md § 7.1 : `autocompleteStream` le
     // pose déjà, mais aucun appel direct ne doit pouvoir émettre une requête d'un caractère.
     if (query.length < AutocompleteRules.MIN_TEXT_LENGTH) return Outcome.Success(emptyList())
-    return api.geocode(baseUrl(), query, bias, language, limit)
+    // Le serveur rend des doublons stricts : les écarter ici, et non dans `autocompleteStream`,
+    // les écarte pour tous les appelants.
+    return api.geocode(baseUrl(), query, bias, language, limit).map { it.withoutDuplicates() }
   }
 
   /**
