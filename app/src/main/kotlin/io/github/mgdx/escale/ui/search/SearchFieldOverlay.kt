@@ -38,6 +38,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -140,11 +142,13 @@ private fun SearchInputBar(field: SearchField, query: String, actions: SearchAct
 }
 
 /**
- * Les entrées de tête, puis les résultats du serveur (SPEC.md § 5.1).
+ * Les entrées de tête, les lieux déjà utilisés, puis les résultats du serveur (SPEC.md § 5.1).
  *
  * Aucun anti-rebond ici, et aucun compte de caractères : ces règles vivent dans
- * `autocompleteStream`, dans `:core` (SPEC.md § 7.1). Cette liste ne fait qu'afficher l'état
- * qu'elle reçoit.
+ * `autocompleteStream`, dans `:core` (SPEC.md § 7.1). Le bloc « déjà utilisés » n'en dépend pas —
+ * il ne demande rien au serveur et s'affiche dès la première lettre —, et son contenu est composé
+ * par `matchingKnownPlaces`, également dans `:core`. Cette liste ne fait qu'afficher l'état qu'elle
+ * reçoit.
  */
 @Composable
 private fun SuggestionList(state: SearchUiState, actions: SearchActions) {
@@ -157,6 +161,12 @@ private fun SuggestionList(state: SearchUiState, actions: SearchActions) {
           Icon(painter = painterResource(shortcut.iconRes()), contentDescription = null)
         },
       )
+    }
+    if (state.knownPlaces.isNotEmpty()) {
+      item { SectionHeader(text = stringResource(R.string.search_known_places)) }
+      itemsIndexed(items = state.knownPlaces, key = ::knownPlaceKey) { _, location ->
+        SuggestionRow(location = location, onClick = { actions.onSuggestionSelected(location) })
+      }
     }
     item { HorizontalDivider() }
     when (val suggestions = state.suggestions) {
@@ -208,6 +218,20 @@ private fun SuggestionRow(location: Location, onClick: () -> Unit) {
     leadingContent = {
       Icon(painter = painterResource(location.kind.iconRes()), contentDescription = kindLabel)
     },
+  )
+}
+
+/** Le titre du bloc « déjà utilisés », annoncé comme un en-tête par les lecteurs d'écran. */
+@Composable
+private fun SectionHeader(text: String) {
+  Text(
+    text = text,
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(horizontal = BarPadding, vertical = BarSpacing)
+      .semantics { heading() },
+    style = MaterialTheme.typography.labelLarge,
+    color = MaterialTheme.colorScheme.primary,
   )
 }
 
@@ -264,6 +288,15 @@ private fun MessageRow(text: String) {
 internal fun suggestionKey(index: Int, location: Location): String = index.toString() + "-" +
   (location.id ?: (location.name + "@" + location.coordinates.lat + "," + location.coordinates.lon))
 
+/**
+ * La clé d'une ligne du bloc « déjà utilisés ».
+ *
+ * Elle est préfixée parce qu'un lieu enregistré peut aussi figurer dans les suggestions du serveur :
+ * le dédoublonnage de SPEC.md § 5.1 l'en retire, mais rien n'oblige les deux listes à se faire
+ * confiance pour une clé de composition, et deux clés égales feraient lever la liste.
+ */
+internal fun knownPlaceKey(index: Int, location: Location): String = "known-" + suggestionKey(index, location)
+
 private val MinTouchTarget: Dp = 48.dp
 private val BarPadding: Dp = 12.dp
 private val BarSpacing: Dp = 8.dp
@@ -285,6 +318,15 @@ private fun SearchFieldContentPreview() {
       state = SearchUiState(
         query = "gare",
         shortcuts = listOf(SearchShortcut.MY_LOCATION, SearchShortcut.HOME, SearchShortcut.PICK_ON_MAP),
+        knownPlaces = listOf(
+          Location(
+            id = null,
+            name = "Gare de Vincennes",
+            description = "Vincennes",
+            coordinates = LatLon(lat = 48.8466, lon = 2.4344),
+            kind = PlaceKind.ADDRESS,
+          ),
+        ),
         suggestions = AutocompleteState.Suggestions(
           listOf(
             Location(

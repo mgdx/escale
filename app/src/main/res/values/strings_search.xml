@@ -45,6 +45,10 @@
   <string name="search_entry_pick_on_map">Choose on the map</string>
   <string name="search_pick_on_map_hint">Press and hold the map to choose a point.</string>
 
+  <!-- Bloc des lieux déjà utilisés, entre les entrées de tête et les résultats du serveur
+       (SPEC.md § 5.1) : lieux enregistrés et extrémités des dernières recherches. -->
+  <string name="search_known_places">Recently used</string>
+
   <!-- Nature d'un résultat : le pictogramme est toujours doublé d'un mot (SPEC.md § 9). -->
   <string name="search_kind_address">Address</string>
   <string name="search_kind_place">Place</string>

@@ -36,6 +36,8 @@
   <string name="search_entry_pick_on_map">Choisir sur la carte</string>
   <string name="search_pick_on_map_hint">Appuyez longuement sur la carte pour choisir un point.</string>
 
+  <string name="search_known_places">Déjà utilisés</string>
+
   <string name="search_kind_address">Adresse</string>
   <string name="search_kind_place">Lieu</string>
   <string name="search_kind_stop">Arrêt</string>

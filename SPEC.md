@@ -223,6 +223,10 @@ par-dessus.
   transport desservi pour les arrêts.
 - Trois entrées supplémentaires en tête de liste : **Ma position**, **Domicile**, **Travail**,
   et **Choisir sur la carte** (qui replie le clavier et fait choisir un point par appui long).
+- Dès le premier caractère, et sans aucune requête, la liste propose d'abord les lieux enregistrés
+  (Domicile, Travail, lieux favoris) et les points de départ et d'arrivée des dernières recherches
+  dont le nom ou la description contient la saisie, au plus cinq, les plus récents d'abord. Les
+  suggestions du serveur suivent, sans doublon avec ce bloc.
 
 **Bouton de position (bas à droite)**
 - Trois états : position inconnue, centrage sur la position, suivi actif.

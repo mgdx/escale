@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.search
 
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.SearchHistoryEntry
 import io.github.mgdx.escale.ui.session.SearchDraft
 
 /** Au-delà de quelques puces, la rangée devient un pense-bête illisible sous les champs. */
@@ -22,7 +23,7 @@ fun quickChips(
   draft: SearchDraft,
   home: Location?,
   work: Location?,
-  recentSearches: List<RecentSearch>,
+  recentSearches: List<SearchHistoryEntry>,
 ): List<QuickChip> {
   if (draft.from != null || draft.to != null) return emptyList()
   return buildList {
