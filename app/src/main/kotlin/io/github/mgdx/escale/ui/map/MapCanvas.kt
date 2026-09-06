@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -166,8 +168,18 @@ fun MapCanvas(
 private fun BoxScope.MapDetailCard(state: MapUiState, contentPadding: PaddingValues) {
   val placement = Modifier
     .align(Alignment.BottomCenter)
-    .padding(bottom = contentPadding.calculateBottomPadding())
-    .padding(StopCardMargin)
+    .padding(
+      // Le haut : ce que la carte de recherche recouvre. En paysage, une fiche haute passait
+      // sinon **derrière** elle, et son nom comme son adresse devenaient illisibles.
+      top = contentPadding.calculateTopPadding() + StopCardMargin,
+      // Le bas : la feuille de résultats, puis la place du cartouche d'attribution.
+      bottom = contentPadding.calculateBottomPadding() + AttributionRoom,
+    )
+    .padding(horizontal = StopCardMargin)
+    // Ce qui ne tient toujours pas se fait défilant plutôt que rogné : à 200 % d'agrandissement et
+    // en paysage, aucune hauteur d'écran ne suffit, et un bouton hors de l'écran est un bouton
+    // perdu (SPEC.md § 9).
+    .verticalScroll(rememberScrollState())
   state.selectedStop?.let { stop ->
     MapStopCard(
       stop = stop,
@@ -557,6 +569,7 @@ private fun Feature.toPlaceTap(): MapTap? {
       category = category,
       typeKey = typeKey,
       complement = poiComplement(
+        typeKey = typeKey,
         cuisine = getStringProperty(OSM_CUISINE),
         atm = isYes(OSM_ATM),
         religion = getStringProperty(OSM_RELIGION),
@@ -747,5 +760,15 @@ private const val OSM_HOUSE_NUMBER = "housenumber"
  */
 private const val TAP_SLOP_PX = 24f
 
-/** De l'air entre l'infobulle et les bords de l'écran. */
+/** De l'air entre la fiche et les bords de l'écran. */
 private val StopCardMargin = 12.dp
+
+/**
+ * La place que la fiche laisse au cartouche d'attribution, en bas à gauche de la carte.
+ *
+ * « Attribution OpenStreetMap visible en permanence » (SPEC.md § 4.2 et § 5.7) : ce n'est pas un
+ * ornement qu'on peut recouvrir, c'est une obligation. Le cartouche se pose à 16 dp du bas et sa
+ * ligne interactive fait 48 dp — `minimumInteractiveComponentSize` la lui garantit —, si bien que
+ * la fiche doit s'arrêter 64 dp plus haut pour ne masquer ni la mention ni son point de contact.
+ */
+private val AttributionRoom = 64.dp

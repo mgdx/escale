@@ -228,4 +228,52 @@ class PoiCategoryTest {
   fun `la casse de la tuile ne change rien au complément`() {
     assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), poiDetail(" Italian "))
   }
+
+  // --- Un complément qui répète le type n'apprend rien -------------------------------------------
+
+  @Test
+  fun `un café dont la cuisine est le café n'affiche pas deux fois le mot`() {
+    // Vu sur un Starbucks : « Café · café ». Le complément ne dit rien de plus que le type.
+    assertNull(poiComplement(typeKey = PoiTypeKey.CAFE, cuisine = "coffee_shop"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.CAFE, cuisine = "cafe"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.CAFE, cuisine = "coffee"))
+  }
+
+  @Test
+  fun `la règle vaut pour tout type dont la cuisine reprend le nom`() {
+    // Aucune table à tenir pour ces cas-là : la valeur du complément est celle du type.
+    assertNull(poiComplement(typeKey = PoiTypeKey.BAR, cuisine = "bar"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.FAST_FOOD, cuisine = "fast_food"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.PUB, cuisine = "pub"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.RESTAURANT, cuisine = "restaurant"))
+    assertNull(poiComplement(typeKey = PoiTypeKey.BAKERY, cuisine = "bakery"))
+  }
+
+  @Test
+  fun `un complément qui apprend quelque chose reste affiché`() {
+    assertEquals(
+      PoiComplement.Named(PoiDetailKey.ITALIAN),
+      poiComplement(typeKey = PoiTypeKey.RESTAURANT, cuisine = "italian"),
+    )
+    // Un café qui sert des crêpes n'est pas un pléonasme.
+    assertEquals(
+      PoiComplement.Named(PoiDetailKey.CREPE),
+      poiComplement(typeKey = PoiTypeKey.CAFE, cuisine = "crepe"),
+    )
+  }
+
+  @Test
+  fun `la redondance n'écarte que le complément fautif, pas les suivants`() {
+    // La cuisine est écartée, le distributeur prend sa place : la fiche ne perd rien au change.
+    assertEquals(
+      PoiComplement.CashMachine,
+      poiComplement(typeKey = PoiTypeKey.CAFE, cuisine = "cafe", atm = true),
+    )
+  }
+
+  @Test
+  fun `sans type connu, le complément est rendu tel quel`() {
+    // Rien à comparer : un lieu que la table ne nomme pas ne peut pas se répéter.
+    assertEquals(PoiComplement.Named(PoiDetailKey.ITALIAN), poiComplement(cuisine = "italian"))
+  }
 }
