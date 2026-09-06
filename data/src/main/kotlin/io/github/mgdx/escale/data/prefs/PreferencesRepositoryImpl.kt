@@ -17,6 +17,7 @@ import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ElevationCosts
 import io.github.mgdx.escale.core.model.PedestrianProfile
 import io.github.mgdx.escale.core.model.RentalFormFactor
+import io.github.mgdx.escale.core.model.RentalFormFactorSelection
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.ThemeChoice
 import io.github.mgdx.escale.core.repository.PreferencesRepository
@@ -101,9 +102,14 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
       ?: DEFAULT_SEARCH.additionalTransferTime,
     maxTransfers = stored[KEY_MAX_TRANSFERS],
     requireBikeTransport = stored[KEY_REQUIRE_BIKE_TRANSPORT] ?: DEFAULT_SEARCH.requireBikeTransport,
+    // Un type inconnu, ou qui n'est plus offert par les réglages — la voiture partagée depuis
+    // qu'elle a quitté le rabattement (SPEC.md § 5.2) —, est oublié à la lecture : sans quoi un
+    // réglage écrit par une version antérieure filtrerait sur un type que l'écran ne montre plus.
     allowedRentalFormFactors = stored[KEY_RENTAL_FORM_FACTORS]
       ?.mapNotNull { name -> RentalFormFactor.entries.firstOrNull { it.name == name } }
+      ?.filter { it in RentalFormFactorSelection.OFFERED }
       ?.toSet()
+      ?.takeIf { it.size != RentalFormFactorSelection.OFFERED.size }
       ?: DEFAULT_SEARCH.allowedRentalFormFactors,
   )
 

@@ -17,11 +17,16 @@ import org.junit.Test
 class RentalFormFactorQueryTest {
 
   @Test
-  fun `sans reglage, aucun filtre n est envoye nulle part`() {
+  fun `sans reglage, seul le rabattement est filtre, et de la seule voiture partagee`() {
     val allowed = SearchPreferences().allowedRentalFormFactors
     assertEquals(emptySet<RentalFormFactor>(), allowed)
-    // Rabattement : rien n'est envoyé, le serveur applique son propre défaut.
-    assertEquals(emptyMap<String, String>(), RentalFormFactorQuery.parameters(JourneyCategory.TRANSIT, allowed))
+    // Rabattement : le filtre est envoyé même sans réglage, car le défaut du serveur inclut la
+    // voiture partagée, que l'onglet Transport en commun ne veut pas (SPEC.md § 5.2).
+    val rabattement = RentalFormFactorQuery.parameters(JourneyCategory.TRANSIT, allowed)
+    val attendu = "BICYCLE,CARGO_BICYCLE,MOPED,SCOOTER_STANDING,SCOOTER_SEATED,OTHER"
+    assertEquals(attendu, rabattement[RentalFormFactorQuery.PRE_TRANSIT])
+    assertEquals(attendu, rabattement[RentalFormFactorQuery.POST_TRANSIT])
+    assertTrue(RentalFormFactorQuery.transitTabAcceptsRentals(allowed))
     // Onglet Vélo : la liste des trois types de SPEC.md § 5.2, inchangée par rapport à aujourd'hui.
     assertEquals(
       mapOf(RentalFormFactorQuery.DIRECT to "BICYCLE,SCOOTER_STANDING,SCOOTER_SEATED"),
@@ -64,10 +69,22 @@ class RentalFormFactorQueryTest {
   }
 
   @Test
-  fun `ne garder que la voiture partagee vide l onglet velo de ses vehicules`() {
+  fun `la voiture partagee n est empruntee par aucun onglet`() {
+    // Un réglage qui ne garderait que la voiture — ce que l'écran de réglages ne permet plus, mais
+    // qu'une version antérieure a pu persister — ne laisse aucun véhicule à proposer nulle part.
     val allowed = setOf(RentalFormFactor.CAR)
     assertFalse(RentalFormFactorQuery.bikeTabAcceptsRentals(allowed))
     assertEquals(emptyMap<String, String>(), RentalFormFactorQuery.parameters(JourneyCategory.BIKE, allowed))
+    assertFalse(RentalFormFactorQuery.transitTabAcceptsRentals(allowed))
+    assertEquals(emptyMap<String, String>(), RentalFormFactorQuery.parameters(JourneyCategory.TRANSIT, allowed))
+
+    // Et elle ne se glisse dans aucune valeur envoyée, quel que soit le réglage.
+    RentalFormFactorSelection.OFFERED.forEach { assertFalse(it == RentalFormFactor.CAR) }
+    JourneyCategory.entries.forEach { categorie ->
+      RentalFormFactorQuery.parameters(categorie, emptySet()).values.forEach { valeur ->
+        assertFalse(valeur.split(",").contains(RentalFormFactor.CAR.name))
+      }
+    }
   }
 
   @Test

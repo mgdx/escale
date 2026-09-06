@@ -58,7 +58,22 @@ class PlanQueryBuilderTest {
     assertEquals("", parameters["directModes"])
     // Le plafond de durée directe ne veut rien dire quand on ne demande aucun trajet direct.
     assertNull(parameters["maxDirectTime"])
-    // Sans réglage d'usager, aucun filtre de véhicules n'est imposé au serveur.
+    // Même sans réglage d'usager, le rabattement exclut la voiture partagée (SPEC.md § 5.2) : le
+    // défaut du serveur, lui, l'inclurait.
+    val attendu = "BICYCLE,CARGO_BICYCLE,MOPED,SCOOTER_STANDING,SCOOTER_SEATED,OTHER"
+    assertEquals(attendu, parameters[RentalFormFactorQuery.PRE_TRANSIT])
+    assertEquals(attendu, parameters[RentalFormFactorQuery.POST_TRANSIT])
+  }
+
+  @Test
+  fun `un rabattement sans aucun vehicule acceptable retire RENTAL et se limite a la marche`() {
+    // Réglage qu'une version antérieure a pu persister : la voiture partagée seule, alors qu'aucun
+    // onglet ne l'emprunte plus.
+    val preferences = SearchPreferences(allowedRentalFormFactors = setOf(RentalFormFactor.CAR))
+    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT, preferences = preferences))
+    assertEquals("WALK", parameters["preTransitModes"])
+    assertEquals("WALK", parameters["postTransitModes"])
+    // Un filtre vide voudrait dire « tous les véhicules » côté serveur : il n'en part aucun.
     assertNull(parameters[RentalFormFactorQuery.PRE_TRANSIT])
     assertNull(parameters[RentalFormFactorQuery.POST_TRANSIT])
   }

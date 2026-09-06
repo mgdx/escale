@@ -119,12 +119,25 @@ object MaxTransfersOptions {
  */
 object RentalFormFactorSelection {
 
-  /** Les cases à cocher de l'écran de réglages, dans l'ordre de l'énumération de l'API. */
-  val OFFERED: List<RentalFormFactor> = RentalFormFactor.entries
+  /**
+   * Les cases à cocher de l'écran de réglages, dans l'ordre de l'énumération de l'API.
+   *
+   * **La voiture partagée n'y figure pas** : aucun onglet ne l'emprunte depuis qu'elle a quitté le
+   * rabattement du transport en commun (SPEC.md § 5.2), et une case qui ne changerait plus rien à
+   * aucune recherche mentirait à l'usager.
+   */
+  val OFFERED: List<RentalFormFactor> = RentalFormFactor.entries.filter { it != RentalFormFactor.CAR }
 
-  /** Ce que l'écran coche : rien de filtré signifie que tout est accepté. */
-  fun selected(allowed: Set<RentalFormFactor>): Set<RentalFormFactor> =
-    if (allowed.isEmpty()) OFFERED.toSet() else allowed
+  /**
+   * Ce que l'écran coche : rien de filtré signifie que tout est accepté.
+   *
+   * Un type persisté par une version antérieure mais qui n'est plus offert — la voiture partagée —
+   * est ignoré ici ; s'il ne reste rien, le réglage vaut « aucun filtre », comme un réglage neuf.
+   */
+  fun selected(allowed: Set<RentalFormFactor>): Set<RentalFormFactor> {
+    val retained = allowed.intersect(OFFERED.toSet())
+    return if (retained.isEmpty()) OFFERED.toSet() else retained
+  }
 
   /**
    * Le réglage à persister après avoir coché ou décoché une case.

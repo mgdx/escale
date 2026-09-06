@@ -38,13 +38,24 @@ object RentalFormFactorQuery {
   )
 
   /**
+   * Types de véhicules que l'onglet Transport en commun accepte en rabattement, dans l'ordre de
+   * l'énumération de l'API.
+   *
+   * **La voiture partagée en est exclue** (SPEC.md § 5.2) : un premier ou dernier kilomètre en
+   * voiture n'est pas du transport en commun, et le proposer sous cet onglet reviendrait à ranger
+   * un trajet motorisé individuel là où l'usager cherche des courses. Aucun autre onglet ne
+   * l'emprunte non plus : elle ne fait donc plus partie des types offerts par les réglages.
+   */
+  private val TRANSIT_TAB_FORM_FACTORS = RentalFormFactor.entries.filter { it != RentalFormFactor.CAR }
+
+  /**
    * Les paramètres de filtrage à joindre à la requête d'une catégorie.
    *
    * @param allowed réglage d'usager (`SearchPreferences.allowedRentalFormFactors`). Vide signifie
    *   « aucun filtre » et non « aucun véhicule », conformément à l'API.
    * @return une entrée par paramètre, ou une map vide quand le serveur n'a rien à filtrer. Une map
-   *   vide **pour l'onglet Vélo** signifie en outre que l'usager a exclu tous les véhicules de cet
-   *   onglet : l'appelant retire alors `RENTAL` de `directModes`.
+   *   vide **pour l'onglet Vélo ou l'onglet Transport en commun** signifie en outre que l'usager a
+   *   exclu tous les véhicules de cet onglet : l'appelant retire alors `RENTAL` des modes.
    */
   fun parameters(category: JourneyCategory, allowed: Set<RentalFormFactor>): Map<String, String> = when (category) {
     JourneyCategory.BIKE -> directParameters(allowed)
@@ -61,16 +72,26 @@ object RentalFormFactorQuery {
    */
   fun bikeTabAcceptsRentals(allowed: Set<RentalFormFactor>): Boolean = bikeTabFormFactors(allowed).isNotEmpty()
 
+  /**
+   * Vrai quand l'onglet Transport en commun a encore un véhicule partagé à proposer en rabattement.
+   * Faux : l'usager n'a gardé que des types absents de cet onglet, et la requête se limite alors à
+   * la marche en premier et dernier kilomètre.
+   */
+  fun transitTabAcceptsRentals(allowed: Set<RentalFormFactor>): Boolean = transitTabFormFactors(allowed).isNotEmpty()
+
   private fun directParameters(allowed: Set<RentalFormFactor>): Map<String, String> {
     val formFactors = bikeTabFormFactors(allowed)
     return if (formFactors.isEmpty()) emptyMap() else mapOf(DIRECT to join(formFactors))
   }
 
+  /**
+   * Le filtre est ici toujours envoyé, même sans réglage d'usager : le défaut du serveur inclut la
+   * voiture partagée, que cet onglet ne veut pas.
+   */
   private fun transitParameters(allowed: Set<RentalFormFactor>): Map<String, String> {
-    // Sans réglage, on laisse le serveur proposer tous les véhicules en rabattement : c'est son
-    // comportement par défaut, et l'envoyer explicitement n'apporterait rien.
-    if (allowed.isEmpty()) return emptyMap()
-    val ordered = join(RentalFormFactor.entries.filter { it in allowed })
+    val formFactors = transitTabFormFactors(allowed)
+    if (formFactors.isEmpty()) return emptyMap()
+    val ordered = join(formFactors)
     return mapOf(PRE_TRANSIT to ordered, POST_TRANSIT to ordered)
   }
 
@@ -80,6 +101,9 @@ object RentalFormFactorQuery {
    */
   private fun bikeTabFormFactors(allowed: Set<RentalFormFactor>): List<RentalFormFactor> =
     if (allowed.isEmpty()) BIKE_TAB_FORM_FACTORS else BIKE_TAB_FORM_FACTORS.filter { it in allowed }
+
+  private fun transitTabFormFactors(allowed: Set<RentalFormFactor>): List<RentalFormFactor> =
+    if (allowed.isEmpty()) TRANSIT_TAB_FORM_FACTORS else TRANSIT_TAB_FORM_FACTORS.filter { it in allowed }
 
   private fun join(formFactors: List<RentalFormFactor>): String = formFactors.joinToString(",") { it.name }
 }

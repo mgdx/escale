@@ -101,6 +101,22 @@ class SearchPreferenceOptionsTest {
   }
 
   @Test
+  fun `la voiture partagee n est plus proposee, et un reglage qui la nommait vaut aucun filtre`() {
+    // Aucun onglet ne l'emprunte depuis qu'elle a quitté le rabattement (SPEC.md § 5.2) : la case
+    // ne changerait plus rien à aucune recherche.
+    assertFalse(RentalFormFactor.CAR in RentalFormFactorSelection.OFFERED)
+    // Un réglage écrit par une version antérieure ne doit pas laisser l'écran sans case cochée.
+    assertEquals(
+      RentalFormFactorSelection.OFFERED.toSet(),
+      RentalFormFactorSelection.selected(setOf(RentalFormFactor.CAR)),
+    )
+    assertEquals(
+      setOf(RentalFormFactor.BICYCLE),
+      RentalFormFactorSelection.selected(setOf(RentalFormFactor.BICYCLE, RentalFormFactor.CAR)),
+    )
+  }
+
+  @Test
   fun `decocher la derniere case est refuse, un filtre vide voudrait dire l inverse`() {
     val velosSeuls = setOf(RentalFormFactor.BICYCLE)
     assertTrue(RentalFormFactorSelection.isLastAccepted(velosSeuls, RentalFormFactor.BICYCLE))

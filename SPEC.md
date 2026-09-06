@@ -248,7 +248,7 @@ aussi, et le rabattement vers une gare relève de l'onglet Transport en commun.
 
 | Onglet | Requête `plan` correspondante |
 |---|---|
-| **Transport en commun** | `transitModes=TRANSIT`, `preTransitModes=WALK,RENTAL`, `postTransitModes=WALK,RENTAL`, `directModes=` (vide) |
+| **Transport en commun** | `transitModes=TRANSIT`, `preTransitModes=WALK,RENTAL`, `postTransitModes=WALK,RENTAL`, `directModes=` (vide), avec `preTransitRentalFormFactors` et `postTransitRentalFormFactors` privés de `CAR` |
 | **Voiture** | `directModes=CAR`, `transitModes=` (vide) |
 | **Vélo** | `directModes=BIKE,RENTAL` avec `directRentalFormFactors=BICYCLE,SCOOTER_STANDING,SCOOTER_SEATED`, `transitModes=` (vide) |
 | **À pied** | `directModes=WALK`, `transitModes=` (vide) |
@@ -261,9 +261,15 @@ Conséquences à respecter :
   Un filtre en tête de liste permet de n'afficher que l'un ou l'autre.
 - Dans l'onglet **Transport en commun**, le libre-service apparaît en premier ou dernier kilomètre.
   La frise du trajet fait apparaître la portion partagée avec son pictogramme propre.
+- **La voiture partagée est exclue du rabattement** : un premier ou dernier kilomètre en voiture
+  n'est pas du transport en commun, et le proposer ici rangerait un trajet motorisé individuel sous
+  l'onglet des courses. Le filtre est donc toujours envoyé, même sans réglage d'usager, le défaut du
+  serveur incluant la voiture. Aucun autre onglet ne l'emprunte : l'onglet Vélo ne la propose pas et
+  l'onglet Voiture ne fait pas de libre-service.
 - Le filtre des types de véhicules (`directRentalFormFactors`, `preTransitRentalFormFactors`,
   `postTransitRentalFormFactors`) est exposé dans les réglages : l'utilisateur qui ne veut pas de
-  trottinettes doit pouvoir les exclure partout, d'un seul endroit.
+  trottinettes doit pouvoir les exclure partout, d'un seul endroit. La voiture n'y est pas proposée,
+  faute d'onglet qui l'emprunte ; un réglage antérieur qui la nommait est oublié à la relecture.
 - Ces paramètres sont marqués « expérimental » côté MOTIS : leur nom ou leur comportement peut
   changer sans changement de version. Les isoler dans une seule fonction de construction de requête,
   pour n'avoir qu'un endroit à corriger.

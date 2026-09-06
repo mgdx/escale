@@ -121,12 +121,22 @@ object PlanQueryBuilder {
     return when (category) {
       // Le seul onglet qui interroge la base horaire. `directModes` est vidé pour que les trajets
       // directs n'éliminent pas les trajets en transport en commun plus lents.
-      JourneyCategory.TRANSIT -> linkedMapOf(
-        TRANSIT_MODES to "TRANSIT",
-        PRE_TRANSIT_MODES to "WALK,RENTAL",
-        POST_TRANSIT_MODES to "WALK,RENTAL",
-        DIRECT_MODES to "",
-      ) + formFactors
+      //
+      // `RENTAL` disparaît du rabattement quand il ne reste aucun type de véhicule à proposer :
+      // un filtre vide signifierait « tous les véhicules » côté serveur, voiture partagée comprise.
+      JourneyCategory.TRANSIT -> {
+        val access = if (RentalFormFactorQuery.transitTabAcceptsRentals(preferences.allowedRentalFormFactors)) {
+          "WALK,RENTAL"
+        } else {
+          "WALK"
+        }
+        linkedMapOf(
+          TRANSIT_MODES to "TRANSIT",
+          PRE_TRANSIT_MODES to access,
+          POST_TRANSIT_MODES to access,
+          DIRECT_MODES to "",
+        ) + formFactors
+      }
 
       JourneyCategory.CAR -> directOnly("CAR", MAX_DIRECT_TIME_CAR_SECONDS)
 

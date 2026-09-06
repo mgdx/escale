@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import io.github.mgdx.escale.core.model.CategoryOrder
 import io.github.mgdx.escale.core.model.ClockFormat
 import io.github.mgdx.escale.core.model.DisplayPreferences
@@ -118,6 +119,20 @@ class PreferencesRepositoryImplTest {
     repository.updateSearchPreferences(SearchPreferences(allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE)))
     repository.updateSearchPreferences(SearchPreferences(allowedRentalFormFactors = emptySet()))
     assertEquals(emptySet<RentalFormFactor>(), repository.searchPreferences.first().allowedRentalFormFactors)
+  }
+
+  @Test
+  fun `un type de vehicule qui n est plus propose est oublie a la relecture`() = runBlocking {
+    // Réglage écrit par une version antérieure, du temps où la voiture partagée était proposée
+    // (SPEC.md § 5.2). Ce qui en reste est conservé ; la voiture, elle, est oubliée.
+    dataStore.edit { it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("BICYCLE", "CAR") }
+    assertEquals(
+      setOf(RentalFormFactor.BICYCLE),
+      repository().searchPreferences.first().allowedRentalFormFactors,
+    )
+    // Et un réglage qui ne nommait que la voiture ne doit pas se relire comme « aucun véhicule ».
+    dataStore.edit { it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("CAR") }
+    assertEquals(emptySet<RentalFormFactor>(), repository().searchPreferences.first().allowedRentalFormFactors)
   }
 
   @Test
