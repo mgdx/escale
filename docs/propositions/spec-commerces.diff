@@ -1,5 +1,5 @@
 diff --git a/SPEC.md b/SPEC.md
-index b124119..9446c87 100644
+index b124119..6ee542e 100644
 --- a/SPEC.md
 +++ b/SPEC.md
 @@ -435,8 +435,10 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
@@ -9,34 +9,35 @@ index b124119..9446c87 100644
 -  couches visibles sur la carte (arrêts, libre-service, points d'intérêt),
 -  ordre des catégories de l'écran de résultats.
 +  couches de la carte, ordre des catégories de l'écran de résultats.
-+- **Couches de la carte** : une entrée qui ouvre un écran dédié (§ 5.6.2), où douze catégories
-+  s'allument et s'éteignent une par une. La liste « Affichage » ne porte plus aucune bascule de
-+  couche : les arrêts et le libre-service, qui y figuraient, rejoignent cet écran.
++- **Couches de la carte** : une entrée qui ouvre un écran dédié (§ 5.6.2), où **quinze bascules**
++  s'allument et s'éteignent une par une, en trois sections. La liste « Affichage » ne porte plus
++  aucune bascule de couche : les arrêts et le libre-service, qui y figuraient, rejoignent cet écran.
  - **Ordre des catégories** : une entrée qui ouvre un écran dédié, où les quatre catégories du § 5.2
    se rangent au glissé-déposé. Le geste au doigt n'est jamais la seule voie d'accès : chaque ligne
    porte aussi les actions d'accessibilité « Monter » et « Descendre » (§ 9). L'ordre décide de la
-@@ -486,6 +488,69 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
+@@ -486,6 +488,78 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
  - L'écran rappelle en pied de page que l'instance publique par défaut est tenue par des bénévoles,
    avec le lien vers leur politique d'usage.
  
 +#### 5.6.2 Écran « Couches de la carte »
 +
 +Sur le modèle de l'écran d'ordre des catégories, une entrée de la liste « Affichage » ouvre un
-+écran dédié. **Douze catégories** s'y règlent une par une, en trois sections. Chaque bascule est
-+indépendante des onze autres et du zoom : elle dit seulement si la catégorie a le droit de
++écran dédié. **Quinze bascules** s'y règlent une par une, en trois sections : deux pour le
++transport, cinq pour les repères, huit pour les commerces et services. Chaque bascule est
++indépendante des quatorze autres et du zoom : elle dit seulement si la catégorie a le droit de
 +s'afficher, le palier auquel elle apparaît restant celui du § 5.7. Une catégorie éteinte n'apparaît
 +à aucun zoom.
 +
-+**Transport** — ce que la carte montre en premier, et le propos de l'application :
++**Transport** — deux bascules, ce que la carte montre en premier et le propos de l'application :
 +
 +| Catégorie | Contenu | Par défaut |
 +|---|---|---|
 +| Arrêts | arrêts et gares (`/api/v6/map/stops`) | allumée |
 +| Libre-service | stations et véhicules (`/api/v1/rentals`) | allumée |
 +
-+**Repères** — les points d'intérêt de la v1, découpés en quatre catégories réglables. Ils
-+apparaissent au zoom ≥ 15, leur nom à partir de 16. **Les quatre sont allumées par défaut** :
-+tant que l'usager ne touche à rien, la carte rend exactement ce qu'elle rendait en v1.
++**Repères** — cinq catégories, qui reprennent les points d'intérêt de la v1 et les découpent. Ils
++apparaissent au zoom ≥ 15, leur nom à partir de 16. **Les cinq sont allumées par défaut** : tant
++que l'usager ne touche à rien, la carte rend ce qu'elle rendait en v1.
 +
 +| Catégorie | Valeurs OpenStreetMap | Par défaut |
 +|---|---|---|
@@ -44,13 +45,21 @@ index b124119..9446c87 100644
 +| Enseignement | `amenity` = school, university, college, library | allumée |
 +| Culture et monuments | `amenity` = theatre, cinema, arts_centre ; `historic` = castle, monument, memorial, fort, ruins, archaeological_site, battlefield ; `tourism` = artwork, viewpoint ; `man_made` = lighthouse | allumée |
 +| Santé publique | `amenity` = hospital, clinic, doctors, dentist, pharmacy | allumée |
++| Parcs et jardins | `leisure` = playground, dog_park | allumée |
 +
 +Les **lieux de culte** sont rangés dans « Services publics » et n'ont pas de catégorie propre : ce
 +sont des repères d'orientation au même titre qu'une mairie ou un commissariat, et la carte n'a pas
 +à faire de la confession un critère d'affichage séparé.
 +
-+**Commerces et services** — sept catégories, au zoom ≥ 16, leur nom à partir de 17. **Toutes sont
-+éteintes par défaut, sauf « Toilettes »** :
++Les **parcs et les jardins eux-mêmes ne sont pas des points** dans les tuiles du serveur : le profil
++ne les porte que comme **surfaces**, dans la couche du foncier, et **sans nom**. La carte les
++dessine déjà en vert et continue de le faire, réglage ou non. La catégorie « Parcs et jardins »
++ajoute donc les pictogrammes et les noms des seuls points que la couche des points d'intérêt porte
++réellement — aires de jeux et parcs à chiens. Poser un pictogramme ou un nom sur le parc lui-même
++demanderait une donnée que ni les tuiles ni l'API MOTIS ne fournissent.
++
++**Commerces et services** — huit catégories, **dont sept éteintes par défaut**, la huitième étant
++« Toilettes ». Elles apparaissent au zoom ≥ 16, leur nom à partir de 17.
 +
 +| Catégorie | Valeurs OpenStreetMap | Par défaut |
 +|---|---|---|
@@ -69,8 +78,8 @@ index b124119..9446c87 100644
 +- **« Toilettes » est la seule catégorie de cette section allumée d'emblée**, et donc le seul
 +  élément qu'un usager qui met à jour l'application voit apparaître sans avoir rien réglé. C'est
 +  assumé : trouver des toilettes publiques relève du déplacement, comme un arrêt ou une
-+  correspondance, et l'information est trop utile pour être rangée derrière un réglage. Tout le
-+  reste demande un geste explicite — la carte sert d'abord à se déplacer, et c'est l'usager qui
++  correspondance, et l'information est trop utile pour être rangée derrière un réglage. Les sept
++  autres demandent un geste explicite — la carte sert d'abord à se déplacer, et c'est l'usager qui
 +  décide de la densifier.
 +- `toilets` **quitte « Services du quotidien »** pour sa propre catégorie et n'y figure plus ;
 +  `drinking_water` y reste.
@@ -85,13 +94,13 @@ index b124119..9446c87 100644
  ### 5.7 Carte
  
  #### Fond de carte
-@@ -508,29 +573,48 @@ petite échelle, mille points sont illisibles et coûtent cher à charger.
+@@ -508,29 +582,49 @@ petite échelle, mille points sont illisibles et coûtent cher à charger.
  | < 11 | Rien d'autre que le fond de carte. **Aucune requête n'est émise.** | — |
  | 11 → 13 | Gares et stations de métro : `RAIL`, `HIGHSPEED_RAIL`, `LONG_DISTANCE`, `SUBURBAN`, `SUBWAY` | `/api/v6/map/stops` |
  | 13 → 15 | + tram, bus, cars, ferry, téléphériques, et **stations de véhicules en libre-service** | `/api/v6/map/stops` + `/api/v1/rentals` |
 -| ≥ 15 | + véhicules en libre-service isolés (free-floating), et **points d'intérêt** : services publics, monuments et sites remarquables, équipements (hôpitaux, écoles, bibliothèques, poste), parcs | `/api/v1/rentals` + couches du fond de carte |
 -| ≥ 17 | + entrées de stations, mobilier, libellés détaillés | couches du fond de carte |
-+| ≥ 15 | + véhicules en libre-service isolés (free-floating), et les **repères** des catégories activées (§ 5.6.2) : services publics, enseignement, culture et monuments, santé publique | `/api/v1/rentals` + couches du fond de carte |
++| ≥ 15 | + véhicules en libre-service isolés (free-floating), et les **repères** des catégories activées (§ 5.6.2) : services publics, enseignement, culture et monuments, santé publique, parcs et jardins | `/api/v1/rentals` + couches du fond de carte |
 +| ≥ 16 | + le nom des repères, et les **pictogrammes des commerces et services** des catégories activées — les toilettes le sont d'emblée (§ 5.6.2) | couches du fond de carte |
 +| ≥ 17 | + entrées de stations, mobilier, libellés détaillés, et **le nom des commerces et services** affichés | couches du fond de carte |
  
@@ -114,20 +123,21 @@ index b124119..9446c87 100644
 +- **Les commerces et services existent dans les tuiles et s'affichent sur demande.** La couche des
 +  points d'intérêt du fond de carte porte déjà les valeurs `shop`, `amenity` et `tourism` : les
 +  afficher est affaire de filtre dans la feuille de style, sans requête, sans donnée nouvelle et
-+  sans image nouvelle. Ils ne s'affichent **jamais sous le zoom 16**, et leurs sept catégories sont
-+  **éteintes par défaut**, les toilettes exceptées (§ 5.6.2) : la carte sert d'abord à se déplacer,
-+  et c'est l'usager qui décide de la densifier. Les repères de la v1 ne bougent pas — mêmes valeurs,
-+  mêmes paliers, mêmes pictogrammes — mais ils se règlent désormais eux aussi, par catégorie.
++  sans image nouvelle. Ils ne s'affichent **jamais sous le zoom 16**, et sur leurs huit catégories
++  **sept sont éteintes par défaut**, les toilettes exceptées (§ 5.6.2) : la carte sert d'abord à se
++  déplacer, et c'est l'usager qui décide de la densifier. Les repères de la v1 ne bougent pas —
++  mêmes valeurs, mêmes paliers, mêmes pictogrammes — mais ils se règlent désormais eux aussi, par
++  catégorie.
  - Les arrêts sont demandés par **emprise rectangulaire** (`min` / `max`), avec le paramètre `modes`
    restreint au palier de zoom courant, et `grouped=true` pour que le serveur regroupe lui-même les
    quais d'une même gare.
  - Chaque palier de zoom conserve les couches des paliers inférieurs : on ajoute, on ne remplace pas.
 -- Un réglage permet de masquer complètement les arrêts, les stations en libre-service ou les
 -  points d'intérêt, indépendamment du zoom.
-+- Les **douze catégories** de l'écran « Couches de la carte » (§ 5.6.2) se masquent **séparément et
-+  indépendamment du zoom** : les arrêts, le libre-service, les quatre catégories de repères et les
-+  sept de commerces et services. Une catégorie éteinte n'apparaît à aucun zoom ; une catégorie
-+  allumée n'apparaît qu'à partir du palier qui la concerne.
++- Les quinze bascules de l'écran « Couches de la carte » (§ 5.6.2) se masquent **séparément et
++  indépendamment du zoom** : les arrêts, le libre-service, et les **treize catégories de points
++  d'intérêt** — cinq de repères, huit de commerces et services. Une catégorie éteinte n'apparaît à
++  aucun zoom ; une catégorie allumée n'apparaît qu'à partir du palier qui la concerne.
  - Appui sur un arrêt : infobulle avec le nom et les lignes desservies, et un bouton menant aux
    prochains départs (§ 5.4). Appui sur une station de libre-service : nom, véhicules disponibles,
    places libres, lien vers l'exploitant.
@@ -147,7 +157,7 @@ index b124119..9446c87 100644
  
  #### Fluidité et fraîcheur — règles impératives
  
-@@ -607,6 +691,11 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
+@@ -607,6 +701,11 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
     emprise élargie de 30 %, cache par emprise, annulation systématique (§ 5.7).
  10. Les tuiles du fond de carte sont mises en cache sur disque par MapLibre, plafond de 100 Mo,
      purgeable depuis les réglages.
@@ -159,7 +169,7 @@ index b124119..9446c87 100644
  
  ---
  
-@@ -747,7 +836,14 @@ utilisable sur un appareil réel.
+@@ -747,7 +846,15 @@ utilisable sur un appareil réel.
  
  ## 15. Points ouverts
  
@@ -173,7 +183,8 @@ index b124119..9446c87 100644
 -   à établir en regardant le rendu réel sur une ville dense et une ville moyenne.
 +1. **Liste précise des catégories OpenStreetMap retenues pour les points d'intérêt** — à trancher
 +   avant le jalon 1, en regardant le rendu réel sur une ville dense et une ville moyenne.
-+   **Tranché** par les **douze catégories** de l'écran « Couches de la carte » (§ 5.6.2) : arrêts
-+   et libre-service ; quatre catégories de repères au zoom ≥ 15, allumées par défaut, qui
-+   reprennent exactement les valeurs de la v1 ; sept catégories de commerces et services au
-+   zoom ≥ 16, éteintes par défaut, les toilettes exceptées.
++   **Tranché** par les **treize catégories de points d'intérêt** de l'écran « Couches de la carte »
++   (§ 5.6.2) : cinq catégories de repères au zoom ≥ 15, allumées par défaut, qui reprennent les
++   valeurs de la v1 ; huit catégories de commerces et services au zoom ≥ 16, dont sept éteintes par
++   défaut, les toilettes exceptées. Avec les arrêts et le libre-service, l'écran compte quinze
++   bascules.
