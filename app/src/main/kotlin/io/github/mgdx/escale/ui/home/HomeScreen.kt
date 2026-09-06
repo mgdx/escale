@@ -127,7 +127,19 @@ fun HomeScreen(
 
     // Emplacement du lot « recherche ». Sa hauteur est mesurée ici, comme celle de la feuille et
     // pour la même raison : elle décide de la part de carte visible, donc du cadrage d'un trajet.
-    MeasuredSlot(Alignment.TopCenter, { measured.searchCardPx = it }) { searchCard(systemInsets) }
+    //
+    // Il s'efface tant qu'une fiche est ouverte, comme les commandes flottantes et pour la même
+    // raison : en paysage, le bandeau et la feuille de résultats consomment ensemble presque toute
+    // la hauteur, et la fiche se retrouvait réduite à une fente où il fallait défiler pour lire
+    // quatre lignes. Ce n'est pas une perte : la fiche porte « Partir d'ici » et « Aller ici »,
+    // c'est-à-dire ce que le bandeau sert à remplir, et elle se referme d'un appui sur la carte.
+    //
+    // La hauteur mesurée, elle, n'est **pas** remise à zéro : le remplissage de la caméra la
+    // reprendrait aussitôt, et la carte glisserait sous le doigt à l'instant où la fiche s'ouvre —
+    // emportant le point qu'on vient de toucher. Elle reprend sa valeur dès que le bandeau revient.
+    if (!state.detailCardOpen) {
+      MeasuredSlot(Alignment.TopCenter, { measured.searchCardPx = it }) { searchCard(systemInsets) }
+    }
 
     if (state.tilesUnavailable) {
       // Juste au-dessus des commandes, et non en haut : le haut de l'écran appartient à la carte

@@ -6,11 +6,14 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +34,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -169,10 +173,12 @@ private fun BoxScope.MapDetailCard(state: MapUiState, contentPadding: PaddingVal
   val placement = Modifier
     .align(Alignment.BottomCenter)
     .padding(
-      // Le haut : ce que la carte de recherche recouvre. En paysage, une fiche haute passait
-      // sinon **derrière** elle, et son nom comme son adresse devenaient illisibles.
-      top = contentPadding.calculateTopPadding() + StopCardMargin,
-      // Le bas : la feuille de résultats, puis la place du cartouche d'attribution.
+      // Le haut : les encarts système, et rien de plus. La carte de recherche s'efface pendant
+      // qu'une fiche est ouverte (`HomeScreen`), si bien qu'il n'y a plus rien pour la recouvrir —
+      // et lui réserver la place du bandeau la réduirait, en paysage, à une fente illisible.
+      top = systemTopInset() + StopCardMargin,
+      // Le bas : la feuille de résultats, qui reste ouverte, puis la place du cartouche
+      // d'attribution.
       bottom = contentPadding.calculateBottomPadding() + AttributionRoom,
     )
     .padding(horizontal = StopCardMargin)
@@ -200,6 +206,16 @@ private fun BoxScope.MapDetailCard(state: MapUiState, contentPadding: PaddingVal
     )
   }
 }
+
+/**
+ * La hauteur que la barre d'état, une encoche ou une barre d'outils système prennent en haut.
+ *
+ * Lue ici plutôt que reçue : le remplissage transmis à [MapCanvas] est celui de la **caméra**, qui
+ * compte en plus la carte de recherche (SPEC.md § 5.7, règle 9). C'est ce qu'il faut au cadrage
+ * d'un trajet, ce n'est pas ce qu'il faut à une fiche devant laquelle ce bandeau n'existe plus.
+ */
+@Composable
+private fun systemTopInset(): Dp = WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
 
 /**
  * Pose le contenu de chaque source, et rien d'autre (SPEC.md § 5.7, règles 6, 7 et 8).
