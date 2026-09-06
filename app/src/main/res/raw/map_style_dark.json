@@ -641,7 +641,897 @@
       }
     },
     {
-      "id": "poi-landmarks",
+      "id": "poi-toilets",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "toilets"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "visible",
+        "icon-image": "icon-toilet",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-food",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "match",
+        [
+          "get",
+          "shop"
+        ],
+        [
+          "supermarket",
+          "convenience",
+          "bakery",
+          "butcher",
+          "greengrocer",
+          "alcohol",
+          "beverages",
+          "kiosk",
+          "general",
+          "department_store",
+          "mall",
+          "marketplace"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-greengrocer",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-dining",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "restaurant",
+          "fast_food",
+          "cafe",
+          "pub",
+          "bar",
+          "biergarten"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-restaurant",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-health-shops",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "any",
+        [
+          "match",
+          [
+            "get",
+            "shop"
+          ],
+          [
+            "chemist",
+            "optician"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "amenity"
+          ],
+          [
+            "veterinary"
+          ],
+          true,
+          false
+        ]
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-chemist",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-money",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "bank",
+          "atm"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-bank",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-lodging",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "match",
+        [
+          "get",
+          "tourism"
+        ],
+        [
+          "hotel",
+          "motel",
+          "hostel",
+          "guest_house",
+          "bed_and_breakfast",
+          "camp_site"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-chalet",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-services",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "any",
+        [
+          "match",
+          [
+            "get",
+            "shop"
+          ],
+          [
+            "hairdresser",
+            "laundry",
+            "dry_cleaning",
+            "travel_agency"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "amenity"
+          ],
+          [
+            "drinking_water",
+            "post_box",
+            "telephone",
+            "car_rental",
+            "car_sharing",
+            "bicycle_rental",
+            "vending_machine"
+          ],
+          true,
+          false
+        ]
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-hairdresser",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-other-shops",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": [
+        "all",
+        [
+          "has",
+          "shop"
+        ],
+        [
+          "match",
+          [
+            "get",
+            "shop"
+          ],
+          [
+            "alcohol",
+            "bakery",
+            "beverages",
+            "butcher",
+            "chemist",
+            "convenience",
+            "department_store",
+            "dry_cleaning",
+            "general",
+            "greengrocer",
+            "hairdresser",
+            "kiosk",
+            "laundry",
+            "mall",
+            "marketplace",
+            "no",
+            "optician",
+            "supermarket",
+            "travel_agency",
+            "vacant"
+          ],
+          false,
+          true
+        ]
+      ],
+      "layout": {
+        "visibility": "none",
+        "icon-image": "icon-shop",
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          0.45,
+          18,
+          0.62
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          17,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 8,
+        "text-optional": true,
+        "symbol-sort-key": 100
+      },
+      "paint": {
+        "icon-color": "#7d8894",
+        "text-color": "#7f858c",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-public-services",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 15,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "townhall",
+          "courthouse",
+          "post_office",
+          "police",
+          "fire_station",
+          "community_centre",
+          "place_of_worship"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "visible",
+        "icon-image": [
+          "case",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "townhall",
+              "courthouse"
+            ],
+            true,
+            false
+          ],
+          "icon-town_hall",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "post_office"
+            ],
+            true,
+            false
+          ],
+          "icon-post",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "police"
+            ],
+            true,
+            false
+          ],
+          "icon-police",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "fire_station"
+            ],
+            true,
+            false
+          ],
+          "icon-fire_station",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "community_centre"
+            ],
+            true,
+            false
+          ],
+          "icon-community",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "place_of_worship"
+            ],
+            true,
+            false
+          ],
+          "icon-place_of_worship",
+          "icon-town_hall"
+        ],
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.55,
+          18,
+          0.8
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          16,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.9
+        ],
+        "text-max-width": 8,
+        "text-optional": true
+      },
+      "paint": {
+        "icon-color": "#9aa8b8",
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-education",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 15,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "school",
+          "university",
+          "college",
+          "library"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "visible",
+        "icon-image": [
+          "case",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "school"
+            ],
+            true,
+            false
+          ],
+          "icon-school",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "university",
+              "college"
+            ],
+            true,
+            false
+          ],
+          "icon-college",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "library"
+            ],
+            true,
+            false
+          ],
+          "icon-library",
+          "icon-school"
+        ],
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.55,
+          18,
+          0.8
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          16,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.9
+        ],
+        "text-max-width": 8,
+        "text-optional": true
+      },
+      "paint": {
+        "icon-color": "#9aa8b8",
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-culture",
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
@@ -655,25 +1545,22 @@
             "amenity"
           ],
           [
-            "hospital",
-            "clinic",
-            "doctors",
-            "dentist",
-            "pharmacy",
-            "school",
-            "university",
-            "college",
-            "library",
-            "townhall",
-            "post_office",
-            "police",
-            "fire_station",
-            "courthouse",
-            "community_centre",
-            "place_of_worship",
             "theatre",
             "cinema",
             "arts_centre"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "tourism"
+          ],
+          [
+            "artwork",
+            "viewpoint"
           ],
           true,
           false
@@ -700,25 +1587,199 @@
           "match",
           [
             "get",
-            "tourism"
+            "man_made"
           ],
           [
-            "artwork",
-            "viewpoint"
+            "lighthouse"
           ],
           true,
           false
-        ],
-        [
-          "==",
-          [
-            "get",
-            "man_made"
-          ],
-          "lighthouse"
         ]
       ],
       "layout": {
+        "visibility": "visible",
+        "icon-image": [
+          "case",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "theatre"
+            ],
+            true,
+            false
+          ],
+          "icon-theatre",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "cinema"
+            ],
+            true,
+            false
+          ],
+          "icon-cinema",
+          [
+            "match",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "arts_centre"
+            ],
+            true,
+            false
+          ],
+          "icon-art_gallery",
+          [
+            "match",
+            [
+              "get",
+              "historic"
+            ],
+            [
+              "castle"
+            ],
+            true,
+            false
+          ],
+          "icon-castle",
+          [
+            "match",
+            [
+              "get",
+              "historic"
+            ],
+            [
+              "monument",
+              "memorial",
+              "fort",
+              "ruins",
+              "archaeological_site",
+              "battlefield"
+            ],
+            true,
+            false
+          ],
+          "icon-monument",
+          [
+            "match",
+            [
+              "get",
+              "tourism"
+            ],
+            [
+              "artwork"
+            ],
+            true,
+            false
+          ],
+          "icon-artwork",
+          [
+            "match",
+            [
+              "get",
+              "tourism"
+            ],
+            [
+              "viewpoint"
+            ],
+            true,
+            false
+          ],
+          "icon-viewpoint",
+          [
+            "match",
+            [
+              "get",
+              "man_made"
+            ],
+            [
+              "lighthouse"
+            ],
+            true,
+            false
+          ],
+          "icon-lighthouse",
+          "icon-historic"
+        ],
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.55,
+          18,
+          0.8
+        ],
+        "icon-padding": 4,
+        "text-field": [
+          "step",
+          [
+            "zoom"
+          ],
+          "",
+          16,
+          [
+            "get",
+            "name"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.9
+        ],
+        "text-max-width": 8,
+        "text-optional": true
+      },
+      "paint": {
+        "icon-color": "#9aa8b8",
+        "text-color": "#9aa0a8",
+        "text-halo-color": "#20242a",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "poi-healthcare",
+      "type": "symbol",
+      "source": "motis",
+      "source-layer": "pois",
+      "minzoom": 15,
+      "filter": [
+        "match",
+        [
+          "get",
+          "amenity"
+        ],
+        [
+          "hospital",
+          "clinic",
+          "doctors",
+          "dentist",
+          "pharmacy"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "visibility": "visible",
         "icon-image": [
           "case",
           [
@@ -750,187 +1811,19 @@
           ],
           "icon-doctor",
           [
-            "==",
+            "match",
             [
               "get",
               "amenity"
             ],
-            "pharmacy"
+            [
+              "pharmacy"
+            ],
+            true,
+            false
           ],
           "icon-pharmacy",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "school"
-          ],
-          "icon-school",
-          [
-            "match",
-            [
-              "get",
-              "amenity"
-            ],
-            [
-              "university",
-              "college"
-            ],
-            true,
-            false
-          ],
-          "icon-college",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "library"
-          ],
-          "icon-library",
-          [
-            "match",
-            [
-              "get",
-              "amenity"
-            ],
-            [
-              "townhall",
-              "courthouse"
-            ],
-            true,
-            false
-          ],
-          "icon-town_hall",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "post_office"
-          ],
-          "icon-post",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "police"
-          ],
-          "icon-police",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "fire_station"
-          ],
-          "icon-fire_station",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "community_centre"
-          ],
-          "icon-community",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "place_of_worship"
-          ],
-          "icon-place_of_worship",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "theatre"
-          ],
-          "icon-theatre",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "cinema"
-          ],
-          "icon-cinema",
-          [
-            "==",
-            [
-              "get",
-              "amenity"
-            ],
-            "arts_centre"
-          ],
-          "icon-art_gallery",
-          [
-            "==",
-            [
-              "get",
-              "historic"
-            ],
-            "castle"
-          ],
-          "icon-castle",
-          [
-            "match",
-            [
-              "get",
-              "historic"
-            ],
-            [
-              "monument",
-              "memorial",
-              "fort",
-              "ruins",
-              "archaeological_site",
-              "battlefield"
-            ],
-            true,
-            false
-          ],
-          "icon-monument",
-          [
-            "==",
-            [
-              "get",
-              "tourism"
-            ],
-            "artwork"
-          ],
-          "icon-artwork",
-          [
-            "==",
-            [
-              "get",
-              "tourism"
-            ],
-            "viewpoint"
-          ],
-          "icon-viewpoint",
-          [
-            "==",
-            [
-              "get",
-              "man_made"
-            ],
-            "lighthouse"
-          ],
-          "icon-lighthouse",
-          "icon-historic"
+          "icon-hospital"
         ],
         "icon-size": [
           "interpolate",

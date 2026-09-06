@@ -94,8 +94,20 @@ class FakeMapRepository(var outcome: Outcome<MapCamera> = Outcome.Failure(Escale
 }
 
 /** Géocodage inverse : seul `reverseGeocode` est exercé par l'écran de carte. */
-class FakeGeocodeRepository(private var label: Location? = null) : GeocodeRepository {
+class FakeGeocodeRepository(var label: Location? = null) : GeocodeRepository {
   val reversed: MutableList<LatLon> = mutableListOf()
+
+  /**
+   * Combien de temps la réponse se fait attendre.
+   *
+   * C'est ce délai qui permet d'éprouver l'annulation de SPEC.md § 7, règle 11 : une fiche refermée
+   * avant la réponse ne doit rien écrire après coup.
+   */
+  var delayMillis: Long = 0
+
+  /** Combien de fois la réponse est réellement parvenue à son appelant. */
+  var completed = 0
+    private set
 
   override suspend fun autocomplete(
     text: String,
@@ -106,6 +118,8 @@ class FakeGeocodeRepository(private var label: Location? = null) : GeocodeReposi
 
   override suspend fun reverseGeocode(point: LatLon, language: String?): Outcome<Location?> {
     reversed += point
+    if (delayMillis > 0) delay(delayMillis)
+    completed += 1
     return Outcome.Success(label)
   }
 

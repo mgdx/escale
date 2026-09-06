@@ -107,7 +107,16 @@ class MapViewModel(
     onDismissRental = ::onDismissRental,
   )
 
-  private val state = MutableStateFlow(MapUiState(stopActions = stopActions, rentalActions = rentalActions))
+  /** Les mêmes rappels pour les points d'intérêt du fond de carte. */
+  private val placeActions = MapPlaceActions(
+    onPlaceClick = ::onPlaceClick,
+    onDismissPlace = ::onDismissPlace,
+    onPick = ::onPlacePick,
+  )
+
+  private val state = MutableStateFlow(
+    MapUiState(stopActions = stopActions, rentalActions = rentalActions, placeActions = placeActions),
+  )
   val uiState: StateFlow<MapUiState> = state.asStateFlow()
 
   /** Le thème du système, poussé par le composable : il décide de la palette de la feuille. */
@@ -134,6 +143,14 @@ class MapViewModel(
   private var tokens = 0L
   private var locationJob: Job? = null
   private var stopDetailJob: Job? = null
+
+  /**
+   * La requête d'adresse de la fiche ouverte (SPEC.md § 7, règle 11).
+   *
+   * Une seule à la fois, et elle meurt avec la fiche : c'est ce champ, et lui seul, qui garantit
+   * qu'une fiche refermée avant la réponse n'en attend plus aucune.
+   */
+  private var placeAddressJob: Job? = null
   private var fineRequested = false
   private var centerOnNextFix = false
 
@@ -142,7 +159,7 @@ class MapViewModel(
     observeStops()
     observeBrowsableStops()
     observeRentals()
-    observePointsOfInterest()
+    observePoiCategories()
     observeSelectedJourney()
     observeSearches()
     applyInitialCamera()
@@ -479,7 +496,8 @@ class MapViewModel(
    */
   private fun onRentalClick(rental: SelectedRental) {
     stopDetailJob?.cancel()
-    state.update { it.copy(selectedRental = rental, selectedStop = null) }
+    placeAddressJob?.cancel()
+    state.update { it.copy(selectedRental = rental, selectedStop = null, selectedPlace = null) }
   }
 
   private fun onDismissRental() {
@@ -508,27 +526,85 @@ class MapViewModel(
     }
   }
 
-  /** Referme l'infobulle ouverte, quelle que soit sa famille, et abandonne l'appel qu'elle attend. */
+  /** Referme la fiche ouverte, quelle que soit sa famille, et abandonne l'appel qu'elle attend. */
   private fun closeDetailCard() {
     stopDetailJob?.cancel()
     stopDetailJob = null
-    state.update { it.copy(selectedStop = null, selectedRental = null) }
+    placeAddressJob?.cancel()
+    placeAddressJob = null
+    state.update { it.copy(selectedStop = null, selectedRental = null, selectedPlace = null) }
   }
 
   /**
-   * Le réglage « points d'intérêt » de SPEC.md § 5.6, indépendant du zoom.
+   * Les douze bascules de couches de SPEC.md § 5.6, indépendantes du zoom.
    *
    * Aucune requête n'est en jeu : les points d'intérêt sont déjà dans les tuiles vectorielles, et
-   * la feuille de style embarquée porte leur couche avec le bon `minzoom`. Il n'y a qu'à l'allumer
-   * ou à l'éteindre.
+   * la feuille de style embarquée porte leurs douze couches avec le bon `minzoom`. Il n'y a qu'à
+   * les allumer ou à les éteindre — jamais à en ajouter ni à en retirer (règle 8).
+   *
+   * Éteindre la catégorie d'une fiche ouverte la referme : laisser une fiche décrire un pictogramme
+   * que la carte vient d'effacer serait un mensonge de plus qu'une commodité.
    */
-  private fun observePointsOfInterest() {
+  private fun observePoiCategories() {
     viewModelScope.launch {
       preferencesRepository.displayPreferences
-        .map { it.showPointsOfInterest }
+        .map { it.visiblePoiCategories }
         .distinctUntilChanged()
-        .collect { visible -> state.update { it.copy(pointsOfInterestVisible = visible) } }
+        .collect { visible ->
+          val orphaned = state.value.selectedPlace?.category?.let { it !in visible } == true
+          if (orphaned) onDismissPlace()
+          state.update { it.copy(visiblePoiCategories = visible) }
+        }
     }
+  }
+
+  /**
+   * Appui sur un point d'intérêt du fond de carte (SPEC.md § 5.7).
+   *
+   * La fiche s'ouvre **aussitôt** sur ce que la tuile porte — le nom, le type, le numéro de voie —
+   * et n'attend rien pour s'afficher. La rue, elle, demande un géocodage inverse : c'est la seule
+   * requête que les points d'intérêt provoquent, **une par fiche**, servie par le cache de 24 h du
+   * géocodage (SPEC.md § 7, règles 5 et 11).
+   *
+   * Elle referme l'infobulle d'un arrêt ou d'un point de libre-service : deux fiches superposées au
+   * bas de l'écran seraient illisibles à 200 % d'agrandissement (SPEC.md § 9).
+   */
+  private fun onPlaceClick(place: SelectedPlace) {
+    stopDetailJob?.cancel()
+    placeAddressJob?.cancel()
+    state.update { it.copy(selectedPlace = place, selectedStop = null, selectedRental = null) }
+    placeAddressJob = viewModelScope.launch {
+      val address = geocodeRepository.reverseGeocode(place.point).getOrNull()
+      state.update { current ->
+        // L'usager a pu refermer la fiche, ou en ouvrir une autre, pendant l'appel.
+        if (current.selectedPlace?.point != place.point) {
+          current
+        } else {
+          current.copy(selectedPlace = current.selectedPlace.copy(address = address, addressLoading = false))
+        }
+      }
+    }
+  }
+
+  /** Referme la fiche, et abandonne la requête d'adresse qu'elle attendait encore. */
+  private fun onDismissPlace() {
+    placeAddressJob?.cancel()
+    placeAddressJob = null
+    state.update { it.copy(selectedPlace = null) }
+  }
+
+  /**
+   * « Partir d'ici » / « Aller ici » depuis la fiche : exactement le chemin de l'appui long.
+   *
+   * L'adresse déjà rendue sert de libellé ; si elle n'est pas encore arrivée, le point part sans
+   * elle. **Aucune seconde requête n'est émise** — une fiche vaut une requête, pas deux
+   * (SPEC.md § 7, règle 11) —, et le lot « recherche » sait afficher un point sans nom.
+   */
+  private fun onPlacePick(purpose: MapPickPurpose) {
+    val place = state.value.selectedPlace ?: return
+    selection.select(purpose, place.point)
+    place.address?.let { selection.attachLabel(place.point, it) }
+    onDismissPlace()
   }
 
   /**
@@ -539,7 +615,14 @@ class MapViewModel(
    * prend, et l'usager doit voir immédiatement qu'il a touché le bon arrêt.
    */
   fun onStopClick(stop: SelectedStop) {
-    state.update { it.copy(selectedStop = stop.copy(linesLoading = true, linesFailed = false), selectedRental = null) }
+    placeAddressJob?.cancel()
+    state.update {
+      it.copy(
+        selectedStop = stop.copy(linesLoading = true, linesFailed = false),
+        selectedRental = null,
+        selectedPlace = null,
+      )
+    }
     stopDetailJob?.cancel()
     stopDetailJob = viewModelScope.launch {
       val outcome = stopsRepository.stop(stop.id)
@@ -585,6 +668,7 @@ class MapViewModel(
         cameraTarget = CameraTarget(goal, animated = true, token = nextToken()),
         selectedStop = null,
         selectedRental = null,
+        selectedPlace = null,
       )
     }
   }

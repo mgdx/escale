@@ -27,6 +27,9 @@ import io.github.mgdx.escale.ui.server.ServerSettingsRoute
 import io.github.mgdx.escale.ui.server.ServerSettingsScreen
 import io.github.mgdx.escale.ui.settings.CategoryOrderRoute
 import io.github.mgdx.escale.ui.settings.CategoryOrderScreen
+import io.github.mgdx.escale.ui.settings.MapLayersRoute
+import io.github.mgdx.escale.ui.settings.MapLayersScreen
+import io.github.mgdx.escale.ui.settings.SettingsNavigation
 import io.github.mgdx.escale.ui.settings.SettingsRoute
 import io.github.mgdx.escale.ui.settings.SettingsScreen
 import io.github.mgdx.escale.ui.trip.TripRoute
@@ -70,6 +73,7 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
     }
     composable<SettingsRoute> { SettingsDestination(navController) }
     composable<CategoryOrderRoute> { CategoryOrderScreen(onBack = navController::popBackStack) }
+    composable<MapLayersRoute> { MapLayersScreen(onBack = navController::popBackStack) }
     composable<FavoritesRoute> { FavoritesDestination(navController) }
     composable<ServerSettingsRoute> {
       ServerSettingsScreen(onBack = navController::popBackStack)
@@ -111,19 +115,22 @@ fun EscaleNavHost(navController: NavHostController = rememberNavController()) {
 }
 
 /**
- * L'écran de réglages et les quatre écrans qu'il ouvre (SPEC.md § 5.6).
+ * L'écran de réglages et les cinq écrans qu'il ouvre (SPEC.md § 5.6).
  *
- * Sorti du graphe pour la même raison que [FavoritesDestination] : cinq destinations empilées dans
+ * Sorti du graphe pour la même raison que [FavoritesDestination] : six destinations empilées dans
  * `EscaleNavHost` en feraient une fonction que plus personne ne lit d'un coup d'œil.
  */
 @Composable
 private fun SettingsDestination(navController: NavHostController) {
   SettingsScreen(
-    onBack = navController::popBackStack,
-    onOpenServerSettings = { navController.navigate(ServerSettingsRoute) },
-    onOpenFavorites = { navController.navigate(FavoritesRoute) },
-    onOpenAbout = { navController.navigate(AboutRoute) },
-    onOpenCategoryOrder = { navController.navigate(CategoryOrderRoute) },
+    navigation = SettingsNavigation(
+      onBack = navController::popBackStack,
+      onOpenServerSettings = { navController.navigate(ServerSettingsRoute) },
+      onOpenFavorites = { navController.navigate(FavoritesRoute) },
+      onOpenAbout = { navController.navigate(AboutRoute) },
+      onOpenCategoryOrder = { navController.navigate(CategoryOrderRoute) },
+      onOpenMapLayers = { navController.navigate(MapLayersRoute) },
+    ),
   )
 }
 

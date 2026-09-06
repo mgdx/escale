@@ -44,6 +44,9 @@ import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.TransitMode
+import io.github.mgdx.escale.core.model.poiCategory
+import io.github.mgdx.escale.core.model.poiComplement
+import io.github.mgdx.escale.core.model.poiTypeKey
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
@@ -146,13 +149,14 @@ fun MapCanvas(
 
   ApplyCameraTarget(map, state.cameraTarget, contentPadding, actions.onCameraTargetApplied)
   ApplyCameraPadding(map, contentPadding)
-  BindMapListeners(mapInstance, map, actions, state.stopActions, state.rentalActions)
+  BindMapListeners(mapInstance, map, actions, state.stopActions, state.rentalActions, state.placeActions)
 }
 
 /**
- * L'infobulle ouverte, s'il y en a une : celle d'un arrêt, ou celle d'un point de libre-service.
+ * La fiche ouverte, s'il y en a une : celle d'un arrêt, d'un point de libre-service, ou d'un point
+ * d'intérêt du fond de carte.
  *
- * Les deux ne s'affichent **jamais ensemble** — le `ViewModel` ferme l'une en ouvrant l'autre — et
+ * Elles ne s'affichent **jamais ensemble** — le `ViewModel` ferme les autres en ouvrant l'une — et
  * se posent exactement au même endroit : au bas de la carte, au-dessus de ce que le remplissage
  * réserve à la feuille de résultats et aux encarts système. Une bulle ancrée sur le marqueur
  * sortirait de l'écran dès qu'on touche un point d'un bord, et davantage encore à 200 %
@@ -174,6 +178,14 @@ private fun BoxScope.MapDetailCard(state: MapUiState, contentPadding: PaddingVal
   }
   state.selectedRental?.let { rental ->
     MapRentalCard(rental = rental, onDismiss = state.rentalActions.onDismissRental, modifier = placement)
+  }
+  state.selectedPlace?.let { place ->
+    MapPlaceCard(
+      place = place,
+      onPick = state.placeActions.onPick,
+      onDismiss = state.placeActions.onDismissPlace,
+      modifier = placement,
+    )
   }
 }
 
@@ -224,12 +236,17 @@ private fun ApplyMapSources(style: Style?, state: MapUiState) {
       ?.setGeoJson(state.clusteredRentalVehiclesGeoJson)
   }
   // Les points d'intérêt ne font l'objet d'aucune requête : ils sont déjà dans les tuiles, et la
-  // feuille embarquée porte leur couche avec le bon `minzoom` (SPEC.md § 5.7). Le réglage de
-  // SPEC.md § 5.6 ne fait que l'allumer ou l'éteindre, indépendamment du zoom.
-  LaunchedEffect(style, state.pointsOfInterestVisible) {
-    style?.getLayer(POINTS_OF_INTEREST_LAYER)?.setProperties(
-      PropertyFactory.visibility(if (state.pointsOfInterestVisible) Property.VISIBLE else Property.NONE),
-    )
+  // feuille embarquée porte leurs douze couches avec le bon `minzoom` (SPEC.md § 5.7). Les douze
+  // bascules de SPEC.md § 5.6 ne font que les allumer ou les éteindre, indépendamment du zoom, et
+  // sans qu'une seule couche soit ajoutée ni retirée (règle 8).
+  LaunchedEffect(style, state.visiblePoiCategories) {
+    val loaded = style ?: return@LaunchedEffect
+    POI_LAYERS.forEach { (category, layerId) ->
+      val visible = category in state.visiblePoiCategories
+      loaded.getLayer(layerId)?.setProperties(
+        PropertyFactory.visibility(if (visible) Property.VISIBLE else Property.NONE),
+      )
+    }
   }
 }
 
@@ -362,8 +379,9 @@ private fun BindMapListeners(
   actions: MapCanvasActions,
   stopActions: MapStopActions,
   rentalActions: MapRentalActions,
+  placeActions: MapPlaceActions,
 ) {
-  DisposableEffect(map, actions, stopActions, rentalActions) {
+  DisposableEffect(map, actions, stopActions, rentalActions, placeActions) {
     val instance = map
     val view = mapInstance.view()
     if (instance == null) return@DisposableEffect onDispose { }
@@ -385,9 +403,9 @@ private fun BindMapListeners(
       actions.onLongClick(LatLon(point.latitude, point.longitude))
       true
     }
-    // Appui sur un arrêt, un point de libre-service ou un groupe (SPEC.md § 5.7). L'interrogation
-    // porte sur les seules couches que l'application pose : toucher une rue ou un bâtiment ne doit
-    // rien ouvrir.
+    // Appui sur un arrêt, un point de libre-service, un groupe ou un point d'intérêt
+    // (SPEC.md § 5.7). L'interrogation porte sur les seules couches qui portent un marqueur :
+    // toucher une rue ou un bâtiment ne doit rien ouvrir.
     val click = MapLibreMap.OnMapClickListener { point ->
       when (val tap = instance.tapAt(instance.projection.toScreenLocation(point))) {
         is MapTap.OnStop -> stopActions.onStopClick(tap.stop)
@@ -396,9 +414,12 @@ private fun BindMapListeners(
 
         is MapTap.OnCluster -> stopActions.onClusterClick(tap.point)
 
+        is MapTap.OnPlace -> placeActions.onPlaceClick(tap.place)
+
         null -> {
           stopActions.onDismissStop()
           rentalActions.onDismissRental()
+          placeActions.onDismissPlace()
         }
       }
       // Faux : l'appui reste disponible pour le reste de la carte, qui n'en fait rien aujourd'hui.
@@ -479,6 +500,8 @@ private sealed interface MapTap {
   data class OnRental(val rental: SelectedRental) : MapTap
 
   data class OnCluster(val point: LatLon) : MapTap
+
+  data class OnPlace(val place: SelectedPlace) : MapTap
 }
 
 /**
@@ -487,14 +510,20 @@ private sealed interface MapTap {
  * L'appui est élargi à un carré de [TAP_SLOP_PX] pixels de côté : un marqueur de 20 à 24 dp n'est
  * pas une cible de 48 dp, et SPEC.md § 9 impose que la cible tactile en soit une. Un marqueur
  * détaillé gagne toujours sur une pastille de regroupement dessinée sous lui.
+ *
+ * **L'ordre des trois recherches est la priorité de SPEC.md § 5.7** : un arrêt ou un point de
+ * libre-service l'emporte sur un point d'intérêt posé au même endroit, et le groupe qui les
+ * rassemble l'emporte aussi. Le point d'intérêt ne répond que si le doigt n'a touché rien d'autre.
  */
 // La signature de `queryRenderedFeatures` est variadique : une poignée d'identifiants recopiés une
 // fois par appui du doigt, le coût est nul et il n'y a pas d'autre appel possible.
 @Suppress("SpreadOperator")
 private fun MapLibreMap.tapAt(screen: PointF): MapTap? {
   val features = queryRenderedFeatures(screen.tapArea(), *TAPPABLE_LAYERS)
-  val marker = features.firstOrNull { !it.hasProperty(CLUSTER_COUNT_PROPERTY) }?.toMarkerTap()
-  return marker ?: features.firstOrNull { it.hasProperty(CLUSTER_COUNT_PROPERTY) }?.toClusterTap()
+  val markers = features.filterNot { it.hasProperty(CLUSTER_COUNT_PROPERTY) }
+  return markers.firstNotNullOfOrNull { it.toMarkerTap() }
+    ?: features.firstOrNull { it.hasProperty(CLUSTER_COUNT_PROPERTY) }?.toClusterTap()
+    ?: markers.firstNotNullOfOrNull { it.toPlaceTap() }
 }
 
 /** L'entité GeoJSON touchée, relue dans les termes de l'interface : un arrêt ou du libre-service. */
@@ -503,6 +532,49 @@ private fun Feature.toMarkerTap(): MapTap? =
 
 private fun Feature.toClusterTap(): MapTap? = (geometry() as? Point)
   ?.let { point -> MapTap.OnCluster(LatLon(lat = point.latitude(), lon = point.longitude())) }
+
+/**
+ * Le point d'intérêt touché, ou `null` si l'entité n'en est pas un.
+ *
+ * Tout est lu sur la tuile, y compris le type et son complément, dont la table vit dans `:core` :
+ * la fiche s'ouvre donc immédiatement, et la seule chose qu'elle attend est son adresse.
+ */
+private fun Feature.toPlaceTap(): MapTap? {
+  val point = geometry() as? Point ?: return null
+  val shop = getStringProperty(OSM_SHOP)
+  val amenity = getStringProperty(OSM_AMENITY)
+  val tourism = getStringProperty(OSM_TOURISM)
+  val historic = getStringProperty(OSM_HISTORIC)
+  val manMade = getStringProperty(OSM_MAN_MADE)
+  val category = poiCategory(shop, amenity, tourism, historic, manMade)
+  val typeKey = poiTypeKey(shop, amenity, tourism, historic, manMade)
+  // Une entité de la couche `pois` que la table ne sait ni classer ni nommer n'a rien à montrer.
+  if (category == null && typeKey == null) return null
+  return MapTap.OnPlace(
+    SelectedPlace(
+      point = LatLon(lat = point.latitude(), lon = point.longitude()),
+      name = getStringProperty(OSM_NAME).orEmpty(),
+      category = category,
+      typeKey = typeKey,
+      complement = poiComplement(
+        cuisine = getStringProperty(OSM_CUISINE),
+        atm = isYes(OSM_ATM),
+        religion = getStringProperty(OSM_RELIGION),
+        denomination = getStringProperty(OSM_DENOMINATION),
+      ),
+      houseNumber = getStringProperty(OSM_HOUSE_NUMBER)?.takeIf { it.isNotBlank() },
+    ),
+  )
+}
+
+/**
+ * Une étiquette OpenStreetMap qui vaut « oui ».
+ *
+ * Les tuiles écrivent `atm=yes` en chaîne, mais rien n'interdit à un producteur de tuiles d'en faire
+ * un booléen : les deux se lisent ici, et tout le reste vaut non.
+ */
+private fun Feature.isYes(property: String): Boolean =
+  getBooleanProperty(property) ?: getStringProperty(property).equals("yes", ignoreCase = true)
 
 /** L'arrêt touché, ou `null` si l'entité n'en est pas un. */
 private fun Feature.toSelectedStop(): SelectedStop? {
@@ -590,12 +662,14 @@ private fun mapRentalColors(): MapRentalColors = MapRentalColors(
 )
 
 /**
- * Toutes les couches auxquelles un appui peut répondre, arrêts puis libre-service.
+ * Toutes les couches auxquelles un appui peut répondre : arrêts, libre-service, points d'intérêt.
  *
- * Les pastilles de regroupement des deux lots sont à la fin de leur propre liste : un marqueur
- * détaillé, où qu'il vienne, gagne donc l'appui sur un groupe dessiné sous lui.
+ * Les pastilles de regroupement des deux premiers lots sont à la fin de leur propre liste : un
+ * marqueur détaillé, où qu'il vienne, gagne donc l'appui sur un groupe dessiné sous lui. La
+ * priorité entre familles, elle, ne tient pas à cet ordre mais à [tapAt].
  */
-private val TAPPABLE_LAYERS: Array<String> = STOP_TAPPABLE_LAYERS + RENTAL_TAPPABLE_LAYERS
+private val TAPPABLE_LAYERS: Array<String> =
+  STOP_TAPPABLE_LAYERS + RENTAL_TAPPABLE_LAYERS + POI_TAPPABLE_LAYERS
 
 /** L'emprise, dans le type de MapLibre. */
 private fun BoundingBox.asLatLngBounds(): LatLngBounds = LatLngBounds.from(
@@ -646,8 +720,23 @@ private const val DOT_RADIUS = 7f
 private const val PICKED_RADIUS = 9f
 private const val STROKE_WIDTH = 2.5f
 
-/** La couche de points d'intérêt des feuilles de `res/raw`, que le réglage allume ou éteint. */
-private const val POINTS_OF_INTEREST_LAYER = "poi-landmarks"
+/**
+ * Les étiquettes OpenStreetMap que la couche `pois` des tuiles porte, et que la fiche relit.
+ *
+ * Elles ne sont pas des chaînes d'interface : ce sont les noms de champs du schéma Shortbread, que
+ * ni la traduction ni le thème ne changent (docs/architecture.md § 3, règle 2).
+ */
+private const val OSM_NAME = "name"
+private const val OSM_SHOP = "shop"
+private const val OSM_AMENITY = "amenity"
+private const val OSM_TOURISM = "tourism"
+private const val OSM_HISTORIC = "historic"
+private const val OSM_MAN_MADE = "man_made"
+private const val OSM_CUISINE = "cuisine"
+private const val OSM_ATM = "atm"
+private const val OSM_RELIGION = "religion"
+private const val OSM_DENOMINATION = "denomination"
+private const val OSM_HOUSE_NUMBER = "housenumber"
 
 /**
  * Demi-côté du carré d'appui, en pixels.

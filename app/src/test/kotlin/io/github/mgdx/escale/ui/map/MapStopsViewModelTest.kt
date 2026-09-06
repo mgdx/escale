@@ -8,6 +8,7 @@ import io.github.mgdx.escale.core.geo.ZoomTier
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.Stop
 import io.github.mgdx.escale.core.model.StopLine
 import io.github.mgdx.escale.core.model.TransitMode
@@ -324,14 +325,14 @@ class MapStopsViewModelTest {
   }
 
   @Test
-  fun `le reglage des points d'interet n'emet aucune requete`() = runTest {
+  fun `les reglages de couches de points d'interet n'emettent aucune requete`() = runTest {
     val model = viewModel()
-    assertTrue(model.uiState.value.pointsOfInterestVisible)
+    assertEquals(PoiCategory.DEFAULT_VISIBLE, model.uiState.value.visiblePoiCategories)
 
-    preferences.updateDisplayPreferences(DisplayPreferences(showPointsOfInterest = false))
+    preferences.updateDisplayPreferences(DisplayPreferences(visiblePoiCategories = setOf(PoiCategory.CULTURE)))
     settle()
 
-    assertFalse(model.uiState.value.pointsOfInterestVisible)
+    assertEquals(setOf(PoiCategory.CULTURE), model.uiState.value.visiblePoiCategories)
     // Les points d'intérêt sont déjà dans les tuiles : les masquer ne coûte rien au réseau.
     assertTrue(stops.requests.isEmpty())
   }

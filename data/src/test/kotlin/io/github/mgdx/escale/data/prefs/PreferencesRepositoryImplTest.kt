@@ -3,6 +3,7 @@ package io.github.mgdx.escale.data.prefs
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -12,6 +13,7 @@ import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ElevationCosts
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.PedestrianProfile
+import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.ThemeChoice
@@ -97,7 +99,7 @@ class PreferencesRepositoryImplTest {
       ),
       showStops = false,
       showRentals = false,
-      showPointsOfInterest = false,
+      visiblePoiCategories = setOf(PoiCategory.TOILETS, PoiCategory.DINING),
       historyEnabled = false,
     )
     assertTrue(repository.updateDisplayPreferences(voulues) is Outcome.Success)
@@ -159,6 +161,54 @@ class PreferencesRepositoryImplTest {
     assertEquals(DisplayPreferences(), repository.displayPreferences.first())
     // Le fichier DataStore est partagé : le serveur configuré doit avoir survécu.
     assertEquals("https://motis.exemple.org", dataStore.data.first()[autreEcran])
+  }
+
+  @Test
+  fun `l ancienne bascule des points d interet decochee eteint les quatre reperes`() = runBlocking {
+    // Réglage écrit avant les douze catégories : personne ne doit voir sa carte se repeupler en
+    // mettant à jour l'application. Les toilettes, elles, apparaissent : c'est l'écart assumé.
+    dataStore.edit { it[booleanPreferencesKey("display_show_points_of_interest")] = false }
+
+    val relu = repository().displayPreferences.first().visiblePoiCategories
+
+    assertEquals(setOf(PoiCategory.TOILETS), relu)
+  }
+
+  @Test
+  fun `l ancienne bascule cochee, ou absente, laisse les reperes allumes`() = runBlocking {
+    dataStore.edit { it[booleanPreferencesKey("display_show_points_of_interest")] = true }
+    assertEquals(PoiCategory.DEFAULT_VISIBLE, repository().displayPreferences.first().visiblePoiCategories)
+
+    dataStore.edit { it.remove(booleanPreferencesKey("display_show_points_of_interest")) }
+    assertEquals(PoiCategory.DEFAULT_VISIBLE, repository().displayPreferences.first().visiblePoiCategories)
+  }
+
+  @Test
+  fun `le nouveau reglage l emporte sur l ancienne bascule`() = runBlocking {
+    // Une fois les douze catégories réglées, l'ancienne clé n'a plus voix au chapitre, même si elle
+    // traîne encore dans le fichier.
+    val repository = repository()
+    dataStore.edit { it[booleanPreferencesKey("display_show_points_of_interest")] = false }
+    repository.updateDisplayPreferences(DisplayPreferences(visiblePoiCategories = setOf(PoiCategory.CULTURE)))
+
+    assertEquals(setOf(PoiCategory.CULTURE), repository().displayPreferences.first().visiblePoiCategories)
+  }
+
+  @Test
+  fun `une categorie inconnue est oubliee a la relecture`() = runBlocking {
+    // Écrite par une version future : elle est ignorée, et les autres restent lisibles.
+    dataStore.edit { it[stringSetPreferencesKey("display_poi_categories")] = setOf("CULTURE", "TELEPORTATION") }
+
+    assertEquals(setOf(PoiCategory.CULTURE), repository().displayPreferences.first().visiblePoiCategories)
+  }
+
+  @Test
+  fun `aucune categorie visible se relit comme aucune, et non comme les defauts`() = runBlocking {
+    // Tout décocher est un choix légitime : la carte ne doit pas se repeupler au redémarrage.
+    val repository = repository()
+    repository.updateDisplayPreferences(DisplayPreferences(visiblePoiCategories = emptySet()))
+
+    assertEquals(emptySet<PoiCategory>(), repository().displayPreferences.first().visiblePoiCategories)
   }
 
   @Test
