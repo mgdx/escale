@@ -16,3 +16,6 @@ local.properties
 
 # Worktrees des sous-agents
 /.claude/worktrees/
+
+# Prompts de travail pour les agents, propres au poste : jamais dans le dépôt
+/prompts/
