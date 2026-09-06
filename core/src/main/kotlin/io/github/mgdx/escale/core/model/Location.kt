@@ -21,4 +21,14 @@ data class Location(
    * d'autocomplétion (SPEC.md § 5.1). Vide pour une adresse ou un lieu.
    */
   val servedModes: List<TransitMode> = emptyList(),
+  /**
+   * Ordre de pertinence du serveur, dont l'algorithme peut changer.
+   *
+   * Il **sert à ordonner, jamais à seuiller** : la valeur n'a de sens que relativement aux autres
+   * résultats de la même réponse, et deux versions de MOTIS ne la calculent pas de la même façon.
+   * Aucun code ne la compare donc à un seuil, et l'interface ne l'affiche pas ; elle documente
+   * l'ordre dans lequel le serveur a rendu la liste, celui que la composition de SPEC.md § 5.1
+   * conserve. Zéro par défaut : un lieu qui ne vient pas du géocodage n'a pas de pertinence.
+   */
+  val score: Double = 0.0,
 )

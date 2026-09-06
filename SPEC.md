@@ -214,12 +214,19 @@ par-dessus.
 
 **Autocomplétion**
 - `/api/v1/geocode` avec `text`, `place` = centre de la carte pour le biais géographique
-  (à défaut la dernière position connue), `language`, `numResults=10`.
+  (à défaut la dernière position connue), `language`, `numResults=20` ; la liste affichée en retient
+  au plus dix, composée pour qu'aucun type de lieu ne masque les autres : au plus quatre arrêts
+  homonymes situés hors de la commune du centre de la carte, et au moins une adresse et un lieu dès
+  que le serveur en a rendu.
 - Debounce de **350 ms**, longueur minimale de 3 caractères, annulation de la requête précédente.
 - Les résultats distinguent visuellement adresse, arrêt et lieu (`LocationType`), avec le mode de
   transport desservi pour les arrêts.
 - Trois entrées supplémentaires en tête de liste : **Ma position**, **Domicile**, **Travail**,
   et **Choisir sur la carte** (qui replie le clavier et fait choisir un point par appui long).
+- Dès le premier caractère, et sans aucune requête, la liste propose d'abord les lieux enregistrés
+  (Domicile, Travail, lieux favoris) et les points de départ et d'arrivée des dernières recherches
+  dont le nom ou la description contient la saisie, au plus cinq, les plus récents d'abord. Les
+  suggestions du serveur suivent, sans doublon avec ce bloc.
 
 **Bouton de position (bas à droite)**
 - Trois états : position inconnue, centrage sur la position, suivi actif.

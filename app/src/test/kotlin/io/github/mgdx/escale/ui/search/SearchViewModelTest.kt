@@ -46,6 +46,9 @@ class SearchViewModelTest {
   private val gareDeLyon = stop("de:0800:1234", "Gare de Lyon")
   private val bastille = address("Place de la Bastille")
 
+  /** Une recherche passee, dont l'arrivee alimente le bloc « deja utilises » (SPEC.md § 5.1). */
+  private val passe = recentSearch(id = 1, from = bastille, to = gareDeLyon)
+
   private val geocode = FakeSearchGeocodeRepository(suggestions = Outcome.Success(listOf(gareDeLyon)))
   private val session = SearchSession()
   private val selection = MapSelection()
@@ -339,7 +342,7 @@ class SearchViewModelTest {
   @Test
   fun `une puce de derniere recherche rejoue la recherche entiere, heure comprise`() = runTest(scheduler) {
     val quand = TimeChoice.ArriveBy(Instant.parse("2026-03-02T09:00:00Z"))
-    val recent = RecentSearch(id = 1, from = bastille, to = gareDeLyon, time = quand)
+    val recent = recentSearch(id = 1, from = bastille, to = gareDeLyon, time = quand)
     val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(recent)))
     advanceUntilIdle()
 
@@ -349,6 +352,62 @@ class SearchViewModelTest {
     assertEquals(bastille, session.draft.value.from)
     assertEquals(gareDeLyon, session.draft.value.to)
     assertEquals(quand, session.draft.value.time)
+  }
+
+  @Test
+  fun `des la premiere lettre, les lieux deja utilises sont proposes sans requete`() = runTest(scheduler) {
+    val places = FakeSavedPlacesSource(home = bastille)
+    val viewModel = viewModel(savedPlaces = places, recent = FakeRecentSearchesSource(listOf(passe)))
+    viewModel.onOpenField(SearchField.TO)
+
+    viewModel.onQueryChange("g")
+    advanceUntilIdle()
+
+    // SPEC.md § 5.1 : le bloc s'affiche sans attendre les trois caracteres ni le reseau.
+    assertEquals(listOf(gareDeLyon), viewModel.uiState.value.knownPlaces)
+    assertEquals(AutocompleteState.Idle, viewModel.uiState.value.suggestions)
+    assertTrue(geocode.requests.isEmpty())
+  }
+
+  @Test
+  fun `les suggestions du serveur perdent celles que le bloc montre deja`() = runTest(scheduler) {
+    val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(passe)))
+    viewModel.onOpenField(SearchField.TO)
+
+    viewModel.onQueryChange("gare de lyon")
+    advanceUntilIdle()
+
+    // Le serveur rend « Gare de Lyon », que le bloc propose deja : il ne doit pas s'afficher deux
+    // fois (SPEC.md § 5.1).
+    assertEquals(listOf(gareDeLyon), viewModel.uiState.value.knownPlaces)
+    assertEquals(AutocompleteState.Suggestions(emptyList()), viewModel.uiState.value.suggestions)
+  }
+
+  @Test
+  fun `historique desactive, le bloc ne propose que les lieux enregistres`() = runTest(scheduler) {
+    // SPEC.md § 5.5 : la bascule est tenue par le depot, qui ne rend alors aucune entree.
+    val places = FakeSavedPlacesSource(home = bastille)
+    val viewModel = viewModel(savedPlaces = places, recent = FakeRecentSearchesSource(emptyList()))
+    viewModel.onOpenField(SearchField.TO)
+
+    viewModel.onQueryChange("ba")
+    advanceUntilIdle()
+
+    assertEquals(listOf(bastille), viewModel.uiState.value.knownPlaces)
+  }
+
+  @Test
+  fun `le bloc se vide en meme temps que le champ`() = runTest(scheduler) {
+    val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(passe)))
+    viewModel.onOpenField(SearchField.TO)
+    viewModel.onQueryChange("g")
+    advanceUntilIdle()
+    assertTrue(viewModel.uiState.value.knownPlaces.isNotEmpty())
+
+    viewModel.onCloseField()
+    advanceUntilIdle()
+
+    assertTrue(viewModel.uiState.value.knownPlaces.isEmpty())
   }
 
   @Test
@@ -372,7 +431,7 @@ class SearchViewModelTest {
 
   @Test
   fun `une puce de derniere recherche n ouvre aucun menu`() = runTest(scheduler) {
-    val recent = RecentSearch(id = 1, from = bastille, to = gareDeLyon, time = TimeChoice.Now)
+    val recent = recentSearch(id = 1, from = bastille, to = gareDeLyon, time = TimeChoice.Now)
     val viewModel = viewModel(recent = FakeRecentSearchesSource(listOf(recent)))
     advanceUntilIdle()
 

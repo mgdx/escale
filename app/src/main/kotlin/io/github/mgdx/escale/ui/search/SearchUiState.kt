@@ -1,6 +1,7 @@
 package io.github.mgdx.escale.ui.search
 
 import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.SearchHistoryEntry
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.AutocompleteState
 
@@ -29,7 +30,7 @@ enum class SearchShortcut {
 sealed interface QuickChip {
   data class Saved(val kind: SavedPlaceKind, val location: Location) : QuickChip
 
-  data class Recent(val search: RecentSearch) : QuickChip
+  data class Recent(val search: SearchHistoryEntry) : QuickChip
 }
 
 /** Les deux heures que l'API sait interroger : `arriveBy` faux, puis vrai. */
@@ -79,6 +80,15 @@ data class SearchUiState(
   val query: String = "",
 
   val suggestions: AutocompleteState = AutocompleteState.Idle,
+
+  /**
+   * Le bloc « déjà utilisés », au-dessus des suggestions du serveur (SPEC.md § 5.1).
+   *
+   * Il est tenu à part de [suggestions] parce qu'il ne vient pas du même endroit : il s'affiche dès
+   * le premier caractère, sans aucune requête, et reste donc visible quand le serveur est encore au
+   * repos, en vol, ou en échec.
+   */
+  val knownPlaces: List<Location> = emptyList(),
 
   /** Les entrées en tête de liste, dans l'ordre de SPEC.md § 5.1. */
   val shortcuts: List<SearchShortcut> = emptyList(),

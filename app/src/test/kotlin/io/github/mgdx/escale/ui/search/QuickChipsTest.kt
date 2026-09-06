@@ -12,7 +12,7 @@ class QuickChipsTest {
 
   private val home = address("Domicile")
   private val work = address("Travail")
-  private val recent = RecentSearch(
+  private val recent = recentSearch(
     id = 1,
     from = address("Bastille"),
     to = stop("stop:1", "Gare de Lyon"),
@@ -59,7 +59,7 @@ class QuickChipsTest {
   @Test
   fun `les puces sont bornees, une rangee n'est pas un pense-bete`() {
     val many = List(12) { index ->
-      RecentSearch(
+      recentSearch(
         id = index.toLong(),
         from = address("Depart $index"),
         to = address("Arrivee $index"),
@@ -99,8 +99,8 @@ class QuickChipsTest {
     val depart = address("Lille Flandres")
     val arrivee = address("Lille Grand Palais")
     val recentes = listOf(
-      RecentSearch(id = 2, from = depart, to = arrivee, time = soir),
-      RecentSearch(id = 1, from = depart, to = arrivee, time = matin),
+      recentSearch(id = 2, from = depart, to = arrivee, time = soir),
+      recentSearch(id = 1, from = depart, to = arrivee, time = matin),
     )
 
     val cles = quickChips(SearchDraft(), home = null, work = null, recentSearches = recentes).map(::chipKey)
@@ -115,7 +115,7 @@ class QuickChipsTest {
   fun `aucune puce ne partage sa cle avec une autre, quelle que soit la rangee`() {
     val lieu = address("Domicile")
     val recentes = List(4) { rang ->
-      RecentSearch(id = rang.toLong(), from = lieu, to = lieu, time = TimeChoice.Now)
+      recentSearch(id = rang.toLong(), from = lieu, to = lieu, time = TimeChoice.Now)
     }
 
     val cles = quickChips(SearchDraft(), home = lieu, work = lieu, recentSearches = recentes).map(::chipKey)

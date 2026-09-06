@@ -12,8 +12,11 @@ import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.AutocompleteQuery
+import io.github.mgdx.escale.core.repository.AutocompleteState
 import io.github.mgdx.escale.core.repository.GeocodeRepository
 import io.github.mgdx.escale.core.repository.autocompleteStream
+import io.github.mgdx.escale.core.repository.matchingKnownPlaces
+import io.github.mgdx.escale.core.repository.withoutKnownPlaces
 import io.github.mgdx.escale.core.result.getOrNull
 import io.github.mgdx.escale.ui.map.LocationSource
 import io.github.mgdx.escale.ui.map.MapCameraMemory
@@ -84,6 +87,17 @@ class SearchViewModel(
   /** La dernière frappe émise, pour pouvoir la rejouer telle quelle. */
   private var lastQuery = AutocompleteQuery("")
 
+  /**
+   * La saisie en cours, telle que le bloc « déjà utilisés » la filtre (SPEC.md § 5.1).
+   *
+   * Un `StateFlow` et non [queries] : ce bloc n'a ni anti-rebond ni minimum de trois caractères à
+   * respecter — il ne demande rien à personne — et il doit s'afficher **dès la première lettre**.
+   */
+  private val queryText = MutableStateFlow("")
+
+  /** Ce que le serveur a rendu, avant le retrait des lieux que le bloc montre déjà. */
+  private val serverSuggestions = MutableStateFlow<AutocompleteState>(AutocompleteState.Idle)
+
   /** La dernière recherche écrite dans l'historique, pour ne pas l'y écrire deux fois. */
   private var lastRecorded: RecordedSearch? = null
 
@@ -113,6 +127,7 @@ class SearchViewModel(
   init {
     restoreSavedState()
     observeSuggestions()
+    observeKnownPlaces()
     observeDraft()
     observeMapPicks()
   }
@@ -266,6 +281,7 @@ class SearchViewModel(
 
   private fun setQuery(text: String) {
     state.update { it.copy(query = text) }
+    queryText.value = text
     lastQuery = AutocompleteQuery(text = text, bias = bias, language = language)
     queries.tryEmit(lastQuery)
   }
@@ -326,10 +342,45 @@ class SearchViewModel(
   private fun observeSuggestions() {
     viewModelScope.launch {
       geocodeRepository.autocompleteStream(queries).collect { suggestions ->
-        state.update { it.copy(suggestions = suggestions) }
+        serverSuggestions.value = suggestions
       }
     }
   }
+
+  /**
+   * Le bloc « déjà utilisés » et les suggestions du serveur, assemblés (SPEC.md § 5.1).
+   *
+   * Les deux sont posés dans l'état par la **même** émission, et c'est ce qui compte : les
+   * suggestions affichées sont celles dont le bloc a été retiré, et les publier séparément
+   * laisserait passer, le temps d'une image, une ligne en double.
+   *
+   * La règle de filtrage, elle, vit dans `:core` : cet écran ne fait que la brancher.
+   */
+  private fun observeKnownPlaces() {
+    val known = combine(
+      queryText,
+      savedPlaces.home,
+      savedPlaces.work,
+      savedPlaces.places,
+      recentSearches.recentSearches,
+    ) { query, home, work, places, recent ->
+      matchingKnownPlaces(query, listOfNotNull(home, work) + places, recent)
+    }
+    viewModelScope.launch {
+      known.combine(serverSuggestions) { block, server -> block to server }
+        .collect { (block, server) ->
+          state.update { it.copy(knownPlaces = block, suggestions = server.withoutKnown(block)) }
+        }
+    }
+  }
+
+  /** Les suggestions du serveur, moins celles que le bloc « déjà utilisés » montre déjà. */
+  private fun AutocompleteState.withoutKnown(known: List<Location>): AutocompleteState =
+    if (this is AutocompleteState.Suggestions) {
+      AutocompleteState.Suggestions(locations.withoutKnownPlaces(known))
+    } else {
+      this
+    }
 
   /**
    * Le brouillon partagé, les lieux enregistrés et l'historique, en une seule vue.
