@@ -2,7 +2,6 @@ package io.github.mgdx.escale.ui.results
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -19,6 +18,7 @@ import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.TransitMode
 import io.github.mgdx.escale.ui.settings.uses24HourClock
+import io.github.mgdx.escale.ui.theme.LocalDarkTheme
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -226,7 +226,7 @@ internal fun tabDescription(category: JourneyCategory, headline: TabHeadline): S
  */
 @Composable
 internal fun delayColor(quality: DelayQuality): Color {
-  val dark = isSystemInDarkTheme()
+  val dark = LocalDarkTheme.current
   return when (quality) {
     DelayQuality.ON_TIME, DelayQuality.EARLY -> if (dark) OnTimeDark else OnTimeLight
     DelayQuality.SLIGHT -> if (dark) SlightDark else SlightLight

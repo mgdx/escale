@@ -8,6 +8,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColors = lightColorScheme(
@@ -71,11 +73,29 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
+ * Le thème effectivement appliqué : sombre, ou clair.
+ *
+ * **Ce n'est pas `isSystemInDarkTheme()`**, qui ne répond qu'à « l'appareil est-il en mode nuit ? ».
+ * Tant que le réglage de SPEC.md § 5.6 vaut « comme le système », les deux se confondent ; dès
+ * qu'il vaut « clair » ou « sombre », ils divergent. Or tout ce qui ne se peint pas avec une
+ * couleur du `ColorScheme` — la feuille de style de la carte, les teintes d'écart à l'horaire —
+ * doit choisir sa variante lui-même : interroger le système le ferait suivre l'appareil pendant
+ * que le reste de l'écran suit le réglage, ce qui donnait une carte claire sous une interface
+ * sombre.
+ *
+ * La valeur par défaut ne sert qu'aux aperçus Compose, qui ne passent pas tous par [EscaleTheme].
+ */
+val LocalDarkTheme = staticCompositionLocalOf { false }
+
+/**
  * Thème Material 3 de l'application (SPEC.md § 3).
  *
  * Les couleurs dynamiques sont préférées dès Android 12 : elles respectent le fond d'écran choisi
  * par l'usager. En deçà, on retombe sur la palette de marque de SPEC.md § 1.1, déclinée en clair
  * et en sombre.
+ *
+ * [darkTheme] est publié dans [LocalDarkTheme] : c'est par là, et non par le système, que le reste
+ * de l'interface apprend quelle variante est à l'écran.
  */
 @Composable
 fun EscaleTheme(
@@ -94,9 +114,11 @@ fun EscaleTheme(
     else -> LightColors
   }
 
-  MaterialTheme(
-    colorScheme = colorScheme,
-    typography = EscaleTypography,
-    content = content,
-  )
+  CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
+    MaterialTheme(
+      colorScheme = colorScheme,
+      typography = EscaleTypography,
+      content = content,
+    )
+  }
 }

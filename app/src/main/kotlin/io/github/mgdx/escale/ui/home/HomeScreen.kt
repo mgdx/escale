@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -68,6 +67,7 @@ import io.github.mgdx.escale.ui.map.MapViewModel
 import io.github.mgdx.escale.ui.map.TileWarning
 import io.github.mgdx.escale.ui.map.manifestPermission
 import io.github.mgdx.escale.ui.map.mapCameraInsets
+import io.github.mgdx.escale.ui.theme.LocalDarkTheme
 
 /**
  * L'écran d'accueil : **la carte, en plein écran, du bord haut au bord bas** (SPEC.md § 5.1).
@@ -102,7 +102,9 @@ fun HomeScreen(
   val context = LocalContext.current
   val uriHandler = LocalUriHandler.current
 
-  val darkTheme = isSystemInDarkTheme()
+  // Le thème **appliqué**, et non celui de l'appareil : un thème forcé dans les réglages
+  // (SPEC.md § 5.6) doit emporter la feuille de style de la carte avec le reste de l'écran.
+  val darkTheme = LocalDarkTheme.current
   LaunchedEffect(darkTheme) { viewModel.onThemeChanged(darkTheme) }
 
   LocationPermissionEffect(state, viewModel)
