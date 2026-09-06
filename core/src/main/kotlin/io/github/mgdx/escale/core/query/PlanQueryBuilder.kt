@@ -51,6 +51,17 @@ object PlanQueryBuilder {
   private const val MAX_PRE_POST_TRANSIT_SECONDS = 30 * 60
 
   /**
+   * Distance maximale d'accrochage d'un point au réseau de rues, en mètres.
+   *
+   * Le défaut serveur est de 250 m : un point posé par appui long au milieu d'un parc, sur un quai
+   * ou sur une plage ne s'accrochait à aucune rue et la recherche échouait sans explication. La
+   * valeur est envoyée sur tous les onglets, et non seulement pour un point choisi sur la carte :
+   * une adresse géocodée au fond d'un lotissement a le même problème, et une règle sans condition
+   * est une règle de moins à tester. Le serveur plafonne par `max_max_matching_distance`.
+   */
+  private const val MAX_MATCHING_DISTANCE_METERS = 1000
+
+  /**
    * Le plafond de durée effectivement envoyé pour un onglet, ou `null` pour l'onglet transport en
    * commun, qui n'en envoie pas.
    *
@@ -92,6 +103,7 @@ object PlanQueryBuilder {
     val parameters = LinkedHashMap<String, String>()
     parameters[PLACE_FROM] = place(query.from)
     parameters[PLACE_TO] = place(query.to)
+    parameters[MAX_MATCHING_DISTANCE] = MAX_MATCHING_DISTANCE_METERS.toString()
     parameters.putAll(timeParameters(query.time))
     parameters.putAll(modeParameters(query.category, query.preferences))
     parameters.putAll(preferenceParameters(query.category, query.preferences))
@@ -255,6 +267,7 @@ object PlanQueryBuilder {
   private const val MAX_DIRECT_TIME = "maxDirectTime"
   private const val MAX_PRE_TRANSIT_TIME = "maxPreTransitTime"
   private const val MAX_POST_TRANSIT_TIME = "maxPostTransitTime"
+  private const val MAX_MATCHING_DISTANCE = "maxMatchingDistance"
   private const val PEDESTRIAN_SPEED = "pedestrianSpeed"
   private const val PEDESTRIAN_PROFILE = "pedestrianProfile"
   private const val CYCLING_SPEED = "cyclingSpeed"

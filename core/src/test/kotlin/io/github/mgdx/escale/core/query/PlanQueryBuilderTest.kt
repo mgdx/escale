@@ -338,6 +338,29 @@ class PlanQueryBuilderTest {
     }
   }
 
+  // --- Accrochage des points au réseau de rues -------------------------------------------------
+
+  @Test
+  fun `un point est accroche a une rue jusqu a un kilometre, sur tous les onglets`() {
+    // Défaut serveur : 250 m. Un point posé au milieu d'un parc, sur un quai ou sur une plage ne
+    // s'accrochait à aucune rue, et la recherche échouait sans explication.
+    JourneyCategory.entries.forEach { category ->
+      assertEquals("1000", PlanQueryBuilder.build(query(category))["maxMatchingDistance"])
+    }
+  }
+
+  @Test
+  fun `la pagination conserve la distance d accrochage`() {
+    val paged = PlanQueryBuilder.build(query(JourneyCategory.WALK), cursor = "EARLIER|1756785600")
+    assertEquals("1000", paged["maxMatchingDistance"])
+  }
+
+  @Test
+  fun `un rafraichissement n accroche aucun point`() {
+    // Le point d'entrée reconstruit un trajet déjà calculé : il n'a aucune coordonnée à apparier.
+    assertNull(PlanQueryBuilder.refresh("opaque-id")["maxMatchingDistance"])
+  }
+
   // --- Langue des libellés ---------------------------------------------------------------------
 
   @Test

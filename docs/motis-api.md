@@ -144,6 +144,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `transitModes` | `TRANSIT` sur l'onglet Transport, **vide** sur les autres | vide = « aucune correspondance calculée » |
 | `directModes` | **vide** sur l'onglet Transport, `CAR` / `BIKE[,RENTAL]` / `WALK` sur les autres | voir le piège n° 3 |
 | `detailedLegs` | `false` sur la liste, `true` à l'ouverture d'un trajet | § 7.6, la géométrie coûte cher |
+| `maxMatchingDistance` | `1000` (mètres) | le défaut de 250 m n'accroche à aucune rue un point posé au milieu d'un parc, sur un quai ou sur une plage : la recherche échoue sans explication. Envoyé sur les quatre onglets, une adresse géocodée au fond d'un lotissement ayant le même problème. Plafonné par `max_max_matching_distance` |
 
 ### Envoyés selon le cas
 
