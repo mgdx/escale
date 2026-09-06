@@ -94,7 +94,13 @@ class SearchViewModel(
   private var savedLocations: Map<SavedPlaceKind, Location?> = emptyMap()
 
   /**
-   * Le centre de la carte, pour le biais géographique de SPEC.md § 5.1.
+   * Le biais géographique de l'autocomplétion (SPEC.md § 5.1).
+   *
+   * Deux sources, dans cet ordre : le centre de la carte, et **à défaut** la dernière position
+   * connue — au premier lancement, ou après un vidage du cache, aucun cadrage n'est mémorisé et
+   * une requête sans biais ramènerait des lieux du bout du monde. Aucune permission n'est demandée
+   * pour cela : la position n'est lue que si elle est déjà accessible. Sans ni l'une ni l'autre,
+   * le biais reste nul.
    *
    * Il est relu à l'ouverture d'un champ, et non à chaque frappe : la carte ne bouge pas pendant
    * qu'on tape, et une lecture par caractère serait du gaspillage.
@@ -113,12 +119,22 @@ class SearchViewModel(
 
   /** Le champ passe en plein écran, avec la liste d'autocomplétion (SPEC.md § 5.1). */
   fun onOpenField(field: SearchField) {
-    myLocationKnown.value = locationSource.hasCoarsePermission() && locationSource.lastKnownLocation() != null
+    val known = knownPoint()
+    myLocationKnown.value = known != null
     setQuery("")
     state.update { it.copy(activeField = field, awaitingMapPick = false) }
     savedState[SAVED_FIELD] = field.name
-    viewModelScope.launch { bias = cameraMemory.lastCamera()?.center }
+    viewModelScope.launch { bias = cameraMemory.lastCamera()?.center ?: known }
   }
+
+  /**
+   * La position déjà connue, ou `null` si l'application n'a pas le droit de la lire.
+   *
+   * La permission est vérifiée avant toute lecture, et **rien n'est demandé à l'usager** : la
+   * position sert ici de repli, elle ne vaut pas qu'on ouvre une boîte de dialogue.
+   */
+  private fun knownPoint(): LatLon? =
+    if (locationSource.hasCoarsePermission()) locationSource.lastKnownLocation() else null
 
   /** Retour depuis le plein écran, sans rien choisir. */
   fun onCloseField() {
