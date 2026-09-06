@@ -70,6 +70,38 @@ class PlanQueryBuilderTest {
   }
 
   @Test
+  fun `l onglet transport en commun cherche les arrets a trente minutes de marche`() {
+    // Défaut serveur : 900 s. L'onglet rendait une liste vide hors ville dense, dès que le premier
+    // arrêt était à plus d'un quart d'heure de marche.
+    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))
+    assertEquals("1800", parameters["maxPreTransitTime"])
+    assertEquals("1800", parameters["maxPostTransitTime"])
+
+    // « Plus tôt » / « Plus tard » renvoient la requête telle quelle : le plafond suit.
+    val paged = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT), cursor = "LATER|1756785600")
+    assertEquals("1800", paged["maxPreTransitTime"])
+    assertEquals("1800", paged["maxPostTransitTime"])
+  }
+
+  @Test
+  fun `le rabattement a pied n est plafonne que la ou il existe`() {
+    listOf(JourneyCategory.CAR, JourneyCategory.BIKE, JourneyCategory.WALK).forEach { category ->
+      val parameters = PlanQueryBuilder.build(query(category))
+      assertNull("$category ne fait aucun rabattement", parameters["maxPreTransitTime"])
+      assertNull("$category ne fait aucun rabattement", parameters["maxPostTransitTime"])
+    }
+  }
+
+  @Test
+  fun `le plafond de marche annonce est celui reellement envoye`() {
+    // L'état vide de l'onglet nomme cette limite : les deux ne peuvent pas diverger.
+    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))
+    val announced = PlanQueryBuilder.maxPrePostTransitTime().seconds.toString()
+    assertEquals(announced, parameters["maxPreTransitTime"])
+    assertEquals(announced, parameters["maxPostTransitTime"])
+  }
+
+  @Test
   fun `aucun reglage de vehicules ne rouvre le rabattement en libre-service`() {
     RentalFormFactor.entries.forEach { type ->
       val preferences = SearchPreferences(allowedRentalFormFactors = setOf(type))

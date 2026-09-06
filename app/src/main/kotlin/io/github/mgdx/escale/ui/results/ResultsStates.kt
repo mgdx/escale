@@ -90,7 +90,7 @@ internal fun ResultsEmpty(category: JourneyCategory, modifier: Modifier = Modifi
     )
     emptyHints(limit == null).forEach { hint ->
       Text(
-        text = stringResource(R.string.results_empty_hint_item, stringResource(hint)),
+        text = stringResource(R.string.results_empty_hint_item, hint),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.fillMaxWidth(),
@@ -99,15 +99,29 @@ internal fun ResultsEmpty(category: JourneyCategory, modifier: Modifier = Modifi
   }
 }
 
-/** Les suggestions imposées par SPEC.md § 8, celles qui ont un sens pour l'onglet consulté. */
-private fun emptyHints(transit: Boolean): List<Int> = if (transit) {
+/**
+ * Les suggestions imposées par SPEC.md § 8, celles qui ont un sens pour l'onglet consulté.
+ *
+ * La première suggestion de l'onglet Transport nomme le rabattement à pied maximal de la requête.
+ * Comme le plafond de durée des onglets directs, la valeur est **lue** dans `PlanQueryBuilder` et
+ * jamais recopiée dans la chaîne : celui qui l'envoie est celui qui l'annonce.
+ */
+@Composable
+private fun emptyHints(transit: Boolean): List<String> = if (transit) {
   listOf(
-    R.string.results_empty_hint_window,
-    R.string.results_empty_hint_transfers,
-    R.string.results_empty_hint_time,
+    stringResource(
+      R.string.results_empty_hint_walk,
+      durationText(PlanQueryBuilder.maxPrePostTransitTime()),
+    ),
+    stringResource(R.string.results_empty_hint_window),
+    stringResource(R.string.results_empty_hint_transfers),
+    stringResource(R.string.results_empty_hint_time),
   )
 } else {
-  listOf(R.string.results_empty_hint_transit, R.string.results_empty_hint_time)
+  listOf(
+    stringResource(R.string.results_empty_hint_transit),
+    stringResource(R.string.results_empty_hint_time),
+  )
 }
 
 /**

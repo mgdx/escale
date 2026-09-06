@@ -110,6 +110,7 @@
   <string name="results_empty_title">Aucun trajet trouvé</string>
   <string name="results_empty_transit_message">Le serveur n\'a trouvé aucun trajet pour cet horaire.</string>
   <string name="results_empty_direct_message">Aucun trajet trouvé dans la limite de %1$s qu\'Escale autorise pour ce mode.</string>
+  <string name="results_empty_hint_walk">Le premier et le dernier arrêt sont cherchés à moins de %1$s à pied</string>
   <string name="results_empty_hint_window">Élargir la fenêtre horaire</string>
   <string name="results_empty_hint_transfers">Autoriser plus de correspondances dans les réglages</string>
   <string name="results_empty_hint_time">Essayer un autre horaire</string>

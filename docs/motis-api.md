@@ -153,6 +153,7 @@ quels sur la requête par `:data`. Tous les noms ci-dessous ont été vérifiés
 | `arriveBy` | « arriver avant » | `true` |
 | `preTransitModes`, `postTransitModes` | onglet Transport | `WALK,RENTAL` : rabattement à pied ou en libre-service |
 | `maxDirectTime` | onglets sans transport en commun | voir le piège n° 2 |
+| `maxPreTransitTime`, `maxPostTransitTime` | onglet Transport | 1800 s : le défaut serveur de 900 s vide l'onglet hors ville dense, dès que le premier arrêt est à plus d'un quart d'heure de marche. Plafonné par `street_routing_max_prepost_transit_seconds` |
 | `detailedTransfers` | écran de détail seulement | hérite de `detailedLegs` quand il est absent — c'est pourquoi il n'est envoyé que là où on le veut explicitement à `true` (§ 5.3) |
 | `pageCursor` | pagination | `previousPageCursor` / `nextPageCursor` d'une page déjà obtenue, **le reste de la requête à l'identique** |
 | `pedestrianSpeed`, `pedestrianProfile` | tous les onglets sauf Voiture | `pedestrianProfile=WHEELCHAIR` est le réglage d'accessibilité du § 9 |
