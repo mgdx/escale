@@ -243,6 +243,9 @@ private fun FullScreenMap(
 /**
  * Les commandes flottantes, et la liste que l'une d'elles ouvre.
  *
+ * Elles s'effacent tant qu'une fiche est ouverte — arrêt, libre-service ou point d'intérêt — parce
+ * qu'elles occupent le même bas d'écran et en recouvriraient les boutons.
+ *
  * Le parcours des arrêts affichés est une **fonction de la carte**, et son état d'ouverture ne
  * regarde que cet écran : le `ViewModel` fournit la liste, l'écran décide si elle est déployée.
  * Choisir un arrêt referme la liste et ouvre l'infobulle habituelle — la même que sur la carte, au
@@ -256,14 +259,20 @@ private fun MapControlsSlot(
   modifier: Modifier = Modifier,
 ) {
   var browsing by rememberSaveable { mutableStateOf(false) }
-  MapControls(
-    locateState = state.locateState,
-    onLocateClick = onLocateClick,
-    onOpenSettings = onOpenSettings,
-    browsableStops = state.browsableStops.size,
-    onBrowseStops = { browsing = true },
-    modifier = modifier,
-  )
+  // Une fiche ouverte occupe le bas de la carte, exactement là où ces boutons flottent : ils la
+  // recouvriraient, et le bord droit de « Aller ici » cesserait d'être atteignable (SPEC.md § 9).
+  // Les effacer le temps d'une fiche est la réponse la plus simple : la fiche porte ses propres
+  // actions, et se referme d'un appui sur sa croix ou sur la carte.
+  if (!state.detailCardOpen) {
+    MapControls(
+      locateState = state.locateState,
+      onLocateClick = onLocateClick,
+      onOpenSettings = onOpenSettings,
+      browsableStops = state.browsableStops.size,
+      onBrowseStops = { browsing = true },
+      modifier = modifier,
+    )
+  }
   if (browsing) {
     BrowseStopsSheet(
       stops = state.browsableStops,

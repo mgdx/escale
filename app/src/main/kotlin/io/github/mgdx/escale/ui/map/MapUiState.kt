@@ -206,7 +206,17 @@ data class MapUiState(
 
   /** Ce que la carte doit faire d'un appui sur un point d'intérêt. Voir [MapPlaceActions]. */
   val placeActions: MapPlaceActions = MapPlaceActions.Inert,
-)
+) {
+  /**
+   * Une fiche est-elle ouverte au bas de la carte, quelle que soit sa famille ?
+   *
+   * Les trois se posent au même endroit et ne s'affichent jamais ensemble. Les commandes flottantes,
+   * elles, occupent le même bas d'écran : c'est ce booléen qui les efface le temps d'une fiche, sans
+   * quoi l'engrenage et le bouton de position recouvriraient ses boutons — une cible tactile qui
+   * n'en est plus une (SPEC.md § 9).
+   */
+  val detailCardOpen: Boolean get() = selectedStop != null || selectedRental != null || selectedPlace != null
+}
 
 /**
  * Les rappels d'interaction sur les arrêts de la carte (SPEC.md § 5.7).
