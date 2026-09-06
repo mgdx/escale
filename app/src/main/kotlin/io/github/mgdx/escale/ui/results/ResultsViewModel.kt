@@ -220,10 +220,17 @@ class ResultsViewModel(
    * Seul [onCategorySelected] en garde la trace : un onglet ouvert parce qu'il est en tête de
    * l'ordre n'est pas un onglet choisi, et il doit pouvoir céder la place au suivant si l'usager
    * range ses catégories autrement.
+   *
+   * **La mise en évidence repart de zéro**, et c'est le seul endroit de ce `ViewModel` où elle est
+   * oubliée délibérément. Un trajet peut figurer dans deux onglets à la fois — le serveur range le
+   * même trajet à pied dans les résultats de l'onglet À pied et dans ceux de l'onglet Vélo —, et
+   * [syncSelection] le retrouverait par sa clé : changer de catégorie laisserait alors la carte sur
+   * le trajet de la catégorie précédente. Or on change d'onglet pour voir autre chose, et
+   * SPEC.md § 5.1 veut le premier trajet du nouveau jeu.
    */
   private fun switchTo(category: JourneyCategory) {
     if (state.value.category == category) return
-    state.update { it.copy(category = category) }
+    state.update { it.copy(category = category, selectedKey = null) }
     val tab = state.value.tabs[category]
     if (tab == null) load(category) else syncSelection()
   }
@@ -456,8 +463,10 @@ class ResultsViewModel(
    * La règle tient en une phrase : **le trajet mis en évidence est celui que l'usager a choisi
    * s'il est encore dans la liste, sinon le premier de la liste, et rien du tout si la liste est
    * vide.** C'est ce qui fait qu'une recherche trace son premier trajet sans qu'on ait à appuyer,
-   * qu'un changement d'onglet met en évidence le premier trajet du nouveau jeu de résultats, et
-   * qu'un jeu vide n'en laisse aucun derrière lui.
+   * qu'une page supplémentaire ou un rafraîchissement ne délogent pas le trajet regardé, et qu'un
+   * jeu vide n'en laisse aucun derrière lui. Le changement d'onglet, lui, échappe à la première
+   * moitié de la règle : [switchTo] a oublié la clé avant d'arriver ici, et c'est donc toujours le
+   * premier trajet du nouveau jeu qui est mis en évidence.
    *
    * Rien n'est publié en dehors de cette fonction et de [onJourneySelected] : le retour depuis
    * l'écran de détail ne passe par aucune des deux, la sélection et son tracé lui survivent donc.

@@ -405,6 +405,27 @@ class ResultsViewModelTest {
   }
 
   @Test
+  fun `changer d onglet ne conserve pas un trajet present dans les deux listes`() = runTest {
+    // Le serveur range le même trajet à pied dans deux onglets à la fois : sans oubli explicite de
+    // la sélection, il resterait mis en évidence et la carte ne montrerait pas l'onglet ouvert.
+    // La feuille trie par heure de départ : le trajet partagé part plus tard, il n'est donc pas
+    // le premier de l'onglet À pied.
+    val shared = journey("commun", 5)
+    val walkFirst = journey("marche", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(shared)))
+    repository.answers[JourneyCategory.WALK] =
+      Outcome.Success(JourneyPage(journeys = listOf(walkFirst, shared)))
+    val model = viewModel()
+    completeSearch()
+    assertEquals(shared, selection.selected.value)
+
+    model.onCategorySelected(JourneyCategory.WALK)
+
+    assertEquals(walkFirst, selection.selected.value)
+    assertEquals(walkFirst.stableKey(), model.uiState.value.selectedKey)
+  }
+
+  @Test
   fun `une nouvelle recherche met en evidence le premier trajet de ses resultats`() = runTest {
     val trip = journey("a", 0)
     repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(trip)))
