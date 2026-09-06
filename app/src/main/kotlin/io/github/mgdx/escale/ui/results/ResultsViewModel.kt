@@ -15,6 +15,7 @@ import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyPage
 import io.github.mgdx.escale.core.model.JourneyRefresh
+import io.github.mgdx.escale.core.model.JourneySort
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.stableKey
 import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
@@ -88,7 +89,7 @@ class ResultsViewModel(
   private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
 
-  private val state = MutableStateFlow(ResultsUiState(category = restoredCategory()))
+  private val state = MutableStateFlow(ResultsUiState(category = restoredCategory(), sorts = restoredSorts()))
 
   val uiState: StateFlow<ResultsUiState> = state.asStateFlow()
 
@@ -145,6 +146,15 @@ class ResultsViewModel(
    * onglet a été choisi, c'est lui qu'on retrouve, et un ordre modifié entre-temps ne le déloge pas.
    */
   private var categoryChosen = savedState.contains(KEY_CATEGORY)
+
+  /**
+   * Faux tant que le brouillon de recherche n'a pas été observé.
+   *
+   * La toute première émission n'ouvre pas une nouvelle recherche : elle **restitue** celle que
+   * l'usager avait en cours, après la mort du processus comme au démarrage. Le tri choisi lui
+   * survit donc, là où une recherche réellement nouvelle le remet à l'ordre des départs.
+   */
+  private var draftKnown = false
 
   init {
     viewModelScope.launch {
@@ -291,19 +301,40 @@ class ResultsViewModel(
   }
 
   /**
+   * L'usager change l'ordre de la liste (SPEC.md § 5.2).
+   *
+   * **Aucune requête n'en découle** : les trajets affichés sont les mêmes, seule leur présentation
+   * change.
+   *
+   * La mise en évidence, elle, repart en tête de la nouvelle liste, comme au changement d'onglet :
+   * on trie pour voir ce que le nouvel ordre met en premier, et laisser la carte sur le trajet
+   * d'avant reviendrait à ne rien montrer du geste (SPEC.md § 5.1).
+   */
+  fun onSortChanged(sort: JourneySort) {
+    val sorts = state.value.sorts + (state.value.category to sort)
+    savedState[KEY_SORT] = serialized(sorts)
+    state.update { it.copy(sorts = sorts, selectedKey = null) }
+    syncSelection()
+  }
+
+  /**
    * Le brouillon de recherche a changé.
    *
    * Tant qu'il est incomplet, la feuille n'existe pas : la carte occupe tout l'écran, et aucune
    * requête n'est envoyée. Dès qu'il est complet, la recherche part — SPEC.md § 5.1 ne prévoit pas
    * de bouton « Rechercher » — mais **pour le seul onglet consulté**.
    */
-  private fun onDraftChanged(draft: SearchDraft) = restart(open = draft.isComplete)
+  private fun onDraftChanged(draft: SearchDraft) {
+    val restored = !draftKnown
+    draftKnown = true
+    restart(open = draft.isComplete, keepSort = restored)
+  }
 
   /**
    * Repart de zéro : tout ce qui court est annulé, les quatre onglets sont oubliés, et la chaîne
    * de chargement recommence — s'il y a une recherche à faire.
    */
-  private fun restart(open: Boolean) {
+  private fun restart(open: Boolean, keepSort: Boolean = false) {
     searchJob?.cancel()
     searchJob = null
     jobs.values.forEach(Job::cancel)
@@ -313,6 +344,10 @@ class ResultsViewModel(
     // Les identifiants d'itinéraire de la recherche précédente ne désignent plus rien d'affiché.
     traced.clear()
     val category = state.value.category
+    // Une nouvelle recherche repart de l'ordre des départs, et **les quatre onglets avec elle** :
+    // les tris choisis portaient sur des trajets qui ne sont plus affichés (SPEC.md § 5.2).
+    val sorts = if (keepSort) state.value.sorts else emptyMap()
+    savedState[KEY_SORT] = serialized(sorts)
     // Les quatre onglets sont en attente **avant** la première requête : leur languette annonce
     // qu'une réponse arrive, et non qu'il n'y a rien à proposer (SPEC.md § 5.2). L'ordre réglé
     // n'est pas un résultat : il traverse la remise à zéro intacte.
@@ -320,6 +355,7 @@ class ResultsViewModel(
       open = open,
       category = category,
       categoryOrder = state.value.categoryOrder,
+      sorts = sorts,
       tabs = if (open) awaiting() else emptyMap(),
     )
     // Plus aucun résultat à montrer : la carte n'a plus rien à tracer, jusqu'à ce que la nouvelle
@@ -570,6 +606,29 @@ class ResultsViewModel(
     return JourneyCategory.entries.firstOrNull { it.name == saved } ?: CategoryOrder.DEFAULT.first()
   }
 
+  /**
+   * Les tris de chaque onglet, tels que l'usager les avait choisis.
+   *
+   * `SavedStateHandle` ne range pas une table telle quelle : elle voyage donc en une chaîne
+   * « CATEGORIE:TRI », les couples séparés par des virgules. Un nom que cette version ne connaît
+   * plus — une catégorie ou un tri disparus d'une version à l'autre — est simplement oublié, et
+   * l'onglet correspondant repart de l'ordre des départs.
+   */
+  private fun restoredSorts(): Map<JourneyCategory, JourneySort> {
+    val saved = savedState.get<String>(KEY_SORT).orEmpty()
+    return saved.split(PAIR_SEPARATOR)
+      .mapNotNull { pair ->
+        val (category, sort) = pair.split(FIELD_SEPARATOR).takeIf { it.size == 2 } ?: return@mapNotNull null
+        val known = JourneyCategory.entries.firstOrNull { it.name == category } ?: return@mapNotNull null
+        JourneySort.entries.firstOrNull { it.name == sort }?.let { known to it }
+      }
+      .toMap()
+  }
+
+  /** La table des tris, sous la forme que `SavedStateHandle` sait garder. */
+  private fun serialized(sorts: Map<JourneyCategory, JourneySort>): String = sorts.entries
+    .joinToString(PAIR_SEPARATOR) { (category, sort) -> "${category.name}$FIELD_SEPARATOR${sort.name}" }
+
   companion object {
     /**
      * L'onglet consulté, restitué après une rotation **comme après la mort du processus**.
@@ -580,6 +639,17 @@ class ResultsViewModel(
      * elles se retrouvent en une requête à la reprise.
      */
     private const val KEY_CATEGORY = "results.category"
+
+    /**
+     * L'ordre de la liste, restitué de la même façon. Ce n'est qu'un choix de présentation : il ne
+     * dit rien de l'endroit où l'usager va, et n'a donc rien d'une donnée à garder en mémoire
+     * seule (SPEC.md § 11).
+     */
+    private const val KEY_SORT = "results.sort"
+
+    /** Ce qui sépare deux onglets, puis un onglet de son tri, dans la chaîne ci-dessus. */
+    private const val PAIR_SEPARATOR = ","
+    private const val FIELD_SEPARATOR = ":"
 
     /** Fabrique propre à ce ViewModel (docs/architecture.md § 3, règle 3). */
     fun factory(container: AppContainer) = viewModelFactory {

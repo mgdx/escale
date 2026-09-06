@@ -99,6 +99,11 @@
   <string name="results_filter_own">Mon vélo</string>
   <string name="results_filter_shared">Partagé</string>
 
+  <string name="results_sort_label">Trier par</string>
+  <string name="results_sort_departure">Départ</string>
+  <string name="results_sort_duration">Durée</string>
+  <string name="results_sort_transfers">Correspondances</string>
+
   <string name="results_earlier">Plus tôt</string>
   <string name="results_later">Plus tard</string>
 

@@ -14,6 +14,7 @@ import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyLeg
+import io.github.mgdx.escale.core.model.JourneySort
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Place
 import io.github.mgdx.escale.core.model.RentalFormFactor
@@ -174,6 +175,7 @@ private val previewActions = ResultsActions(
   onLater = {},
   onJourneySelected = {},
   onBikeFilterChanged = {},
+  onSortChanged = {},
   onRefresh = {},
 )
 
@@ -197,6 +199,18 @@ private fun ResultsListPreview() = PreviewSheet(previewState)
 @Preview(name = "Résultats à 200 %", heightDp = 900, fontScale = 2f, showBackground = true)
 @Composable
 private fun ResultsLargeTextPreview() = PreviewSheet(previewState)
+
+/**
+ * La liste triée par durée : le sélecteur de tri, avec sa puce active (SPEC.md § 5.2).
+ *
+ * Il n'y a rien de plus à vérifier à 200 % que dans les aperçus voisins : c'est la même rangée de
+ * puces, qui passe à la ligne quand elle ne tient plus.
+ */
+@Preview(name = "Résultats triés par durée", heightDp = 600, showBackground = true)
+@Composable
+private fun ResultsSortedPreview() = PreviewSheet(
+  previewState.copy(sorts = mapOf(JourneyCategory.TRANSIT to JourneySort.DURATION)),
+)
 
 /**
  * L'onglet Vélo et son filtre, que rien ne rendait jusqu'ici.

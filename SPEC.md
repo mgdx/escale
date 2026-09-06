@@ -321,6 +321,9 @@ Règles de comportement :
 - Badge de perturbation si la portion porte des `alerts`.
 - Boutons **Plus tôt** / **Plus tard** en tête et pied de liste, via `previousPageCursor` /
   `nextPageCursor` (la requête d'origine est renvoyée telle quelle, seul le curseur change).
+- Un sélecteur en tête de liste ordonne les trajets affichés par heure de départ (défaut), par durée
+  croissante ou par nombre de correspondances puis durée. Le tri est local : il ne déclenche aucune
+  requête, et la pagination continue de recoller les pages par heure de départ avant tri.
 
 ### 5.3 Détail d'un trajet
 
