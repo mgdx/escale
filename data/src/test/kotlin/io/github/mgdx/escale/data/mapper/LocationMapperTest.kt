@@ -84,6 +84,15 @@ class LocationMapperTest {
   }
 
   @Test
+  fun `la pertinence du serveur est transportee, et vaut zero quand il n en donne pas`() {
+    // SPEC.md § 5.1 : elle documente l'ordre de la réponse, elle ne sert jamais de seuil.
+    val locations = matches("geocode_rue_de_rivoli.json").toDomain()
+    assertEquals(-19.75, locations.first().score, 0.0)
+    val sansScore = GeocodeMatchDto(type = "ADDRESS", name = "Rue de Rivoli", id = "", lat = 48.0, lon = 2.0)
+    assertEquals(0.0, sansScore.toDomain().score, 0.0)
+  }
+
+  @Test
   fun `un geocodage inverse rend des lieux et des adresses`() {
     val locations = matches("reverse_geocode_bastille.json").toDomain()
     assertEquals(PlaceKind.PLACE, locations.first().kind)

@@ -27,6 +27,9 @@ internal fun GeocodeMatchDto.toDomain(): Location = Location(
   // SPEC.md § 5.1 : l'interface annonce les modes desservis par un arrêt. Un doublon renvoyé par
   // le serveur, ou deux valeurs inconnues repliées sur OTHER, ne doivent pas s'afficher deux fois.
   servedModes = modes.map(::toTransitMode).distinct(),
+  // Transporté tel quel : c'est la composition de SPEC.md § 5.1 qui s'appuie sur l'ordre qu'il
+  // documente, et personne ne le compare à un seuil.
+  score = score,
 )
 
 /** `Match[]` -> liste de [Location], dans l'ordre de pertinence rendu par le serveur. */

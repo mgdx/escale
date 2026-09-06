@@ -41,7 +41,18 @@ interface GeocodeRepository {
   suspend fun clearGeocodeCache(): Outcome<Unit>
 
   companion object {
-    /** `numResults=10`, valeur fixée par SPEC.md § 5.1. */
-    const val DEFAULT_RESULT_COUNT = 10
+    /**
+     * `numResults=20`, valeur fixée par SPEC.md § 5.1.
+     *
+     * Le serveur en rend vingt pour que la composition ait de quoi choisir : biaisée ou non, la
+     * réponse à « rue de la paix » est dominée par des arrêts homonymes, et l'adresse cherchée
+     * n'arrive parfois qu'au quatorzième rang. Ce n'est **pas** le nombre de lignes affichées, qui
+     * reste [DISPLAYED_RESULT_COUNT], et ce n'est pas non plus une requête de plus : SPEC.md § 7.1
+     * n'en autorise toujours qu'une par frappe.
+     */
+    const val DEFAULT_RESULT_COUNT = 20
+
+    /** Au plus dix lignes affichées (SPEC.md § 5.1), choisies par `composeSuggestions`. */
+    const val DISPLAYED_RESULT_COUNT = 10
   }
 }

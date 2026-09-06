@@ -57,14 +57,21 @@ object AutocompleteRules {
  * L'annulation vient de `flatMapLatest` : une nouvelle frappe annule la coroutine de la précédente,
  * donc la requête HTTP qu'elle attendait.
  *
+ * Ce que le serveur rend est ensuite **composé** pour l'affichage (`composeSuggestions`) : vingt
+ * candidats demandés, dix lignes montrées, choisies pour qu'un type de lieu n'écrase pas les autres
+ * (SPEC.md § 5.1). Le dédoublonnage, lui, a déjà eu lieu : il appartient au dépôt, qui l'applique à
+ * tous ses appelants.
+ *
  * @param queries les frappes successives, une par caractère saisi.
- * @param limit `numResults`, dix par défaut (SPEC.md § 5.1).
+ * @param limit `numResults`, vingt par défaut (SPEC.md § 5.1).
+ * @param displayed le nombre de lignes affichables, dix par défaut (SPEC.md § 5.1).
  * @param debounceMillis paramétrable pour les tests uniquement ; jamais en deçà de 350 ms.
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 fun GeocodeRepository.autocompleteStream(
   queries: Flow<AutocompleteQuery>,
   limit: Int = GeocodeRepository.DEFAULT_RESULT_COUNT,
+  displayed: Int = GeocodeRepository.DISPLAYED_RESULT_COUNT,
   debounceMillis: Long = AutocompleteRules.DEBOUNCE_MILLIS,
 ): Flow<AutocompleteState> = queries
   .map { it.copy(text = it.text.trim()) }
@@ -77,14 +84,14 @@ fun GeocodeRepository.autocompleteStream(
     } else {
       flow {
         emit(AutocompleteState.Loading)
-        emit(autocomplete(query.text, query.bias, query.language, limit).toState())
+        emit(autocomplete(query.text, query.bias, query.language, limit).toState(displayed))
       }
     }
   }
   // Effacer trois caractères d'affilée ramène trois fois au même état vide : n'en montrer qu'un.
   .distinctUntilChanged()
 
-private fun Outcome<List<Location>>.toState(): AutocompleteState = when (this) {
-  is Outcome.Success -> AutocompleteState.Suggestions(value)
+private fun Outcome<List<Location>>.toState(displayed: Int): AutocompleteState = when (this) {
+  is Outcome.Success -> AutocompleteState.Suggestions(composeSuggestions(value, displayed))
   is Outcome.Failure -> AutocompleteState.Failed(error)
 }

@@ -43,7 +43,7 @@ Les paramètres sont assemblés par `data/net/GeocodeApi.kt`.
 | `place` | `latitude,longitude` du centre de la carte, à défaut la dernière position connue | Le biais géographique du § 5.1. Absent si aucun point de référence n'est connu |
 | `placeBias` | `5`, **et seulement quand `place` est envoyé** | Voir ci-dessous. Un poids sans point de référence n'a pas de sens, et un paramètre de plus salit le cache disque de 24 h (§ 7.5) |
 | `language` | la langue de l'interface | Absent si elle n'est pas connue |
-| `numResults` | `10` (§ 5.1) | |
+| `numResults` | `20` (§ 5.1) | L'écran n'en montre que dix, mais la composition du § 5.1 a besoin de candidats à choisir : le biais ne suffit pas à sortir une adresse d'une file d'arrêts homonymes |
 
 **Pourquoi `placeBias` et pas le défaut du serveur.** Le défaut de l'OpenAPI vaut 1, et ce poids est
 trop faible pour être utile : les arrêts homonymes de tout le pays passent devant les adresses

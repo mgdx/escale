@@ -214,7 +214,10 @@ par-dessus.
 
 **Autocomplétion**
 - `/api/v1/geocode` avec `text`, `place` = centre de la carte pour le biais géographique
-  (à défaut la dernière position connue), `language`, `numResults=10`.
+  (à défaut la dernière position connue), `language`, `numResults=20` ; la liste affichée en retient
+  au plus dix, composée pour qu'aucun type de lieu ne masque les autres : au plus quatre arrêts
+  homonymes situés hors de la commune du centre de la carte, et au moins une adresse et un lieu dès
+  que le serveur en a rendu.
 - Debounce de **350 ms**, longueur minimale de 3 caractères, annulation de la requête précédente.
 - Les résultats distinguent visuellement adresse, arrêt et lieu (`LocationType`), avec le mode de
   transport desservi pour les arrêts.
