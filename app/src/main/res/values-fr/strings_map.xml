@@ -91,4 +91,99 @@
     <item quantity="other">%d arrêts affichés</item>
   </plurals>
   <string name="map_browse_stops_open">Afficher cet arrêt</string>
+
+  <!-- Les douze catégories de points d'intérêt (SPEC.md § 5.7). Le libellé sert à la fois de
+       titre de bascule dans l'écran « Couches de la carte » et de nom de repli dans la fiche,
+       pour un lieu dont la tuile ne porte ni nom ni valeur connue. -->
+  <string name="map_place_category_public_services">Services publics</string>
+  <string name="map_place_category_education">Enseignement</string>
+  <string name="map_place_category_culture">Culture et monuments</string>
+  <string name="map_place_category_healthcare">Santé publique</string>
+  <string name="map_place_category_toilets">Toilettes publiques</string>
+  <string name="map_place_category_food">Alimentation</string>
+  <string name="map_place_category_dining">Restauration</string>
+  <string name="map_place_category_health_shops">Commerces de santé</string>
+  <string name="map_place_category_money">Argent</string>
+  <string name="map_place_category_lodging">Hébergement</string>
+  <string name="map_place_category_everyday_services">Services du quotidien</string>
+  <string name="map_place_category_other_shops">Autres commerces</string>
+
+  <!-- Types de lieux, un par valeur OpenStreetMap retenue (SPEC.md § 5.7). -->
+  <string name="map_place_type_townhall">Mairie</string>
+  <string name="map_place_type_courthouse">Palais de justice</string>
+  <string name="map_place_type_post_office">Bureau de poste</string>
+  <string name="map_place_type_police">Police</string>
+  <string name="map_place_type_fire_station">Caserne de pompiers</string>
+  <string name="map_place_type_community_centre">Centre social</string>
+  <string name="map_place_type_place_of_worship">Lieu de culte</string>
+  <string name="map_place_type_school">École</string>
+  <string name="map_place_type_university">Université</string>
+  <string name="map_place_type_college">Établissement supérieur</string>
+  <string name="map_place_type_library">Bibliothèque</string>
+  <string name="map_place_type_theatre">Théâtre</string>
+  <string name="map_place_type_cinema">Cinéma</string>
+  <string name="map_place_type_arts_centre">Centre culturel</string>
+  <string name="map_place_type_castle">Château</string>
+  <string name="map_place_type_monument">Monument</string>
+  <string name="map_place_type_memorial">Mémorial</string>
+  <string name="map_place_type_fort">Fort</string>
+  <string name="map_place_type_ruins">Ruines</string>
+  <string name="map_place_type_archaeological_site">Site archéologique</string>
+  <string name="map_place_type_battlefield">Champ de bataille</string>
+  <string name="map_place_type_artwork">Œuvre d’art</string>
+  <string name="map_place_type_viewpoint">Point de vue</string>
+  <string name="map_place_type_lighthouse">Phare</string>
+  <string name="map_place_type_hospital">Hôpital</string>
+  <string name="map_place_type_clinic">Clinique</string>
+  <string name="map_place_type_doctors">Cabinet médical</string>
+  <string name="map_place_type_dentist">Dentiste</string>
+  <string name="map_place_type_pharmacy">Pharmacie</string>
+  <string name="map_place_type_toilets">Toilettes publiques</string>
+  <string name="map_place_type_supermarket">Supermarché</string>
+  <string name="map_place_type_convenience">Supérette</string>
+  <string name="map_place_type_bakery">Boulangerie</string>
+  <string name="map_place_type_butcher">Boucherie</string>
+  <string name="map_place_type_greengrocer">Primeur</string>
+  <string name="map_place_type_alcohol">Caviste</string>
+  <string name="map_place_type_beverages">Boissons</string>
+  <string name="map_place_type_kiosk">Kiosque</string>
+  <string name="map_place_type_general">Bazar</string>
+  <string name="map_place_type_department_store">Grand magasin</string>
+  <string name="map_place_type_mall">Centre commercial</string>
+  <string name="map_place_type_marketplace">Marché</string>
+  <string name="map_place_type_restaurant">Restaurant</string>
+  <string name="map_place_type_fast_food">Restauration rapide</string>
+  <string name="map_place_type_cafe">Café</string>
+  <string name="map_place_type_pub">Pub</string>
+  <string name="map_place_type_bar">Bar</string>
+  <string name="map_place_type_biergarten">Brasserie en plein air</string>
+  <string name="map_place_type_veterinary">Vétérinaire</string>
+  <string name="map_place_type_chemist">Droguerie</string>
+  <string name="map_place_type_optician">Opticien</string>
+  <string name="map_place_type_bank">Banque</string>
+  <string name="map_place_type_atm">Distributeur de billets</string>
+  <string name="map_place_type_hotel">Hôtel</string>
+  <string name="map_place_type_motel">Motel</string>
+  <string name="map_place_type_hostel">Auberge de jeunesse</string>
+  <string name="map_place_type_guest_house">Chambre d’hôtes</string>
+  <string name="map_place_type_bed_and_breakfast">Chambre d’hôtes</string>
+  <string name="map_place_type_camp_site">Camping</string>
+  <string name="map_place_type_drinking_water">Point d’eau potable</string>
+  <string name="map_place_type_post_box">Boîte aux lettres</string>
+  <string name="map_place_type_telephone">Téléphone public</string>
+  <string name="map_place_type_car_rental">Location de voiture</string>
+  <string name="map_place_type_car_sharing">Voiture partagée</string>
+  <string name="map_place_type_bicycle_rental">Location de vélo</string>
+  <string name="map_place_type_vending_machine">Distributeur automatique</string>
+  <string name="map_place_type_hairdresser">Coiffeur</string>
+  <string name="map_place_type_laundry">Laverie</string>
+  <string name="map_place_type_dry_cleaning">Pressing</string>
+  <string name="map_place_type_travel_agency">Agence de voyage</string>
+
+  <!-- Fiche d'un point d'intérêt du fond de carte (SPEC.md § 5.7). -->
+  <string name="map_place_close">Fermer le détail du lieu</string>
+  <string name="map_place_unnamed">Point d\'intérêt</string>
+  <!-- Le type, puis ce qui le précise : « Restaurant · italian », « Banque · distributeur ». -->
+  <string name="map_place_type_detail">%1$s · %2$s</string>
+  <string name="map_place_detail_atm">distributeur</string>
 </resources>

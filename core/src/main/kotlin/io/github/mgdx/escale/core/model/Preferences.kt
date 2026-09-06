@@ -18,9 +18,9 @@ enum class ClockFormat {
 /**
  * Réglages d'affichage, indépendants des paramètres envoyés au serveur.
  *
- * Les trois bascules de couches sont indépendantes du zoom : elles masquent complètement une
- * catégorie, même quand l'échelle la justifierait (SPEC.md § 5.7). L'ordre des onglets, lui, ne
- * masque rien : il ne fait que les ranger autrement (SPEC.md § 5.6).
+ * Les bascules de couches sont indépendantes du zoom : elles masquent complètement une catégorie,
+ * même quand l'échelle la justifierait (SPEC.md § 5.7). L'ordre des onglets, lui, ne masque rien :
+ * il ne fait que les ranger autrement (SPEC.md § 5.6).
  */
 data class DisplayPreferences(
   val theme: ThemeChoice = ThemeChoice.SYSTEM,
@@ -34,7 +34,18 @@ data class DisplayPreferences(
   val categoryOrder: List<JourneyCategory> = CategoryOrder.DEFAULT,
   val showStops: Boolean = true,
   val showRentals: Boolean = true,
-  val showPointsOfInterest: Boolean = true,
+  /**
+   * Les catégories de points d'intérêt visibles sur la carte (SPEC.md § 5.6 et § 5.7).
+   *
+   * Douze bascules indépendantes, réglées une par une dans l'écran « Couches de la carte » : les
+   * quatre catégories de repères et les toilettes publiques sont là au premier lancement, les sept
+   * autres attendent d'être demandées. Chacune commande **une** couche de la feuille de style,
+   * qu'on allume ou qu'on éteint sans jamais l'ajouter ni la retirer (SPEC.md § 5.7, règle 8).
+   *
+   * Ce champ remplace le `showPointsOfInterest` des versions antérieures ; sa reprise est décrite
+   * dans `PreferencesRepositoryImpl`.
+   */
+  val visiblePoiCategories: Set<PoiCategory> = PoiCategory.DEFAULT_VISIBLE,
   /** Faux : les recherches ne sont plus enregistrées dans l'historique (SPEC.md § 5.5). */
   val historyEnabled: Boolean = true,
 )

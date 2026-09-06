@@ -16,6 +16,7 @@ import io.github.mgdx.escale.core.model.ClockFormat
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.ElevationCosts
 import io.github.mgdx.escale.core.model.PedestrianProfile
+import io.github.mgdx.escale.core.model.PoiCategory
 import io.github.mgdx.escale.core.model.RentalFormFactor
 import io.github.mgdx.escale.core.model.RentalFormFactorSelection
 import io.github.mgdx.escale.core.model.SearchPreferences
@@ -76,7 +77,9 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
     stored[KEY_CATEGORY_ORDER] = preferences.categoryOrder.joinToString(ORDER_SEPARATOR) { it.name }
     stored[KEY_SHOW_STOPS] = preferences.showStops
     stored[KEY_SHOW_RENTALS] = preferences.showRentals
-    stored[KEY_SHOW_POINTS_OF_INTEREST] = preferences.showPointsOfInterest
+    // Un ensemble, et non douze booléens : le nom de chaque catégorie visible, et rien d'autre.
+    // Une catégorie ajoutée demain sera donc absente du fichier, et prendra sa valeur par défaut.
+    stored[KEY_POI_CATEGORIES] = preferences.visiblePoiCategories.map { it.name }.toSet()
     stored[KEY_HISTORY_ENABLED] = preferences.historyEnabled
   }
 
@@ -124,9 +127,37 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
       ?: DEFAULT_DISPLAY.categoryOrder,
     showStops = stored[KEY_SHOW_STOPS] ?: DEFAULT_DISPLAY.showStops,
     showRentals = stored[KEY_SHOW_RENTALS] ?: DEFAULT_DISPLAY.showRentals,
-    showPointsOfInterest = stored[KEY_SHOW_POINTS_OF_INTEREST] ?: DEFAULT_DISPLAY.showPointsOfInterest,
+    visiblePoiCategories = toVisiblePoiCategories(stored),
     historyEnabled = stored[KEY_HISTORY_ENABLED] ?: DEFAULT_DISPLAY.historyEnabled,
   )
+
+  /**
+   * Les catégories de points d'intérêt visibles, reprise de l'ancien réglage comprise.
+   *
+   * Jusqu'au jalon 12, une seule bascule — `display_show_points_of_interest` — commandait tous les
+   * repères à la fois. Elle est remplacée par douze catégories réglables une par une, et son
+   * ancienne valeur est **relue** : une carte réglée hier doit rester celle d'aujourd'hui. Décochée,
+   * elle éteint les quatre catégories de repères ; cochée ou absente, elle les laisse allumées.
+   *
+   * Les toilettes publiques font exception et s'affichent dans les deux cas : c'est le seul écart
+   * assumé de cette reprise (SPEC.md § 5.7).
+   *
+   * Un nom inconnu — écrit par une version future — est ignoré plutôt que de faire échouer la
+   * lecture, comme partout ailleurs dans ce dépôt.
+   */
+  private fun toVisiblePoiCategories(stored: Preferences): Set<PoiCategory> {
+    val saved = stored[KEY_POI_CATEGORIES]
+      ?: return migratedPoiCategories(stored[KEY_SHOW_POINTS_OF_INTEREST])
+    return saved.mapNotNullTo(mutableSetOf()) { name -> PoiCategory.entries.firstOrNull { it.name == name } }
+  }
+
+  /** Ce que montrait la carte avant les douze bascules, exprimé dans les termes d'aujourd'hui. */
+  private fun migratedPoiCategories(showPointsOfInterest: Boolean?): Set<PoiCategory> =
+    if (showPointsOfInterest == false) {
+      PoiCategory.DEFAULT_VISIBLE - PoiCategory.LANDMARKS
+    } else {
+      PoiCategory.DEFAULT_VISIBLE
+    }
 
   /**
    * Une valeur d'énumération inconnue — écrite par une version future, ou par un fichier abîmé — se
@@ -171,6 +202,9 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
     val KEY_CATEGORY_ORDER = stringPreferencesKey("display_category_order")
     val KEY_SHOW_STOPS = booleanPreferencesKey("display_show_stops")
     val KEY_SHOW_RENTALS = booleanPreferencesKey("display_show_rentals")
+    val KEY_POI_CATEGORIES = stringSetPreferencesKey("display_poi_categories")
+
+    /** L'ancienne bascule unique des points d'intérêt, encore lue pour reprendre son choix. */
     val KEY_SHOW_POINTS_OF_INTEREST = booleanPreferencesKey("display_show_points_of_interest")
     val KEY_HISTORY_ENABLED = booleanPreferencesKey("display_history_enabled")
 
@@ -189,6 +223,7 @@ class PreferencesRepositoryImpl(private val dataStore: DataStore<Preferences>) :
       KEY_CATEGORY_ORDER,
       KEY_SHOW_STOPS,
       KEY_SHOW_RENTALS,
+      KEY_POI_CATEGORIES,
       KEY_SHOW_POINTS_OF_INTEREST,
       KEY_HISTORY_ENABLED,
     )

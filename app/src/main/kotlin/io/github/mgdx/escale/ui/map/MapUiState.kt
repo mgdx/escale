@@ -7,6 +7,10 @@ import io.github.mgdx.escale.core.geo.RentalMarkerKind
 import io.github.mgdx.escale.core.geo.StopMarker
 import io.github.mgdx.escale.core.model.BoundingBox
 import io.github.mgdx.escale.core.model.LatLon
+import io.github.mgdx.escale.core.model.Location
+import io.github.mgdx.escale.core.model.PoiCategory
+import io.github.mgdx.escale.core.model.PoiComplement
+import io.github.mgdx.escale.core.model.PoiTypeKey
 import io.github.mgdx.escale.core.model.StopLine
 import io.github.mgdx.escale.core.model.TransitMode
 
@@ -137,14 +141,14 @@ data class MapUiState(
   val clusteredStopsGeoJson: String = MapGeoJson.EMPTY,
 
   /**
-   * Les points d'intérêt du fond de carte sont-ils visibles ?
+   * Les catégories de points d'intérêt visibles sur la carte (SPEC.md § 5.6 et § 5.7).
    *
-   * SPEC.md § 5.7 : « un réglage permet de masquer complètement les arrêts, les stations en
-   * libre-service ou les points d'intérêt, **indépendamment du zoom** ». Les points d'intérêt ne
-   * font l'objet d'aucune requête : ils sont déjà dans les tuiles, et ce booléen ne fait
-   * qu'allumer ou éteindre la couche de la feuille de style.
+   * « Un réglage permet de masquer complètement les arrêts, les stations en libre-service ou les
+   * points d'intérêt, **indépendamment du zoom** » : chacune des douze catégories se règle
+   * séparément. Aucune requête n'est en jeu — les points d'intérêt sont déjà dans les tuiles —, et
+   * cet ensemble ne fait qu'allumer ou éteindre les douze couches de la feuille de style.
    */
-  val pointsOfInterestVisible: Boolean = true,
+  val visiblePoiCategories: Set<PoiCategory> = PoiCategory.DEFAULT_VISIBLE,
 
   /**
    * Les stations de libre-service posées sur leur source ordinaire (SPEC.md § 5.7).
@@ -191,11 +195,17 @@ data class MapUiState(
   /** L'infobulle ouverte sur une station ou un véhicule en libre-service (SPEC.md § 5.7). */
   val selectedRental: SelectedRental? = null,
 
+  /** La fiche ouverte sur un point d'intérêt du fond de carte (SPEC.md § 5.7). */
+  val selectedPlace: SelectedPlace? = null,
+
   /** Ce que la carte doit faire d'un appui sur un arrêt. Voir [MapStopActions]. */
   val stopActions: MapStopActions = MapStopActions.Inert,
 
   /** Ce que la carte doit faire d'un appui sur un point de libre-service. */
   val rentalActions: MapRentalActions = MapRentalActions.Inert,
+
+  /** Ce que la carte doit faire d'un appui sur un point d'intérêt. Voir [MapPlaceActions]. */
+  val placeActions: MapPlaceActions = MapPlaceActions.Inert,
 )
 
 /**
@@ -292,4 +302,54 @@ data class SelectedRental(
   val isReturning: Boolean,
   /** Lien profond vers l'exploitant, ouvert en intent externe et jamais en WebView (SPEC.md § 2). */
   val rentalUriAndroid: String? = null,
+)
+
+/**
+ * Les rappels d'interaction sur les points d'intérêt du fond de carte (SPEC.md § 5.7).
+ *
+ * Même dispositif que [MapStopActions] et [MapRentalActions], et pour la même raison : le lot
+ * « carte » possède à la fois le `ViewModel` et le canevas, leur couture n'a pas à passer par
+ * l'écran qui les héberge. L'instance est créée une seule fois et n'entre donc dans aucune
+ * comparaison d'état.
+ *
+ * [onPick] mène exactement où mène l'appui long sur la carte : le point est déposé dans
+ * `MapSelection`, que le lot « recherche » consomme.
+ */
+@Stable
+class MapPlaceActions(
+  val onPlaceClick: (SelectedPlace) -> Unit,
+  val onDismissPlace: () -> Unit,
+  val onPick: (MapPickPurpose) -> Unit,
+) {
+  companion object {
+    val Inert = MapPlaceActions(onPlaceClick = {}, onDismissPlace = {}, onPick = {})
+  }
+}
+
+/**
+ * Le point d'intérêt sur lequel la fiche est ouverte (SPEC.md § 5.7).
+ *
+ * Tout vient de l'entité touchée, sauf l'adresse : la tuile ne porte que le numéro de voie, et la
+ * rue demande un géocodage inverse. C'est la **seule** requête que les points d'intérêt provoquent,
+ * une par fiche, annulée à la fermeture (SPEC.md § 7, règle 11).
+ *
+ * Aucun de ces champs n'est journalisé, pas plus que la position : SPEC.md § 8 et § 11 l'interdisent
+ * y compris en compilation de débogage.
+ */
+data class SelectedPlace(
+  val point: LatLon,
+  /** Le nom porté par la tuile, vide quand le lieu n'en a pas — beaucoup n'en ont pas. */
+  val name: String = "",
+  /** La catégorie, qui nomme le lieu à défaut de mieux. */
+  val category: PoiCategory? = null,
+  /** Le type précis, quand la table le nomme : « Boulangerie », « Lieu de culte ». */
+  val typeKey: PoiTypeKey? = null,
+  /** Ce qui suit le type : la cuisine, la confession, ou le distributeur de billets. */
+  val complement: PoiComplement? = null,
+  /** Le numéro de voie de la tuile, qui tient lieu d'adresse en attendant la vraie. */
+  val houseNumber: String? = null,
+  /** L'adresse rendue par le géocodage inverse, nulle tant qu'elle n'est pas arrivée ou connue. */
+  val address: Location? = null,
+  /** Vrai tant que la requête d'adresse est en vol : la fiche s'ouvre sans l'attendre. */
+  val addressLoading: Boolean = true,
 )

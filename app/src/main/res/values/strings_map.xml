@@ -97,4 +97,99 @@
     <item quantity="other">%d stops on screen</item>
   </plurals>
   <string name="map_browse_stops_open">Show this stop</string>
+
+  <!-- Les douze catégories de points d'intérêt (SPEC.md § 5.7). Le libellé sert à la fois de
+       titre de bascule dans l'écran « Couches de la carte » et de nom de repli dans la fiche,
+       pour un lieu dont la tuile ne porte ni nom ni valeur connue. -->
+  <string name="map_place_category_public_services">Public services</string>
+  <string name="map_place_category_education">Education</string>
+  <string name="map_place_category_culture">Culture and landmarks</string>
+  <string name="map_place_category_healthcare">Healthcare</string>
+  <string name="map_place_category_toilets">Public toilets</string>
+  <string name="map_place_category_food">Food shops</string>
+  <string name="map_place_category_dining">Restaurants and cafés</string>
+  <string name="map_place_category_health_shops">Health shops</string>
+  <string name="map_place_category_money">Money</string>
+  <string name="map_place_category_lodging">Accommodation</string>
+  <string name="map_place_category_everyday_services">Everyday services</string>
+  <string name="map_place_category_other_shops">Other shops</string>
+
+  <!-- Types de lieux, un par valeur OpenStreetMap retenue (SPEC.md § 5.7). -->
+  <string name="map_place_type_townhall">Town hall</string>
+  <string name="map_place_type_courthouse">Courthouse</string>
+  <string name="map_place_type_post_office">Post office</string>
+  <string name="map_place_type_police">Police station</string>
+  <string name="map_place_type_fire_station">Fire station</string>
+  <string name="map_place_type_community_centre">Community centre</string>
+  <string name="map_place_type_place_of_worship">Place of worship</string>
+  <string name="map_place_type_school">School</string>
+  <string name="map_place_type_university">University</string>
+  <string name="map_place_type_college">College</string>
+  <string name="map_place_type_library">Library</string>
+  <string name="map_place_type_theatre">Theatre</string>
+  <string name="map_place_type_cinema">Cinema</string>
+  <string name="map_place_type_arts_centre">Arts centre</string>
+  <string name="map_place_type_castle">Castle</string>
+  <string name="map_place_type_monument">Monument</string>
+  <string name="map_place_type_memorial">Memorial</string>
+  <string name="map_place_type_fort">Fort</string>
+  <string name="map_place_type_ruins">Ruins</string>
+  <string name="map_place_type_archaeological_site">Archaeological site</string>
+  <string name="map_place_type_battlefield">Battlefield</string>
+  <string name="map_place_type_artwork">Artwork</string>
+  <string name="map_place_type_viewpoint">Viewpoint</string>
+  <string name="map_place_type_lighthouse">Lighthouse</string>
+  <string name="map_place_type_hospital">Hospital</string>
+  <string name="map_place_type_clinic">Clinic</string>
+  <string name="map_place_type_doctors">Doctor’s surgery</string>
+  <string name="map_place_type_dentist">Dentist</string>
+  <string name="map_place_type_pharmacy">Pharmacy</string>
+  <string name="map_place_type_toilets">Public toilets</string>
+  <string name="map_place_type_supermarket">Supermarket</string>
+  <string name="map_place_type_convenience">Convenience store</string>
+  <string name="map_place_type_bakery">Bakery</string>
+  <string name="map_place_type_butcher">Butcher</string>
+  <string name="map_place_type_greengrocer">Greengrocer</string>
+  <string name="map_place_type_alcohol">Off-licence</string>
+  <string name="map_place_type_beverages">Drinks shop</string>
+  <string name="map_place_type_kiosk">Kiosk</string>
+  <string name="map_place_type_general">General store</string>
+  <string name="map_place_type_department_store">Department store</string>
+  <string name="map_place_type_mall">Shopping centre</string>
+  <string name="map_place_type_marketplace">Marketplace</string>
+  <string name="map_place_type_restaurant">Restaurant</string>
+  <string name="map_place_type_fast_food">Fast food</string>
+  <string name="map_place_type_cafe">Café</string>
+  <string name="map_place_type_pub">Pub</string>
+  <string name="map_place_type_bar">Bar</string>
+  <string name="map_place_type_biergarten">Beer garden</string>
+  <string name="map_place_type_veterinary">Vet</string>
+  <string name="map_place_type_chemist">Chemist</string>
+  <string name="map_place_type_optician">Optician</string>
+  <string name="map_place_type_bank">Bank</string>
+  <string name="map_place_type_atm">Cash machine</string>
+  <string name="map_place_type_hotel">Hotel</string>
+  <string name="map_place_type_motel">Motel</string>
+  <string name="map_place_type_hostel">Hostel</string>
+  <string name="map_place_type_guest_house">Guest house</string>
+  <string name="map_place_type_bed_and_breakfast">Bed and breakfast</string>
+  <string name="map_place_type_camp_site">Campsite</string>
+  <string name="map_place_type_drinking_water">Drinking water</string>
+  <string name="map_place_type_post_box">Post box</string>
+  <string name="map_place_type_telephone">Public telephone</string>
+  <string name="map_place_type_car_rental">Car hire</string>
+  <string name="map_place_type_car_sharing">Car sharing</string>
+  <string name="map_place_type_bicycle_rental">Bike hire</string>
+  <string name="map_place_type_vending_machine">Vending machine</string>
+  <string name="map_place_type_hairdresser">Hairdresser</string>
+  <string name="map_place_type_laundry">Launderette</string>
+  <string name="map_place_type_dry_cleaning">Dry cleaner</string>
+  <string name="map_place_type_travel_agency">Travel agency</string>
+
+  <!-- Fiche d'un point d'intérêt du fond de carte (SPEC.md § 5.7). -->
+  <string name="map_place_close">Close place details</string>
+  <string name="map_place_unnamed">Point of interest</string>
+  <!-- Le type, puis ce qui le précise : « Restaurant · italian », « Bank · cash machine ». -->
+  <string name="map_place_type_detail">%1$s · %2$s</string>
+  <string name="map_place_detail_atm">cash machine</string>
 </resources>

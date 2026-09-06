@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -56,11 +57,7 @@ import io.github.mgdx.escale.ui.theme.EscaleTheme
  */
 @Composable
 fun SettingsScreen(
-  onBack: () -> Unit,
-  onOpenServerSettings: () -> Unit,
-  onOpenFavorites: () -> Unit,
-  onOpenAbout: () -> Unit,
-  onOpenCategoryOrder: () -> Unit,
+  navigation: SettingsNavigation,
   modifier: Modifier = Modifier,
   viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(appContainer())),
 ) {
@@ -68,11 +65,12 @@ fun SettingsScreen(
   SettingsContent(
     uiState = uiState,
     actions = SettingsActions(
-      onBack = onBack,
-      onOpenServerSettings = onOpenServerSettings,
-      onOpenFavorites = onOpenFavorites,
-      onOpenAbout = onOpenAbout,
-      onOpenCategoryOrder = onOpenCategoryOrder,
+      onBack = navigation.onBack,
+      onOpenServerSettings = navigation.onOpenServerSettings,
+      onOpenFavorites = navigation.onOpenFavorites,
+      onOpenAbout = navigation.onOpenAbout,
+      onOpenCategoryOrder = navigation.onOpenCategoryOrder,
+      onOpenMapLayers = navigation.onOpenMapLayers,
       onOpenDialog = viewModel::openDialog,
       onLanguageSettingsUnavailable = viewModel::languageSettingsUnavailable,
       onDismissDialog = viewModel::dismissDialog,
@@ -85,6 +83,26 @@ fun SettingsScreen(
     modifier = modifier,
   )
 }
+
+/**
+ * Les six issues de l'écran, réunies en un objet.
+ *
+ * Elles voyagent ensemble parce qu'elles vont toutes au même endroit — le graphe de navigation —, et
+ * parce qu'une signature de composable ne se relit plus passé une poignée de paramètres : c'est déjà
+ * le parti pris de `SearchActions` et de `ServerSettingsActions`.
+ */
+@Immutable
+data class SettingsNavigation(
+  val onBack: () -> Unit,
+  val onOpenServerSettings: () -> Unit,
+  /** L'écran des favoris et de l'historique (SPEC.md § 5.5). */
+  val onOpenFavorites: () -> Unit,
+  val onOpenAbout: () -> Unit,
+  /** L'écran « Ordre des catégories » (SPEC.md § 5.2). */
+  val onOpenCategoryOrder: () -> Unit,
+  /** L'écran « Couches de la carte » (SPEC.md § 5.7). */
+  val onOpenMapLayers: () -> Unit,
+)
 
 /**
  * Les actions de l'écran, réunies pour qu'aucun composable n'ait dix paramètres.
@@ -100,6 +118,8 @@ internal data class SettingsActions(
   val onOpenAbout: () -> Unit,
   /** L'écran « Ordre des catégories » : il range les onglets de SPEC.md § 5.2. */
   val onOpenCategoryOrder: () -> Unit,
+  /** L'écran « Couches de la carte » : il décide de ce que la carte montre (SPEC.md § 5.7). */
+  val onOpenMapLayers: () -> Unit,
   val onOpenDialog: (SettingsDialog) -> Unit,
   val onLanguageSettingsUnavailable: () -> Unit,
   val onDismissDialog: () -> Unit,
@@ -248,10 +268,10 @@ private fun SearchSection(search: SearchPreferences, actions: SettingsActions) {
 /**
  * Affichage : thème, format d'heure, couches de la carte (SPEC.md § 5.6 et § 5.7).
  *
- * **Point d'accroche du jalon 6, les arrêts sur la carte** : les trois bascules de couches sont
- * persistées dès maintenant et lisibles par `PreferencesRepository.displayPreferences`, champs
- * `showStops`, `showRentals` et `showPointsOfInterest`. Le lot qui affichera les arrêts n'a rien à
- * ajouter ici : il observe ce flux et masque la couche correspondante, indépendamment du zoom.
+ * Les couches de la carte ne sont plus ici : leurs quatorze bascules ouvrent leur propre écran
+ * (`MapLayersScreen`), et cette section n'en garde que l'entrée. Elles restent lisibles par
+ * `PreferencesRepository.displayPreferences`, champs `showStops`, `showRentals` et
+ * `visiblePoiCategories`, que la carte observe pour éteindre une couche indépendamment du zoom.
  *
  * Le format d'heure (`clockFormat`) attend de même son lecteur : le formatage des heures vit dans
  * `:core.format`, qui ne le consulte pas encore.
@@ -281,23 +301,12 @@ private fun DisplaySection(display: DisplayPreferences, actions: SettingsActions
     description = stringResource(R.string.settings_category_order_description),
     onClick = actions.onOpenCategoryOrder,
   )
-  SettingsSwitchItem(
-    title = stringResource(R.string.settings_show_stops_title),
-    description = stringResource(R.string.settings_show_stops_description),
-    checked = display.showStops,
-    onCheckedChange = { actions.onDisplayChanged(display.copy(showStops = it)) },
-  )
-  SettingsSwitchItem(
-    title = stringResource(R.string.settings_show_rentals_title),
-    description = stringResource(R.string.settings_show_rentals_description),
-    checked = display.showRentals,
-    onCheckedChange = { actions.onDisplayChanged(display.copy(showRentals = it)) },
-  )
-  SettingsSwitchItem(
-    title = stringResource(R.string.settings_show_points_of_interest_title),
-    description = stringResource(R.string.settings_show_points_of_interest_description),
-    checked = display.showPointsOfInterest,
-    onCheckedChange = { actions.onDisplayChanged(display.copy(showPointsOfInterest = it)) },
+  // Les quatorze bascules de couches ont leur propre écran : noyées ici, entre le thème et le format
+  // de l'heure, elles auraient rendu les deux illisibles (SPEC.md § 5.6).
+  SettingsItem(
+    title = stringResource(R.string.settings_map_layers_title),
+    description = stringResource(R.string.settings_map_layers_description),
+    onClick = actions.onOpenMapLayers,
   )
 }
 
@@ -363,6 +372,7 @@ private val previewActions = SettingsActions(
   onOpenFavorites = {},
   onOpenAbout = {},
   onOpenCategoryOrder = {},
+  onOpenMapLayers = {},
   onOpenDialog = {},
   onLanguageSettingsUnavailable = {},
   onDismissDialog = {},

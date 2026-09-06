@@ -101,8 +101,6 @@
   <string name="settings_show_stops_description">Gares, stations et arrêts, dès que l\'échelle le permet. Désactivé, ils restent masqués à tous les niveaux de zoom.</string>
   <string name="settings_show_rentals_title">Afficher le libre-service sur la carte</string>
   <string name="settings_show_rentals_description">Stations et véhicules sans station.</string>
-  <string name="settings_show_points_of_interest_title">Afficher les points d\'intérêt sur la carte</string>
-  <string name="settings_show_points_of_interest_description">Services publics, monuments, parcs et équipements qui aident à se repérer.</string>
 
   <!-- Entrée vers l'écran des favoris et de l'historique (SPEC.md § 5.5). -->
   <string name="settings_favorites_title">Favoris et historique</string>
@@ -191,4 +189,27 @@
   <string name="settings_category_order_position">%1$s, position %2$d sur %3$d</string>
   <string name="settings_category_order_move_up">Monter</string>
   <string name="settings_category_order_move_down">Descendre</string>
+
+  <!-- Écran « Couches de la carte » (SPEC.md § 5.6), ouvert depuis Réglages → Affichage. -->
+  <string name="settings_map_layers_title">Couches de la carte</string>
+  <string name="settings_map_layers_description">Choisir ce que la carte affiche, à toutes les échelles.</string>
+  <string name="settings_map_layers_hint">Les repères aident à s\'orienter et s\'affichent dès le zoom 15. Les commerces et services sont plus denses et n\'apparaissent qu\'à partir du zoom 16.</string>
+  <string name="settings_map_layers_section_transport">Transport</string>
+  <string name="settings_map_layers_section_landmarks">Repères</string>
+  <string name="settings_map_layers_section_shops">Commerces et services</string>
+
+  <!-- Descriptions des quatorze bascules de l'écran « Couches de la carte ». Leurs titres sont
+       les libellés de catégorie de strings_map.xml : une catégorie porte un seul nom. -->
+  <string name="settings_layer_public_services_description">Mairies, bureaux de poste, police, pompiers, lieux de culte.</string>
+  <string name="settings_layer_education_description">Écoles, universités, bibliothèques.</string>
+  <string name="settings_layer_culture_description">Théâtres, cinémas, châteaux, monuments, points de vue.</string>
+  <string name="settings_layer_healthcare_description">Hôpitaux, cabinets médicaux, pharmacies.</string>
+  <string name="settings_layer_toilets_description">La seule couche de cette section affichée d’emblée.</string>
+  <string name="settings_layer_food_description">Supermarchés, boulangeries, boucheries, marchés.</string>
+  <string name="settings_layer_dining_description">Restaurants, cafés, bars, pubs.</string>
+  <string name="settings_layer_health_shops_description">Drogueries, opticiens, vétérinaires.</string>
+  <string name="settings_layer_money_description">Banques et distributeurs de billets.</string>
+  <string name="settings_layer_lodging_description">Hôtels, auberges, campings.</string>
+  <string name="settings_layer_everyday_services_description">Coiffeurs, laveries, boîtes aux lettres, points d’eau, location de véhicules.</string>
+  <string name="settings_layer_other_shops_description">Tous les autres commerces portés par les tuiles.</string>
 </resources>

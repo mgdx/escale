@@ -116,8 +116,6 @@
   <string name="settings_show_stops_description">Stations and stops, once the map is zoomed in enough. Turning this off hides them at every zoom level.</string>
   <string name="settings_show_rentals_title">Show shared vehicles on the map</string>
   <string name="settings_show_rentals_description">Docking stations and free-floating vehicles.</string>
-  <string name="settings_show_points_of_interest_title">Show points of interest on the map</string>
-  <string name="settings_show_points_of_interest_description">Public services, landmarks, parks and facilities that help you find your way.</string>
 
   <!-- Données (SPEC.md § 5.6). Chaque effacement dit ce qu'il supprime avant de le faire. -->
   <!-- Entrée vers l'écran des favoris et de l'historique (SPEC.md § 5.5). -->
@@ -219,4 +217,29 @@
   <string name="settings_category_order_position">%1$s, position %2$d of %3$d</string>
   <string name="settings_category_order_move_up">Move up</string>
   <string name="settings_category_order_move_down">Move down</string>
+
+  <!-- Écran « Couches de la carte » (SPEC.md § 5.6), ouvert depuis Réglages → Affichage. Les titres
+       des treize bascules de points d'intérêt sont les libellés de catégorie de strings_map.xml :
+       une catégorie porte un seul nom, à l'écran comme dans la fiche. -->
+  <string name="settings_map_layers_title">Map layers</string>
+  <string name="settings_map_layers_description">Choose what the map shows, at every zoom level.</string>
+  <string name="settings_map_layers_hint">Landmarks help you find your way and are shown from zoom level 15. Shops and services are denser and only appear from zoom level 16.</string>
+  <string name="settings_map_layers_section_transport">Transport</string>
+  <string name="settings_map_layers_section_landmarks">Landmarks</string>
+  <string name="settings_map_layers_section_shops">Shops and services</string>
+
+  <!-- Descriptions des quatorze bascules de l'écran « Couches de la carte ». Leurs titres sont
+       les libellés de catégorie de strings_map.xml : une catégorie porte un seul nom. -->
+  <string name="settings_layer_public_services_description">Town halls, post offices, police and fire stations, places of worship.</string>
+  <string name="settings_layer_education_description">Schools, universities and libraries.</string>
+  <string name="settings_layer_culture_description">Theatres, cinemas, castles, monuments and viewpoints.</string>
+  <string name="settings_layer_healthcare_description">Hospitals, surgeries and pharmacies.</string>
+  <string name="settings_layer_toilets_description">The only shops-and-services layer shown by default.</string>
+  <string name="settings_layer_food_description">Supermarkets, bakeries, butchers, markets.</string>
+  <string name="settings_layer_dining_description">Restaurants, cafés, bars and pubs.</string>
+  <string name="settings_layer_health_shops_description">Chemists, opticians, vets.</string>
+  <string name="settings_layer_money_description">Banks and cash machines.</string>
+  <string name="settings_layer_lodging_description">Hotels, hostels, campsites.</string>
+  <string name="settings_layer_everyday_services_description">Hairdressers, launderettes, post boxes, drinking water, vehicle hire.</string>
+  <string name="settings_layer_other_shops_description">Every other shop carried by the map tiles.</string>
 </resources>
