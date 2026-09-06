@@ -208,7 +208,9 @@ par-dessus.
   un clavier et une liste au-dessus de la carte.
 - Dès que Départ et Arrivée sont renseignés, la recherche se lance : pas de bouton « Rechercher ».
   Les résultats montent en feuille inférieure (§ 5.2) au-dessus de la carte, qui reste visible
-  en haut et cadre le trajet sélectionné.
+  en haut et cadre le trajet sélectionné. **Le trajet sélectionné est tracé tel qu'il se parcourt**,
+  et non en segments droits entre ses extrémités : sa géométrie est demandée au serveur pour lui
+  seul (§ 7, règle 6).
 
 **Autocomplétion**
 - `/api/v1/geocode` avec `text`, `place` = centre de la carte pour le biais géographique
@@ -573,7 +575,11 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
    (« tirer pour rafraîchir »), ou au retour au premier plan si les données ont plus de 60 secondes.
 5. Cache mémoire des réponses `plan` pour la durée de la recherche ; cache disque de 24 h pour les
    résultats de géocodage.
-6. `detailedLegs=false` sur la liste de résultats, `true` seulement à l'ouverture d'un trajet.
+6. `detailedLegs=false` sur la liste de résultats, `true` pour le **seul trajet mis en évidence**
+   sur la carte (§ 5.1) et à l'ouverture d'un trajet. Sans géométrie, la carte ne saurait relier
+   que le départ à l'arrivée en ligne droite : le trajet dessiné obtient donc son tracé réel en une
+   requête de rafraîchissement d'itinéraire, mémorisée le temps de la recherche. Les autres trajets
+   de la liste n'en déclenchent aucune.
 7. **Aucun travail de fond, sans exception.** L'application ne fait de réseau que lorsqu'elle est
    au premier plan : aucun service, aucune tâche périodique, aucune synchronisation, aucune tâche
    différée. La seule exception qu'admettait une version antérieure de cette spec, les trajets

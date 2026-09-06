@@ -123,6 +123,22 @@ fun journeyTrace(journey: Journey?): JourneyTrace {
   return JourneyTrace(segments = segments, markers = markers, bounds = boundingBoxOf(points))
 }
 
+/**
+ * Vrai si le serveur a rendu la géométrie des portions, et non leurs seules extrémités.
+ *
+ * La liste de résultats demande `detailedLegs=false` (SPEC.md § 7, règle 6) : ses trajets arrivent
+ * **sans polyligne**, et [journeyTrace] ne peut alors que relier les extrémités en ligne droite. Un
+ * trajet dans cet état n'est pas montrable sur la carte — c'est un segment entre le départ et
+ * l'arrivée, pas un itinéraire —, et c'est cette propriété qui permet d'aller chercher le tracé
+ * réel du seul trajet mis en évidence (SPEC.md § 5.1) sans alourdir la liste.
+ *
+ * Une seule portion pourvue suffit à répondre vrai : le serveur détaille toutes les portions ou
+ * aucune, et une portion dégénérée — deux extrémités confondues — ne doit pas faire conclure à
+ * l'absence de tracé.
+ */
+val Journey.isTraced: Boolean
+  get() = legs.any { it.geometry.size >= MIN_POINTS }
+
 /** Une portion, ou `null` si elle ne tient pas debout : deux points identiques ne font pas un trait. */
 private fun segmentOf(leg: JourneyLeg): TraceSegment? {
   val real = leg.geometry.size >= MIN_POINTS

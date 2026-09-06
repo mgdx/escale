@@ -7,6 +7,7 @@ import io.github.mgdx.escale.core.model.Place
 import io.github.mgdx.escale.core.model.RentalInfo
 import io.github.mgdx.escale.core.model.TransitMode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -215,6 +216,25 @@ class JourneyTraceTest {
     scheduledTime = INSTANT,
     time = INSTANT,
   )
+
+  // --- Géométrie réelle ou reconstituée (SPEC.md § 7, règle 6) ------------------------------
+
+  @Test
+  fun `un trajet sans polyligne n est pas tracé`() {
+    // Ce que rend la liste de résultats, qui demande `detailedLegs=false` : des extrémités, et
+    // rien entre elles. La carte n'en tirerait qu'une ligne droite.
+    assertFalse(journey(walk(geometry = emptyList())).isTraced)
+  }
+
+  @Test
+  fun `un trajet dont une portion porte sa polyligne est tracé`() {
+    assertTrue(journey(walk(geometry = emptyList()), transit(geometry = listOf(sud, est))).isTraced)
+  }
+
+  @Test
+  fun `un trajet vide n est pas tracé`() {
+    assertFalse(journey().isTraced)
+  }
 
   private fun walk(
     from: LatLon = sud,

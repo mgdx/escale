@@ -538,12 +538,32 @@ class ResultsViewModelTest {
     time = time,
   )
 
+  /** Le même trajet privé d'identifiant d'itinéraire : ce que rend un trajet direct. */
+  private fun Journey.withoutId(): Journey = copy(id = null)
+
+  /** Une polyligne quelconque : seule sa présence compte, jamais sa forme. */
+  private val trace = listOf(LatLon(lat = 50.63, lon = 3.06), LatLon(lat = 50.64, lon = 3.09))
+
   private fun journey(id: String, afterMinutes: Long, minutes: Long = 20): Journey =
     journeyOf(id, afterMinutes, rental = false, minutes = minutes)
 
+  /**
+   * Le même trajet, mais **avec sa géométrie** : ce que rend `refresh(detailedLegs = true)`.
+   *
+   * C'est la seule différence qui compte ici : un trajet tracé n'a plus rien à demander au réseau.
+   */
+  private fun tracedJourney(id: String, afterMinutes: Long, minutes: Long = 20): Journey =
+    journeyOf(id, afterMinutes, rental = false, minutes = minutes, geometry = trace)
+
   private fun rentalJourney(id: String, afterMinutes: Long): Journey = journeyOf(id, afterMinutes, rental = true)
 
-  private fun journeyOf(id: String, afterMinutes: Long, rental: Boolean, minutes: Long = 20): Journey {
+  private fun journeyOf(
+    id: String,
+    afterMinutes: Long,
+    rental: Boolean,
+    minutes: Long = 20,
+    geometry: List<LatLon> = emptyList(),
+  ): Journey {
     val start = Instant.parse("2026-09-01T08:00:00Z").plusSeconds(afterMinutes * 60)
     val end = start.plusSeconds(Duration.ofMinutes(minutes).seconds)
     val leg = if (rental) {
@@ -555,6 +575,7 @@ class ResultsViewModelTest {
         duration = Duration.ofMinutes(minutes),
         from = place(start),
         to = place(end),
+        geometry = geometry,
         rental = RentalInfo(
           systemId = "systeme",
           systemName = "Systeme",
@@ -578,6 +599,7 @@ class ResultsViewModelTest {
         duration = Duration.ofMinutes(minutes),
         from = place(start),
         to = place(end),
+        geometry = geometry,
       )
     }
     return Journey(
@@ -730,5 +752,115 @@ class ResultsViewModelTest {
     assertEquals(allTabs.toSet(), model.uiState.value.categoryOrder.toSet())
     assertEquals(allTabs.size, model.uiState.value.categoryOrder.size)
     assertEquals(allTabs.toSet(), repository.categories().toSet())
+  }
+
+  // --- Géométrie réelle du trajet mis en évidence (SPEC.md § 5.1 et § 7, règle 6) --------------
+
+  @Test
+  fun `le trajet mis en evidence obtient sa geometrie reelle`() = runTest {
+    val first = journey("a", 0)
+    val second = journey("b", 10)
+    val traced = tracedJourney("a", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(first, second)))
+    repository.detailed["a"] = Outcome.Success(traced)
+    viewModel()
+
+    completeSearch()
+
+    // La liste est demandée sans géométrie (§ 7, règle 6) : sans cette requête, la carte ne
+    // dessinerait qu'une ligne droite entre le départ et l'arrivée.
+    assertEquals(listOf("a"), repository.refreshed)
+    assertEquals(traced, selection.selected.value)
+  }
+
+  @Test
+  fun `les autres trajets de la liste ne sont pas detailles`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] =
+      Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0), journey("b", 10), journey("c", 20))))
+    viewModel()
+
+    completeSearch()
+
+    // Un seul trajet est dessiné, donc une seule requête : c'est ce qui préserve la sobriété du § 7.
+    assertEquals(listOf("a"), repository.refreshed)
+  }
+
+  @Test
+  fun `un aller retour entre deux onglets ne redemande pas le trace`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    repository.answers[JourneyCategory.WALK] = Outcome.Success(JourneyPage(journeys = listOf(journey("w", 5))))
+    repository.detailed["a"] = Outcome.Success(tracedJourney("a", 0))
+    repository.detailed["w"] = Outcome.Success(tracedJourney("w", 5))
+    val model = viewModel()
+    completeSearch()
+
+    model.onCategorySelected(JourneyCategory.WALK)
+    model.onCategorySelected(JourneyCategory.TRANSIT)
+
+    // Le tracé rapatrié est mémorisé le temps de la recherche : revenir sur un onglet déjà vu ne
+    // vaut aucune requête (SPEC.md § 7.5).
+    assertEquals(listOf("a", "w"), repository.refreshed)
+    assertEquals(tracedJourney("a", 0), selection.selected.value)
+  }
+
+  @Test
+  fun `un trajet deja trace ne declenche aucune requete`() = runTest {
+    val traced = tracedJourney("a", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(traced)))
+    viewModel()
+
+    completeSearch()
+
+    assertTrue(repository.refreshed.isEmpty())
+    assertEquals(traced, selection.selected.value)
+  }
+
+  @Test
+  fun `un trace en echec laisse le trajet approche sur la carte`() = runTest {
+    val first = journey("a", 0)
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(first)))
+    // Aucune réponse n'est enregistrée pour « a » : le faux dépôt rend un échec réseau.
+    val model = viewModel()
+
+    completeSearch()
+
+    // Le tracé approché vaut mieux qu'une carte nue, et l'échec d'une requête que personne n'a
+    // demandée n'a pas à s'afficher : la liste, elle, est bien arrivée (SPEC.md § 8).
+    assertEquals(listOf("a"), repository.refreshed)
+    assertEquals(first, selection.selected.value)
+    assertNull(model.uiState.value.current.error)
+  }
+
+  @Test
+  fun `une nouvelle recherche oublie les traces de la precedente`() = runTest {
+    repository.answers[JourneyCategory.TRANSIT] = Outcome.Success(JourneyPage(journeys = listOf(journey("a", 0))))
+    repository.detailed["a"] = Outcome.Success(tracedJourney("a", 0))
+    viewModel()
+    completeSearch()
+
+    session.setTime(TimeChoice.DepartAt(Instant.parse("2026-09-01T09:00:00Z")))
+
+    // Les identifiants d'itinéraire sont ceux de la nouvelle recherche : le tracé se redemande.
+    assertEquals(listOf("a", "a"), repository.refreshed)
+  }
+
+  @Test
+  fun `un trajet direct sans identifiant obtient son trace par une requete detaillee`() = runTest {
+    val direct = journey("w", 0).withoutId()
+    val traced = tracedJourney("w", 0).withoutId()
+    repository.answers[JourneyCategory.WALK] =
+      Outcome.Success(JourneyPage(journeys = emptyList(), direct = listOf(direct)))
+    repository.detailedAnswers[JourneyCategory.WALK] =
+      Outcome.Success(JourneyPage(journeys = emptyList(), direct = listOf(traced)))
+    val model = viewModel()
+    completeSearch()
+
+    model.onCategorySelected(JourneyCategory.WALK)
+
+    // Les trajets directs n'ont pas d'identifiant d'itinéraire : il n'y a rien à rafraîchir, c'est
+    // la requête de l'onglet qui repart, détaillée cette fois.
+    assertTrue(repository.refreshed.isEmpty())
+    assertTrue(repository.calls.any { it.category == JourneyCategory.WALK && it.detailedLegs })
+    assertEquals(traced, selection.selected.value)
   }
 }

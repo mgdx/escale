@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
+import io.github.mgdx.escale.core.geo.isTraced
 import io.github.mgdx.escale.core.model.CategoryOrder
 import io.github.mgdx.escale.core.model.DisplayPreferences
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyFeed
 import io.github.mgdx.escale.core.model.JourneyPage
+import io.github.mgdx.escale.core.model.JourneyRefresh
 import io.github.mgdx.escale.core.model.SearchPreferences
 import io.github.mgdx.escale.core.model.stableKey
 import io.github.mgdx.escale.core.query.RealtimeRefreshPolicy
@@ -65,6 +67,13 @@ import java.time.Instant
  * affichée ([syncSelection]). L'appui, lui, ajoute une demande d'ouverture de l'écran de détail
  * sur [openDetail], à consommation unique.
  *
+ * **Le trajet mis en évidence, et lui seul, obtient sa géométrie réelle** (§ 5.1, § 7 règle 6). La
+ * liste continue d'être demandée sans géométrie : ses trajets n'ont donc que leurs extrémités, et
+ * la carte n'en tirerait qu'une ligne droite entre le départ et l'arrivée. [requestTrace] va donc
+ * chercher le tracé du seul trajet dessiné, en une requête, dont la réponse est mémorisée le temps
+ * de la recherche. C'est la quatrième règle de sobriété de cet écran : une requête de plus par
+ * trajet mis en évidence, aucune pour les autres.
+ *
  * Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et **ne journalise rien** :
  * il manipule des adresses et des coordonnées, que SPEC.md § 11 interdit d'écrire dans une trace,
  * y compris en débogage.
@@ -103,6 +112,20 @@ class ResultsViewModel(
 
   /** Un travail par onglet, au plus. C'est ce qui permet d'annuler sans toucher aux autres. */
   private val jobs = mutableMapOf<JourneyCategory, Job>()
+
+  /**
+   * Les trajets dont on a rapatrié la géométrie réelle, par `stableKey()`.
+   *
+   * La clé n'est pas l'identifiant d'itinéraire : les trajets directs des onglets À pied, Vélo et
+   * Voiture n'en reçoivent pas, et il leur faut pourtant une entrée ici.
+   *
+   * Ce cache tient le temps d'une recherche et pas davantage : [restart] le vide, parce que les
+   * trajets de la recherche précédente ne sont plus affichés.
+   */
+  private val traced = mutableMapOf<String, Journey>()
+
+  /** La requête de tracé en vol, au plus une : seul le trajet mis en évidence en mérite une. */
+  private var traceJob: Job? = null
 
   /** La chaîne qui charge les quatre onglets l'un après l'autre, annulable d'un bloc. */
   private var searchJob: Job? = null
@@ -278,6 +301,10 @@ class ResultsViewModel(
     searchJob = null
     jobs.values.forEach(Job::cancel)
     jobs.clear()
+    traceJob?.cancel()
+    traceJob = null
+    // Les identifiants d'itinéraire de la recherche précédente ne désignent plus rien d'affiché.
+    traced.clear()
     val category = state.value.category
     // Les quatre onglets sont en attente **avant** la première requête : leur languette annonce
     // qu'une réponse arrive, et non qu'il n'y a rien à proposer (SPEC.md § 5.2). L'ordre réglé
@@ -441,9 +468,87 @@ class ResultsViewModel(
     select(chosen)
   }
 
+  /**
+   * Publie le trajet mis en évidence, **dans la meilleure version connue**.
+   *
+   * La version affichée dans la liste part tout de suite : la carte a de quoi dessiner sans
+   * attendre le réseau. Si sa géométrie manque — c'est le cas normal, la liste demandant
+   * `detailedLegs=false` (SPEC.md § 7, règle 6) —, [requestTrace] va chercher le tracé réel et le
+   * republie derrière.
+   */
   private fun select(journey: Journey?) {
-    state.update { it.copy(selectedKey = journey?.stableKey()) }
-    selection.select(journey)
+    val key = journey?.stableKey()
+    val changed = key != state.value.selectedKey
+    state.update { it.copy(selectedKey = key) }
+    selection.select(journey?.let { traced[key] ?: it })
+    // La requête ne part qu'au changement de trajet mis en évidence : `syncSelection` est appelée
+    // à chaque arrivée d'onglet, et republier le même trajet ne justifie aucune requête (§ 7).
+    if (changed) requestTrace(journey)
+  }
+
+  /**
+   * Va chercher la géométrie réelle du trajet mis en évidence (SPEC.md § 5.1).
+   *
+   * **Une requête, pour un seul trajet.** La liste reste demandée sans géométrie, comme l'exige la
+   * règle 6 du § 7 : c'est le seul trajet que la carte dessine qui vaut le détour par le réseau,
+   * et sa réponse est mémorisée le temps de la recherche pour qu'un aller-retour entre deux onglets
+   * n'en redemande pas.
+   *
+   * Rien ne part quand le trajet porte déjà sa géométrie, ni quand on l'a déjà rapatriée. Un échec
+   * ne se voit pas non plus : le tracé approché reste sur la carte, ce qui vaut mieux qu'un bandeau
+   * d'erreur pour une requête que personne n'a demandée.
+   */
+  private fun requestTrace(journey: Journey?) {
+    traceJob?.cancel()
+    traceJob = null
+    if (journey == null || journey.isTraced) return
+    val key = journey.stableKey()
+    if (traced.containsKey(key)) return
+    traceJob = viewModelScope.launch {
+      val detailed = tracedVersionOf(journey) ?: return@launch
+      traced[key] = detailed
+      // Le trajet mis en évidence a pu changer pendant la requête : on ne remplace que le sien.
+      if (state.value.selectedKey == key) selection.select(detailed)
+    }
+  }
+
+  /**
+   * Le trajet dans sa version tracée, par le chemin le moins coûteux d'abord.
+   *
+   * Le rafraîchissement d'itinéraire ne demande que l'identifiant du trajet : c'est la requête la
+   * plus légère qui rende sa géométrie. Encore faut-il que le serveur ait donné cet identifiant —
+   * **les trajets directs des onglets À pied, Vélo et Voiture n'en ont pas**, vérifié sur un
+   * serveur MOTIS —, et qu'il n'ait pas expiré entre-temps. Dans ces deux cas, et dans ces deux
+   * cas seulement, on passe par [replanned].
+   */
+  private suspend fun tracedVersionOf(journey: Journey): Journey? {
+    val itineraryId = journey.id
+    if (itineraryId != null) {
+      val outcome = planRepository.refresh(itineraryId, detailedLegs = true)
+      if (outcome is Outcome.Success) return outcome.value
+      if (!JourneyRefresh.invalidatesItineraryId((outcome as Outcome.Failure).error)) return null
+    }
+    return replanned(journey)
+  }
+
+  /**
+   * Le repli : rejouer la requête de l'onglet consulté, détaillée cette fois, et y retrouver le
+   * trajet mis en évidence par son heure de départ.
+   *
+   * L'appariement est celui de `JourneyRefresh`, en Kotlin pur et déjà éprouvé pour l'écran de
+   * détail : `detailedTransfers` accompagne `detailedLegs`, et le serveur peut alors découper une
+   * correspondance en portions supplémentaires — comparer les trajets par leur forme serait
+   * fragile, leur heure de départ ne l'est pas.
+   *
+   * La réponse détaillée a sa propre entrée dans le cache de `PlanRepository` : revenir plus tard
+   * sur le même onglet ne la redemande pas (SPEC.md § 7.5).
+   */
+  private suspend fun replanned(journey: Journey): Journey? {
+    val query = session.toQuery(state.value.category, preferences) ?: return null
+    val outcome = planRepository.plan(query, cursor = null, detailedLegs = true)
+    if (outcome !is Outcome.Success) return null
+    val page = outcome.value
+    return JourneyRefresh.closestToDeparture(page.journeys + page.direct, journey.startTime)
   }
 
   /**
