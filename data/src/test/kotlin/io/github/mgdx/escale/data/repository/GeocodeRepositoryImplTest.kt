@@ -95,6 +95,14 @@ class GeocodeRepositoryImplTest {
   }
 
   @Test
+  fun `les doublons rendus par le serveur n arrivent pas jusqu a l interface`() = runTest {
+    // Le serveur rend « Louvre » trois fois : trois places perdues dans une liste de dix.
+    val outcome = repository("geocode_louvre_doublons.json").autocomplete("Louvre")
+    val locations = (outcome as Outcome.Success).value
+    assertEquals(listOf("Louvre", "Louvre - Rivoli", "Rue du Louvre"), locations.map { it.name })
+  }
+
+  @Test
   fun `le geocodage inverse ne rend que le resultat le plus pertinent`() = runTest {
     val outcome = repository("reverse_geocode_bastille.json").reverseGeocode(LatLon(48.8532, 2.3692))
     assertEquals("Colonne de Juillet", (outcome as Outcome.Success).value?.name)
