@@ -61,7 +61,7 @@ class PlanRepositoryImplTest {
     repository.plan(PlanTestSupport.query(JourneyCategory.TRANSIT))
     assertEquals("TRANSIT", parameter("transitModes"))
     assertEquals("", parameter("directModes"))
-    assertEquals("WALK,RENTAL", parameter("preTransitModes"))
+    assertEquals("WALK", parameter("preTransitModes"))
     assertEquals("false", parameter("detailedLegs"))
 
     repository.plan(PlanTestSupport.query(JourneyCategory.CAR))

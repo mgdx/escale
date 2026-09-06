@@ -50,32 +50,27 @@ class PlanQueryBuilderTest {
   // --- Un onglet, une requête ----------------------------------------------------------------
 
   @Test
-  fun `l onglet transport en commun vide directModes et autorise le libre-service en rabattement`() {
+  fun `l onglet transport en commun vide directModes et se rabat a pied`() {
     val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT))
     assertEquals("TRANSIT", parameters["transitModes"])
-    assertEquals("WALK,RENTAL", parameters["preTransitModes"])
-    assertEquals("WALK,RENTAL", parameters["postTransitModes"])
+    // Le premier et le dernier kilomètre se font à pied, jamais en véhicule partagé (SPEC.md § 5.2).
+    assertEquals("WALK", parameters["preTransitModes"])
+    assertEquals("WALK", parameters["postTransitModes"])
     assertEquals("", parameters["directModes"])
     // Le plafond de durée directe ne veut rien dire quand on ne demande aucun trajet direct.
     assertNull(parameters["maxDirectTime"])
-    // Même sans réglage d'usager, le rabattement exclut la voiture partagée (SPEC.md § 5.2) : le
-    // défaut du serveur, lui, l'inclurait.
-    val attendu = "BICYCLE,CARGO_BICYCLE,MOPED,SCOOTER_STANDING,SCOOTER_SEATED,OTHER"
-    assertEquals(attendu, parameters[RentalFormFactorQuery.PRE_TRANSIT])
-    assertEquals(attendu, parameters[RentalFormFactorQuery.POST_TRANSIT])
   }
 
   @Test
-  fun `un rabattement sans aucun vehicule acceptable retire RENTAL et se limite a la marche`() {
-    // Réglage qu'une version antérieure a pu persister : la voiture partagée seule, alors qu'aucun
-    // onglet ne l'emprunte plus.
-    val preferences = SearchPreferences(allowedRentalFormFactors = setOf(RentalFormFactor.CAR))
-    val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT, preferences = preferences))
-    assertEquals("WALK", parameters["preTransitModes"])
-    assertEquals("WALK", parameters["postTransitModes"])
-    // Un filtre vide voudrait dire « tous les véhicules » côté serveur : il n'en part aucun.
-    assertNull(parameters[RentalFormFactorQuery.PRE_TRANSIT])
-    assertNull(parameters[RentalFormFactorQuery.POST_TRANSIT])
+  fun `aucun reglage de vehicules ne rouvre le rabattement en libre-service`() {
+    RentalFormFactor.entries.forEach { type ->
+      val preferences = SearchPreferences(allowedRentalFormFactors = setOf(type))
+      val parameters = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT, preferences = preferences))
+      assertEquals("WALK", parameters["preTransitModes"])
+      assertEquals("WALK", parameters["postTransitModes"])
+      // Et aucun paramètre expérimental de types de véhicules ne part avec cette requête.
+      assertNull(parameters[RentalFormFactorQuery.DIRECT])
+    }
   }
 
   @Test
@@ -271,7 +266,7 @@ class PlanQueryBuilderTest {
   // --- Types de véhicules partagés, paramètres expérimentaux ---------------------------------
 
   @Test
-  fun `exclure un type de vehicule le retire de l onglet velo et du rabattement`() {
+  fun `exclure un type de vehicule le retire de l onglet velo`() {
     val preferences = SearchPreferences(
       allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE, RentalFormFactor.CARGO_BICYCLE),
     )
@@ -280,10 +275,6 @@ class PlanQueryBuilderTest {
     // Le vélo cargo n'appartient pas à l'onglet Vélo tel que SPEC.md § 5.2 le définit ; les
     // trottinettes, elles, viennent d'être exclues par l'usager.
     assertEquals("BICYCLE", bike[RentalFormFactorQuery.DIRECT])
-
-    val transit = PlanQueryBuilder.build(query(JourneyCategory.TRANSIT, preferences = preferences))
-    assertEquals("BICYCLE,CARGO_BICYCLE", transit[RentalFormFactorQuery.PRE_TRANSIT])
-    assertEquals("BICYCLE,CARGO_BICYCLE", transit[RentalFormFactorQuery.POST_TRANSIT])
   }
 
   @Test

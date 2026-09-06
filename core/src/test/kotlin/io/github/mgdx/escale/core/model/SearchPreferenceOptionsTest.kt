@@ -101,18 +101,21 @@ class SearchPreferenceOptionsTest {
   }
 
   @Test
-  fun `la voiture partagee n est plus proposee, et un reglage qui la nommait vaut aucun filtre`() {
-    // Aucun onglet ne l'emprunte depuis qu'elle a quitté le rabattement (SPEC.md § 5.2) : la case
-    // ne changerait plus rien à aucune recherche.
-    assertFalse(RentalFormFactor.CAR in RentalFormFactorSelection.OFFERED)
+  fun `seuls les types de l onglet velo sont proposes, un reglage sur un autre vaut aucun filtre`() {
+    // L'onglet Vélo est le seul à emprunter un véhicule partagé depuis que le rabattement du
+    // transport en commun se fait à pied (SPEC.md § 5.2) : une case de plus ne changerait rien.
+    assertEquals(
+      listOf(RentalFormFactor.BICYCLE, RentalFormFactor.SCOOTER_STANDING, RentalFormFactor.SCOOTER_SEATED),
+      RentalFormFactorSelection.OFFERED,
+    )
     // Un réglage écrit par une version antérieure ne doit pas laisser l'écran sans case cochée.
     assertEquals(
       RentalFormFactorSelection.OFFERED.toSet(),
-      RentalFormFactorSelection.selected(setOf(RentalFormFactor.CAR)),
+      RentalFormFactorSelection.selected(setOf(RentalFormFactor.CAR, RentalFormFactor.MOPED)),
     )
     assertEquals(
       setOf(RentalFormFactor.BICYCLE),
-      RentalFormFactorSelection.selected(setOf(RentalFormFactor.BICYCLE, RentalFormFactor.CAR)),
+      RentalFormFactorSelection.selected(setOf(RentalFormFactor.BICYCLE, RentalFormFactor.CARGO_BICYCLE)),
     )
   }
 

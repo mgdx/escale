@@ -75,7 +75,7 @@ class PreferencesRepositoryImplTest {
       additionalTransferTime = Duration.ofMinutes(5),
       maxTransfers = 2,
       requireBikeTransport = true,
-      allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE, RentalFormFactor.CARGO_BICYCLE),
+      allowedRentalFormFactors = setOf(RentalFormFactor.BICYCLE, RentalFormFactor.SCOOTER_SEATED),
     )
     assertTrue(repository.updateSearchPreferences(voulues) is Outcome.Success)
     assertEquals(voulues, repository.searchPreferences.first())
@@ -123,15 +123,18 @@ class PreferencesRepositoryImplTest {
 
   @Test
   fun `un type de vehicule qui n est plus propose est oublie a la relecture`() = runBlocking {
-    // Réglage écrit par une version antérieure, du temps où la voiture partagée était proposée
-    // (SPEC.md § 5.2). Ce qui en reste est conservé ; la voiture, elle, est oubliée.
-    dataStore.edit { it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("BICYCLE", "CAR") }
+    // Réglage écrit par une version antérieure, du temps où la voiture et le vélo cargo étaient
+    // proposés (SPEC.md § 5.2). Ce qui en reste est conservé ; le reste est oublié.
+    dataStore.edit {
+      it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("BICYCLE", "CAR", "CARGO_BICYCLE")
+    }
     assertEquals(
       setOf(RentalFormFactor.BICYCLE),
       repository().searchPreferences.first().allowedRentalFormFactors,
     )
-    // Et un réglage qui ne nommait que la voiture ne doit pas se relire comme « aucun véhicule ».
-    dataStore.edit { it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("CAR") }
+    // Et un réglage qui ne nommait que des types disparus ne doit pas se relire comme « aucun
+    // véhicule », ce qui viderait l'onglet Vélo de ses trajets partagés.
+    dataStore.edit { it[stringSetPreferencesKey("search_rental_form_factors")] = setOf("CAR", "MOPED") }
     assertEquals(emptySet<RentalFormFactor>(), repository().searchPreferences.first().allowedRentalFormFactors)
   }
 

@@ -244,11 +244,12 @@ quatre sont toujours recherchées, avec les mêmes paramètres.
 
 **Il n'y a pas d'onglet « Libre-service »** : les véhicules en libre-service sont intégrés à la
 catégorie correspondant à leur type — un vélo partagé relève de l'onglet Vélo, une trottinette
-aussi, et le rabattement vers une gare relève de l'onglet Transport en commun.
+aussi. L'onglet Transport en commun, lui, n'en emprunte aucun : on rejoint et on quitte un arrêt
+à pied.
 
 | Onglet | Requête `plan` correspondante |
 |---|---|
-| **Transport en commun** | `transitModes=TRANSIT`, `preTransitModes=WALK,RENTAL`, `postTransitModes=WALK,RENTAL`, `directModes=` (vide), avec `preTransitRentalFormFactors` et `postTransitRentalFormFactors` privés de `CAR` |
+| **Transport en commun** | `transitModes=TRANSIT`, `preTransitModes=WALK`, `postTransitModes=WALK`, `directModes=` (vide) |
 | **Voiture** | `directModes=CAR`, `transitModes=` (vide) |
 | **Vélo** | `directModes=BIKE,RENTAL` avec `directRentalFormFactors=BICYCLE,SCOOTER_STANDING,SCOOTER_SEATED`, `transitModes=` (vide) |
 | **À pied** | `directModes=WALK`, `transitModes=` (vide) |
@@ -259,17 +260,17 @@ Conséquences à respecter :
   même liste. Chaque proposition indique clairement de laquelle il s'agit : pictogramme et libellé
   distincts, nom de l'exploitant et couleur du système (`rental.color`) sur les trajets partagés.
   Un filtre en tête de liste permet de n'afficher que l'un ou l'autre.
-- Dans l'onglet **Transport en commun**, le libre-service apparaît en premier ou dernier kilomètre.
-  La frise du trajet fait apparaître la portion partagée avec son pictogramme propre.
-- **La voiture partagée est exclue du rabattement** : un premier ou dernier kilomètre en voiture
-  n'est pas du transport en commun, et le proposer ici rangerait un trajet motorisé individuel sous
-  l'onglet des courses. Le filtre est donc toujours envoyé, même sans réglage d'usager, le défaut du
-  serveur incluant la voiture. Aucun autre onglet ne l'emprunte : l'onglet Vélo ne la propose pas et
-  l'onglet Voiture ne fait pas de libre-service.
-- Le filtre des types de véhicules (`directRentalFormFactors`, `preTransitRentalFormFactors`,
-  `postTransitRentalFormFactors`) est exposé dans les réglages : l'utilisateur qui ne veut pas de
-  trottinettes doit pouvoir les exclure partout, d'un seul endroit. La voiture n'y est pas proposée,
-  faute d'onglet qui l'emprunte ; un réglage antérieur qui la nommait est oublié à la relecture.
+- Dans l'onglet **Transport en commun**, le rabattement se fait **à pied et seulement à pied** :
+  ni voiture, ni vélo, ni trottinette partagés en premier ou dernier kilomètre. Un trajet motorisé
+  ou à vélo n'est pas du transport en commun, et le ranger sous cet onglet mélangerait deux façons
+  de se déplacer que l'usager a justement séparées en changeant d'onglet. Cette catégorie ne
+  transporte donc aucun paramètre de types de véhicules.
+- Le filtre des types de véhicules (`directRentalFormFactors`) est exposé dans les réglages :
+  l'utilisateur qui ne veut pas de trottinettes doit pouvoir les exclure d'un seul endroit. Seuls
+  les types que l'onglet Vélo peut proposer y figurent — vélo, trottinette, trottinette assise ;
+  une case sans effet sur aucune recherche mentirait à l'usager. Un réglage antérieur qui nommait
+  un autre type est oublié à la relecture. Les paramètres `preTransitRentalFormFactors` et
+  `postTransitRentalFormFactors` ne sont plus émis.
 - Ces paramètres sont marqués « expérimental » côté MOTIS : leur nom ou leur comportement peut
   changer sans changement de version. Les isoler dans une seule fonction de construction de requête,
   pour n'avoir qu'un endroit à corriger.

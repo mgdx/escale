@@ -110,8 +110,8 @@ object MaxTransfersOptions {
  * Le filtre unique des types de véhicules en libre-service (SPEC.md § 5.2).
  *
  * « L'utilisateur qui ne veut pas de trottinettes doit pouvoir les exclure partout, d'un seul
- * endroit » : ce filtre alimente à lui seul `directRentalFormFactors`, `preTransitRentalFormFactors`
- * et `postTransitRentalFormFactors`, par [io.github.mgdx.escale.core.query.RentalFormFactorQuery].
+ * endroit » : ce filtre alimente à lui seul `directRentalFormFactors`, par
+ * [io.github.mgdx.escale.core.query.RentalFormFactorQuery].
  *
  * **Un ensemble vide signifie « aucun filtre », et non « aucun véhicule »** : c'est la convention de
  * l'API, reprise telle quelle par [SearchPreferences]. Toute la subtilité de cet objet est là — ce
@@ -120,19 +120,26 @@ object MaxTransfersOptions {
 object RentalFormFactorSelection {
 
   /**
-   * Les cases à cocher de l'écran de réglages, dans l'ordre de l'énumération de l'API.
+   * **Les types de véhicules qu'Escale peut proposer**, dans l'ordre imposé par SPEC.md § 5.2, et
+   * du même coup les cases à cocher de l'écran de réglages.
    *
-   * **La voiture partagée n'y figure pas** : aucun onglet ne l'emprunte depuis qu'elle a quitté le
-   * rabattement du transport en commun (SPEC.md § 5.2), et une case qui ne changerait plus rien à
-   * aucune recherche mentirait à l'usager.
+   * La liste est celle de l'onglet Vélo, seul onglet qui emprunte encore un véhicule partagé
+   * depuis que le rabattement du transport en commun se fait à pied : proposer une case qui ne
+   * changerait rien à aucune recherche mentirait à l'usager. Voiture, cyclomoteur, vélo cargo et
+   * « autre véhicule » n'y figurent donc plus — un trajet motorisé sous un pictogramme de vélo
+   * n'aurait de toute façon pas sa place dans cet onglet.
    */
-  val OFFERED: List<RentalFormFactor> = RentalFormFactor.entries.filter { it != RentalFormFactor.CAR }
+  val OFFERED: List<RentalFormFactor> = listOf(
+    RentalFormFactor.BICYCLE,
+    RentalFormFactor.SCOOTER_STANDING,
+    RentalFormFactor.SCOOTER_SEATED,
+  )
 
   /**
    * Ce que l'écran coche : rien de filtré signifie que tout est accepté.
    *
-   * Un type persisté par une version antérieure mais qui n'est plus offert — la voiture partagée —
-   * est ignoré ici ; s'il ne reste rien, le réglage vaut « aucun filtre », comme un réglage neuf.
+   * Un type persisté par une version antérieure mais qui n'est plus offert est ignoré ici ; s'il
+   * ne reste rien, le réglage vaut « aucun filtre », comme un réglage neuf.
    */
   fun selected(allowed: Set<RentalFormFactor>): Set<RentalFormFactor> {
     val retained = allowed.intersect(OFFERED.toSet())

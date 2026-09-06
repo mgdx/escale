@@ -78,7 +78,7 @@
 
   <!-- Le filtre unique de SPEC.md § 5.2 : exclure un type de véhicule le retire partout. -->
   <string name="settings_rental_form_factors_title">Shared vehicles</string>
-  <string name="settings_rental_form_factors_description">Which shared vehicles Escale may suggest, for a whole journey as well as to and from a stop. A type left unticked never shows up anywhere. At least one type must stay ticked.</string>
+  <string name="settings_rental_form_factors_description">Which shared vehicles Escale may suggest for a whole journey, in the Bike tab. A type left unticked never shows up anywhere. At least one type must stay ticked.</string>
   <string name="settings_rental_form_factors_all">All types accepted</string>
   <string name="settings_rental_bicycle">Bike</string>
   <string name="settings_rental_cargo_bicycle">Cargo bike</string>

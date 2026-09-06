@@ -71,7 +71,7 @@
   <string name="settings_require_bike_transport_description">Ne retient que les trains, bus et bateaux qui embarquent les vélos.</string>
 
   <string name="settings_rental_form_factors_title">Véhicules en libre-service</string>
-  <string name="settings_rental_form_factors_description">Les véhicules partagés qu\'Escale peut proposer, pour un trajet entier comme pour rejoindre ou quitter un arrêt. Un type décoché n\'apparaît nulle part. Au moins un type doit rester coché.</string>
+  <string name="settings_rental_form_factors_description">Les véhicules partagés qu\'Escale peut proposer pour un trajet entier, dans l\'onglet Vélo. Un type décoché n\'apparaît nulle part. Au moins un type doit rester coché.</string>
   <string name="settings_rental_form_factors_all">Tous les types acceptés</string>
   <string name="settings_rental_bicycle">Vélo</string>
   <string name="settings_rental_cargo_bicycle">Vélo cargo</string>
