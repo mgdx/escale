@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -60,7 +61,9 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.mgdx.escale.R
@@ -418,10 +421,20 @@ private fun CategoryTab(category: JourneyCategory, headline: TabHeadline, select
       verticalArrangement = Arrangement.spacedBy(TabSpacing),
     ) {
       Icon(painter = painterResource(category.iconRes()), contentDescription = null)
+      val style = MaterialTheme.typography.labelMedium
       Text(
         text = headlineText(headline),
-        style = MaterialTheme.typography.labelMedium,
+        style = style,
         textAlign = TextAlign.Center,
+        // Une seule ligne, toujours : c'est ce qui garantit aux quatre onglets la même hauteur et
+        // des pictogrammes alignés. Plutôt que de se couper en deux, le libellé se réduit — jamais
+        // en deçà de `TabMinFontSize`, exprimée en `sp` et qui suit donc l'agrandissement réglé
+        // par l'usager (SPEC.md § 9). La borne haute est la taille du style : sans elle, la
+        // réduction deviendrait un agrandissement et « 18 min » remplirait tout l'onglet.
+        // En pratique rien ne se réduit avant 150 % : la forme courte de la durée tient
+        // d'elle-même en dessous.
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = TabMinFontSize, maxFontSize = style.fontSize),
       )
     }
   }
@@ -556,8 +569,16 @@ private val HandleBand: Dp = 24.dp
 
 private val HandleWidth: Dp = 32.dp
 private val HandleHeight: Dp = 4.dp
-private val TabHorizontalPadding: Dp = 16.dp
+
+// Assez d'air autour de la durée pour qu'elle ne touche pas sa voisine, mais pas davantage : un
+// onglet ne vaut que le quart de la largeur, et chaque point rendu au texte est un point de moins
+// à lui reprendre en taille de police quand l'usager agrandit le texte.
+private val TabHorizontalPadding: Dp = 8.dp
 private val TabVerticalPadding: Dp = 8.dp
 private val TabSpacing: Dp = 4.dp
+
+// Le plancher de réduction de la durée d'un onglet, en `sp` : il grandit donc avec le réglage de
+// taille de texte du système, et ne fige jamais le libellé à une taille absolue.
+private val TabMinFontSize: TextUnit = 10.sp
 private val ContentPadding: Dp = 16.dp
 private val ListSpacing: Dp = 8.dp

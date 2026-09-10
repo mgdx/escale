@@ -45,4 +45,17 @@ class FormattedDurationTest {
     assertEquals(0L, formatted.hours)
     assertEquals(7L, formatted.minutes)
   }
+
+  @Test
+  fun `une duree qui cumule heures et minutes s ecrit avec ses deux unites`() {
+    assertTrue(FormattedDuration.of(Duration.ofMinutes(77)).spellsBothUnits)
+    assertTrue(FormattedDuration.of(Duration.ofHours(26).plusMinutes(5)).spellsBothUnits)
+  }
+
+  @Test
+  fun `une duree d une seule unite ne gagne rien a etre raccourcie`() {
+    assertFalse(FormattedDuration.of(Duration.ofMinutes(18)).spellsBothUnits)
+    assertFalse(FormattedDuration.of(Duration.ofHours(2)).spellsBothUnits)
+    assertFalse(FormattedDuration.of(Duration.ofSeconds(20)).spellsBothUnits)
+  }
 }

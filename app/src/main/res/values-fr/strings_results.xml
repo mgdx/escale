@@ -125,4 +125,6 @@
   <string name="results_sheet_state_expanded">Déplié</string>
   <string name="results_sheet_state_half">À moitié déplié</string>
   <string name="results_sheet_state_collapsed">Replié</string>
+
+  <string name="results_tab_duration_hours_minutes">%1$d&#160;h&#160;%2$02d</string>
 </resources>

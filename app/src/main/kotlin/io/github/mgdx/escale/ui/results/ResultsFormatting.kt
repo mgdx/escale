@@ -200,7 +200,26 @@ internal fun durationText(value: FormattedDuration): String = when {
 internal fun headlineText(headline: TabHeadline): String = when (headline) {
   TabHeadline.Pending -> stringResource(R.string.results_tab_duration_pending)
   TabHeadline.None -> stringResource(R.string.results_tab_duration_none)
-  is TabHeadline.Fastest -> durationText(headline.duration)
+  is TabHeadline.Fastest -> compactDurationText(headline.duration)
+}
+
+/**
+ * La même durée, mais dans sa forme courte quand elle en a une : « 1 h 17 » plutôt que
+ * « 1 h 17 min ».
+ *
+ * Le bandeau donne le quart de la largeur de l'écran à chaque onglet, quelle que soit la taille de
+ * texte réglée par l'usager : au-delà de 130 % d'agrandissement, la forme longue s'y coupait en
+ * deux lignes et l'onglet concerné devenait plus haut que ses voisins. C'est `:core` qui dit
+ * quelles durées gagnent à être raccourcies, pas cet écran.
+ */
+@Composable
+private fun compactDurationText(duration: Duration): String {
+  val value = FormattedDuration.of(duration)
+  return if (value.spellsBothUnits) {
+    stringResource(R.string.results_tab_duration_hours_minutes, value.hours, value.minutes)
+  } else {
+    durationText(value)
+  }
 }
 
 /** L'onglet tel qu'un lecteur d'écran l'annonce : sa catégorie, puis ce qu'elle propose. */

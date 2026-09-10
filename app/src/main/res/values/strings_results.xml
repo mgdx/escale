@@ -156,4 +156,10 @@
   <string name="results_sheet_state_expanded">Expanded</string>
   <string name="results_sheet_state_half">Half open</string>
   <string name="results_sheet_state_collapsed">Collapsed</string>
+
+  <!-- Forme courte de la durée, réservée au bandeau d'onglets : quatre onglets se partagent la
+       largeur de l'écran, et « 1 hr 17 min » s'y coupait en deux lignes dès 130 % d'agrandissement
+       (SPEC.md § 9). L'espace est insécable, la durée ne se coupe donc jamais. Les cartes de
+       résultat et le lecteur d'écran gardent la forme longue, qui se lit et s'entend mieux. -->
+  <string name="results_tab_duration_hours_minutes">%1$dh&#160;%2$02dm</string>
 </resources>
