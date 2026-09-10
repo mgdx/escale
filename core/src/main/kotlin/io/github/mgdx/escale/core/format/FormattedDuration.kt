@@ -19,6 +19,20 @@ data class FormattedDuration(
   val isZero: Boolean
     get() = hours == 0L && minutes == 0L
 
+  /**
+   * Vrai lorsque la durée s'écrit avec ses **deux** unités en toutes lettres (« 1 h 17 min »).
+   *
+   * C'est le seul cas où le libellé complet est assez long pour ne pas tenir dans une largeur
+   * contrainte — un onglet du bandeau de résultats vaut le quart de l'écran (SPEC.md § 5.2), et le
+   * libellé s'y coupait en deux lignes dès 130 % d'agrandissement. L'interface lui préfère alors
+   * la forme courte, « 1 h 17 », qui dit la même chose sans la seconde unité.
+   *
+   * En dessous de l'heure (« 18 min ») comme sur une heure ronde (« 2 h »), les deux formes ont la
+   * même longueur : rien à gagner à raccourcir, et l'unité en toutes lettres est plus claire.
+   */
+  val spellsBothUnits: Boolean
+    get() = hours > 0L && minutes > 0L
+
   companion object {
     private const val SECONDS_PER_MINUTE = 60L
     private const val MINUTES_PER_HOUR = 60L
