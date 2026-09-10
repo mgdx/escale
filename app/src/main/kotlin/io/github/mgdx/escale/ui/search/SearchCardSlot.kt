@@ -36,6 +36,13 @@ fun SearchCardSlot(padding: PaddingValues, onOpenFavorites: () -> Unit, modifier
     SearchFieldOverlay(field = field, state = state, actions = actions)
   }
 
+  // Composée après le plein écran pour que l'explication d'un refus se pose par-dessus lui : c'est
+  // depuis sa liste que « Ma position » est touchée.
+  SearchLocationPermission(
+    request = state.locationPermissionRequest,
+    onGranted = { actions.onShortcutSelected(SearchShortcut.MY_LOCATION) },
+  )
+
   state.timePicker?.let { picker ->
     TimeChoiceDialogs(picker = picker, actions = actions)
   }

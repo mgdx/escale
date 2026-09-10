@@ -18,11 +18,13 @@ import io.github.mgdx.escale.core.repository.autocompleteStream
 import io.github.mgdx.escale.core.repository.matchingKnownPlaces
 import io.github.mgdx.escale.core.repository.withoutKnownPlaces
 import io.github.mgdx.escale.core.result.getOrNull
+import io.github.mgdx.escale.ui.map.LocationPermission
 import io.github.mgdx.escale.ui.map.LocationSource
 import io.github.mgdx.escale.ui.map.MapCameraMemory
 import io.github.mgdx.escale.ui.map.MapPick
 import io.github.mgdx.escale.ui.map.MapPickPurpose
 import io.github.mgdx.escale.ui.map.MapSelection
+import io.github.mgdx.escale.ui.map.PermissionRequest
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.delay
@@ -33,8 +35,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.ZoneId
 import java.util.Locale
 
@@ -101,8 +105,8 @@ class SearchViewModel(
   /** La dernière recherche écrite dans l'historique, pour ne pas l'y écrire deux fois. */
   private var lastRecorded: RecordedSearch? = null
 
-  /** Vrai quand une position est déjà connue sans rien demander à l'usager. */
-  private val myLocationKnown = MutableStateFlow(false)
+  /** Les demandes de permission successives, numérotées pour qu'aucune ne se confonde. */
+  private var permissionTokens = 0L
 
   /** Les deux lieux enregistrés, tenus à part de l'état d'écran : ce n'est pas de l'affichage. */
   private var savedLocations: Map<SavedPlaceKind, Location?> = emptyMap()
@@ -135,7 +139,6 @@ class SearchViewModel(
   /** Le champ passe en plein écran, avec la liste d'autocomplétion (SPEC.md § 5.1). */
   fun onOpenField(field: SearchField) {
     val known = knownPoint()
-    myLocationKnown.value = known != null
     setQuery("")
     state.update { it.copy(activeField = field, awaitingMapPick = false) }
     savedState[SAVED_FIELD] = field.name
@@ -320,16 +323,45 @@ class SearchViewModel(
   /**
    * « Ma position », dont le libellé lisible vient du géocodage inverse (SPEC.md § 5.1).
    *
-   * Aucune permission n'est demandée ici : l'entrée n'est proposée que si une position est déjà
-   * connue. Si le serveur ne sait rien de cet endroit, le point garde ses coordonnées pour nom.
+   * L'entrée est proposée en permanence : c'est donc **ici**, à l'appui, que la permission se
+   * demande si elle manque — jamais à l'ouverture de l'écran ni au démarrage (SPEC.md § 5.1 et
+   * § 11). Si le serveur ne sait rien de cet endroit, le point garde ses coordonnées pour nom.
+   *
+   * L'écran rejoue cet appui, tel quel, quand le système vient d'accorder la permission : il n'y a
+   * donc qu'un seul chemin vers la position, et il passe toujours par l'entrée de la liste.
    */
   private fun useDeviceLocation() {
-    val point = locationSource.lastKnownLocation() ?: return
+    if (!locationSource.hasCoarsePermission()) {
+      requestLocationPermission()
+      return
+    }
     val field = state.value.activeField
+    // La demande a abouti : elle n'a plus à traîner dans l'état d'écran.
+    state.update { it.copy(locationPermissionRequest = null) }
     onCloseField()
     viewModelScope.launch {
+      val point = firstKnownPoint() ?: return@launch
       val named = geocodeRepository.reverseGeocode(point, language).getOrNull() ?: point.asUnnamedLocation()
       fill(field, named)
+    }
+  }
+
+  /**
+   * La position à écrire dans le champ : celle que le système garde en cache, et à défaut le
+   * premier point que le fournisseur enverra.
+   *
+   * Le repli existe parce que la permission vient parfois d'être accordée à l'appui même : le
+   * système n'a alors encore rien en cache, et s'arrêter là ferait de l'entrée un appui mort.
+   * L'attente est **bornée** et meurt avec l'écran : rien ne tourne en fond (SPEC.md § 7.7).
+   */
+  private suspend fun firstKnownPoint(): LatLon? = locationSource.lastKnownLocation()
+    ?: withTimeoutOrNull(FIRST_FIX_TIMEOUT_MILLIS) { locationSource.locations().first() }
+
+  /** Une demande de permission de plus, que l'interface passera au système. */
+  private fun requestLocationPermission() {
+    permissionTokens += 1
+    state.update {
+      it.copy(locationPermissionRequest = PermissionRequest(LocationPermission.COARSE, permissionTokens))
     }
   }
 
@@ -395,11 +427,10 @@ class SearchViewModel(
         savedPlaces.home,
         savedPlaces.work,
         recentSearches.recentSearches,
-        myLocationKnown,
-      ) { draft, home, work, recent, myLocation ->
+      ) { draft, home, work, recent ->
         savedLocations = mapOf(SavedPlaceKind.HOME to home, SavedPlaceKind.WORK to work)
         savedState[SAVED_DRAFT] = encodeSearchDraft(draft)
-        Snapshot(draft, quickChips(draft, home, work, recent), searchShortcuts(myLocation, home, work))
+        Snapshot(draft, quickChips(draft, home, work, recent), searchShortcuts(home, work))
       }.collect(::applySnapshot)
     }
   }
@@ -502,6 +533,13 @@ class SearchViewModel(
      * celui-ci soit acquitté. Généreux : il ne retarde rien à l'écran, le point y est déjà.
      */
     private const val MAP_PICK_LABEL_GRACE_MILLIS = 8_000L
+
+    /**
+     * Le temps laissé au fournisseur pour livrer un premier point quand le système n'en a aucun
+     * en cache. Au-delà, l'appui reste sans effet : c'est ce que fait déjà le bouton de position
+     * de la carte, qui attend sans rien promettre.
+     */
+    private const val FIRST_FIX_TIMEOUT_MILLIS = 10_000L
 
     /** De quoi encaisser une rafale de frappes sans jamais bloquer le fil principal. */
     private const val QUERY_BUFFER = 8
