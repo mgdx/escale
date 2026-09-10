@@ -116,7 +116,7 @@ fun Style.installJourneyTraceLayers(colors: MapTraceColors, markerIcons: Map<Tra
   // donc une couche par motif, chacune filtrée sur la forme que la portion a demandée.
   TraceStroke.entries.forEach { stroke -> addLayerUnderLabels(strokeLayer(stroke)) }
   addLayer(lineLabelLayer(colors))
-  TraceMarkerKind.entries.forEach { kind -> addLayer(markerLayer(kind, colors)) }
+  TRACE_MARKER_LAYER_ORDER.forEach { kind -> addLayer(markerLayer(kind, colors)) }
 }
 
 /** Le trait d'une forme de portion : plein pour un véhicule, pointillé pour la marche. */
@@ -172,9 +172,14 @@ private fun markerLayer(kind: TraceMarkerKind, colors: MapTraceColors): SymbolLa
     withProperties(
       PropertyFactory.iconImage(kind.imageId()),
       PropertyFactory.iconAnchor(kind.iconAnchor()),
-      // Un marqueur de trajet ne se laisse pas effacer par un libellé du fond de carte.
-      PropertyFactory.iconAllowOverlap(true),
-      PropertyFactory.iconIgnorePlacement(true),
+      // Le départ et l'arrivée ne se laissent pas effacer par un libellé du fond de carte ; une
+      // correspondance, elle, cède la place (voir [alwaysDrawn]).
+      PropertyFactory.iconAllowOverlap(kind.alwaysDrawn()),
+      // Volontairement laissé à `false`, pour les trois natures : un marqueur qui ignore le
+      // placement sort de la détection de recouvrement, et plus rien alors ne l'évite — c'est ce
+      // qui empilait les correspondances les unes sur les autres et sur l'anneau de départ.
+      PropertyFactory.iconIgnorePlacement(false),
+      PropertyFactory.iconPadding(ICON_PADDING),
       PropertyFactory.textField(Expression.get(MapGeoJson.PROPERTY_LABEL)),
       PropertyFactory.textFont(arrayOf(LABEL_FONT)),
       PropertyFactory.textSize(LABEL_SIZE),
@@ -209,10 +214,10 @@ internal fun Style.addLayerUnderLabels(layer: Layer) {
 @Composable
 fun rememberTraceMarkerIcons(colors: MapTraceColors): Map<TraceMarkerKind, Bitmap> {
   val context = LocalContext.current
-  val size = with(LocalDensity.current) { MarkerIconSize.roundToPx() }
-  return remember(context, colors, size) {
+  val density = LocalDensity.current
+  return remember(context, colors, density) {
     TraceMarkerKind.entries.associateWith { kind ->
-      context.tintedBitmap(kind.iconRes(), kind.tint(colors), size)
+      context.tintedBitmap(kind.iconRes(), kind.tint(colors), with(density) { kind.iconSize().roundToPx() })
     }
   }
 }
@@ -234,6 +239,45 @@ private fun TraceMarkerKind.tint(colors: MapTraceColors): Color = when (this) {
   TraceMarkerKind.ORIGIN -> colors.origin
   TraceMarkerKind.TRANSFER -> colors.transfer
   TraceMarkerKind.DESTINATION -> colors.destination
+}
+
+/**
+ * Le départ et l'arrivée sont dessinés quoi qu'il arrive ; une correspondance, elle, cède la place.
+ *
+ * Les deux extrémités portent le sens du tracé : les effacer parce qu'un nom de commune passe par
+ * là n'aurait aucun sens. Une correspondance n'est qu'un repère intermédiaire, et le trajet la dit
+ * déjà en toutes lettres dans la feuille de résultats : quand la place manque — deux
+ * correspondances voisines au zoom d'un trajet interurbain, ou une correspondance qui retombe sur
+ * l'anneau de départ — MapLibre l'écarte, et elle revient dès qu'on zoome. C'est la politique que
+ * les marqueurs d'arrêt appliquent déjà.
+ */
+internal fun TraceMarkerKind.alwaysDrawn(): Boolean = when (this) {
+  TraceMarkerKind.ORIGIN, TraceMarkerKind.DESTINATION -> true
+  TraceMarkerKind.TRANSFER -> false
+}
+
+/**
+ * L'ordre de pose des couches de marqueurs, et donc celui dans lequel MapLibre leur cherche une
+ * place : la détection de recouvrement part de la couche la plus haute. Les marqueurs qu'on ne peut
+ * pas effacer passent donc **au-dessus**, ce qui leur fait réserver leur place avant que les
+ * correspondances ne cherchent la leur — sans quoi une correspondance placée en premier viendrait
+ * encore noircir le départ.
+ */
+internal val TRACE_MARKER_LAYER_ORDER: List<TraceMarkerKind> =
+  TraceMarkerKind.entries.sortedBy { if (it.alwaysDrawn()) 1 else 0 }
+
+/**
+ * Le côté du carré dans lequel le dessin est composé, par nature de marqueur.
+ *
+ * Les trois glyphes ne remplissent pas leur cadre de la même façon : l'anneau de départ et
+ * l'épingle d'arrivée sont des contours qui laissent le quart du carré libre, la silhouette de
+ * correspondance est pleine et va d'un bord à l'autre. À cadre égal elle pèse le double à l'œil, au
+ * point de noircir tout le voisinage du départ. Elle est donc composée dans un carré plus petit —
+ * en pixels, et non par un facteur `icon-size`, pour que le dessin reste net.
+ */
+internal fun TraceMarkerKind.iconSize(): Dp = when (this) {
+  TraceMarkerKind.TRANSFER -> TransferIconSize
+  TraceMarkerKind.ORIGIN, TraceMarkerKind.DESTINATION -> MarkerIconSize
 }
 
 /** L'épingle d'arrivée pointe le lieu par sa pointe ; les deux autres dessins sont centrés. */
@@ -302,5 +346,16 @@ private const val LABEL_HALO_WIDTH = 1.6f
 private const val LABEL_MAX_WIDTH = 8f
 private const val LABEL_OFFSET = 1f
 
+/**
+ * Marge ajoutée autour du dessin pour la détection de recouvrement, en pixels d'écran.
+ *
+ * Un peu plus que les deux pixels par défaut de MapLibre : deux marqueurs qui se frôlent sans se
+ * toucher restent illisibles, ils doivent respirer.
+ */
+private const val ICON_PADDING = 4f
+
 /** Un marqueur de carte : plus grand qu'une icône d'interface, il doit se voir à bout de bras. */
 private val MarkerIconSize: Dp = 28.dp
+
+/** Le carré de la correspondance, dont le dessin est plein : voir [iconSize]. */
+private val TransferIconSize: Dp = 22.dp
