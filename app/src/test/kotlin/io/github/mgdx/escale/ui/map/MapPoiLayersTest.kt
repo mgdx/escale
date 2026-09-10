@@ -34,11 +34,19 @@ class MapPoiLayersTest {
 
   private val json = Json { ignoreUnknownKeys = true }
 
-  private val sheets: Map<String, List<JsonObject>> = listOf("light", "dark").associateWith { name ->
+  private val roots: Map<String, JsonObject> = listOf("light", "dark").associateWith { name ->
     val file = File("src/main/res/raw/map_style_$name.json")
     assertTrue("feuille introuvable : ${file.absolutePath}", file.exists())
-    json.parseToJsonElement(file.readText()).jsonObject.getValue("layers").jsonArray.map { it.jsonObject }
+    json.parseToJsonElement(file.readText()).jsonObject
   }
+
+  private val sheets: Map<String, List<JsonObject>> =
+    roots.mapValues { (_, root) -> root.getValue("layers").jsonArray.map { it.jsonObject } }
+
+  /** Le dernier zoom que la source vectorielle demande au serveur. */
+  private fun sourceMaxZoom(sheet: String): Int =
+    roots.getValue(sheet).getValue("sources").jsonObject.getValue("motis").jsonObject
+      .getValue("maxzoom").jsonPrimitive.int
 
   private fun layer(sheet: String, id: String): JsonObject? =
     sheets.getValue(sheet).firstOrNull { it.getValue("id").jsonPrimitive.content == id }
@@ -64,14 +72,29 @@ class MapPoiLayersTest {
   }
 
   @Test
-  fun `les paliers de zoom suivent la famille de la categorie`() {
-    // Les repères dès 15 avec leur nom à 16, les commerces à 16 avec leur nom à 17 (SPEC.md § 5.7).
+  fun `les paliers de zoom tiennent dans ce que le tuilage sert`() {
+    // Le tuilage MOTIS s'arrête au zoom 15 : repères comme commerces apparaissent donc à 15, avec
+    // leur nom à 16 (SPEC.md § 5.7). Un palier plus haut ne se verrait jamais sur une tuile réelle.
     sheets.keys.forEach { sheet ->
-      POI_LAYERS.forEach { (category, id) ->
-        val expected = if (category.kind == PoiKind.LANDMARK) 15 else 16
+      POI_LAYERS.values.forEach { id ->
         val found = layer(sheet, id)!!
-        assertEquals("$sheet : $id", expected, found.getValue("minzoom").jsonPrimitive.int)
-        assertEquals("$sheet : $id", expected + 1, nameZoom(found))
+        assertEquals("$sheet : $id", POI_MIN_ZOOM, found.getValue("minzoom").jsonPrimitive.int)
+        assertEquals("$sheet : $id", POI_MIN_ZOOM + 1, nameZoom(found))
+      }
+    }
+  }
+
+  @Test
+  fun `la source s'arrete au dernier zoom que le serveur sert`() {
+    // Au-delà de 15 le serveur répond 501 : sans ce plafond, la carte réclame des tuiles qui
+    // n'existent pas et cesse d'agrandir la dernière chargée (SPEC.md § 4.2 point 4 et § 5.7).
+    sheets.keys.forEach { sheet -> assertEquals(sheet, POI_MIN_ZOOM, sourceMaxZoom(sheet)) }
+    // Et aucune couche, points d'intérêt ou non, ne se réveille au-dessus de ce plafond.
+    sheets.forEach { (sheet, layers) ->
+      layers.forEach { found ->
+        val id = found.getValue("id").jsonPrimitive.content
+        val minZoom = (found["minzoom"] as? JsonPrimitive)?.int ?: 0
+        assertTrue("$sheet : $id démarre à $minZoom", minZoom <= POI_MIN_ZOOM)
       }
     }
   }
@@ -205,6 +228,9 @@ class MapPoiLayersTest {
   }
 
   private companion object {
+    /** Le palier des points d'intérêt, borné par le dernier zoom que MOTIS tuile (SPEC.md § 5.7). */
+    const val POI_MIN_ZOOM = 15
+
     /** Les opérateurs d'expression que les deux feuilles emploient, et rien de plus. */
     val OPERATORS = setOf("match", "all", "any", "case", "step", "interpolate", "==", "!=", "!", "coalesce")
 

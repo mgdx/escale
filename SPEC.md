@@ -509,7 +509,14 @@ petite échelle, mille points sont illisibles et coûtent cher à charger.
 | 11 → 13 | Gares et stations de métro : `RAIL`, `HIGHSPEED_RAIL`, `LONG_DISTANCE`, `SUBURBAN`, `SUBWAY` | `/api/v6/map/stops` |
 | 13 → 15 | + tram, bus, cars, ferry, téléphériques, et **stations de véhicules en libre-service** | `/api/v6/map/stops` + `/api/v1/rentals` |
 | ≥ 15 | + véhicules en libre-service isolés (free-floating), et **points d'intérêt** : services publics, monuments et sites remarquables, équipements (hôpitaux, écoles, bibliothèques, poste), parcs | `/api/v1/rentals` + couches du fond de carte |
-| ≥ 17 | + entrées de stations, mobilier, libellés détaillés | couches du fond de carte |
+
+**Le palier 15 est le dernier**, parce que le tuilage MOTIS s'arrête au zoom 15 : au-delà, le
+serveur répond `501` et aucune tuile n'existe plus. La source déclare donc `"maxzoom": 15` — MapLibre
+cesse alors de réclamer l'inexistant et agrandit lui-même la dernière tuile chargée, si bien que
+zoomer plus loin reste possible sans émettre une seule requête (§ 4.2, point 4). Puisque plus aucun
+détail n'arrive après 15, aucune couche de la feuille de style ne porte un `minzoom` supérieur : les
+points d'intérêt paraissent tous à 15 et leur nom à 16, et rien ne se réserve pour un palier que le
+fond de carte ne sait plus enrichir.
 
 Points essentiels de mise en œuvre :
 
