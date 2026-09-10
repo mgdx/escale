@@ -224,43 +224,46 @@ private fun systemTopInset(): Dp = WindowInsets.safeDrawing.asPaddingValues().ca
  * sérialisé par le `ViewModel`, hors du fil principal, et une collection vide efface un contenu
  * sans rien démonter. Des deux sources d'arrêts, une seule porte des entités à la fois : c'est
  * ainsi que le regroupement s'allume et s'éteint sans toucher aux couches.
+ *
+ * Chaque effet capture la feuille au moment où il est lancé, et passe donc par [takeIfCurrent] :
+ * une feuille que la carte n'affiche plus n'a plus de source à remplir.
  */
 @Composable
 private fun ApplyMapSources(style: Style?, state: MapUiState) {
   LaunchedEffect(style, state.userLocationGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(USER_LOCATION_SOURCE)?.setGeoJson(state.userLocationGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(USER_LOCATION_SOURCE)?.setGeoJson(state.userLocationGeoJson)
   }
   LaunchedEffect(style, state.pickedPointGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(PICKED_POINT_SOURCE)?.setGeoJson(state.pickedPointGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(PICKED_POINT_SOURCE)?.setGeoJson(state.pickedPointGeoJson)
   }
   LaunchedEffect(style, state.journeyLinesGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(JOURNEY_LINES_SOURCE)?.setGeoJson(state.journeyLinesGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(JOURNEY_LINES_SOURCE)?.setGeoJson(state.journeyLinesGeoJson)
   }
   LaunchedEffect(style, state.journeyMarkersGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(JOURNEY_MARKERS_SOURCE)?.setGeoJson(state.journeyMarkersGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(JOURNEY_MARKERS_SOURCE)?.setGeoJson(state.journeyMarkersGeoJson)
   }
   LaunchedEffect(style, state.stopsGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(STOPS_SOURCE)?.setGeoJson(state.stopsGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(STOPS_SOURCE)?.setGeoJson(state.stopsGeoJson)
   }
   LaunchedEffect(style, state.clusteredStopsGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(STOPS_CLUSTERED_SOURCE)?.setGeoJson(state.clusteredStopsGeoJson)
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(STOPS_CLUSTERED_SOURCE)?.setGeoJson(state.clusteredStopsGeoJson)
   }
   // Le libre-service a deux familles, donc quatre sources : chacune se remplit et se vide seule,
   // sans jamais qu'une couche soit ajoutée ni retirée (SPEC.md § 5.7, règles 6 et 8).
   LaunchedEffect(style, state.rentalStationsGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.STATION))
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.STATION))
       ?.setGeoJson(state.rentalStationsGeoJson)
   }
   LaunchedEffect(style, state.clusteredRentalStationsGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.STATION))
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.STATION))
       ?.setGeoJson(state.clusteredRentalStationsGeoJson)
   }
   LaunchedEffect(style, state.rentalVehiclesGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.VEHICLE))
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(rentalSource(RentalMarkerKind.VEHICLE))
       ?.setGeoJson(state.rentalVehiclesGeoJson)
   }
   LaunchedEffect(style, state.clusteredRentalVehiclesGeoJson) {
-    style?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.VEHICLE))
+    style.takeIfCurrent()?.getSourceAs<GeoJsonSource>(rentalClusteredSource(RentalMarkerKind.VEHICLE))
       ?.setGeoJson(state.clusteredRentalVehiclesGeoJson)
   }
   // Les points d'intérêt ne font l'objet d'aucune requête : ils sont déjà dans les tuiles, et la
@@ -268,7 +271,7 @@ private fun ApplyMapSources(style: Style?, state: MapUiState) {
   // bascules de SPEC.md § 5.6 ne font que les allumer ou les éteindre, indépendamment du zoom, et
   // sans qu'une seule couche soit ajoutée ni retirée (règle 8).
   LaunchedEffect(style, state.visiblePoiCategories) {
-    val loaded = style ?: return@LaunchedEffect
+    val loaded = style.takeIfCurrent() ?: return@LaunchedEffect
     POI_LAYERS.forEach { (category, layerId) ->
       val visible = category in state.visiblePoiCategories
       loaded.getLayer(layerId)?.setProperties(
@@ -277,6 +280,21 @@ private fun ApplyMapSources(style: Style?, state: MapUiState) {
     }
   }
 }
+
+/**
+ * La feuille, à la seule condition qu'elle soit encore celle que la carte affiche.
+ *
+ * Changer de thème ou de serveur relance `setStyle` : MapLibre détache alors la feuille précédente,
+ * et le moindre `getSourceAs` ou `getLayer` sur cet objet périmé lève une `IllegalStateException`
+ * — « Calling getSourceAs when a newer style is loading/has loaded ». Or les effets de
+ * [ApplyMapSources] ont capturé la feuille au moment de leur lancement : l'un d'eux peut très bien
+ * s'exécuter juste après le début du chargement suivant.
+ *
+ * La question est posée à MapLibre plutôt que l'exception rattrapée : une feuille détachée n'a plus
+ * de source à remplir, et rien n'est perdu pour autant, puisque la feuille suivante réinstalle ses
+ * couches et relance ces mêmes effets, qui y reposent le contenu à jour.
+ */
+private fun Style?.takeIfCurrent(): Style? = this?.takeIf { it.isFullyLoaded }
 
 /**
  * Suit le cycle de vie de l'écran sans jamais détruire la carte.
