@@ -36,13 +36,16 @@ fun quickChips(
 /**
  * Les entrées en tête de la liste d'autocomplétion (SPEC.md § 5.1).
  *
- * « Ma position » n'apparaît que si une position est déjà connue **sans rien demander à l'usager** :
- * la permission de localisation se demande au bouton de position de la carte, jamais depuis un
- * champ de saisie, et l'application reste pleinement utilisable sans elle (SPEC.md § 11).
- * Domicile et travail suivent la même règle que les puces : absents, ils ne s'affichent pas.
+ * « Ma position » y figure **toujours**, permission accordée ou non : la spec l'énonce sans
+ * condition, et une entrée qui n'apparaîtrait qu'une fois la permission accordée ne se découvrirait
+ * jamais. L'absence conditionnelle n'est prévue que pour le domicile et le travail (SPEC.md § 5.5),
+ * qui suivent la même règle que les puces : absents, ils ne s'affichent pas.
+ *
+ * Rien n'est demandé pour autant à l'ouverture de l'écran : c'est l'**appui** sur l'entrée qui
+ * demande la permission, et un refus laisse l'application pleinement utilisable (SPEC.md § 11).
  */
-fun searchShortcuts(myLocationKnown: Boolean, home: Location?, work: Location?): List<SearchShortcut> = buildList {
-  if (myLocationKnown) add(SearchShortcut.MY_LOCATION)
+fun searchShortcuts(home: Location?, work: Location?): List<SearchShortcut> = buildList {
+  add(SearchShortcut.MY_LOCATION)
   if (home != null) add(SearchShortcut.HOME)
   if (work != null) add(SearchShortcut.WORK)
   add(SearchShortcut.PICK_ON_MAP)

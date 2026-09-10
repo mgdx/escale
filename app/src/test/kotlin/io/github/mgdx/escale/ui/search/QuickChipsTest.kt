@@ -71,11 +71,13 @@ class QuickChipsTest {
   }
 
   @Test
-  fun `ma position n'est proposee que si une position est deja connue`() {
-    assertEquals(listOf(SearchShortcut.PICK_ON_MAP), searchShortcuts(false, null, null))
+  fun `ma position est proposee en permanence, permission ou pas`() {
+    // SPEC.md § 5.1 l'enonce sans condition : la liste ne depend pas de la permission, que seul
+    // l'appui sur l'entree demande. Domicile et travail, eux, restent absents s'ils ne sont pas
+    // renseignes (SPEC.md § 5.5).
     assertEquals(
       listOf(SearchShortcut.MY_LOCATION, SearchShortcut.PICK_ON_MAP),
-      searchShortcuts(true, null, null),
+      searchShortcuts(null, null),
     )
   }
 
@@ -88,7 +90,7 @@ class QuickChipsTest {
         SearchShortcut.WORK,
         SearchShortcut.PICK_ON_MAP,
       ),
-      searchShortcuts(myLocationKnown = true, home = home, work = work),
+      searchShortcuts(home = home, work = work),
     )
   }
 

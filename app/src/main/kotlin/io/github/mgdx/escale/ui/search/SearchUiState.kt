@@ -4,6 +4,7 @@ import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.SearchHistoryEntry
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.repository.AutocompleteState
+import io.github.mgdx.escale.ui.map.PermissionRequest
 
 /** Lequel des deux champs de la carte de recherche l'usager est en train de remplir. */
 enum class SearchField {
@@ -108,4 +109,12 @@ data class SearchUiState(
 
   /** « Choisir sur la carte » : l'écran s'efface et attend un appui long (SPEC.md § 5.1). */
   val awaitingMapPick: Boolean = false,
+
+  /**
+   * La permission de localisation à demander, née d'un appui sur « Ma position », ou `null`.
+   *
+   * Elle n'est jamais posée à l'ouverture de l'écran ni au démarrage (SPEC.md § 5.1 et § 11) :
+   * seul l'appui sur l'entrée la remplit.
+   */
+  val locationPermissionRequest: PermissionRequest? = null,
 )

@@ -13,6 +13,7 @@ import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.favorites.FakeFavoritesRepository
 import io.github.mgdx.escale.ui.map.FakeCameraMemory
 import io.github.mgdx.escale.ui.map.FakeLocationSource
+import io.github.mgdx.escale.ui.map.LocationPermission
 import io.github.mgdx.escale.ui.map.MapPickPurpose
 import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.session.SearchSession
@@ -176,18 +177,81 @@ class SearchViewModelTest {
   }
 
   @Test
-  fun `ma position n'apparait que si une position est deja connue`() = runTest(scheduler) {
+  fun `ma position est en tete de liste meme sans permission`() = runTest(scheduler) {
     val viewModel = viewModel()
 
     viewModel.onOpenField(SearchField.FROM)
     advanceUntilIdle()
-    assertEquals(listOf(SearchShortcut.PICK_ON_MAP), viewModel.uiState.value.shortcuts)
 
+    // SPEC.md § 5.1 : l'entree est la, permission ou pas, sans quoi elle ne se decouvre jamais.
+    assertEquals(
+      listOf(SearchShortcut.MY_LOCATION, SearchShortcut.PICK_ON_MAP),
+      viewModel.uiState.value.shortcuts,
+    )
+    // Et rien n'est demande a l'ouverture de l'ecran (SPEC.md § 5.1 et § 11).
+    assertNull(viewModel.uiState.value.locationPermissionRequest)
+  }
+
+  @Test
+  fun `l'appui sur ma position demande la permission approchee`() = runTest(scheduler) {
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+
+    viewModel.onShortcutSelected(SearchShortcut.MY_LOCATION)
+    advanceUntilIdle()
+
+    assertEquals(LocationPermission.COARSE, viewModel.uiState.value.locationPermissionRequest?.permission)
+    // Le champ reste ouvert derriere la demande, et rien n'y est encore ecrit.
+    assertEquals(SearchField.FROM, viewModel.uiState.value.activeField)
+    assertNull(session.draft.value.from)
+  }
+
+  @Test
+  fun `une demande sans suite ne retire ni l'entree ni le champ`() = runTest(scheduler) {
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+
+    // C'est le refus, definitif ou non, vu du ViewModel : la permission n'arrive jamais, l'appui
+    // n'est pas rejoue, et rien ne doit disparaitre pour autant. L'explication du bouton de
+    // position de la carte, elle, est affichee par l'ecran (SPEC.md § 5.1 et § 11).
+    viewModel.onShortcutSelected(SearchShortcut.MY_LOCATION)
+    advanceUntilIdle()
+
+    assertNull(session.draft.value.from)
+    assertTrue(viewModel.uiState.value.shortcuts.contains(SearchShortcut.MY_LOCATION))
+    assertEquals(SearchField.FROM, viewModel.uiState.value.activeField)
+  }
+
+  @Test
+  fun `l'appui rejoue apres l'accord remplit le champ et acquitte la demande`() = runTest(scheduler) {
+    geocode.reverse = Outcome.Success(bastille)
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onShortcutSelected(SearchShortcut.MY_LOCATION)
+
+    // Ce que fait l'ecran quand le systeme a accorde la permission : il rejoue l'appui, tel quel.
     locations.coarseGranted = true
     locations.lastKnown = LatLon(48.85, 2.35)
-    viewModel.onOpenField(SearchField.FROM)
+    viewModel.onShortcutSelected(SearchShortcut.MY_LOCATION)
     advanceUntilIdle()
-    assertTrue(viewModel.uiState.value.shortcuts.contains(SearchShortcut.MY_LOCATION))
+
+    assertEquals(bastille, session.draft.value.from)
+    assertNull(viewModel.uiState.value.activeField)
+    assertNull(viewModel.uiState.value.locationPermissionRequest)
+  }
+
+  @Test
+  fun `sans position en cache, le premier point recu remplit le champ`() = runTest(scheduler) {
+    geocode.reverse = Outcome.Success(bastille)
+    locations.coarseGranted = true
+    val viewModel = viewModel()
+    viewModel.onOpenField(SearchField.FROM)
+
+    viewModel.onShortcutSelected(SearchShortcut.MY_LOCATION)
+    locations.emitted.emit(LatLon(48.85, 2.35))
+    advanceUntilIdle()
+
+    assertEquals(bastille, session.draft.value.from)
   }
 
   @Test
