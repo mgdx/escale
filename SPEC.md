@@ -524,17 +524,24 @@ Points essentiels de mise en œuvre :
   tuiles vectorielles issues d'OpenStreetMap. Il suffit d'activer les couches correspondantes dans
   la feuille de style avec le bon `minzoom`. Aucune API à interroger, aucun coût réseau
   supplémentaire, et le comportement reste correct sur un serveur auto-hébergé.
-- **Les commerces sont hors périmètre de la v1.** Ni boutiques, ni cafés, ni restaurants : ils
-  saturent la carte et ne servent pas le propos, qui est de se déplacer. Les couches existent dans
-  les tuiles et pourront être activées plus tard sans rien changer d'autre. La v1 s'en tient aux
-  repères qui aident à s'orienter et à reconnaître un quartier : services publics, monuments,
-  équipements, parcs.
+- **Les commerces s'affichent à la demande, et restent éteints par défaut.** Une carte saturée de
+  boutiques, de cafés et de restaurants ne sert pas le propos, qui est de se déplacer : rien de
+  commercial n'apparaît donc sans un geste de l'usager. Les points d'intérêt se répartissent en
+  **douze catégories, réglables une par une** — quatre de repères, qui aident à s'orienter et à
+  reconnaître un quartier, et huit de commerces et services. Les quatre repères sont allumés au
+  premier lancement ; des huit autres, seules les **toilettes publiques** le sont, parce qu'elles se
+  cherchent au lieu de s'explorer. À réglages inchangés, la carte reste celle d'avant, plus les
+  toilettes.
 - Les arrêts sont demandés par **emprise rectangulaire** (`min` / `max`), avec le paramètre `modes`
   restreint au palier de zoom courant, et `grouped=true` pour que le serveur regroupe lui-même les
   quais d'une même gare.
 - Chaque palier de zoom conserve les couches des paliers inférieurs : on ajoute, on ne remplace pas.
-- Un réglage permet de masquer complètement les arrêts, les stations en libre-service ou les
-  points d'intérêt, indépendamment du zoom.
+- Un écran dédié, **« Couches de la carte »**, décide de ce que la carte montre, indépendamment du
+  zoom : quatorze bascules en trois sections — **Transport** (les arrêts, le libre-service),
+  **Repères** et **Commerces et services** —, où chacune des douze catégories de points d'intérêt
+  se règle séparément. Aucune bascule ne déclenche de requête : les douze couches sont déjà dans la
+  feuille de style avec leur filtre et leur `minzoom`, le réglage ne fait que les allumer ou les
+  éteindre.
 - Appui sur un arrêt : infobulle avec le nom et les lignes desservies, et un bouton menant aux
   prochains départs (§ 5.4). Appui sur une station de libre-service : nom, véhicules disponibles,
   places libres, lien vers l'exploitant.
