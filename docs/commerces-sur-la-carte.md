@@ -49,9 +49,13 @@ n'apparaît sans un geste de l'usager.
 | Zoom | Ce qui apparaît |
 |---|---|
 | < 15 | Rien de plus qu'aujourd'hui. |
-| ≥ 15 | Les **repères** des catégories activées, sans nom. |
-| ≥ 16 | Le nom des repères, et le **pictogramme** des catégories de commerces activées — dont les toilettes, allumées d'emblée. Pictogramme discret, sous les arrêts dans l'ordre de placement. |
-| ≥ 17 | Le nom des commerces, sous le pictogramme, `text-optional` : le nom s'efface avant le pictogramme quand ça se bouscule. |
+| ≥ 15 | Le **pictogramme** de toutes les catégories activées, repères comme commerces — dont les toilettes, allumées d'emblée —, sans nom. Pictogramme discret, sous les arrêts dans l'ordre de placement. |
+| ≥ 16 | Leur **nom**, sous le pictogramme, `text-optional` : le nom s'efface avant le pictogramme quand ça se bouscule. |
+
+Le palier des commerces est descendu de 16 à 15, et celui des noms de 17 à 16, parce que le tuilage
+MOTIS s'arrête au zoom 15 : la source déclare `"maxzoom": 15` et plus aucun détail n'arrive au-delà.
+Réserver une couche pour un palier que le fond de carte ne sait plus enrichir n'aurait rien montré
+de plus. C'est ce que dit SPEC.md § 5.7 sous le tableau des paliers, et c'est lui qui fait autorité.
 
 Chaque catégorie porte un pictogramme des sprites `basics` déjà servis par le serveur (aucune image
 nouvelle dans l'APK, déjà à 13,9 Mo sur 15).
@@ -86,7 +90,7 @@ la carte et pas d'option ».** Les parcs, jardins et espaces verts restent ce qu
 aujourd'hui — des surfaces vertes dessinées par la couche `land-park` du fond de carte dès le
 zoom 11, sans pictogramme, sans nom et sans réglage. Rien à faire côté code.
 
-**Commerces et services — zoom ≥ 16, nom à partir de 17, huit catégories dont sept éteintes par
+**Commerces et services — zoom ≥ 15, nom à partir de 16, huit catégories dont sept éteintes par
 défaut.**
 
 | Catégorie | Valeurs OSM | Par défaut |
