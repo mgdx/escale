@@ -24,6 +24,9 @@ import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
+import io.github.mgdx.escale.ui.search.decodeSearchDraft
+import io.github.mgdx.escale.ui.search.encodeSearchDraft
+import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +71,14 @@ class DetailViewModel(
   private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
 
+  /**
+   * La recherche relue dans l'état sauvegardé, quand le processus est mort entre-temps.
+   *
+   * Elle est reconstruite **avant** [state], parce que [initialState] nomme déjà les extrémités du
+   * trajet et a donc besoin d'elle dès la première image. `null` quand rien n'a été sauvegardé.
+   */
+  private val restoredSession: SearchSession? = restoreSession(savedState)
+
   private val state = MutableStateFlow(initialState())
 
   val uiState: StateFlow<DetailUiState> = state.asStateFlow()
@@ -111,7 +122,7 @@ class DetailViewModel(
    * catégorie relue n'est plus la même, et l'étoile doit alors désigner l'autre favori, ou aucun.
    */
   private fun refreshFavoriteState() {
-    val draft = session.draft.value
+    val draft = currentSession().draft.value
     val from = draft.from
     val to = draft.to
     val journey = state.value.journey
@@ -161,7 +172,7 @@ class DetailViewModel(
       }
       return
     }
-    val draft = session.draft.value
+    val draft = currentSession().draft.value
     val from = draft.from
     val to = draft.to
     val journey = state.value.journey
@@ -281,7 +292,7 @@ class DetailViewModel(
    * à vélo vers une gare doit être rejoué sur l'onglet Transport, pas sur l'onglet Vélo.
    */
   private suspend fun replanned(current: Journey): Outcome<Journey> {
-    val query = session.toQuery(JourneyRefresh.categoryOf(current), PREFERENCES)
+    val query = currentSession().toQuery(JourneyRefresh.categoryOf(current), PREFERENCES)
       ?: return Outcome.Failure(EscaleError.Unknown(cause = NO_SEARCH))
     return when (val outcome = planRepository.plan(query, cursor = null, detailedLegs = true)) {
       is Outcome.Failure -> outcome
@@ -403,9 +414,11 @@ class DetailViewModel(
     // (docs/architecture.md § 6).
     if (error == EscaleError.Superseded) return
     // Rien à montrer sous le bandeau : c'est l'écran restitué après la mort du processus, dont
-    // l'identifiant conservé était le seul appui. Périmé, il ne laisse aucun repli — la recherche
-    // d'origine a disparu avec le processus — et l'écran se referme comme il le faisait déjà. Une
-    // panne passagère, elle, garde le bandeau et son bouton « Réessayer » (SPEC.md § 8).
+    // l'identifiant conservé était le seul appui. Périmé, il ne laisse aucun repli : la recherche
+    // est bien là, mais le repli de SPEC.md § 5.5.1 retient le trajet le plus proche en heure de
+    // départ, et cette heure-là s'en est allée avec le trajet qui la portait. L'écran se referme
+    // donc comme il le faisait déjà. Une panne passagère, elle, garde le bandeau et son bouton
+    // « Réessayer » (SPEC.md § 8).
     if (state.value.journey == null && JourneyRefresh.invalidatesItineraryId(error)) {
       state.update { it.copy(loading = false, error = null, closed = true) }
       return
@@ -417,15 +430,21 @@ class DetailViewModel(
    * L'état de départ de l'écran, y compris **au retour d'une mort du processus**.
    *
    * Le trajet choisi vit en mémoire, dans `SelectedJourneyStore`, qui ne survit pas au processus.
-   * Ce qui survit, c'est l'identifiant de l'itinéraire, rangé dans l'état sauvegardé de cette
-   * entrée de navigation : il suffit à redemander le trajet en une requête, plutôt que de refermer
-   * l'écran sous les yeux de l'usager qui le lisait. Il n'y va rien de plus que ce que l'état
-   * sauvegardé porte déjà — la recherche en cours y est écrite en clair par l'écran de recherche —
-   * et il disparaît avec la tâche, jamais sur le disque (PRIVACY.md, SPEC.md § 11).
+   * Ce qui survit, c'est l'identifiant de l'itinéraire **et la recherche qui y a mené**, rangés
+   * dans l'état sauvegardé de cette entrée de navigation : le premier suffit à redemander le trajet
+   * en une requête, plutôt que de refermer l'écran sous les yeux de l'usager qui le lisait, et la
+   * seconde à le renommer et à retrouver son favori. Il n'y va rien de plus que ce que l'état
+   * sauvegardé porte déjà — l'écran de recherche y écrit le même brouillon, encodé par la même
+   * fonction — et tout disparaît avec la tâche, jamais sur le disque (PRIVACY.md, SPEC.md § 11).
    */
   private fun initialState(): DetailUiState {
     val chosen = selection.selected.value
     if (chosen != null) savedState[KEY_ITINERARY] = chosen.id
+    // La recherche n'est copiée que tant qu'elle existe : sur une fiche déjà restituée, la session
+    // est vide et l'écrire écraserait le brouillon relu, que la rotation suivante ne trouverait
+    // plus.
+    val draft = session.draft.value
+    if (draft != SearchDraft()) savedState[KEY_SEARCH] = encodeSearchDraft(draft)
     // Ni trajet en mémoire, ni identifiant conservé — un trajet dont le serveur n'a pas donné
     // d'identifiant, par exemple : il n'y a rien à reconstruire, l'écran se referme.
     if (chosen == null && savedState.get<String>(KEY_ITINERARY) == null) return DetailUiState(closed = true)
@@ -448,9 +467,24 @@ class DetailViewModel(
    * `SelectedJourneyStore` en profite aussi : le lot « tracé » y lit le nom de ses marqueurs.
    */
   private fun named(journey: Journey): Journey {
-    val draft = session.draft.value
+    val draft = currentSession().draft.value
     return journey.withEndpointNames(origin = draft.from?.name, destination = draft.to?.name)
   }
+
+  /**
+   * La recherche qui a mené à cette fiche, **y compris quand le processus est mort entre-temps**.
+   *
+   * `SearchSession` vit dans l'`AppContainer` : elle survit à la rotation, pas au processus. Après
+   * une mort en arrière-plan, l'écran de détail est le premier recomposé, et il trouve la session
+   * vide — le brouillon n'y revient qu'une fois l'accueil recomposé, c'est-à-dire au retour en
+   * arrière. Trop tard pour l'écran affiché : l'arrivée envoyée en coordonnées retombait sur son
+   * libellé générique, et l'étoile des favoris, qui a besoin du couple cherché, restait creuse.
+   *
+   * La session en cours fait donc foi tant qu'elle porte quelque chose — elle est la plus
+   * récente —, et [restoredSession] prend le relais sinon.
+   */
+  private fun currentSession(): SearchSession =
+    if (session.draft.value == SearchDraft()) restoredSession ?: session else session
 
   private fun restored(key: String): Set<Int> = savedState.get<IntArray>(key)?.toSet().orEmpty()
 
@@ -479,6 +513,35 @@ class DetailViewModel(
      * les trajets obtenus restent en mémoire seulement, comme le promet PRIVACY.md.
      */
     private const val KEY_ITINERARY = "detail.itinerary"
+
+    /**
+     * La recherche en cours au moment où la fiche s'est ouverte, encodée comme l'écran de recherche
+     * encode déjà la sienne.
+     *
+     * L'itinéraire seul ne suffit pas : MOTIS ne nomme pas un point qu'on lui a envoyé en
+     * coordonnées, et le libellé de l'arrivée n'existe que dans ce brouillon. Sans lui, la fiche
+     * restituée affichait « Arrivée » là où elle affichait « Grenoble » un instant plus tôt.
+     *
+     * Même mémoire, même durée de vie et même règle de confidentialité que [KEY_ITINERARY] : le
+     * système la garde le temps de relancer le processus, elle s'en va avec la tâche, et rien
+     * n'atteint le disque (PRIVACY.md, SPEC.md § 11).
+     */
+    private const val KEY_SEARCH = "detail.search"
+
+    /**
+     * Relit la recherche sauvegardée, ou rend `null` quand il n'y en a pas.
+     *
+     * Hors de la classe parce qu'elle est appelée depuis un initialiseur de propriété : elle ne
+     * doit dépendre d'aucun autre champ que celui qu'on lui passe.
+     */
+    private fun restoreSession(savedState: SavedStateHandle): SearchSession? {
+      val draft = savedState.get<String>(KEY_SEARCH)?.let(::decodeSearchDraft) ?: return null
+      return SearchSession().apply {
+        setFrom(draft.from)
+        setTo(draft.to)
+        setTime(draft.time)
+      }
+    }
 
     /** Aucune recherche en cours : le repli sur `plan` est impossible, il n'y a pas de requête. */
     private const val NO_SEARCH = "NoSearchInProgress"
