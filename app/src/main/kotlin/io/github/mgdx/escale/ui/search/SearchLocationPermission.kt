@@ -1,10 +1,5 @@
 package io.github.mgdx.escale.ui.search
 
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -15,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import io.github.mgdx.escale.ui.common.openApplicationSettings
 import io.github.mgdx.escale.ui.map.LocationPermissionDialog
 import io.github.mgdx.escale.ui.map.PermissionRequest
 import io.github.mgdx.escale.ui.map.manifestPermission
@@ -66,17 +62,5 @@ internal fun SearchLocationPermission(request: PermissionRequest?, onGranted: ()
       },
       onDismiss = { explanationVisible = false },
     )
-  }
-}
-
-/** La fiche de l'application dans les réglages système, d'où la permission peut être rendue. */
-private fun Context.openApplicationSettings() {
-  val target = Uri.fromParts("package", packageName, null)
-  val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, target)
-    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-  try {
-    startActivity(intent)
-  } catch (_: ActivityNotFoundException) {
-    // Un appareil sans écran de réglages n'a pas à faire planter la recherche.
   }
 }

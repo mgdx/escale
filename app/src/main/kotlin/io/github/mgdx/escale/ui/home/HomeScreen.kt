@@ -1,10 +1,6 @@
 package io.github.mgdx.escale.ui.home
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.mgdx.escale.R
 import io.github.mgdx.escale.appContainer
+import io.github.mgdx.escale.ui.common.openApplicationSettings
 import io.github.mgdx.escale.ui.map.AttributionBar
 import io.github.mgdx.escale.ui.map.AttributionDialog
 import io.github.mgdx.escale.ui.map.BrowseStopsButton
@@ -385,22 +382,6 @@ private fun MapViewModel.canvasActions() = MapCanvasActions(
   onPick = ::onPick,
   onDismissPick = ::onDismissLongPress,
 )
-
-/** La fiche de l'application dans les réglages système, d'où la permission peut être rendue. */
-private fun Context.openApplicationSettings() {
-  val target = Uri.fromParts("package", packageName, null)
-  startActivitySafely(
-    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, target).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-  )
-}
-
-private fun Context.startActivitySafely(intent: Intent) {
-  try {
-    startActivity(intent)
-  } catch (_: ActivityNotFoundException) {
-    // Un appareil sans écran de réglages n'a pas à faire planter la carte.
-  }
-}
 
 /** Marges de SPEC.md § 5.1 : 12 dp entre les commandes flottantes et le bord de l'écran. */
 private val ScreenMargin: Dp = 12.dp
