@@ -435,8 +435,8 @@ en sous-titre. Elle ouvre un écran dédié (§ 5.6.1).
   (`additionalTransferTime`), nombre maximal de correspondances (`maxTransfers`),
   exiger le transport des vélos (`requireBikeTransport`).
 - Affichage : thème (système / clair / sombre), langue, format 12 h ou 24 h,
-  couches visibles sur la carte (arrêts, libre-service, points d'intérêt),
-  ordre des catégories de l'écran de résultats.
+  ordre des catégories de l'écran de résultats, et une entrée **« Couches de la carte »** qui ouvre
+  l'écran où se règle ce que la carte montre (§ 5.7).
 - **Ordre des catégories** : une entrée qui ouvre un écran dédié, où les quatre catégories du § 5.2
   se rangent au glissé-déposé. Le geste au doigt n'est jamais la seule voie d'accès : chaque ligne
   porte aussi les actions d'accessibilité « Monter » et « Descendre » (§ 9). L'ordre décide de la
