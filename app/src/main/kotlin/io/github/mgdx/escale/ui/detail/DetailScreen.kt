@@ -99,8 +99,8 @@ fun DetailScreen(
   // SPEC.md § 7.4 : au retour au premier plan, et seulement si les horaires affichés ont plus de
   // 60 secondes. Le bouton « Actualiser » de la barre, lui, rafraîchit sans condition.
   ForegroundEffect(viewModel::onForeground)
-  // Plus rien à montrer — typiquement au retour après la mort du processus, où le magasin en
-  // mémoire est vide : l'écran se referme au lieu d'afficher une page blanche.
+  // Plus rien à montrer — l'itinéraire redemandé au retour d'une mort du processus a été refusé,
+  // et il n'y a pas de repli : l'écran se referme au lieu d'afficher une page blanche.
   LaunchedEffect(state.closed) { if (state.closed) onBack() }
   DetailContent(
     state = state,
@@ -199,8 +199,46 @@ internal fun DetailContent(
       )
     },
   ) { innerPadding ->
-    if (journey == null) return@Scaffold
+    if (journey == null) {
+      DetailPlaceholder(state = state, actions = actions, padding = innerPadding)
+      return@Scaffold
+    }
     DetailList(journey = journey, state = state, actions = actions, padding = innerPadding)
+  }
+}
+
+/**
+ * Ce que montre l'écran tant qu'il n'a pas de trajet.
+ *
+ * Le cas n'existe qu'au retour d'une mort du processus, où le trajet est reconstruit à partir de
+ * son seul identifiant : l'attente est annoncée plutôt que laissée en page blanche, et un échec
+ * passager garde son bouton « Réessayer » (SPEC.md § 8). Un identifiant périmé, lui, ne parvient
+ * pas jusqu'ici : l'écran se referme.
+ */
+@Composable
+private fun DetailPlaceholder(state: DetailUiState, actions: DetailActions, padding: PaddingValues) {
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(padding)
+      .padding(ScreenPadding),
+    contentAlignment = Alignment.Center,
+  ) {
+    if (state.error != null) {
+      ErrorMessage(error = state.error, onRetry = actions.onRefresh)
+    } else {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(ListSpacing),
+      ) {
+        CircularProgressIndicator()
+        Text(
+          text = stringResource(R.string.detail_loading_details),
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+    }
   }
 }
 

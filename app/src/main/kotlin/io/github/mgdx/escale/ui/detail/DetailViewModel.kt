@@ -226,12 +226,29 @@ class DetailViewModel(
     state.update { it.copy(message = message) }
   }
 
+  /**
+   * La requête détaillée, dans les deux situations où l'écran en a besoin.
+   *
+   * Le trajet est déjà là — ouverture depuis la liste, « Actualiser », retour au premier plan — et
+   * c'est [detailed] qui s'en charge, repli compris. Sinon l'écran vient d'être restitué après la
+   * mort du processus : le magasin en mémoire est vide, il ne reste que l'identifiant conservé, et
+   * `refresh-itinerary` suffit à reconstruire le trajet. **Une requête, celle de l'écran consulté,
+   * et pas une de plus** (SPEC.md § 7).
+   */
   private fun load() {
-    val current = state.value.journey ?: return
+    val current = state.value.journey
+    val itineraryId = savedState.get<String>(KEY_ITINERARY)
+    when {
+      current != null -> request { detailed(current) }
+      itineraryId != null -> request { planRepository.refresh(itineraryId, detailedLegs = true) }
+    }
+  }
+
+  private fun request(call: suspend () -> Outcome<Journey>) {
     work?.cancel()
     work = viewModelScope.launch {
       state.update { it.copy(loading = true, error = null) }
-      when (val outcome = detailed(current)) {
+      when (val outcome = call()) {
         is Outcome.Success -> onDetailed(outcome.value)
         is Outcome.Failure -> onFailure(outcome.error)
       }
@@ -351,8 +368,10 @@ class DetailViewModel(
     val previous = state.value.journey
     // Le repli peut rendre un trajet recomposé : les positions de portions ne désignent alors plus
     // les mêmes portions, et un dépliage restitué au mauvais endroit serait pire que pas de
-    // dépliage du tout.
-    val sameShape = previous != null && previous.legs.size == journey.legs.size
+    // dépliage du tout. Sans trajet précédent — l'écran restitué après la mort du processus —, il
+    // n'y a rien à comparer : c'est le même itinéraire qui revient, et le dépliage relu dans
+    // l'état sauvegardé désigne bien ses portions.
+    val sameShape = previous == null || previous.legs.size == journey.legs.size
     if (!sameShape) {
       rentalWork.values.forEach(Job::cancel)
       rentalWork.clear()
@@ -370,6 +389,9 @@ class DetailViewModel(
         rentals = if (sameShape) it.rentals else emptyMap(),
       )
     }
+    // Le repli rend un autre itinéraire, donc un autre identifiant : c'est celui-là qu'il faudra
+    // redemander, et non celui d'un trajet que le serveur a déjà refusé.
+    savedState[KEY_ITINERARY] = journey.id
     // Le trajet détaillé porte la géométrie des portions, que le trajet sommaire n'avait pas : le
     // publier ici permet au lot « tracé » de dessiner le vrai tracé sans rien demander à cet écran.
     selection.select(journey)
@@ -380,13 +402,37 @@ class DetailViewModel(
     // Une requête supplantée n'est jamais montrée : un résultat plus récent arrive derrière
     // (docs/architecture.md § 6).
     if (error == EscaleError.Superseded) return
+    // Rien à montrer sous le bandeau : c'est l'écran restitué après la mort du processus, dont
+    // l'identifiant conservé était le seul appui. Périmé, il ne laisse aucun repli — la recherche
+    // d'origine a disparu avec le processus — et l'écran se referme comme il le faisait déjà. Une
+    // panne passagère, elle, garde le bandeau et son bouton « Réessayer » (SPEC.md § 8).
+    if (state.value.journey == null && JourneyRefresh.invalidatesItineraryId(error)) {
+      state.update { it.copy(loading = false, error = null, closed = true) }
+      return
+    }
     state.update { it.copy(loading = false, error = error) }
   }
 
+  /**
+   * L'état de départ de l'écran, y compris **au retour d'une mort du processus**.
+   *
+   * Le trajet choisi vit en mémoire, dans `SelectedJourneyStore`, qui ne survit pas au processus.
+   * Ce qui survit, c'est l'identifiant de l'itinéraire, rangé dans l'état sauvegardé de cette
+   * entrée de navigation : il suffit à redemander le trajet en une requête, plutôt que de refermer
+   * l'écran sous les yeux de l'usager qui le lisait. Il n'y va rien de plus que ce que l'état
+   * sauvegardé porte déjà — la recherche en cours y est écrite en clair par l'écran de recherche —
+   * et il disparaît avec la tâche, jamais sur le disque (PRIVACY.md, SPEC.md § 11).
+   */
   private fun initialState(): DetailUiState {
-    val chosen = selection.selected.value ?: return DetailUiState(closed = true)
+    val chosen = selection.selected.value
+    if (chosen != null) savedState[KEY_ITINERARY] = chosen.id
+    // Ni trajet en mémoire, ni identifiant conservé — un trajet dont le serveur n'a pas donné
+    // d'identifiant, par exemple : il n'y a rien à reconstruire, l'écran se referme.
+    if (chosen == null && savedState.get<String>(KEY_ITINERARY) == null) return DetailUiState(closed = true)
     return DetailUiState(
-      journey = named(chosen),
+      journey = chosen?.let(::named),
+      // Le trajet reste à reconstruire : l'écran annonce l'attente dès sa première image.
+      loading = chosen == null,
       expandedLegs = restored(KEY_LEGS),
       expandedStops = restored(KEY_STOPS),
       expandedSteps = restored(KEY_STEPS),
@@ -423,6 +469,16 @@ class DetailViewModel(
     private const val KEY_LEGS = "detail.legs"
     private const val KEY_STOPS = "detail.stops"
     private const val KEY_STEPS = "detail.steps"
+
+    /**
+     * L'identifiant de l'itinéraire affiché : **ce par quoi l'écran se rouvre** après la mort du
+     * processus, au lieu de se refermer sur la liste de résultats.
+     *
+     * Il vit dans l'état sauvegardé de l'entrée de navigation, que le système garde en mémoire le
+     * temps de relancer le processus et qui s'en va avec la tâche. Rien n'est écrit sur le disque :
+     * les trajets obtenus restent en mémoire seulement, comme le promet PRIVACY.md.
+     */
+    private const val KEY_ITINERARY = "detail.itinerary"
 
     /** Aucune recherche en cours : le repli sur `plan` est impossible, il n'y a pas de requête. */
     private const val NO_SEARCH = "NoSearchInProgress"
