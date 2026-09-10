@@ -193,7 +193,7 @@
   <!-- Écran « Couches de la carte » (SPEC.md § 5.6), ouvert depuis Réglages → Affichage. -->
   <string name="settings_map_layers_title">Couches de la carte</string>
   <string name="settings_map_layers_description">Choisir ce que la carte affiche, à toutes les échelles.</string>
-  <string name="settings_map_layers_hint">Les repères aident à s\'orienter et s\'affichent dès le zoom 15. Les commerces et services sont plus denses et n\'apparaissent qu\'à partir du zoom 16.</string>
+  <string name="settings_map_layers_hint">Activer une catégorie ne change rien tant que la carte n\'est pas assez agrandie&#160;: les pictogrammes apparaissent au zoom 15, les noms au zoom 16.</string>
   <string name="settings_map_layers_section_transport">Transport</string>
   <string name="settings_map_layers_section_landmarks">Repères</string>
   <string name="settings_map_layers_section_shops">Commerces et services</string>

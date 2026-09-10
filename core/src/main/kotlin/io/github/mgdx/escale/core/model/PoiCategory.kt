@@ -4,8 +4,9 @@ package io.github.mgdx.escale.core.model
  * Ce qu'une catégorie de points d'intérêt montre, et à quelle échelle (SPEC.md § 5.7).
  *
  * Les deux familles ne se règlent pas de la même façon : les **repères** aident à s'orienter et
- * sont affichés d'emblée dès le zoom 15, tandis que les **commerces et services** densifient la
- * carte et ne s'affichent qu'à la demande, à partir du zoom 16.
+ * sont allumés d'emblée, tandis que les **commerces et services** densifient la carte et ne
+ * s'affichent qu'à la demande. Le tuilage MOTIS s'arrêtant au zoom 15, les unes comme les autres
+ * paraissent à ce palier, et leur nom au zoom 16.
  */
 enum class PoiKind {
   /** Services publics, enseignement, monuments, santé : les repères de la v1. */

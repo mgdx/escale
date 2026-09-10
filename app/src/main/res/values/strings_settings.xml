@@ -223,7 +223,7 @@
        une catégorie porte un seul nom, à l'écran comme dans la fiche. -->
   <string name="settings_map_layers_title">Map layers</string>
   <string name="settings_map_layers_description">Choose what the map shows, at every zoom level.</string>
-  <string name="settings_map_layers_hint">Landmarks help you find your way and are shown from zoom level 15. Shops and services are denser and only appear from zoom level 16.</string>
+  <string name="settings_map_layers_hint">Turning a category on changes nothing until you zoom in far enough: icons appear at zoom level 15, and names at 16.</string>
   <string name="settings_map_layers_section_transport">Transport</string>
   <string name="settings_map_layers_section_landmarks">Landmarks</string>
   <string name="settings_map_layers_section_shops">Shops and services</string>
