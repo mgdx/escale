@@ -7,7 +7,7 @@
       "tiles": [
         "__BASE_URL__/tiles/{z}/{x}/{y}.mvt"
       ],
-      "maxzoom": 20,
+      "maxzoom": 15,
       "attribution": "© OpenStreetMap"
     }
   },
@@ -645,7 +645,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "match",
         [
@@ -681,7 +681,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -712,7 +712,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "match",
         [
@@ -759,7 +759,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -790,7 +790,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "match",
         [
@@ -831,7 +831,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -862,7 +862,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "any",
         [
@@ -914,7 +914,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -945,7 +945,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "match",
         [
@@ -982,7 +982,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -1013,7 +1013,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "match",
         [
@@ -1054,7 +1054,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -1085,7 +1085,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "any",
         [
@@ -1145,7 +1145,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
@@ -1176,7 +1176,7 @@
       "type": "symbol",
       "source": "motis",
       "source-layer": "pois",
-      "minzoom": 16,
+      "minzoom": 15,
       "filter": [
         "all",
         [
@@ -1238,7 +1238,7 @@
             "zoom"
           ],
           "",
-          17,
+          16,
           [
             "get",
             "name"
