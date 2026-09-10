@@ -259,3 +259,29 @@ private fun DetailLoadingPreview() {
 private fun DetailErrorPreview() {
   DetailPreview(DetailUiState(journey = sampleJourney, error = EscaleError.NoNetwork))
 }
+
+/**
+ * La fiche restituée après la mort du processus, le temps que le trajet redemandé revienne.
+ *
+ * Il n'y a pas encore de trajet à montrer : l'écran annonce l'attente plutôt que d'ouvrir sur une
+ * page blanche.
+ */
+@Preview(showBackground = true, name = "Détail restitué, en attente")
+@Preview(
+  showBackground = true,
+  name = "Détail restitué, en attente, thème sombre",
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Preview(showBackground = true, name = "Détail restitué, en attente, 200 %", fontScale = 2f)
+@Composable
+private fun DetailRestoringPreview() {
+  DetailPreview(DetailUiState(loading = true))
+}
+
+/** La même, quand la requête de restitution a échoué : le bandeau et son bouton « Réessayer ». */
+@Preview(showBackground = true, name = "Détail restitué, échec")
+@Preview(showBackground = true, name = "Détail restitué, échec, thème sombre", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DetailRestoringErrorPreview() {
+  DetailPreview(DetailUiState(error = EscaleError.NoNetwork))
+}

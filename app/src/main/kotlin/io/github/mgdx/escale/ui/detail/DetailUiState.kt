@@ -15,8 +15,9 @@ import java.time.Instant
  * par le trajet complet dès qu'il arrive — [detailed] passe alors à vrai.
  *
  * Les trois ensembles de dépliage sont indexés sur la position de la portion dans [journey]. Ils
- * sont **le seul état sauvegardé** : un numéro de portion ne dit rien du trajet de l'usager, là où
- * le trajet lui-même n'a rien à faire sur le disque (SPEC.md § 11).
+ * sont sauvegardés, avec l'identifiant de l'itinéraire par lequel l'écran se rouvre après la mort
+ * du processus : le trajet lui-même, lui, n'est jamais écrit nulle part et disparaît avec le
+ * processus (SPEC.md § 11).
  */
 data class DetailUiState(
   val journey: Journey? = null,
@@ -41,8 +42,9 @@ data class DetailUiState(
    */
   val rentals: Map<Int, RentalLegAvailability> = emptyMap(),
   /**
-   * Vrai quand il n'y a plus rien à montrer : aucun trajet n'est choisi, typiquement au retour
-   * après la mort du processus. L'écran se referme au lieu d'afficher une page vide.
+   * Vrai quand il n'y a plus rien à montrer, ni trajet choisi ni itinéraire à redemander — au
+   * retour d'une mort du processus quand l'identifiant conservé a été refusé par le serveur.
+   * L'écran se referme au lieu d'afficher une page vide.
    */
   val closed: Boolean = false,
   /**

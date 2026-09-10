@@ -51,6 +51,90 @@ class DetailViewModelTest {
     assertTrue(repository.planCalls.isEmpty())
   }
 
+  // --- Retour après la mort du processus ---------------------------------------------------------
+
+  @Test
+  fun `apres la mort du processus, la fiche se rouvre sur le meme trajet, en une requete`() {
+    selection.select(journeyOf("id-1"))
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1"))
+    viewModel()
+
+    // Le processus meurt : le magasin en mémoire s'en va, l'état sauvegardé de l'entrée de
+    // navigation reste. C'est exactement ce que fait `am kill` suivi d'un retour à l'application.
+    selection.select(null)
+    repository.refreshCalls.clear()
+    val detailed = journeyOf("id-1", legs = listOf(walkLeg(0, 6), transitLeg(6, 20)))
+    repository.refreshAnswer = Outcome.Success(detailed)
+
+    val restored = viewModel()
+
+    assertFalse(restored.uiState.value.closed)
+    assertEquals(detailed, restored.uiState.value.journey)
+    assertTrue(restored.uiState.value.detailed)
+    // Une seule requête, et c'est celle de l'écran consulté (SPEC.md § 7).
+    assertEquals(listOf("id-1" to true), repository.refreshCalls)
+    assertTrue(repository.planCalls.isEmpty())
+    // Le trajet est republié : la carte retrouve son tracé sans rien demander.
+    assertEquals(detailed, selection.selected.value)
+  }
+
+  @Test
+  fun `le trajet restitue attend sa reponse plutot que de montrer une page blanche`() {
+    selection.select(journeyOf("id-1"))
+    viewModel()
+    selection.select(null)
+    repository.refreshAnswer = Outcome.Failure(EscaleError.Timeout)
+
+    val restored = viewModel()
+
+    // La requête a échoué : l'écran reste ouvert, sur le bandeau et son bouton « Réessayer ».
+    assertFalse(restored.uiState.value.closed)
+    assertNull(restored.uiState.value.journey)
+    assertEquals(EscaleError.Timeout, restored.uiState.value.error)
+    assertFalse(restored.uiState.value.loading)
+  }
+
+  @Test
+  fun `un identifiant perime, sans recherche a rejouer, referme la fiche restituee`() {
+    selection.select(journeyOf("id-perime"))
+    viewModel()
+    selection.select(null)
+    repository.refreshAnswer = Outcome.Failure(EscaleError.BadRequest(serverMessage = null))
+
+    // La recherche d'origine a disparu avec le processus : aucun repli n'est possible.
+    val restored = viewModel(session = SearchSession())
+
+    assertTrue(restored.uiState.value.closed)
+    assertNull(restored.uiState.value.error)
+    assertTrue(repository.planCalls.isEmpty())
+  }
+
+  @Test
+  fun `un trajet sans identifiant ne se restitue pas, et l'ecran se referme comme avant`() {
+    selection.select(journeyOf(null))
+    viewModel()
+    selection.select(null)
+    repository.refreshCalls.clear()
+
+    val restored = viewModel()
+
+    assertTrue(restored.uiState.value.closed)
+    assertTrue(repository.refreshCalls.isEmpty())
+  }
+
+  @Test
+  fun `le depliage restitue designe bien les portions du trajet redemande`() {
+    selection.select(journeyOf("id-1"))
+    val viewModel = viewModel()
+    viewModel.onLegToggled(1)
+    selection.select(null)
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1"))
+
+    val restored = viewModel()
+
+    assertEquals(setOf(1), restored.uiState.value.expandedLegs)
+  }
+
   @Test
   fun `a l'ouverture, le trajet sommaire est affiche avant meme la requete detaillee`() {
     val summary = journeyOf("id-1")

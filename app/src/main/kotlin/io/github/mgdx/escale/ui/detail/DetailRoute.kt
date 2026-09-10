@@ -7,14 +7,15 @@ import kotlinx.serialization.Serializable
  * (docs/architecture.md § 3, règle 4).
  *
  * **La route ne porte aucun argument, et c'est délibéré.** Un identifiant d'itinéraire MOTIS
- * encode la requête qui l'a produit — donc l'origine et la destination de l'usager — et les
- * arguments de route finissent dans l'état sauvegardé du système, sur le disque. SPEC.md § 11
- * interdit d'y écrire une donnée de localisation, et `ResultsViewModel` a tranché de la même façon
- * pour la liste de résultats.
+ * encode la requête qui l'a produit — donc l'origine et la destination de l'usager — et un
+ * argument de route se lit dans l'adresse de la destination, journalisée par l'outillage de
+ * navigation. Il n'a rien à y faire (SPEC.md § 11).
  *
  * Le trajet à afficher est donc lu en mémoire, dans `SelectedJourneyStore`. Après la mort du
- * processus ce magasin est vide, comme l'est la recherche en cours : l'écran se referme alors de
- * lui-même et l'usager retrouve la carte, exactement comme la feuille de résultats.
+ * processus ce magasin est vide : `DetailViewModel` redemande alors l'itinéraire à partir de
+ * l'identifiant qu'il a rangé dans l'état sauvegardé de cette entrée de navigation — en mémoire du
+ * système, jamais sur le disque, et effacé avec la tâche. L'usager qui revient retrouve la fiche
+ * qu'il lisait, et non la liste de résultats.
  */
 @Serializable
 data object DetailRoute
