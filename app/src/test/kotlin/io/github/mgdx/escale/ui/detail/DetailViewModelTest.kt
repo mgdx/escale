@@ -101,7 +101,8 @@ class DetailViewModelTest {
     selection.select(null)
     repository.refreshAnswer = Outcome.Failure(EscaleError.BadRequest(serverMessage = null))
 
-    // La recherche d'origine a disparu avec le processus : aucun repli n'est possible.
+    // Le trajet a disparu avec le processus : le repli de SPEC.md § 5.5.1 retient le plus proche en
+    // heure de départ, et cette heure-là n'existe plus. Aucun repli n'est donc possible.
     val restored = viewModel(session = SearchSession())
 
     assertTrue(restored.uiState.value.closed)
@@ -274,6 +275,45 @@ class DetailViewModelTest {
     val viewModel = viewModel(session = SearchSession())
 
     assertEquals("", viewModel.uiState.value.journey?.legs?.first()?.from?.name)
+  }
+
+  @Test
+  fun `apres la mort du processus, l'arrivee garde le nom saisi plutot qu'un libelle generique`() {
+    selection.select(journeyOf("id-1", legs = listOf(anonymousWalkLeg(0, 20))))
+    viewModel()
+
+    // Le processus meurt : `SearchSession` vit dans l'`AppContainer` et s'en va avec lui. Seul
+    // l'état sauvegardé de l'entrée de navigation subsiste, d'où le `SavedStateHandle` conservé.
+    selection.select(null)
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1", legs = listOf(anonymousWalkLeg(0, 20))))
+
+    val restored = viewModel(session = SearchSession())
+
+    val legs = restored.uiState.value.journey?.legs.orEmpty()
+    assertEquals("Bercy", legs.first().from.name)
+    // C'est le défaut relevé à la recette : cette ligne affichait « Arrivée » là où elle affichait
+    // « Nation » un instant plus tôt.
+    assertEquals("Nation", legs.last().to.name)
+    // Le trajet republié pour la carte porte les mêmes noms.
+    assertEquals("Nation", selection.selected.value?.legs?.last()?.to?.name)
+  }
+
+  @Test
+  fun `apres la mort du processus, l'etoile enregistre le couple cherche au lieu d'echouer`() = runBlocking {
+    selection.select(journeyOf("id-1"))
+    viewModel()
+
+    selection.select(null)
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-1"))
+    val restored = viewModel(session = SearchSession())
+
+    restored.onToggleFavorite()
+
+    val favori = favorites.journeys.first().single()
+    assertEquals("Bercy", favori.from.name)
+    assertEquals("Nation", favori.to.name)
+    assertEquals(DetailMessage.FAVORITE_ADDED, restored.uiState.value.message)
+    assertEquals(favori.id, restored.uiState.value.favoriteId)
   }
 
   @Test
