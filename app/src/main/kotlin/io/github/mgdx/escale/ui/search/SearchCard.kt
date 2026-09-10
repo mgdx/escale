@@ -19,17 +19,33 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RippleConfiguration
+import androidx.compose.material3.RippleDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -121,38 +137,47 @@ fun SearchCard(state: SearchUiState, actions: SearchActions, padding: PaddingVal
 @Composable
 private fun SearchFieldRow(field: SearchField, value: Location?, actions: SearchActions) {
   val hint = stringResource(field.hintRes())
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .heightIn(min = MinTouchTarget)
-      .clickable(onClickLabel = hint, role = Role.Button) { actions.onOpenField(field) }
-      .padding(horizontal = RowPadding, vertical = RowSpacing),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    Icon(
-      painter = painterResource(field.iconRes()),
-      contentDescription = stringResource(field.labelRes()),
-      tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Spacer(modifier = Modifier.width(RowSpacing))
-    Text(
-      // Le nom du lieu, tel que l'autocomplétion l'a rendu ; à défaut, ce que le champ attend.
-      text = value?.name ?: hint,
-      modifier = Modifier.weight(1f),
-      style = MaterialTheme.typography.bodyLarge,
-      color = if (value == null) {
-        MaterialTheme.colorScheme.onSurfaceVariant
-      } else {
-        MaterialTheme.colorScheme.onSurface
-      },
-    )
-    if (value != null) {
-      IconButton(onClick = { actions.onClearField(field) }, modifier = Modifier.size(MinTouchTarget)) {
-        Icon(
-          painter = painterResource(R.drawable.ic_cancel),
-          contentDescription = stringResource(R.string.search_clear),
-          tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+  var focused by remember { mutableStateOf(false) }
+  CompositionLocalProvider(LocalRippleConfiguration provides SearchRowRipple) {
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(min = MinTouchTarget)
+        .focusRing(visible = focused, color = MaterialTheme.colorScheme.primary)
+        .onFocusChanged { focused = it.isFocused }
+        .clickable(onClickLabel = hint, role = Role.Button) { actions.onOpenField(field) }
+        .padding(horizontal = RowPadding, vertical = RowSpacing),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Icon(
+        painter = painterResource(field.iconRes()),
+        contentDescription = stringResource(field.labelRes()),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Spacer(modifier = Modifier.width(RowSpacing))
+      Text(
+        // Le nom du lieu, tel que l'autocomplétion l'a rendu ; à défaut, ce que le champ attend.
+        text = value?.name ?: hint,
+        modifier = Modifier.weight(1f),
+        style = MaterialTheme.typography.bodyLarge,
+        color = if (value == null) {
+          MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+          MaterialTheme.colorScheme.onSurface
+        },
+      )
+      if (value != null) {
+        // Le bouton d'effacement garde l'indication complète du thème : il est rond, son fond de
+        // focus l'est aussi, et c'est exactement ce que la ligne, elle, ne peut pas offrir.
+        CompositionLocalProvider(LocalRippleConfiguration provides DefaultRipple) {
+          IconButton(onClick = { actions.onClearField(field) }, modifier = Modifier.size(MinTouchTarget)) {
+            Icon(
+              painter = painterResource(R.drawable.ic_cancel),
+              contentDescription = stringResource(R.string.search_clear),
+              tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
+        }
       }
     }
   }
@@ -162,22 +187,59 @@ private fun SearchFieldRow(field: SearchField, value: Location?, actions: Search
 @Composable
 private fun TimeRow(state: SearchUiState, onClick: () -> Unit) {
   val label = stringResource(R.string.search_time_change)
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .heightIn(min = MinTouchTarget)
-      .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
-      .padding(horizontal = RowPadding, vertical = RowSpacing),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    Icon(
-      painter = painterResource(R.drawable.ic_schedule),
-      contentDescription = label,
-      tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Spacer(modifier = Modifier.width(RowSpacing))
-    Text(text = timeChoiceLabel(state.time), style = MaterialTheme.typography.bodyLarge)
+  var focused by remember { mutableStateOf(false) }
+  CompositionLocalProvider(LocalRippleConfiguration provides SearchRowRipple) {
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(min = MinTouchTarget)
+        .focusRing(visible = focused, color = MaterialTheme.colorScheme.primary)
+        .onFocusChanged { focused = it.isFocused }
+        .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+        .padding(horizontal = RowPadding, vertical = RowSpacing),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Icon(
+        painter = painterResource(R.drawable.ic_schedule),
+        contentDescription = label,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Spacer(modifier = Modifier.width(RowSpacing))
+      Text(text = timeChoiceLabel(state.time), style = MaterialTheme.typography.bodyLarge)
+    }
   }
+}
+
+/**
+ * L'indication de focus des trois lignes de la carte : **un anneau, jamais un fond**.
+ *
+ * Le fond de focus par défaut de Material remplit toute la ligne. Comme une ligne va d'un bord à
+ * l'autre de la moitié gauche de la carte, ce fond se lit comme un bandeau gris qui recouvre
+ * l'angle arrondi supérieur et s'arrête net avant le bouton d'inversion — l'anomalie A5 du rapport
+ * du 9 septembre 2026. Et il n'attend aucun geste pour s'allumer : quand l'appareil est sorti
+ * du mode tactile (une touche matérielle, un D-pad, `adb shell input keyevent` — un état que
+ * WindowManager conserve d'une application à l'autre), le système donne le focus initial au premier
+ * élément focalisable de la fenêtre, ici la ligne « Départ », **dès le lancement**. Le bandeau
+ * restait donc affiché tant que l'usager ne touchait pas l'écran : le premier contact repasse en
+ * mode tactile, et `Modifier.clickable` (`Focusability.SystemDefined`) rend alors la ligne non
+ * focalisable, ce qui effaçait le fond.
+ *
+ * L'anneau règle les deux moitiés du problème : il se dessine en retrait, parallèle à l'angle de la
+ * carte, et il se lit comme une mise en évidence de navigation et non comme un fond. Le focus
+ * clavier reste acquis, visible et annoncé (SPEC.md § 9).
+ */
+private fun Modifier.focusRing(visible: Boolean, color: Color): Modifier = drawWithContent {
+  drawContent()
+  if (!visible) return@drawWithContent
+  val stroke = FocusRingWidth.toPx()
+  val inset = FocusRingInset.toPx() + stroke / 2
+  drawRoundRect(
+    color = color,
+    topLeft = Offset(inset, inset),
+    size = Size(width = size.width - inset * 2, height = size.height - inset * 2),
+    cornerRadius = CornerRadius(FocusRingRadius.toPx()),
+    style = Stroke(width = stroke),
+  )
 }
 
 /**
@@ -328,6 +390,39 @@ private val MinTouchTarget: Dp = 48.dp
 private val RowPadding: Dp = 12.dp
 private val RowSpacing: Dp = 8.dp
 private val DividerInset: Dp = 48.dp
+
+/**
+ * L'indication des lignes de la carte : celle du thème, **sauf le fond de focus**.
+ *
+ * Seul `focusedAlpha` tombe à zéro. L'appui, le survol et le glissement gardent leur remplissage :
+ * l'indication au toucher est celle de Material, à l'identique. Le focus, lui, est rendu par
+ * [focusRing]. Le réglage est volontairement porté par `LocalRippleConfiguration`, la porte de
+ * sortie prévue par Material 3 pour un composant précis, et il n'enveloppe que les trois lignes —
+ * le bouton d'inversion et le bouton d'effacement, ronds, gardent le fond du thème.
+ */
+internal val SearchRowRipple = RippleConfiguration(
+  rippleAlpha = RippleAlpha(
+    draggedAlpha = RippleDefaults.RippleAlpha.draggedAlpha,
+    focusedAlpha = 0f,
+    hoveredAlpha = RippleDefaults.RippleAlpha.hoveredAlpha,
+    pressedAlpha = RippleDefaults.RippleAlpha.pressedAlpha,
+  ),
+)
+
+/** L'indication du thème, rendue aux boutons ronds imbriqués dans une ligne. */
+private val DefaultRipple = RippleConfiguration()
+
+/**
+ * L'anneau de focus se pose en retrait du bord de la ligne, et son rayon complète ce retrait pour
+ * épouser l'angle de la carte : retrait + demi-épaisseur + rayon = les 16 dp de `shapes.large`.
+ * C'est ce qu'éprouve `SearchCardFocusTest` — sans quoi l'anneau serait coupé par l'angle arrondi.
+ */
+internal val FocusRingInset: Dp = 2.dp
+internal val FocusRingWidth: Dp = 2.dp
+internal val FocusRingRadius: Dp = 13.dp
+
+/** Le rayon de `MaterialTheme.shapes.large`, la forme de la carte de recherche. */
+internal val CardCornerRadius: Dp = 16.dp
 private val ChipIconSize: Dp = 18.dp
 private val ChipBorderWidth: Dp = 1.dp
 private val CardTonalElevation: Dp = 3.dp
