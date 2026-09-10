@@ -24,10 +24,10 @@ import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
-import io.github.mgdx.escale.ui.search.decodeSearchDraft
-import io.github.mgdx.escale.ui.search.encodeSearchDraft
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
+import io.github.mgdx.escale.ui.session.decodeSearchDraft
+import io.github.mgdx.escale.ui.session.encodeSearchDraft
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,9 +1,10 @@
-package io.github.mgdx.escale.ui.search
+package io.github.mgdx.escale.ui.session
 
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
-import io.github.mgdx.escale.ui.session.SearchDraft
+import io.github.mgdx.escale.ui.search.address
+import io.github.mgdx.escale.ui.search.stop
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

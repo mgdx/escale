@@ -1,11 +1,10 @@
-package io.github.mgdx.escale.ui.search
+package io.github.mgdx.escale.ui.session
 
 import io.github.mgdx.escale.core.model.LatLon
 import io.github.mgdx.escale.core.model.Location
 import io.github.mgdx.escale.core.model.PlaceKind
 import io.github.mgdx.escale.core.model.TimeChoice
 import io.github.mgdx.escale.core.model.TransitMode
-import io.github.mgdx.escale.ui.session.SearchDraft
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

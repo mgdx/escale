@@ -27,6 +27,8 @@ import io.github.mgdx.escale.ui.map.MapSelection
 import io.github.mgdx.escale.ui.map.PermissionRequest
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
+import io.github.mgdx.escale.ui.session.decodeSearchDraft
+import io.github.mgdx.escale.ui.session.encodeSearchDraft
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
