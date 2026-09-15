@@ -23,7 +23,9 @@ algorithme de routage.
 ### 1.2 Non-objectifs de la v1
 
 - Achat, réservation ou affichage de titres de transport (`withFares` est expérimental côté MOTIS).
-- Guidage pas-à-pas type GPS avec suivi de position continu.
+- Guidage pas-à-pas type GPS avec suivi de position continu. Le **suivi de trajet** du § 5.3.1
+  n'en relève pas : il se fonde sur l'horaire, jamais sur la position, et ne lit jamais celle-ci
+  hors du premier plan.
 - Transport à la demande (`ODM`, `FLEX`, `RIDE_SHARING`) : les résultats renvoyés par le serveur
   sont affichés s'ils arrivent, mais aucune interface dédiée n'est développée.
 - Fonctionnement hors ligne du calcul d'itinéraire (impossible : le calcul est serveur).
@@ -368,7 +370,94 @@ du trajet. Fond de carte : § 5.7.
 
 **Actions** : partager le trajet en texte, ajouter aux favoris, rafraîchir
 (`/api/v6/refresh-itinerary` avec l'`id` de l'itinéraire, qui recalcule avec les données temps réel
-à jour sans relancer une recherche complète).
+à jour sans relancer une recherche complète), et **suivre le trajet** (§ 5.3.1).
+
+#### 5.3.1 Suivi d'un trajet
+
+Depuis l'écran de détail, l'usager peut **suivre** un trajet : l'application l'accompagne pendant
+le déplacement et l'avertit, téléphone verrouillé et en poche, du moment de descendre et des
+correspondances. C'est la **seule** fonction d'Escale qui vit hors du premier plan, et elle est
+encadrée mot pour mot ci-dessous. Tout ce que ce paragraphe ne permet pas est interdit.
+
+**Principe : l'horaire, jamais la position.** La progression se calcule uniquement à partir des
+heures de passage connues : les heures effectives, temps réel appliqué quand il existe, telles que
+reçues au dernier chargement ou rafraîchissement du trajet. À un instant donné, la portion en cours
+est celle dont l'intervalle départ–arrivée contient cet instant. Dans une portion en transport en
+commun, le dernier arrêt franchi est le dernier arrêt intermédiaire dont l'heure de départ est
+passée, et le **nombre d'arrêts restants** compte les arrêts intermédiaires non encore franchis
+plus l'arrêt de descente, **arrêts supprimés exclus**. Ce calcul ne demande ni réseau ni
+localisation, et c'est précisément la raison du choix : il fonctionne dans le métro. Sa
+contrepartie est assumée et dite à l'usager au lancement du suivi : un retard que le serveur n'a
+pas signalé décale les annonces d'autant.
+
+**Disponibilité.** Le bouton « Suivre ce trajet » n'est proposé que si le trajet comporte au moins
+une portion en transport en commun, n'a aucune portion annulée, n'est pas terminé et démarre dans
+moins de **60 minutes**. Un seul trajet se suit à la fois : en suivre un autre remplace le
+précédent, après confirmation.
+
+**Ce que l'usager voit.**
+
+- Une **notification permanente**, mise à jour à chaque échéance, qui dit la portion en cours et
+  la prochaine action. Avant le départ : « Départ à 12:20 de Châtelet · ligne 4 vers Porte
+  d'Orléans · quai 2 ». À bord : « Ligne 4 · prochain arrêt Saint-Michel · descente à
+  Montparnasse dans 5 arrêts (12:34) ». À pied ou en correspondance : « Marcher 4 min jusqu'à
+  Montparnasse · ligne 6 vers Nation à 12:41 ». À l'arrivée : « Arrivée à destination ». Elle
+  porte une action « Arrêter le suivi », et son appui ouvre l'écran de détail du trajet suivi.
+- Des **alertes**, sonores et vibrantes, sur un canal distinct de la notification permanente, aux
+  seuls moments qui demandent un geste : « Descente dans 3 arrêts », « Descente au prochain
+  arrêt », « Descendez ici : Montparnasse » suivi de ce qui vient ensuite (correspondance ou
+  marche), et « Arrivée à destination ». L'alerte « dans 3 arrêts » est omise quand la portion
+  compte moins de trois arrêts restants au moment de la montée, et les deux alertes de descente
+  sont fusionnées quand elles tomberaient au même instant. Chaque alerte est un texte, jamais un
+  son seul (§ 9). Le seuil de trois arrêts est fixe en v1.
+- Dans l'application, l'écran de détail du trajet suivi affiche la même progression dans un
+  bandeau en tête de liste, met en évidence la portion et l'arrêt en cours, et son bouton devient
+  « Arrêter le suivi ».
+
+**Échéances.** Les instants qui déclenchent une mise à jour ou une alerte sont exactement : le
+départ de chaque portion, le départ de chaque arrêt intermédiaire, l'arrivée de chaque portion.
+Entre deux échéances, rien ne s'exécute. Un suivi lancé en cours de route se place d'emblée à la
+bonne échéance sans rejouer celles qui sont passées.
+
+**Rafraîchissement.** Le suivi lui-même **ne fait aucune requête réseau** : il ne rafraîchit
+jamais le trajet de son propre chef, ni à heure fixe, ni à l'approche d'une correspondance. Le
+temps réel n'entre que par les voies du § 7.4, c'est-à-dire par le bouton « Actualiser » et par le
+retour au premier plan de l'écran de détail, et tout rafraîchissement du trajet suivi met le suivi
+à jour avec les nouvelles heures. Une portion annulée par un rafraîchissement est signalée par une
+alerte, et le suivi continue sur les heures connues : il ne cherche pas d'alternative.
+
+**Fin du suivi.** Il s'arrête de lui-même à l'heure d'arrivée du trajet telle que connue au
+dernier rafraîchissement, ou quand l'usager appuie sur « Arrêter le suivi », depuis la notification
+comme depuis l'écran. Un rafraîchissement peut repousser cette heure, jamais au-delà de
+**30 minutes** après l'arrivée connue au lancement : passée cette borne, le suivi s'arrête de toute
+façon, un service ne tourne pas indéfiniment sur des heures qui ne veulent plus rien dire. À l'arrêt,
+la notification permanente disparaît et **rien ne subsiste** : ni trace, ni entrée d'historique
+supplémentaire, ni donnée en mémoire.
+
+**Moyens techniques, limitativement.**
+
+- Un **service au premier plan** de type `specialUse`, démarré par l'appui sur « Suivre ce
+  trajet » et jamais autrement : pas au démarrage de l'appareil, pas à l'ouverture de
+  l'application, pas par un autre composant. Il détient un **verrou de réveil partiel** le temps
+  du suivi, faute de quoi les échéances ne se déclenchent pas écran éteint, et le relâche à
+  l'arrêt. C'est le seul service de l'application et le seul détenteur de verrou. Si le système
+  tue le processus, le service est relancé avec le même trajet et reprend à la bonne échéance.
+- La permission `POST_NOTIFICATIONS` est demandée **à l'appui sur le bouton**, sur Android 13 et
+  suivants, et nulle part ailleurs. Si elle est refusée, le suivi n'est pas lancé et l'écran
+  l'explique : pas de suivi muet.
+- Le trajet suivi vit **en mémoire** du service, transmis par l'intent de démarrage sous une
+  forme réduite (portions, arrêts, heures, libellés), sans géométrie ni instructions pas-à-pas.
+  Rien n'est écrit sur disque, ni dans Room, ni dans DataStore : un suivi ne survit pas à un
+  redémarrage de l'appareil, et c'est voulu.
+- Toujours **interdits** : `WorkManager`, `AlarmManager`, `JobScheduler`, toute alarme exacte,
+  tout récepteur de démarrage, tout second service, toute lecture de position par le service,
+  toute requête réseau par le service. `NoBackgroundWorkTest` continue de le garantir : il
+  autorise ce seul service, et un test vérifie que le paquet du suivi ne référence ni client
+  réseau, ni dépôt, ni source de position.
+- Le calcul de progression (portion et arrêt en cours, arrêts restants, prochaine échéance,
+  nature de l'annonce à faire) vit dans `:core` et se teste en JVM. Le service et la notification
+  ne font que l'appeler à chaque échéance et mettre ses résultats en mots avec les ressources de
+  chaînes de `:app`.
 
 ### 5.4 Prochains départs à un arrêt
 
@@ -414,15 +503,22 @@ consultation.
 
 Le retrait est entier, et pas seulement au niveau de l'interface :
 
-- Aucune tâche de fond, donc plus aucune dépendance à `androidx.work` (§ 7.7).
-- Aucune notification, donc plus de `POST_NOTIFICATIONS`, ni de `WAKE_LOCK`, ni de permission de
-  démarrage automatique ou de service à retirer de la fusion (§ 11).
+- Aucune tâche planifiée : plus aucune dépendance à `androidx.work`, aucune alarme, et aucune
+  requête envoyée sans un geste de l'usager (§ 7.7).
+- Aucune notification à heure fixe, et aucune permission de démarrage automatique (§ 11).
 - Aucun stockage : la table `watched_journeys` est **supprimée** par une migration Room, parce que
   ce qu'elle contenait — heure et jours de départ habituels — est de la même nature que ce que la
   fonction révélait au serveur. Les trajets favoris, eux, sont conservés intacts.
 
 C'est une **interdiction**, au même titre que celles du § 11 : un test du dépôt échoue si le code
-réintroduit une tâche de fond, une permission de fond, un service ou un récepteur.
+réintroduit une tâche planifiée, une alarme, un récepteur ou un service autre que celui du suivi
+de trajet.
+
+**Le suivi de trajet du § 5.3.1 n'est pas cette fonction, et ne doit pas le devenir.** Il ne
+démarre que par un geste explicite de l'usager, pendant un déplacement que celui-ci vient de
+chercher ; il ne fait aucune requête ; il ne retient rien une fois terminé. La ligne à ne pas
+franchir est nette : une requête émise sans geste de l'usager, ou une donnée de trajet conservée
+après la fin du suivi, ramènerait exactement ce que ce paragraphe retire.
 
 ### 5.6 Réglages
 
@@ -604,6 +700,7 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
    pagination, ni rafraîchissement.
 4. **Aucun polling.** Le rafraîchissement du temps réel est déclenché par l'utilisateur
    (« tirer pour rafraîchir »), ou au retour au premier plan si les données ont plus de 60 secondes.
+   Le suivi de trajet (§ 5.3.1) n'est pas un troisième déclencheur : il ne rafraîchit rien.
 5. Cache mémoire des réponses `plan` pour la durée de la recherche ; cache disque de 24 h pour les
    résultats de géocodage.
 6. `detailedLegs=false` sur la liste de résultats, `true` pour le **seul trajet mis en évidence**
@@ -611,11 +708,13 @@ l'appareil. Les durées sont formatées par une fonction unique et testée de `:
    que le départ à l'arrivée en ligne droite : le trajet dessiné obtient donc son tracé réel en une
    requête de rafraîchissement d'itinéraire, mémorisée le temps de la recherche. Les autres trajets
    de la liste n'en déclenchent aucune.
-7. **Aucun travail de fond, sans exception.** L'application ne fait de réseau que lorsqu'elle est
-   au premier plan : aucun service, aucune tâche périodique, aucune synchronisation, aucune tâche
-   différée. La seule exception qu'admettait une version antérieure de cette spec, les trajets
-   surveillés, est retirée (§ 5.5.1) : une requête à heure fixe avant un trajet habituel trahit une
-   habitude de déplacement.
+7. **Aucun réseau hors du premier plan, sans exception.** L'application ne fait de réseau que
+   lorsqu'elle est au premier plan : aucune tâche périodique, aucune synchronisation, aucune tâche
+   différée, aucun service qui touche au réseau. La seule exception qu'admettait une version
+   antérieure de cette spec, les trajets surveillés, est retirée (§ 5.5.1) : une requête à heure
+   fixe avant un trajet habituel trahit une habitude de déplacement. Le service de suivi de trajet
+   (§ 5.3.1) tourne hors du premier plan mais **ne fait aucune requête** : il n'est pas une
+   exception à cette règle, il n'en relève pas, et un test le garantit.
 8. Délai d'expiration de 30 s, une seule tentative de reprise, pas de reprise sur les erreurs 4xx.
 9. Carte : aucune requête sous le zoom 11, déclenchement à l'arrêt de la caméra uniquement,
    emprise élargie de 30 %, cache par emprise, annulation systématique (§ 5.7).
@@ -656,12 +755,16 @@ compilation de débogage.
 
 - `:core` : tests JVM sur le décodage des polylignes (précisions 6 et 7), le mapping DTO → domaine,
   le calcul des retards, le formatage des durées et des pluriels, l'assemblage des paramètres de
-  requête pour chacune des cinq catégories.
+  requête pour chacune des cinq catégories, et la progression du suivi de trajet (§ 5.3.1) :
+  portion et arrêt en cours, arrêts restants avec arrêts supprimés, échéances, alertes, suivi
+  lancé en cours de route, fin de suivi.
 - `:data` : tests avec un serveur HTTP simulé et des réponses JSON réelles capturées depuis
   `api.transitous.org`, stockées dans `src/test/resources/fixtures/`. Au moins : un trajet en
   transport en commun avec correspondance, un trajet en libre-service, un trajet sans résultat,
   une réponse portant des `alerts`, une réponse contenant des champs inconnus.
-- `:app` : tests Compose sur les états liste / vide / erreur / chargement.
+- `:app` : tests Compose sur les états liste / vide / erreur / chargement ; `NoBackgroundWorkTest`,
+  qui n'admet que le service du suivi de trajet, et un test qui prouve que le paquet du suivi ne
+  référence ni client réseau, ni dépôt, ni source de position (§ 5.3.1).
 - Aucun test ne tape sur le réseau réel.
 - **Vérification sur appareil réel** à chaque jalon : mode clair et sombre, rotation, texte agrandi,
   états vide et erreur. La procédure d'installation, de capture d'écran et de lecture des journaux
@@ -675,6 +778,15 @@ Permissions déclarées, et aucune autre :
 
 - `INTERNET`
 - `ACCESS_COARSE_LOCATION` et `ACCESS_FINE_LOCATION`, facultatives, demandées à l'usage
+- `POST_NOTIFICATIONS`, facultative, demandée à l'usage au seul appui sur « Suivre ce trajet »
+  (§ 5.3.1), pour la notification de suivi et ses alertes. Refusée, le suivi n'est pas lancé et
+  tout le reste de l'application fonctionne comme avant.
+- `FOREGROUND_SERVICE` et `FOREGROUND_SERVICE_SPECIAL_USE`, de niveau normal, pour le service de
+  suivi de trajet, seul service de l'application. Le type `specialUse` est le seul honnête :
+  le suivi n'est ni de la localisation, ni de la lecture de média, ni une synchronisation. La
+  propriété `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` du manifeste en dit l'usage en clair.
+- `WAKE_LOCK`, de niveau normal, pour le verrou de réveil partiel que ce service détient pendant
+  le suivi et pendant lui seul.
 - `ACCESS_NETWORK_STATE`, exigée par MapLibre : son `ConnectivityReceiver` appelle
   `getActiveNetworkInfo()` pour suspendre le téléchargement des tuiles hors ligne, et lève une
   `SecurityException` sans elle. Permission de **niveau normal** : accordée à l'installation, sans
@@ -688,21 +800,24 @@ Permissions déclarées, et aucune autre :
   application signée avec la même clé pourrait l'obtenir, c'est-à-dire aucune autre. Elle n'est
   donc accordée à personne, ne donne accès à aucune donnée, n'ouvre aucun échange hors de
   l'application et ne donne lieu à aucun écran de consentement. Elle est nommée ici parce qu'un
-  relecteur qui compte les entrées du manifeste fusionné en trouve **cinq** et non quatre.
+  relecteur qui compte les entrées du manifeste fusionné en trouve **neuf** et non huit.
 
 `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE`, `WAKE_LOCK` et `POST_NOTIFICATIONS` entraient
 autrefois par le manifeste d'`androidx.work`, dépendance des trajets surveillés. La fonction et la
-bibliothèque étant retirées (§ 5.5.1), **aucune de ces quatre permissions n'apparaît plus dans le
-manifeste fusionné**, et il n'y a plus rien à en retirer par `tools:node="remove"`. Le jour où une
-bibliothèque en réintroduirait une, elle serait retirée de la fusion plutôt que tolérée.
+bibliothèque sont retirées (§ 5.5.1). Trois de ces permissions reviennent aujourd'hui, mais
+**déclarées par l'application elle-même**, pour le suivi de trajet et rien d'autre ;
+`RECEIVE_BOOT_COMPLETED` ne revient pas, parce qu'un suivi ne survit pas au redémarrage. Aucune
+permission n'entre par une bibliothèque : le jour où l'une en réintroduirait une, elle serait
+retirée de la fusion plutôt que tolérée.
 
-L'application doit rester entièrement utilisable si la permission de localisation est refusée.
-Aucune permission de stockage, de contacts, de démarrage automatique, de service en arrière-plan,
-ni d'alarme exacte.
+L'application doit rester entièrement utilisable si la permission de localisation est refusée, et
+si celle de notification l'est. Aucune permission de stockage, de contacts, de démarrage
+automatique, de localisation en arrière-plan, ni d'alarme exacte.
 Un fichier `PRIVACY.md` documente précisément ce qui est envoyé au serveur (les coordonnées de
 départ et d'arrivée, l'heure, les préférences de modes) et ce qui reste local. Il dit aussi ce
 qu'Escale ne fait pas : **aucune requête n'est envoyée sans que l'usager ait l'application sous les
-yeux**.
+yeux**, et ce que fait le suivi de trajet quand le téléphone est verrouillé : des calculs locaux
+sur des heures déjà reçues, et rien d'autre.
 
 ---
 
@@ -744,6 +859,9 @@ la CI GitHub Actions (compilation, tests, lint sur chaque poussée).
 9. **Départs** : `stoptimes`, détail de course.
 10. **Favoris et historique** : domicile, travail, Room, réglages, effacement.
 11. **Finition** : accessibilité, traduction française, métadonnées Fastlane, conformité F-Droid.
+12. **Suivi de trajet** (§ 5.3.1) : progression dans `:core`, service au premier plan, notification
+    permanente et alertes, bandeau de l'écran de détail, permissions, mise à jour de `PRIVACY.md`,
+    de `docs/fdroid.md`, du manifeste et de `NoBackgroundWorkTest`.
 
 Chaque jalon se termine par une application qui compile, dont les tests passent, et qui est
 utilisable sur un appareil réel.
