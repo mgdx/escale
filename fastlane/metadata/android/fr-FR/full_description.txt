@@ -20,6 +20,6 @@ Données cartographiques © les contributeurs OpenStreetMap, sous licence ODbL :
 
 <b>Vie privée</b>
 
-Aucune mesure d'audience, aucun traqueur, aucune publicité, aucun service Google Play. Rien ne quitte votre téléphone en dehors des requêtes envoyées au serveur d'itinéraires que vous avez configuré, et rien n'est envoyé pendant que l'application est fermée : Escale n'a ni tâche de fond, ni service, ni notification. Favoris, domicile, travail et historique de recherche restent en mémoire locale ; la sauvegarde automatique est désactivée, ils ne sont donc jamais recopiés ailleurs.
+Aucune mesure d'audience, aucun traqueur, aucune publicité, aucun service Google Play. Rien ne quitte votre téléphone en dehors des requêtes envoyées au serveur d'itinéraires que vous avez configuré, et rien n'est envoyé pendant que l'application est fermée : Escale n'a ni tâche de fond, ni tâche planifiée. La seule chose qui puisse tourner téléphone verrouillé est le suivi de trajet que vous lancez vous-même, qui compte les arrêts sur l'horaire, n'envoie rien et ne lit pas votre position. Favoris, domicile, travail et historique de recherche restent en mémoire locale ; la sauvegarde automatique est désactivée, ils ne sont donc jamais recopiés ailleurs.
 
 Escale est un logiciel libre, publié sous licence GNU General Public License v3 ou ultérieure.

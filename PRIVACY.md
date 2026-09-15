@@ -18,7 +18,10 @@ encore écrites sont annoncées comme telles.
 - Rien n'est synchronisé, sauvegardé ni envoyé ailleurs que sur votre appareil et vers le serveur
   que vous avez choisi.
 - **Aucune requête n'est envoyée sans que vous ayez l'application sous les yeux.** Escale n'a ni
-  tâche de fond, ni service, ni notification : fermée, elle ne fait rien du tout.
+  tâche de fond, ni tâche planifiée, ni synchronisation : fermée, elle ne fait rien du tout. La
+  seule chose qui puisse tourner pendant que le téléphone est verrouillé est le **suivi d'un
+  trajet**, que vous lancez vous-même d'un bouton, qui ne fait aucune requête, et qui s'arrête à
+  l'arrivée (voir plus bas).
 
 ## Ce qui est envoyé au serveur MOTIS configuré
 
@@ -87,22 +90,50 @@ aujourd'hui **aucune fonction d'exportation** dans l'application, donc aucun moy
 rattraper. C'est un choix assumé : la seule sauvegarde possible aurait été une copie hors de votre
 appareil, ce que ce document promet précisément de ne jamais faire.
 
+## Le suivi d'un trajet
+
+Depuis le détail d'un trajet en transport en commun, un bouton **« Suivre ce trajet »** vous
+accompagne pendant le déplacement : une notification permanente dit où vous en êtes, et des
+alertes sonores vous préviennent trois arrêts avant de descendre, au dernier arrêt, à chaque
+correspondance et à l'arrivée. Voici exactement ce que cela fait, et ce que cela ne fait pas.
+
+- **Tout est calculé sur l'horaire**, à partir des heures déjà reçues quand vous avez ouvert ou
+  actualisé le trajet. Le suivi **ne lit jamais votre position** : c'est ce qui lui permet de
+  fonctionner dans le métro, et c'est aussi ce qui fait qu'un retard que le serveur n'a pas signalé
+  décale les annonces d'autant. L'application vous le dit au lancement.
+- **Aucune requête n'est envoyée** pendant le suivi. Le temps réel ne se met à jour que si vous
+  ouvrez l'application et actualisez le trajet vous-même, comme d'habitude.
+- **Rien n'est écrit sur le disque.** Le trajet suivi vit en mémoire le temps du suivi ; un
+  redémarrage du téléphone l'arrête, et il ne reprend pas tout seul.
+- Le suivi **ne démarre que par votre appui** sur le bouton, jamais à l'ouverture de l'application,
+  jamais au démarrage du téléphone. Il **s'arrête de lui-même** à l'arrivée, ou quand vous appuyez
+  sur « Arrêter le suivi », et au plus tard trente minutes après l'heure d'arrivée connue au
+  lancement. Il ne reste alors rien : ni notification, ni trace, ni entrée d'historique.
+- Il ne surveille aucun trajet à votre place : ce n'est pas la fonction de surveillance décrite
+  plus bas, qui a été retirée et ne revient pas.
+
 ## Permissions
 
-Escale déclare **quatre** permissions Android, et aucune autre :
+Escale déclare **huit** permissions Android, et aucune autre :
 
 | Permission | Pourquoi | Quand elle est demandée |
 |---|---|---|
 | `INTERNET` | interroger le serveur MOTIS | à l'installation, obligatoire |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | vous situer sur la carte et partir de votre position | facultatives, au premier appui sur le bouton de localisation |
 | `ACCESS_NETWORK_STATE` | savoir si l'appareil est connecté, pour que la carte cesse de réclamer des tuiles hors ligne | à l'installation, exigée par la bibliothèque de carte |
+| `POST_NOTIFICATIONS` | afficher la notification et les alertes du suivi d'un trajet | facultative, au seul appui sur « Suivre ce trajet » ; refusée, le suivi ne démarre pas et tout le reste fonctionne |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | faire tourner le suivi d'un trajet pendant que le téléphone est verrouillé | à l'installation, sans écran de consentement ; le service ne tourne que pendant un suivi que vous avez lancé |
+| `WAKE_LOCK` | réveiller le téléphone aux heures de passage des arrêts pendant un suivi | à l'installation, sans écran de consentement ; détenue pendant le suivi et lui seul |
 
-`ACCESS_NETWORK_STATE` est une permission de niveau *normal* : elle ne vous est pas soumise et ne
-donne accès qu'au fait que l'appareil soit connecté ou non — ni le nom du réseau, ni son adresse,
-ni rien qui vous concerne. La bibliothèque de carte réclamait également l'accès à l'état du Wi-Fi ;
-elle ne s'en sert nulle part, et Escale la retire de son manifeste.
+`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` et `WAKE_LOCK` sont
+des permissions de niveau *normal* : elles ne vous sont pas soumises et ne donnent accès à aucune
+donnée. La première ne dit que si l'appareil est connecté ou non — ni le nom du réseau, ni son
+adresse, ni rien qui vous concerne. Les trois autres n'existent que pour le suivi d'un trajet : elles
+permettent à un service de continuer à compter les arrêts pendant que l'écran est éteint, et à
+rien d'autre. La bibliothèque de carte réclamait également l'accès à l'état du Wi-Fi ; elle ne s'en
+sert nulle part, et Escale la retire de son manifeste.
 
-**Une cinquième ligne, qui n'est pas une permission Android.** Si vous lisez le manifeste de
+**Une neuvième ligne, qui n'est pas une permission Android.** Si vous lisez le manifeste de
 l'application installée, vous y trouverez aussi
 `io.github.mgdx.escale.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Ce n'est pas une permission de
 la plateforme : c'est une permission qu'Escale **définit pour elle-même**, ajoutée automatiquement
@@ -112,13 +143,12 @@ niveau *signature*, ce qui veut dire que seule une application signée avec la m
 l'obtenir — donc aucune. Elle ne donne accès à rien, ne vous est jamais soumise, et n'existe que
 pour fermer une porte, pas pour en ouvrir une.
 
-Aucune permission de stockage, de contacts, de **démarrage automatique**, de **service en
-arrière-plan**, de **notification** ni d'**alarme exacte** n'est demandée. Escale n'a aucune tâche
-de fond : la bibliothèque de tâches d'Android (`androidx.work`), qui apportait autrefois quatre de
-ces permissions, n'est plus une dépendance de l'application. Vous pouvez le vérifier vous-même : le
-manifeste d'une application installée est public, et celui d'Escale ne contient que les quatre
-permissions du tableau ci-dessus, plus la permission de signature décrite juste avant, qui ne donne
-accès à rien.
+Aucune permission de stockage, de contacts, de **démarrage automatique**, de **localisation en
+arrière-plan** ni d'**alarme exacte** n'est demandée. Escale n'a aucune tâche planifiée : la
+bibliothèque de tâches d'Android (`androidx.work`) n'est pas une dépendance de l'application, et
+aucune permission n'entre par une bibliothèque. Vous pouvez le vérifier vous-même : le manifeste
+d'une application installée est public, et celui d'Escale ne contient que les huit permissions du
+tableau ci-dessus, plus la permission de signature décrite juste avant, qui ne donne accès à rien.
 
 ## Favoris et historique
 
@@ -156,10 +186,12 @@ quand vous l'ouvrez.
 
 En conséquence, aujourd'hui :
 
-- Escale **ne fait rien quand elle n'est pas ouverte** : aucun service, aucune tâche différée ou
-  périodique, aucune synchronisation, aucune notification, aucun relevé de votre position.
-- Elle n'a plus besoin des permissions correspondantes : ni notification, ni démarrage automatique,
-  ni service en arrière-plan, ni alarme exacte, ni maintien de l'appareil éveillé.
+- Escale **n'envoie rien quand elle n'est pas ouverte** : aucune tâche différée ou périodique,
+  aucune synchronisation, aucun relevé de votre position. Le suivi d'un trajet, décrit plus haut,
+  est la seule chose qui puisse tourner écran éteint, et il ne fait ni requête, ni relevé de
+  position : il compte les arrêts sur des heures déjà reçues, puis s'efface.
+- Elle n'a pas de permission de démarrage automatique ni d'alarme exacte ; celles du suivi de
+  trajet ne servent qu'à lui, et il ne démarre que d'un appui de votre part.
 - Ce que la fonction avait enregistré sur votre appareil — l'heure et les jours de vos départs
   habituels — **est effacé à la mise à jour**, et non simplement laissé de côté. Vos trajets
   favoris, eux, sont conservés tels quels.

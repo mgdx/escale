@@ -18,6 +18,10 @@ Le nom joue sur deux sens : l'escale du voyageur, et la correspondance qui ponct
   durées, retards en temps réel, perturbations, disponibilité des stations de libre-service.
 - Carte plein écran avec les arrêts, les stations et les points d'intérêt utiles à l'orientation.
 - Prochains départs à un arrêt, favoris et historique, le tout stocké **localement**.
+- **Suivi d'un trajet** en transport en commun : une notification dit où vous en êtes et vous
+  prévient trois arrêts avant de descendre, au dernier arrêt, à chaque correspondance et à
+  l'arrivée. Tout est calculé sur l'horaire, sans lire votre position, ce qui fonctionne dans le
+  métro ; rien n'est envoyé pendant le suivi.
 
 Toute l'intelligence de calcul est côté serveur : l'application n'implémente aucun algorithme de
 routage. Le cahier des charges complet est dans [`SPEC.md`](SPEC.md), qui fait autorité.

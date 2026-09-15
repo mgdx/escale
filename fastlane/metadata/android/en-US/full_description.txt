@@ -20,6 +20,6 @@ Map data © OpenStreetMap contributors, licensed under the ODbL: <a href="https:
 
 <b>Privacy</b>
 
-No analytics, no tracker, no advertising, no Google Play services. Nothing leaves your phone except the requests sent to the routing server you have configured, and nothing is sent while the app is closed: Escale has no background task, no service and no notification. Favourites, home, work and search history stay in local storage; automatic backup is switched off, so they are never copied anywhere else.
+No analytics, no tracker, no advertising, no Google Play services. Nothing leaves your phone except the requests sent to the routing server you have configured, and nothing is sent while the app is closed: Escale has no background task and no scheduled work. The only thing that can run while your phone is locked is the journey follow-up you start yourself, which counts stops on the timetable, sends nothing and reads no location. Favourites, home, work and search history stay in local storage; automatic backup is switched off, so they are never copied anywhere else.
 
 Escale is free software, released under the GNU General Public License v3 or later.

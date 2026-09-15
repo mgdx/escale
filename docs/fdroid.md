@@ -177,7 +177,7 @@ Deux précisions utiles :
 
 Le manifeste fusionné de **publication** (`processReleaseManifest`) déclare exactement ceci.
 
-### Les quatre permissions de plateforme
+### Les huit permissions de plateforme
 
 | Permission | Niveau | Origine | Justification |
 |---|---|---|---|
@@ -185,33 +185,45 @@ Le manifeste fusionné de **publication** (`processReleaseManifest`) déclare ex
 | `ACCESS_COARSE_LOCATION` | dangereuse | Escale | Facultative. Centrer la carte, proposer « Ma position » comme départ. Demandée **à l'usage**, au premier appui sur le bouton de position, jamais au démarrage. |
 | `ACCESS_FINE_LOCATION` | dangereuse | Escale | Facultative. Demandée seulement si l'usager insiste pour un centrage précis, après la précédente. |
 | `ACCESS_NETWORK_STATE` | **normal** | MapLibre | Le `ConnectivityReceiver` de la bibliothèque appelle `getActiveNetworkInfo()` et lève une `SecurityException` sans elle. Accordée à l'installation, sans écran de consentement ; elle ne donne accès qu'à l'état « connecté ou non ». |
+| `POST_NOTIFICATIONS` | dangereuse (Android 13+) | Escale | Facultative. La notification permanente et les alertes du **suivi de trajet** (SPEC.md § 5.3.1). Demandée **à l'usage**, au seul appui sur « Suivre ce trajet » ; refusée, le suivi ne démarre pas et tout le reste fonctionne. |
+| `FOREGROUND_SERVICE` | normal | Escale | Le service au premier plan du suivi de trajet, seul service de l'application. Démarré par l'appui sur le bouton, jamais autrement ; il ne fait aucune requête. |
+| `FOREGROUND_SERVICE_SPECIAL_USE` | normal | Escale | Le type de ce service. `specialUse` est le seul honnête : le suivi n'est ni de la localisation, ni un média, ni une synchronisation. La propriété `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` du manifeste en dit l'usage. |
+| `WAKE_LOCK` | normal | Escale | Le verrou de réveil partiel que ce service détient pendant le suivi, et lui seul, pour que les échéances se déclenchent écran éteint. Borné à la fin du suivi. |
 
-**L'application reste entièrement utilisable si les deux permissions facultatives de
-localisation sont refusées.**
+**L'application reste entièrement utilisable si les permissions facultatives de localisation et
+de notification sont refusées.**
 C'est une exigence de SPEC.md § 11, pas une intention.
 
-### Quatre permissions de fond qui n'entrent plus du tout
+### Le suivi de trajet, seul travail hors du premier plan
 
-`androidx.work` déclarait dans son propre manifeste `RECEIVE_BOOT_COMPLETED` (*démarrage
-automatique*), `FOREGROUND_SERVICE` (*service en arrière-plan*), `WAKE_LOCK` et
-`ACCESS_NETWORK_STATE`, et `POST_NOTIFICATIONS` servait à prévenir l'usager du résultat d'une
-vérification. La bibliothèque était la dépendance des trajets surveillés ; **la fonction a été
-retirée** pour ce qu'elle coûtait en confidentialité (SPEC.md § 5.5.1), et la dépendance avec elle.
+Le suivi de trajet (SPEC.md § 5.3.1) est **la seule** fonction qui vive hors du premier plan, et un
+relecteur peut vérifier son périmètre sur les sources plutôt que sur parole :
 
-Ces permissions ne sont donc plus retirées de la fusion par `tools:node="remove"` : **elles
-n'entrent plus du tout**, ce qu'un relecteur constate directement sur le manifeste fusionné.
-`ACCESS_NETWORK_STATE` reste, apportée par MapLibre. Un test du dépôt
-(`NoBackgroundWorkTest`) échoue si le code réintroduit une tâche de fond, un service, un récepteur
-ou l'une de ces permissions.
+- il se fonde sur l'horaire seul, **jamais sur la position** : `FollowIsolationTest` échoue si le
+  paquet `follow` référence une source de position, un client réseau, un dépôt ou un stockage ;
+- il ne fait **aucune requête réseau** : le temps réel n'entre que par l'écran de détail, sur un
+  geste de l'usager (§ 7.4) ;
+- il n'écrit **rien sur le disque** : le trajet suivi voyage dans l'intent du service et vit en
+  mémoire ; un redémarrage de l'appareil l'arrête ;
+- il ne démarre que par un appui, s'arrête à l'arrivée ou trente minutes après l'arrivée connue au
+  lancement, et ne laisse rien derrière lui.
+
+Il n'a rien à voir avec les **trajets surveillés** d'une version antérieure, retirés pour ce qu'ils
+coûtaient en confidentialité (SPEC.md § 5.5.1) : ceux-ci envoyaient une requête à heure fixe, la
+veille du même trajet, jour après jour. `androidx.work`, leur dépendance, n'est plus dans le
+graphe, et `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM` et `USE_EXACT_ALARM` n'entrent nulle
+part. `NoBackgroundWorkTest` échoue si le code réintroduit une tâche planifiée, une alarme, un
+récepteur, un second service ou l'une de ces permissions, et vérifie que le manifeste déclare
+exactement les quatre permissions du suivi, pas une de plus.
 
 `ACCESS_WIFI_STATE` et `<uses-feature android:name="android.hardware.wifi">`, apportées par
 MapLibre qui ne s'en sert nulle part, sont retirées de la même manière. Le manifeste fusionné ne
 contient **aucun `<uses-feature>`**.
 
 Ne sont demandées, et ne doivent jamais l'être : aucune permission de stockage, de contacts,
-d'appareil photo, de journal d'appels, ni `SCHEDULE_EXACT_ALARM`.
+d'appareil photo, de journal d'appels, de localisation en arrière-plan, ni `SCHEDULE_EXACT_ALARM`.
 
-### Une cinquième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
+### Une neuvième entrée, qui n'est pas une permission Android — SPEC.md § 11 la nomme
 
 Le manifeste de publication déclare aussi :
 
@@ -350,8 +362,8 @@ soumise à un consentement éclairé.
 - Escale ne collecte rien pour son compte, n'a pas de serveur propre, n'émet aucun identifiant.
 - **Aucune requête n'est envoyée sans que l'usager ait l'application sous les yeux.** La seule qui
   l'était, celle des trajets surveillés, a été retirée (§ 5.5.1) précisément parce qu'une requête à
-  heure fixe révèle une habitude de déplacement. L'application n'a plus ni tâche de fond, ni
-  service, ni notification.
+  heure fixe révèle une habitude de déplacement. Le seul service de l'application, le suivi de
+  trajet, ne touche pas au réseau (§ 3 ci-dessus).
 - Aucune des applications de transport citées plus haut ne porte `Tracking`.
 
 ### `NonFreeAssets`, `NonFreeDep`, `NonFreeAdd` — non
