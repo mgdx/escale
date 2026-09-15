@@ -1,5 +1,6 @@
 package io.github.mgdx.escale
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    handle(intent)
     setContent {
       val container = (application as EscaleApplication).container
       val display by container.preferencesRepository.displayPreferences
@@ -58,6 +60,25 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handle(intent)
+  }
+
+  /**
+   * L'appui sur la notification du suivi de trajet ouvre la fiche du trajet suivi (SPEC.md § 5.3.1).
+   *
+   * L'activité ne navigue pas elle-même : elle dépose la demande auprès du suivi, et c'est le graphe
+   * de navigation qui la consomme, comme il consomme déjà les demandes de la carte. L'action est
+   * effacée aussitôt, pour qu'une recréation de l'activité ne la rejoue pas.
+   */
+  private fun handle(intent: Intent?) {
+    if (intent?.action != ACTION_OPEN_FOLLOW) return
+    intent.action = null
+    (application as EscaleApplication).container.journeyFollower.requestOpen()
+  }
+
   /**
    * Signale au système que l'application est réellement affichée, **au sens de SPEC.md § 5.7** :
    * « démarrage à froid jusqu'à la première image de carte : moins de 1,5 s ».
@@ -79,5 +100,10 @@ class MainActivity : ComponentActivity() {
     LaunchedEffect(drawn) {
       if (drawn) reportFullyDrawn()
     }
+  }
+
+  companion object {
+    /** L'action de l'intent que pose la notification du suivi de trajet. */
+    const val ACTION_OPEN_FOLLOW = "io.github.mgdx.escale.OPEN_FOLLOW"
   }
 }

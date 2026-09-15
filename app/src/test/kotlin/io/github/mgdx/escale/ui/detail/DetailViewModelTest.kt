@@ -2,6 +2,7 @@ package io.github.mgdx.escale.ui.detail
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.mgdx.escale.MainDispatcherRule
+import io.github.mgdx.escale.core.follow.FollowState
 import io.github.mgdx.escale.core.model.JourneyCategory
 import io.github.mgdx.escale.core.model.JourneyLeg
 import io.github.mgdx.escale.core.model.JourneyPage
@@ -636,7 +637,161 @@ class DetailViewModelTest {
     assertNull(viewModel.uiState.value.favoriteId)
   }
 
+  // --- Suivi de trajet (SPEC.md § 5.3.1) ---------------------------------------------------------
+
+  @Test
+  fun `le bouton de suivi n'est propose que dans l'heure qui precede le depart`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+
+    // Le trajet part à 8 h 00 et arrive à 8 h 20 ; l'horloge dit 9 h 30 : il est terminé.
+    assertFalse(viewModel().uiState.value.followAvailable)
+
+    clock = at(-30)
+    assertTrue(viewModel().uiState.value.followAvailable)
+
+    clock = at(-90)
+    assertFalse(viewModel().uiState.value.followAvailable)
+  }
+
+  @Test
+  fun `suivre le trajet demarre le suivi, le dit, et le bandeau s'affiche`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    clock = at(7)
+    val viewModel = viewModel()
+
+    viewModel.onFollowRequested()
+
+    assertEquals(listOf(journey), follower.started)
+    assertEquals(DetailMessage.FOLLOW_STARTED, viewModel.uiState.value.message)
+    // À 8 h 07, l'usager est à bord de la ligne 1 depuis 8 h 05.
+    assertTrue(viewModel.uiState.value.follow is FollowState.OnBoard)
+  }
+
+  @Test
+  fun `hors de la fenetre de lancement, la demande de suivi ne fait rien`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    val viewModel = viewModel()
+
+    viewModel.onFollowRequested()
+
+    assertTrue(follower.started.isEmpty())
+    assertNull(viewModel.uiState.value.follow)
+  }
+
+  @Test
+  fun `un autre trajet deja suivi demande confirmation avant d'etre remplace`() {
+    clock = at(2)
+    follower.start(journeyOf("autre", legs = listOf(transitLeg(1, 15))))
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    val viewModel = viewModel()
+
+    // L'autre trajet est suivi : le bandeau ne s'affiche pas pour celui-ci.
+    assertNull(viewModel.uiState.value.follow)
+
+    viewModel.onFollowRequested()
+    assertTrue(viewModel.uiState.value.followReplacePrompt)
+    assertEquals(1, follower.started.size)
+
+    viewModel.onFollowReplaceDismissed()
+    assertFalse(viewModel.uiState.value.followReplacePrompt)
+    assertEquals(1, follower.started.size)
+
+    viewModel.onFollowRequested()
+    viewModel.onFollowReplaceConfirmed()
+    assertFalse(viewModel.uiState.value.followReplacePrompt)
+    assertEquals(listOf("autre", "id-1"), follower.started.map { it.id })
+    assertTrue(viewModel.uiState.value.follow != null)
+  }
+
+  @Test
+  fun `le suivi avance, et le bandeau suit sans rien demander`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    clock = at(2)
+    val viewModel = viewModel()
+    viewModel.onFollowRequested()
+    assertTrue(viewModel.uiState.value.follow is FollowState.Connecting)
+
+    follower.publish(FollowState.Arrived)
+
+    assertEquals(FollowState.Arrived, viewModel.uiState.value.follow)
+  }
+
+  @Test
+  fun `un rafraichissement du trajet suivi met le suivi a jour, sous la meme cle`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    clock = at(2)
+    val viewModel = viewModel()
+    viewModel.onFollowRequested()
+
+    // Le repli sur `plan` rend un itinéraire à l'identifiant différent : c'est toujours le même
+    // trajet suivi, sous sa clé d'origine, avec les nouvelles heures.
+    repository.refreshAnswer = Outcome.Failure(EscaleError.BadRequest(serverMessage = null))
+    val replanned = journeyOf("id-2", legs = listOf(walkLeg(0, 5), transitLeg(5, 24)))
+    repository.planAnswer = Outcome.Success(JourneyPage(journeys = listOf(replanned)))
+    viewModel.onRefresh()
+
+    assertEquals(listOf("id-1" to replanned), follower.replaced)
+    assertEquals("id-2", follower.session.value?.plan?.itineraryId)
+    assertEquals("id-1", follower.session.value?.plan?.key)
+    assertTrue(viewModel.uiState.value.follow != null)
+  }
+
+  @Test
+  fun `un rafraichissement d'un trajet non suivi ne touche pas au suivi`() {
+    clock = at(2)
+    follower.start(journeyOf("autre", legs = listOf(transitLeg(1, 15))))
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+
+    viewModel()
+
+    assertTrue(follower.replaced.isEmpty())
+  }
+
+  @Test
+  fun `arreter le suivi retire le bandeau`() {
+    val journey = journeyOf("id-1")
+    selection.select(journey)
+    repository.refreshAnswer = Outcome.Success(journey)
+    clock = at(2)
+    val viewModel = viewModel()
+    viewModel.onFollowRequested()
+
+    viewModel.onFollowStop()
+
+    assertEquals(1, follower.stops)
+    assertNull(viewModel.uiState.value.follow)
+  }
+
+  @Test
+  fun `ouverte depuis la notification apres la mort du processus, la fiche se reconstruit`() {
+    // Rien en mémoire, rien de sauvegardé : seul le suivi connaît encore l'identifiant.
+    follower.reopenItineraryId = "id-suivi"
+    repository.refreshAnswer = Outcome.Success(journeyOf("id-suivi"))
+
+    val viewModel = viewModel()
+
+    assertFalse(viewModel.uiState.value.closed)
+    assertEquals(listOf("id-suivi" to true), repository.refreshCalls)
+    assertEquals("id-suivi", viewModel.uiState.value.journey?.id)
+  }
+
   private val favorites = FakeFavoritesRepository()
+
+  private val follower = FakeJourneyFollower { clock }
 
   private fun viewModel(session: SearchSession = sessionWithSearch()) = DetailViewModel(
     selection = selection,
@@ -644,6 +799,7 @@ class DetailViewModelTest {
     planRepository = repository,
     rentalsRepository = rentals,
     favoritesRepository = favorites,
+    follower = follower,
     savedState = savedState,
     now = { clock },
   )

@@ -168,6 +168,31 @@ private fun FavoritesDestination(navController: NavHostController) {
 @Composable
 private fun PendingRequestNavigation(navController: NavHostController) {
   StopDepartureNavigation(navController)
+  FollowNavigation(navController)
+}
+
+/**
+ * La notification du suivi de trajet mène à la fiche du trajet suivi (SPEC.md § 5.3.1).
+ *
+ * Le trajet entier est republié dans `SelectedJourneyStore` s'il est encore en mémoire : c'est là
+ * que l'écran de détail le lit. Sinon — le processus est mort pendant le suivi — l'écran se
+ * reconstruira depuis l'identifiant d'itinéraire, qu'il ira lui-même chercher auprès du suivi.
+ *
+ * Une fiche déjà ouverte est refermée d'abord : elle pourrait montrer un autre trajet, et
+ * `launchSingleTop` seul l'aurait laissée telle quelle.
+ */
+@Composable
+private fun FollowNavigation(navController: NavHostController) {
+  val container = appContainer()
+  val follower = container.journeyFollower
+  val token by follower.openRequests.collectAsStateWithLifecycle()
+  LaunchedEffect(token) {
+    if (token == null) return@LaunchedEffect
+    follower.journey?.let(container.selectedJourneyStore::select)
+    navController.popBackStack(DetailRoute, inclusive = true)
+    navController.navigate(DetailRoute) { launchSingleTop = true }
+    follower.consumeOpen()
+  }
 }
 
 /**

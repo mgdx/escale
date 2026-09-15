@@ -22,12 +22,20 @@
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
   <!--
-    Aucune permission de travail de fond, et c'est vérifié plutôt que promis (voir
-    `NoBackgroundWorkTest`). RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE, WAKE_LOCK et
-    POST_NOTIFICATIONS entraient toutes par le manifeste d'androidx.work, que l'application ne
-    dépend plus depuis le retrait des trajets surveillés : elles ne sont plus ni demandées ni à
-    retirer de la fusion. `SCHEDULE_EXACT_ALARM` n'a jamais été demandée et ne doit pas l'être.
+    Les quatre permissions du suivi de trajet (SPEC.md § 5.3.1 et § 11), déclarées par
+    l'application elle-même et pour cette seule fonction. POST_NOTIFICATIONS est demandée à
+    l'usage, au seul appui sur « Suivre ce trajet », jamais au démarrage. Les trois autres sont de
+    niveau normal : le service au premier plan et son type `specialUse`, et le verrou de réveil
+    partiel que ce service détient le temps du suivi. Aucune ne vient d'une bibliothèque.
+
+    Ce qui reste interdit, et vérifié par `NoBackgroundWorkTest` plutôt que promis : tout second
+    service, tout récepteur, RECEIVE_BOOT_COMPLETED (un suivi ne survit pas au redémarrage),
+    SCHEDULE_EXACT_ALARM et USE_EXACT_ALARM.
   -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
 
   <!--
     ACCESS_WIFI_STATE et la fonctionnalité `android.hardware.wifi` viennent du manifeste de
@@ -93,6 +101,21 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
+    <!--
+      Le seul service de l'application : le suivi de trajet (SPEC.md § 5.3.1). Non exporté, démarré
+      par l'appui sur « Suivre ce trajet » et jamais autrement. Le type `specialUse` est le seul
+      honnête : le suivi n'est ni de la localisation, ni de la lecture de média, ni une
+      synchronisation ; la propriété en dit l'usage en clair.
+    -->
+    <service
+        android:name=".follow.FollowService"
+        android:exported="false"
+        android:foregroundServiceType="specialUse">
+      <property
+          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+          android:value="Transit journey guidance: timetable-based stop countdown and transfer alerts, started by the user, no network, no location." />
+    </service>
   </application>
 
 </manifest>

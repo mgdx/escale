@@ -125,6 +125,10 @@ private fun rememberDetailActions(
     onTripSelected = onTripSelected,
     onToggleFavorite = viewModel::onToggleFavorite,
     onMessageShown = viewModel::onMessageShown,
+    onFollowRequested = viewModel::onFollowRequested,
+    onFollowStop = viewModel::onFollowStop,
+    onFollowReplaceConfirmed = viewModel::onFollowReplaceConfirmed,
+    onFollowReplaceDismissed = viewModel::onFollowReplaceDismissed,
   )
 }
 
@@ -160,6 +164,14 @@ internal data class DetailActions(
   val onToggleFavorite: (() -> Unit)? = null,
   /** Le message affiché après un ajout a été montré : l'écran le dit, pour qu'il soit oublié. */
   val onMessageShown: () -> Unit = {},
+  /**
+   * « Suivre ce trajet » (SPEC.md § 5.3.1), **une fois la permission de notification obtenue** :
+   * l'écran la demande avant d'appeler ceci. Nul dans les aperçus, qui n'ont pas de suivi.
+   */
+  val onFollowRequested: (() -> Unit)? = null,
+  val onFollowStop: () -> Unit = {},
+  val onFollowReplaceConfirmed: () -> Unit = {},
+  val onFollowReplaceDismissed: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -204,6 +216,9 @@ internal fun DetailContent(
       return@Scaffold
     }
     DetailList(journey = journey, state = state, actions = actions, padding = innerPadding)
+  }
+  if (state.followReplacePrompt) {
+    FollowReplaceDialog(onConfirm = actions.onFollowReplaceConfirmed, onDismiss = actions.onFollowReplaceDismissed)
   }
 }
 
@@ -261,6 +276,7 @@ private fun RowScope.DetailBarActions(journey: Journey, state: DetailUiState, ac
       )
     }
   }
+  FollowBarAction(state = state, actions = actions)
   IconButton(onClick = actions.onRefresh) {
     Icon(
       painter = painterResource(R.drawable.ic_refresh),
@@ -285,6 +301,10 @@ private fun DetailList(journey: Journey, state: DetailUiState, actions: DetailAc
     verticalArrangement = Arrangement.spacedBy(ListSpacing),
   ) {
     item(key = SUMMARY_KEY) { DetailSummary(journey = journey, state = state) }
+    if (state.follow != null) {
+      // Le bandeau du suivi (SPEC.md § 5.3.1) : la même progression que la notification, en tête.
+      item(key = FOLLOW_KEY) { FollowBanner(state = state.follow, onStop = actions.onFollowStop) }
+    }
     if (journey.alerts.isNotEmpty()) {
       // Le bandeau des perturbations en vigueur, le même qu'en tête de carte de résultat
       // (SPEC.md § 5.2). Le détail de chacune reste dans la portion qui la porte.
@@ -561,6 +581,7 @@ private fun transitHeading(line: JourneyShareLine.Transit): String {
 }
 
 private const val SUMMARY_KEY = "resume"
+private const val FOLLOW_KEY = "suivi"
 private const val ALERTS_KEY = "perturbations"
 private const val ERROR_KEY = "erreur"
 private const val ORIGIN_KEY = "depart"

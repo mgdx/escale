@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -80,16 +82,31 @@ import java.time.Instant
 internal fun LegCard(index: Int, leg: JourneyLeg, state: DetailUiState, actions: DetailActions) {
   val expanded = index in state.expandedLegs
   val label = stringResource(if (expanded) R.string.detail_leg_collapse else R.string.detail_leg_expand)
+  // La portion en cours du suivi (SPEC.md § 5.3.1) : un fond distinct, **et** la mention en toutes
+  // lettres juste sous l'en-tête — la couleur seule ne dit rien à qui écoute l'écran (SPEC.md § 9).
+  val current = state.follow.currentLegIndex() == index
   ElevatedCard(
     modifier = Modifier
       .fillMaxWidth()
       .clickable(onClickLabel = label, role = Role.Button) { actions.onLegToggled(index) },
+    colors = if (current) {
+      CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    } else {
+      CardDefaults.elevatedCardColors()
+    },
   ) {
     Column(
       modifier = Modifier.padding(CardPadding),
       verticalArrangement = Arrangement.spacedBy(CardSpacing),
     ) {
       LegHeader(leg = leg, expanded = expanded)
+      if (current) {
+        DetailRow(
+          icon = R.drawable.ic_near_me,
+          text = stringResource(R.string.follow_current_leg),
+          color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+      }
       StatusLines(TimeStatus.of(leg))
       if (expanded) {
         LegBody(index = index, leg = leg, state = state, actions = actions)
@@ -271,15 +288,17 @@ private fun IntermediateStops(index: Int, leg: JourneyLeg.Transit, state: Detail
     labelRes = if (expanded) R.string.detail_hide_stops else R.string.detail_show_stops,
     onClick = { actions.onStopsToggled(index) },
   )
-  if (expanded) stops.forEach { StopRow(it) }
+  // Le prochain arrêt du suivi, quand l'usager est à bord de cette portion (SPEC.md § 5.3.1).
+  val nextStop = state.follow.nextStopIndexOf(index)
+  if (expanded) stops.forEachIndexed { position, visit -> StopRow(visit = visit, next = position == nextStop) }
 }
 
 @Composable
-private fun StopRow(visit: StopVisit) {
+private fun StopRow(visit: StopVisit, next: Boolean) {
   val formatTime = rememberTimeFormatter()
   val time = visit.arrival ?: visit.departure
   val name = placeLabel(visit.place.name, R.string.detail_place_unnamed)
-  val text = if (visit.cancelled) stringResource(R.string.detail_stop_cancelled) else name
+  val look = stopLook(visit.cancelled, next)
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -288,34 +307,72 @@ private fun StopRow(visit: StopVisit) {
       .padding(start = NestedIndent),
     horizontalArrangement = Arrangement.spacedBy(RowSpacing),
   ) {
-    if (visit.cancelled) {
-      // Le pictogramme de suppression, comme partout ailleurs dans l'application : le rouge et le
-      // barré ne portent jamais seuls l'information (SPEC.md § 9). Il est muet, le mot est écrit.
+    if (look.icon != null) {
+      // Le pictogramme, comme partout ailleurs dans l'application : le rouge, le gras et le barré
+      // ne portent jamais seuls l'information (SPEC.md § 9). Il est muet, le mot est écrit.
       Icon(
-        painter = painterResource(R.drawable.ic_cancel),
+        painter = painterResource(look.icon),
         contentDescription = null,
         modifier = Modifier.size(RowIconSize),
-        tint = MaterialTheme.colorScheme.error,
+        tint = look.color,
       )
     }
     Text(
-      text = if (visit.cancelled) stringResource(R.string.results_summary, name, text) else name,
+      text = look.marker?.let { stringResource(R.string.results_summary, name, stringResource(it)) } ?: name,
       style = MaterialTheme.typography.bodyMedium,
-      color = if (visit.cancelled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-      // Un arrêt non desservi est barré, et le mot « Supprimé » suit son nom : le trait seul ne
-      // dirait rien à qui écoute l'écran (SPEC.md § 9).
-      textDecoration = if (visit.cancelled) TextDecoration.LineThrough else null,
+      fontWeight = look.weight,
+      color = look.color,
+      textDecoration = look.decoration,
       modifier = Modifier.weight(1f),
     )
     if (time != null) {
       Text(
         text = formatTime(time),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textDecoration = if (visit.cancelled) TextDecoration.LineThrough else null,
+        color = look.color,
+        textDecoration = look.decoration,
       )
     }
   }
+}
+
+/** L'apparence d'un arrêt : supprimé, prochain arrêt du suivi (SPEC.md § 5.3.1), ou ordinaire. */
+private data class StopLook(
+  val icon: Int?,
+  val marker: Int?,
+  val color: Color,
+  val weight: FontWeight?,
+  val decoration: TextDecoration?,
+)
+
+@Composable
+private fun stopLook(cancelled: Boolean, next: Boolean): StopLook = when {
+  // Un arrêt non desservi est barré, et le mot « Supprimé » suit son nom : le trait seul ne
+  // dirait rien à qui écoute l'écran (SPEC.md § 9).
+  cancelled -> StopLook(
+    icon = R.drawable.ic_cancel,
+    marker = R.string.detail_stop_cancelled,
+    color = MaterialTheme.colorScheme.error,
+    weight = null,
+    decoration = TextDecoration.LineThrough,
+  )
+
+  // « Prochain arrêt » s'écrit, en plus du gras : la graisse seule ne se lit pas à l'oreille.
+  next -> StopLook(
+    icon = R.drawable.ic_near_me,
+    marker = R.string.follow_next_stop_marker,
+    color = MaterialTheme.colorScheme.onSurface,
+    weight = FontWeight.Bold,
+    decoration = null,
+  )
+
+  else -> StopLook(
+    icon = null,
+    marker = null,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    weight = null,
+    decoration = null,
+  )
 }
 
 // --- Libre-service -----------------------------------------------------------------------------

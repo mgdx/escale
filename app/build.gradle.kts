@@ -266,6 +266,7 @@ val classesKeptByName = listOf(
   // Instanciées par le système d'après le nom écrit dans AndroidManifest.xml.
   "io.github.mgdx.escale.EscaleApplication",
   "io.github.mgdx.escale.MainActivity",
+  "io.github.mgdx.escale.follow.FollowService",
   // Room appelle `Class.forName("<base>_Impl")`. Protégée par la règle de `room-runtime`
   // (`-keep class * extends androidx.room.RoomDatabase { void <init>(); }`).
   "io.github.mgdx.escale.data.db.EscaleDatabase_Impl",

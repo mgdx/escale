@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.mgdx.escale.AppContainer
+import io.github.mgdx.escale.core.follow.FollowLimits
+import io.github.mgdx.escale.core.follow.FollowPlan
 import io.github.mgdx.escale.core.model.FavoriteJourney
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.JourneyLeg
@@ -23,6 +25,7 @@ import io.github.mgdx.escale.core.repository.PlanRepository
 import io.github.mgdx.escale.core.repository.RentalsRepository
 import io.github.mgdx.escale.core.result.EscaleError
 import io.github.mgdx.escale.core.result.Outcome
+import io.github.mgdx.escale.follow.JourneyFollowing
 import io.github.mgdx.escale.ui.results.SelectedJourneyStore
 import io.github.mgdx.escale.ui.session.SearchDraft
 import io.github.mgdx.escale.ui.session.SearchSession
@@ -60,6 +63,11 @@ import java.time.Instant
  * secondes — la même règle que la feuille de résultats, tenue par le même `RealtimeRefreshPolicy`.
  * Ni minuterie, ni boucle, ni tâche de fond. Ce `ViewModel` n'importe rien de Compose (docs/architecture.md § 8) et
  * **ne journalise rien** : il manipule des adresses et des coordonnées (SPEC.md § 11).
+ *
+ * **Le suivi de trajet (SPEC.md § 5.3.1)** passe aussi par ici, et c'est le seul lien entre la
+ * fiche et le suivi : le bouton demande à suivre ou à arrêter, le bandeau lit où en est l'usager,
+ * et **tout rafraîchissement du trajet suivi met le suivi à jour** avec les nouvelles heures. Le
+ * suivi lui-même ne fait aucune requête : le temps réel n'entre que par cet écran.
  */
 class DetailViewModel(
   private val selection: SelectedJourneyStore,
@@ -67,6 +75,7 @@ class DetailViewModel(
   private val planRepository: PlanRepository,
   private val rentalsRepository: RentalsRepository,
   private val favoritesRepository: FavoritesRepository,
+  private val follower: JourneyFollowing,
   private val savedState: SavedStateHandle,
   private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -95,6 +104,67 @@ class DetailViewModel(
   init {
     if (!state.value.closed) load()
     observeFavorites()
+    observeFollow()
+  }
+
+  /**
+   * Le suivi, observé : le service avance d'échéance en échéance, et le bandeau doit suivre.
+   *
+   * Seul le suivi de **ce** trajet s'affiche. Un autre trajet suivi ne se voit qu'à l'appui sur le
+   * bouton, qui demande alors confirmation avant de le remplacer.
+   */
+  private fun observeFollow() {
+    viewModelScope.launch {
+      follower.session.collect { refreshFollowState() }
+    }
+  }
+
+  private fun refreshFollowState() {
+    val journey = state.value.journey
+    val current = follower.session.value
+    state.update {
+      it.copy(
+        follow = if (journey != null && current?.covers(journey) == true) current.state else null,
+        followAvailable = journey != null && FollowLimits.canStart(journey, now()),
+      )
+    }
+  }
+
+  /**
+   * Le bouton « Suivre ce trajet » (SPEC.md § 5.3.1), une fois la permission de notification
+   * obtenue — c'est l'écran qui la demande, seul un composable le peut.
+   *
+   * Un seul trajet se suit à la fois : si un autre l'est déjà, l'écran demande confirmation.
+   */
+  fun onFollowRequested() {
+    val journey = state.value.journey ?: return
+    val current = follower.session.value
+    if (current != null && !current.covers(journey)) {
+      state.update { it.copy(followReplacePrompt = true) }
+      return
+    }
+    startFollow(journey)
+  }
+
+  fun onFollowReplaceConfirmed() {
+    state.update { it.copy(followReplacePrompt = false) }
+    state.value.journey?.let(::startFollow)
+  }
+
+  fun onFollowReplaceDismissed() {
+    state.update { it.copy(followReplacePrompt = false) }
+  }
+
+  /** « Arrêter le suivi », depuis le bandeau comme depuis la barre. */
+  fun onFollowStop() {
+    follower.stop()
+  }
+
+  private fun startFollow(journey: Journey) {
+    if (!FollowLimits.canStart(journey, now())) return
+    follower.start(journey)
+    refreshFollowState()
+    show(DetailMessage.FOLLOW_STARTED)
   }
 
   /**
@@ -407,6 +477,14 @@ class DetailViewModel(
     // publier ici permet au lot « tracé » de dessiner le vrai tracé sans rien demander à cet écran.
     selection.select(journey)
     refreshFavoriteState()
+    // Le suivi ne rafraîchit jamais de lui-même (SPEC.md § 5.3.1) : c'est ici, et seulement ici,
+    // que les nouvelles heures lui parviennent. Sous la clé du suivi, qui ne change pas même quand
+    // le repli sur `plan` a rendu un itinéraire à l'identifiant différent.
+    val followed = follower.session.value
+    if (followed != null && (previous?.let(followed::covers) == true || followed.covers(journey))) {
+      follower.replace(followed.plan.key, journey)
+    }
+    refreshFollowState()
   }
 
   private fun onFailure(error: EscaleError) {
@@ -445,6 +523,12 @@ class DetailViewModel(
     // plus.
     val draft = session.draft.value
     if (draft != SearchDraft()) savedState[KEY_SEARCH] = encodeSearchDraft(draft)
+    // La fiche s'ouvre depuis la notification du suivi alors que le processus est mort entre-temps :
+    // le trajet n'est plus en mémoire, mais le suivi connaît encore son identifiant, et il suffit à
+    // le redemander — sur un geste de l'usager, comme SPEC.md § 5.3.1 le veut.
+    if (chosen == null && savedState.get<String>(KEY_ITINERARY) == null) {
+      follower.takeReopenItineraryId()?.let { savedState[KEY_ITINERARY] = it }
+    }
     // Ni trajet en mémoire, ni identifiant conservé — un trajet dont le serveur n'a pas donné
     // d'identifiant, par exemple : il n'y a rien à reconstruire, l'écran se referme.
     if (chosen == null && savedState.get<String>(KEY_ITINERARY) == null) return DetailUiState(closed = true)
@@ -565,6 +649,7 @@ class DetailViewModel(
           planRepository = container.planRepository,
           rentalsRepository = container.rentalsRepository,
           favoritesRepository = container.favoritesRepository,
+          follower = container.journeyFollower,
           savedState = createSavedStateHandle(),
         )
       }

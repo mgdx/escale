@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chaînes du suivi de trajet (SPEC.md § 5.3.1) : le bouton de l'écran de détail, son bandeau, la
+  notification permanente et les alertes. Une chaîne ajoutée ici l'est aussi dans values-fr/.
+
+  Les libellés de mode, de durée et de quai ne sont pas repris ici : ils vivent dans
+  strings_results.xml et strings_detail.xml, et le suivi les réutilise tels quels pour qu'une ligne
+  s'appelle pareil dans la notification et dans la fiche.
+-->
+<resources>
+  <!-- Le bouton de la barre : son libellé dit ce que l'appui va faire (SPEC.md § 9). -->
+  <string name="follow_action_start">Follow this journey</string>
+  <string name="follow_action_stop">Stop following</string>
+
+  <!-- Dit au lancement du suivi, parce que la spec l'exige : le suivi se fonde sur l'horaire. -->
+  <string name="follow_started">Announcements follow the timetable and the last refresh. A delay the server has not reported shifts them.</string>
+  <string name="follow_banner_hint">Based on the timetable and the last refresh</string>
+
+  <!-- Un seul trajet se suit à la fois : en suivre un autre remplace le précédent, après confirmation. -->
+  <string name="follow_replace_title">Replace the followed journey?</string>
+  <string name="follow_replace_text">Another journey is already being followed. Following this one stops the other.</string>
+  <string name="follow_replace_confirm">Replace</string>
+  <string name="follow_replace_cancel">Cancel</string>
+
+  <!-- Refus de la permission de notification : le suivi n'est pas lancé, et l'écran l'explique. -->
+  <string name="follow_permission_title">Notifications are turned off</string>
+  <string name="follow_permission_text">Following a journey relies on notifications: they are how Escale tells you when to get off. Turn them on for Escale in the system settings.</string>
+  <string name="follow_permission_action">Open settings</string>
+
+  <!-- Les deux canaux de notification, tels que l'usager les voit dans les réglages système. -->
+  <string name="follow_channel_ongoing">Journey being followed</string>
+  <string name="follow_channel_ongoing_description">The current leg and the next stop, updated as the journey goes on. Silent.</string>
+  <string name="follow_channel_alerts">Get-off alerts</string>
+  <string name="follow_channel_alerts_description">When to get off, transfers and arrival.</string>
+
+  <!-- La notification permanente et le bandeau : la portion en cours et la prochaine action. -->
+  <string name="follow_waiting_title">Departure at %1$s from %2$s</string>
+  <!-- « Metro 4 towards Porte d'Orléans » : la ligne, puis sa direction. -->
+  <string name="follow_line_towards">%1$s towards %2$s</string>
+  <!-- « Metro 6 towards Nation at 12:41 » -->
+  <string name="follow_line_at">%1$s at %2$s</string>
+  <!-- « Metro 4 · Next stop: Saint-Michel » -->
+  <string name="follow_onboard_title">%1$s · Next stop: %2$s</string>
+  <!-- %1$s l'arrêt de descente, %2$d les arrêts restants, %3$s l'heure de descente. -->
+  <plurals name="follow_onboard_stops">
+    <item quantity="one">Get off at %1$s in %2$d stop (%3$s)</item>
+    <item quantity="other">Get off at %1$s in %2$d stops (%3$s)</item>
+  </plurals>
+  <string name="follow_onboard_next">Get off at the next stop: %1$s (%2$s)</string>
+  <!-- %1$s la durée, %2$s la destination du cheminement. -->
+  <string name="follow_street_walk">Walk %1$s to %2$s</string>
+  <string name="follow_street_bike">Cycle %1$s to %2$s</string>
+  <string name="follow_street_car">Drive %1$s to %2$s</string>
+  <string name="follow_street_rental">Ride %1$s to %2$s</string>
+  <string name="follow_transfer_title">Transfer: %1$s</string>
+  <string name="follow_transfer_text">Departure at %1$s</string>
+  <string name="follow_arrived_title">Arrived at destination</string>
+
+  <!-- Les alertes : sonores, vibrantes, et toujours un texte (SPEC.md § 9). -->
+  <plurals name="follow_alert_stops_before">
+    <item quantity="one">Get off in %d stop</item>
+    <item quantity="other">Get off in %d stops</item>
+  </plurals>
+  <string name="follow_alert_next_stop">Get off at the next stop</string>
+  <string name="follow_alert_alight">Get off here: %1$s</string>
+  <string name="follow_alert_cancelled_title">Journey disrupted</string>
+  <string name="follow_alert_cancelled_text">A leg of the followed journey has been cancelled. Check the trip details.</string>
+
+  <!-- Dans la fiche : la portion et l'arrêt en cours, en toutes lettres et non par la seule couleur. -->
+  <string name="follow_current_leg">You are here</string>
+  <string name="follow_next_stop_marker">Next stop</string>
+</resources>

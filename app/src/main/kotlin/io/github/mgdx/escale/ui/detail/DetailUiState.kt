@@ -1,5 +1,6 @@
 package io.github.mgdx.escale.ui.detail
 
+import io.github.mgdx.escale.core.follow.FollowState
 import io.github.mgdx.escale.core.model.Journey
 import io.github.mgdx.escale.core.model.RentalAvailability
 import io.github.mgdx.escale.core.result.EscaleError
@@ -56,6 +57,15 @@ data class DetailUiState(
   val favoriteId: Long? = null,
   /** Le retour d'un ajout ou d'un retrait, à montrer une fois puis à oublier (SPEC.md § 5.5). */
   val message: DetailMessage? = null,
+  /**
+   * Où en est l'usager, quand **ce trajet-ci** est suivi (SPEC.md § 5.3.1) ; `null` sinon, y compris
+   * quand c'est un autre trajet qui l'est. C'est ce que le bandeau met en mots.
+   */
+  val follow: FollowState? = null,
+  /** Vrai quand le bouton « Suivre ce trajet » est proposé : `FollowLimits` en décide. */
+  val followAvailable: Boolean = false,
+  /** Un autre trajet est suivi : la confirmation de remplacement est ouverte. */
+  val followReplacePrompt: Boolean = false,
 )
 
 /**
@@ -68,6 +78,9 @@ enum class DetailMessage {
   FAVORITE_ADDED,
   FAVORITE_REMOVED,
   FAVORITE_FAILED,
+
+  /** Le suivi vient de commencer : la spec veut que sa limite soit dite à ce moment-là (§ 5.3.1). */
+  FOLLOW_STARTED,
 }
 
 /**

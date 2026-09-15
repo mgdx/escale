@@ -108,7 +108,7 @@ private fun TransitMode.iconRes(): Int = when (this) {
 
 @Suppress("CyclomaticComplexMethod")
 @StringRes
-private fun TransitMode.labelRes(): Int = when (this) {
+internal fun TransitMode.labelRes(): Int = when (this) {
   TransitMode.WALK -> R.string.results_mode_walk
   TransitMode.BIKE -> R.string.results_mode_bike
   TransitMode.RENTAL -> R.string.results_mode_rental

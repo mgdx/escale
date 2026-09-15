@@ -35,6 +35,7 @@ import io.github.mgdx.escale.data.repository.PlanRepositoryImpl
 import io.github.mgdx.escale.data.repository.RentalsRepositoryImpl
 import io.github.mgdx.escale.data.repository.StopsRepositoryImpl
 import io.github.mgdx.escale.data.repository.TripRepositoryImpl
+import io.github.mgdx.escale.follow.JourneyFollower
 import io.github.mgdx.escale.ui.map.DeviceLocationSource
 import io.github.mgdx.escale.ui.map.MapCameraStore
 import io.github.mgdx.escale.ui.map.MapInstance
@@ -237,6 +238,13 @@ class AppContainer(context: Context) {
   val tripRepository: TripRepository by lazy {
     TripRepositoryImpl(TripApi(versionName = BuildConfig.VERSION_NAME), serverRepository)
   }
+
+  /**
+   * Le suivi de trajet (SPEC.md § 5.3.1) : ce que l'écran de détail demande, ce que le service
+   * rapporte. Un seul, parce qu'un seul trajet se suit à la fois, et parce que le service doit
+   * retrouver le même objet que l'écran.
+   */
+  val journeyFollower: JourneyFollower by lazy { JourneyFollower(appContext) }
 
   private companion object {
     const val PREFERENCES_NAME = "escale"

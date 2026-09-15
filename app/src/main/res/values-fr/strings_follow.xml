@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="follow_action_start">Suivre ce trajet</string>
+  <string name="follow_action_stop">Arrêter le suivi</string>
+
+  <string name="follow_started">Les annonces suivent l\'horaire et la dernière actualisation. Un retard que le serveur n\'a pas signalé les décale d\'autant.</string>
+  <string name="follow_banner_hint">D\'après l\'horaire et la dernière actualisation</string>
+
+  <string name="follow_replace_title">Remplacer le trajet suivi&#160;?</string>
+  <string name="follow_replace_text">Un autre trajet est déjà suivi. Suivre celui-ci arrête l\'autre.</string>
+  <string name="follow_replace_confirm">Remplacer</string>
+  <string name="follow_replace_cancel">Annuler</string>
+
+  <string name="follow_permission_title">Les notifications sont désactivées</string>
+  <string name="follow_permission_text">Le suivi d\'un trajet repose sur les notifications&#160;: c\'est par elles qu\'Escale vous dit quand descendre. Activez-les pour Escale dans les réglages du système.</string>
+  <string name="follow_permission_action">Ouvrir les réglages</string>
+
+  <string name="follow_channel_ongoing">Trajet suivi</string>
+  <string name="follow_channel_ongoing_description">La portion en cours et le prochain arrêt, mis à jour au fil du trajet. Silencieuse.</string>
+  <string name="follow_channel_alerts">Alertes de descente</string>
+  <string name="follow_channel_alerts_description">Quand descendre, les correspondances et l\'arrivée.</string>
+
+  <string name="follow_waiting_title">Départ à %1$s de %2$s</string>
+  <string name="follow_line_towards">%1$s direction %2$s</string>
+  <string name="follow_line_at">%1$s à %2$s</string>
+  <string name="follow_onboard_title">%1$s · Prochain arrêt&#160;: %2$s</string>
+  <plurals name="follow_onboard_stops">
+    <item quantity="one">Descente à %1$s dans %2$d arrêt (%3$s)</item>
+    <!-- Catégorie CLDR « many » du français : elle ne vaut que pour les millions, et lint l'exige
+         dès qu'un pluriel porte un nombre. La forme reprend « other ». -->
+    <item quantity="many">Descente à %1$s dans %2$d arrêts (%3$s)</item>
+    <item quantity="other">Descente à %1$s dans %2$d arrêts (%3$s)</item>
+  </plurals>
+  <string name="follow_onboard_next">Descente au prochain arrêt&#160;: %1$s (%2$s)</string>
+  <string name="follow_street_walk">Marcher %1$s jusqu\'à %2$s</string>
+  <string name="follow_street_bike">Pédaler %1$s jusqu\'à %2$s</string>
+  <string name="follow_street_car">Conduire %1$s jusqu\'à %2$s</string>
+  <string name="follow_street_rental">Rouler %1$s jusqu\'à %2$s</string>
+  <string name="follow_transfer_title">Correspondance&#160;: %1$s</string>
+  <string name="follow_transfer_text">Départ à %1$s</string>
+  <string name="follow_arrived_title">Arrivée à destination</string>
+
+  <plurals name="follow_alert_stops_before">
+    <item quantity="one">Descente dans %d arrêt</item>
+    <item quantity="many">Descente dans %d arrêts</item>
+    <item quantity="other">Descente dans %d arrêts</item>
+  </plurals>
+  <string name="follow_alert_next_stop">Descente au prochain arrêt</string>
+  <string name="follow_alert_alight">Descendez ici&#160;: %1$s</string>
+  <string name="follow_alert_cancelled_title">Trajet perturbé</string>
+  <string name="follow_alert_cancelled_text">Une portion du trajet suivi a été supprimée. Consultez le détail du trajet.</string>
+
+  <string name="follow_current_leg">Vous êtes ici</string>
+  <string name="follow_next_stop_marker">Prochain arrêt</string>
+</resources>
